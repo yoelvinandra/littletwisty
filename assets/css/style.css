@@ -1,0 +1,36 @@
+
+/*----------------------------------------------*/
+
+@font-face {
+    font-family: Roboto;
+    *src: url(../font/Roboto/Roboto-Regular.ttf);
+}
+
+* {
+	font-size:14px;
+}
+
+body {
+    padding:0px;
+    font-size:10px;
+    margin:0;
+}
+a {
+	/*font-family:roboto,sans-serif, Geneva, Calibri;
+	font-size:12px;
+	font-weight:bold;
+	text-decoration:none;
+	color:black;*/
+}
+
+input:-moz-read-only {
+    background-color: #F0F0F0;
+}
+input:read-only {
+    background-color: #F0F0F0;
+}
+
+
+.box-title b{
+	font-size:12pt;
+}

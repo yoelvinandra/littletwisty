@@ -1,0 +1,225 @@
+.fieldset{
+	margin:0px;
+	padding:1px;
+	border: 1px solid #000000;
+    -moz-border-radius:8px;
+    -webkit-border-radius:8px;
+	border-radius:8px;
+	color:black;
+}
+
+#field{
+	border-radius:10px; 
+	border-color:"skyblue";
+}
+
+table .fieldset{
+	border-radius:8px;
+	 -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+	border-collapse:separate !important;
+}
+
+
+.JudulArialBig {
+	font-family: "Century Gothic";
+	font-size: 27px;
+}
+
+.hapus-border-bawah{
+	border-bottom:1px solid #FFF;
+}
+
+.hapus-border-kiri{
+	border-left:1px solid #FFF;
+	border-right:1px solid #FFF;
+}
+
+.border-atas{
+	border-top:1px solid black;
+}
+
+.border-bawah{
+	border-bottom:1px solid black;
+}
+
+.border-kiri{
+	border-left:1px solid black;
+}
+
+.border-kanan{
+	border-right:1px solid black;
+}
+
+.header-label{
+	font-family:Tahoma;
+	font-size:15px;
+	font-weight:bold;
+	text-decoration: underline;	
+}
+.header2{
+	font-family:"Tahoma";
+	font-size:10px;
+	font-weight:bold;
+}
+.header{
+	font-family:"Tahoma";
+	font-size:12px;	
+}
+.detail{
+	font-family:"Tahoma";
+	font-size:12px;
+	padding:1.5px;
+}
+.detail2{
+	font-family:"Tahoma";
+	font-size:10px;
+	padding:1.5px;
+}
+.right{
+	text-align:right;
+}
+.center{
+	text-align:center;
+}
+.total{
+	font-family:"Courier New";
+	font-size:9pt;
+	letter-spacing:-1px;
+	word-spacing:-3px;
+	font-weight:bold;
+}
+.grandtotal{
+	font-family:"Tahoma";
+	font-size:12px;
+	font-weight:bold;
+}
+table{
+	border-collapse:collapse;
+}
+
+.tabel_detail{
+	margin-top:5px;
+}
+
+.font-header {
+	font-family:"arial";
+	font-size:11px;
+	font-weight:bold;
+	/* width: 100px; */
+}
+
+.font-body{
+	font-family:"Courier New";
+	font-size:9pt;
+	letter-spacing:-1px;
+	word-spacing:-3px;
+}
+
+.tbl-header {
+	font-family:"Courier New";
+	font-size:9pt;
+	letter-spacing:-1px;
+	word-spacing:-3px;
+	font-weight:bold;
+}
+
+.title{
+	font-family:verdana;
+	font-size:20px;
+	font-weight:bold;
+}
+
+.tabel_perusahaan{
+	margin-bottom:2px;
+	width:100%;
+}
+.tabel_perusahaan tr td{
+	width:10%;
+}
+
+.namaperusahaan{
+	font-family:"Tahoma";
+	font-size:12px;
+	font-weight:bold;
+}
+
+.alamatperusahaan{
+	font-family:"Tahoma";
+	font-size:10px;
+	padding:1.5px;
+}
+
+.faktur{
+	width:620px; 
+	height:500px; 
+
+}
+
+.tanda_terima{
+	width:310px; 
+	height:500px; 
+}
+
+.tanda_terima_detail{
+	width:310px; 
+	margin-top:10px; 
+}
+
+.faktur_detail{
+	margin-top:10px;
+	width:620px; 
+}
+
+.tanda_terima_fieldset{
+	border:0;
+}
+
+.customer{
+	width:367px;
+}
+
+.info_transaksi{
+	width:250px;
+}
+
+.customer_lain{
+	width:317px;
+}
+
+.info_transaksi_lain{
+	width:300px;
+}
+
+.no{
+	width:3%;
+}
+.satuan{
+	width:6%;
+}
+.bonus{
+	width:6%;
+}
+.qty{
+	width:20%;
+}
+.jumlah{
+	width:6%;
+}
+.harga{
+	width:14%;
+}
+.disc{
+	width:10%;
+}
+.subtotal{
+	width:14%;
+}
+.tanda_tangan{
+	width:45%;
+	/* border:1px solid; */
+}
+.perhitungan_akhir{
+	width:20%;
+	/* border:1px solid; */
+}
