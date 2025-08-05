@@ -24,7 +24,7 @@ date_default_timezone_set("Asia/Jakarta");
 |
 */
 
-$config['base_url'] = 'https://littletwisty.id/devpos';
+$config['base_url'] = 'https://littletwisty.id/pos';
 /*
 |--------------------------------------------------------------------------
 | Index File
@@ -532,5 +532,6 @@ $config['proxy_ips'] = '';
      }
  }
 }
+
 
 spl_autoload_register('kang_controller');*/
