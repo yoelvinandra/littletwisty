@@ -164,6 +164,15 @@ class Model_master_barang extends MY_Model{
 		return $data;
 	}
 	
+	public function comboGridKategoriSaja(){
+
+    	$sql = "SELECT URUTAN as NO, KATEGORI, IDKATEGORISHOPEE,IDKATEGORITIKTOK,IDKATEGORILAZADA FROM MKATEGORI";
+    	$data['rows'] = $this->db->query($sql)->result();
+
+		
+		return $data;
+	}
+	
 	public function comboGridKategori(){
 		
 		$sql = "select a.KATEGORI,a.NAMABARANG
@@ -176,6 +185,48 @@ class Model_master_barang extends MY_Model{
 		$query = $this->db->query($sql);
 
 		$data['rows'] = $query->result();
+		return $data;
+	}
+	
+	function comboGridMarketplace($kategori,$marketplace){
+	    
+	    $arrKategori = explode("%",$kategori);
+		if(count($arrKategori) > 1)
+		{ 
+		     $whereKategori = "and a.KATEGORI like '$kategori' ";
+		}
+		else
+		{
+		    $whereKategori = "and a.KATEGORI = '$kategori' ";
+		}
+		    
+	    $sql = "select a.IDBARANG as ID, a.KODEBARANG as KODE, a.NAMABARANG as NAMA, if(c.KONSINYASI = 1,b.HARGAKONSINYASI,b.HARGACORET) as HARGA, SKU".$marketplace." as SKU, '' as NAMALABEL,  a.WARNA, a.SIZE
+    				from MBARANG a
+    				inner join MHARGA b on a.IDBARANG = b.IDBARANG
+    				inner join MCUSTOMER c on c.IDCUSTOMER = b.IDCUSTOMER
+    				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 
+    				and a.KODEBARANG != 'XXXXX'
+    				and c.NAMACUSTOMER = '$marketplace'
+    				$whereKategori
+    				group by a.IDBARANG
+    				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
+    		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC
+    				";
+	    
+    	$query = $this->db->query($sql);
+    	
+    	//CEK PAKAI BARCODE ATAU TIDAK
+    	$data["rows"]  = $query->result();
+    	
+    	foreach($data['rows'] as $item)
+    	{
+    	    $item->NAMALABEL = explode(" | ",$item->NAMA)[0];
+    	    if(explode(" | ",$item->NAMA) > 1)
+    	    {
+    	        $item->NAMALABEL .= "<br><i>".$item->WARNA.", ".$item->SIZE."</i>";
+    	    }
+    	}
+		
 		return $data;
 	}
 	
@@ -366,15 +417,29 @@ class Model_master_barang extends MY_Model{
 		return $query;
 	}
 
-	public function dataGrid(){
+	public function dataGrid($jenis){
+	    $whereItemJenis = "";
+	    if($jenis == "SHOPEE")
+	    {
+	        $whereItemJenis = "and a.idbarangshopee = 0";
+	    }
+	    else if($jenis == "TIKTOK")
+	    {
+	        $whereItemJenis = "and a.idbarangtiktok = 0";
+	    }
+	    else if($jenis == "LAZADA")
+	    {
+	        $whereItemJenis = "and a.idbaranglazada = 0";
+	    }
+	    
 		$data = [];
 		$sql = "select a.KATEGORIONLINE, a.KATEGORI,count(a.KATEGORI) as JMLVARIAN,if(MIN(a.HARGAJUAL) <> MAX(a.HARGAJUAL),CONCAT(FORMAT(MIN(a.HARGAJUAL),0),'  -  ',FORMAT(MAX(a.HARGAJUAL),0)),FORMAT(MAX(a.HARGAJUAL),0)) as RANGEHARGAUMUM,MAX(a.TGLENTRY) as TGLENTRY,if(sum(a.STATUS) > 0,1,0) as STATUS,a.DESKRIPSI,a.PANJANG,a.LEBAR,a.TINGGI,a.BERAT
 				from MBARANG a
-				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}
+				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereItemJenis
 				group by a.KATEGORI
 				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
     		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC";
-		$query = $this->db->query($sql);
+		$query = $this->db->queryRaw($sql);
 		$data['rows'] = $query->result();
 
 		return $data;
@@ -398,7 +463,7 @@ class Model_master_barang extends MY_Model{
     		$sql = "select a.IDBARANG, a.KODEBARANG, a.NAMABARANG,
     					   a.SATUAN, a.SIZE,a.WARNA,
     					   a.HARGABELI, a.HARGAJUAL, a.CATATAN, 
-    					   a.TGLENTRY, a.STATUS, e.USERNAME as USERBUAT,a.SKUSHOPEE,a.SKUTOKPED,a.SKUTIKTOK,'' as MODE,a.BARCODE
+    					   a.TGLENTRY, a.STATUS, e.USERNAME as USERBUAT,a.SKUSHOPEE,a.SKUTOKPED,a.SKUTIKTOK,a.SKULAZADA,'' as MODE,a.BARCODE
     				from MBARANG a
     				left join MUSER e on a.USERENTRY = e.USERID
     				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}
@@ -418,7 +483,7 @@ class Model_master_barang extends MY_Model{
 		$sql = "select a.KATEGORIONLINE,a.KATEGORI, a.KODEBARANG, a.NAMABARANG,a.BARCODE,
         			   a.SATUAN, if(a.SIZE = 0, '',a.SIZE) AS UKURAN,a.WARNA,
         			   FORMAT(a.HARGABELI,0) as HARGABELI, FORMAT(a.HARGAJUAL,0) as HARGAJUAL, a.CATATAN, 
-        			   a.TGLENTRY, a.STATUS, e.USERNAME as USERBUAT,a.SKUSHOPEE,a.SKUTOKPED,a.SKUTIKTOK,a.BERAT,a.PANJANG,a.LEBAR,a.TINGGI
+        			   a.TGLENTRY, a.STATUS, e.USERNAME as USERBUAT,a.SKUSHOPEE,a.SKUTOKPED,a.SKUTIKTOK,a.SKULAZADA,a.BERAT,a.PANJANG,a.LEBAR,a.TINGGI
         		from MBARANG a
         		left join MUSER e on a.USERENTRY = e.USERID
         		where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}
@@ -442,10 +507,10 @@ class Model_master_barang extends MY_Model{
 			//update di database utama 
 			$this->db->where("IDBARANG",$id)
 					 ->where("IDPERUSAHAAN",$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']);
-			$this->db->update('MBARANG',$data);
+			$this->db->updateRaw('MBARANG',$data);
 		}else{
 			//insert baru di database utama
-			$this->db->insert('MBARANG',$data);
+			$this->db->insertRaw('MBARANG',$data);
 			$id = $this->db->insert_id();
 			
 			$sqlCustomer = "select * from mcustomer where status = 1 and idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}"; 
@@ -636,6 +701,19 @@ class Model_master_barang extends MY_Model{
 		}
 	}
 	
+	function cek_valid_sku_lazada($sku){
+		$sql = "select KODEBARANG, NAMABARANG 
+				from MBARANG
+				where IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 
+					  and SKULAZADA = ?";
+		$query = $this->db->query($sql, $sku)->row();
+		if(isset($query)){
+			return 'SKU Lazada Sudah Digunakan Oleh Barang ('.$query->KODEBARANG.') '.$query->NAMABARANG.',<br>SKU Lazada Tidak Dapat Digunakan';
+		}else{
+			return '';
+		}
+	}
+	
 	function cek_valid_nama($nama,$kode=" "){
 		$sql = "select KODEBARANG, NAMABARANG 
 				from MBARANG a
@@ -656,7 +734,7 @@ class Model_master_barang extends MY_Model{
 	}
 	
 	function getDataBarangBySKU($sku){
-	   $sql = "select IDBARANG, NAMABARANG from MBARANG where SKUSHOPEE = '$sku' or SKUTIKTOK  = '$sku'";
+	   $sql = "select IDBARANG, NAMABARANG from MBARANG where SKUSHOPEE = '$sku' or SKUTIKTOK  = '$sku' or SKULAZADA  = '$sku'";
 	   return $this->db->query($sql)->row();
 	}
 	

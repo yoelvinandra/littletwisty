@@ -140,7 +140,7 @@ if ($tampil=='REGISTER') {
 			);
 		}
 		$urutan2++;
-		$warna = $urutan2%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan2%2==0 ? '#cfcfcf' : '#FFFFFF';
 		if ($rs->TUTUP==1) $warna = '#CCCCCC';
 
 		$this->html_table->set_tr();
@@ -240,7 +240,7 @@ if ($tampil=='REGISTER') {
 		);
 
 		$urutan2++;
-		$warna = $urutan2%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan2%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 		$total['jml']       += $r->JML;
 
@@ -301,7 +301,7 @@ if ($tampil=='REGISTER') {
 	$urutan = 0;
 	foreach($query as $r) {
 		$urutan++;
-		$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 		if ($r->STATUS == 'I') $warna2 = '#FFFFFF';
 		else if ($r->STATUS == 'S') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];

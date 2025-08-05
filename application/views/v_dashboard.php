@@ -274,7 +274,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
           <div class="box box-warning">
             <div class="box-header with-border" style="height:650px; margin:0px 0px 0px 30px">
 			    <div class="row col-md-12">
-			         <h3 class="HEADERPERIODE" style="font-weight:bold;">Customer dengan Penjualan Terbanyak</h3>
+			         <h3 class="HEADERPERIODE" style="font-weight:bold;">Data Penjualan Terbanyak</h3>
     			</div>
     			<div class="row col-md-12" style="padding-top:5px;">
     			    <div class="row col-md-12 col-sm-12 col-xs-12" style="padding: 0px 0px 0px 0px; font-size:12pt;" >
@@ -317,14 +317,35 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
     			        </div>
 			        </div>
     			</div>
-    			<div class="row col-md-12">
-    			     <hr style="margin:20px 0px 20px 0px" ></hr>
-    			      <div class="loading3" style="text-align:center;"><br><br>Tunggu Sebentar...</div>
-    			      <div class="tableCustomer" style="overflow-y:scroll; height:390px;" >
-                             
-                      </div>
-                    <br>
-    			</div>
+    			<div class="row col-md-12" style="text-align:center;">
+        			<div class="nav-tabs-custom"  style="margin-top:15px; box-shadow:none !important;">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tab_dashboard_customer_terbanyak" data-toggle="tab">Customer</a></li>
+                    		<li><a href="#tab_dashboard_kota_terbanyak" data-toggle="tab">Kota</a></li>
+                        </ul>
+                        
+                        <div class="tab-content" style="height:270px;">
+                            <div class="tab-pane active" id="tab_dashboard_customer_terbanyak" style="height:200px;">
+                    			<div class="row col-md-12">
+                    			      <div class="loading3" style="text-align:center;"><br><br>Tunggu Sebentar...</div>
+                    			      <div class="tableCustomer" style="overflow-y:scroll; height:390px; padding-right:15px;" >
+                                             
+                                      </div>
+                                    <br>
+                    			</div>
+                            </div> 
+                            <div class="tab-pane" id="tab_dashboard_kota_terbanyak"  style="height:200px;">
+                                <div class="row col-md-12">
+                    			      <div class="loading3" style="text-align:center;"><br><br>Tunggu Sebentar...</div>
+                    			      <div class="tableKota" style="overflow-y:scroll; height:390px; padding-right:15px;" >
+                                             
+                                      </div>
+                                    <br>
+                    			</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- /.box-body -->
           </div>
@@ -385,7 +406,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
     			<div class="row col-md-12">
     			     <hr style="margin:20px 0px 20px 0px" ></hr>
     			      <div class="loading4" style="text-align:center;"><br><br>Tunggu Sebentar...</div>
-    			      <div class="tableStok" id="tableStoked" style="overflow-y:scroll; height:390px;" >
+    			      <div class="tableStok" id="tableStoked" style="overflow-y:scroll; height:390px; padding-right:15px;" >
                              
                       </div>
                     <br>
@@ -1604,11 +1625,13 @@ $(document).ready(function(){
         setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer);
     }
     
-    var labelCustomer = []
+    var labelCustomer = [];
     var qtyCustomer = [];
+    var grandtotalCustomer = [];
     
     function setPeriodeCustomer(periode,tglawal,tglakhir,barang){ 
         $(".tableCustomer").html("");
+        $(".tableKota").html("");
         $(".loading3").html("<br><br><br><br><br><br><br><br>Tunggu Sebentar...");
         $(".loading3").show();
         $.ajax({
@@ -1618,29 +1641,45 @@ $(document).ready(function(){
         	dataType: 'json',
         	success : function(msg){
                 $(".loading3").hide();
-            	var data = msg.result;
+            	var dataCustomer = msg.resultCustomer;
             	labelCustomer = [];
             	qtyCustomer = [];
+            	grandtotalCustomer = [];
             	
-            	for(var x = 0 ; x < data.length; x++)
+            	for(var x = 0 ; x < dataCustomer.length; x++)
             	{
-            	    labelCustomer.push(data[x].NAMA);
-            	    qtyCustomer.push(parseInt(data[x].QTY));
+            	    labelCustomer.push(dataCustomer[x].NAMA);
+            	    qtyCustomer.push(parseInt(dataCustomer[x].QTY));
+            	    grandtotalCustomer.push(parseInt(dataCustomer[x].GRANDTOTAL));
             	}
-                setTableCustomer(labelCustomer,qtyCustomer);
+                setTableCustomer(labelCustomer,qtyCustomer,grandtotalCustomer);
+                
+                var dataKota = msg.resultKota;
+            	labelKota = [];
+            	qtyKota = [];
+            	grandtotalKota = [];
+            	
+            	for(var x = 0 ; x < dataKota.length; x++)
+            	{
+            	    labelKota.push(dataKota[x].NAMA);
+            	    qtyKota.push(parseInt(dataKota[x].QTY));
+            	    grandtotalKota.push(parseInt(dataKota[x].GRANDTOTAL));
+            	}
+                setTableKota(labelKota,qtyKota,grandtotalKota);
         	}
         });
     }
     
-    function setTableCustomer(label,value){
+    function setTableCustomer(label,value,valueGrand){
                
         $(".loading3").hide();
         var table = "";
         var total = 0;
+        var grand = 0;
         if(label.length > 0)
         {
             table = "<table width='100%'  style=' border-collapse:separate; border-spacing: 0 10px;'>";
-            table += "<tr valign='top' ><th style='font-size:12pt;'>No </th><th width='70%' style='font-size:12pt;'>Detail</th><th width='w0%' style='font-size:12pt;'>Jumlah</th></tr>";
+            table += "<tr valign='top' ><th style='font-size:12pt;'>No </th><th width='55%' style='font-size:12pt; text-align:left;'>Detail</th><th width='10%' style='text-align:center; font-size:12pt;'>Jumlah</th><th style='text-align:right; font-size:12pt;'>Grand Total</th></tr>";
             for(var x = 0 ; x < label.length;x++)
             {
                 let jmlFormat = new Intl.NumberFormat('en-US', { 
@@ -1650,8 +1689,16 @@ $(document).ready(function(){
                     currency: 'IDR' 
                 }).format(value[x]).replace("IDR","");
                 
-                table += "<tr valign='top'><td style='font-size:10pt;'>"+(x+1)+".</td><td style='font-size:10pt;'>"+label[x]+"</td><td style='text-align:right;font-size:10pt;'>"+jmlFormat+" Psg</td></tr>";
+                let grandFormat = new Intl.NumberFormat('en-US', { 
+            	    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    style: 'currency', 
+                    currency: 'IDR' 
+                }).format(valueGrand[x]).replace("IDR","");
+                
+                table += "<tr valign='top'><td style='font-size:10pt;  text-align:left;'>"+(x+1)+".</td><td style='font-size:10pt; text-align:left;'>"+label[x]+"</td><td style='text-align:center;font-size:10pt;'>"+jmlFormat+" Psg</td><td style='text-align:right;font-size:10pt;'>Rp"+grandFormat+"</td></tr>";
                 total += parseInt(value[x]);
+                grand += parseInt(valueGrand[x]);
             }
             
             let totalFormat = new Intl.NumberFormat('en-US', { 
@@ -1660,8 +1707,15 @@ $(document).ready(function(){
                     style: 'currency', 
                     currency: 'IDR' 
             }).format(total).replace("IDR","");
+            
+            let grandtotalFormat = new Intl.NumberFormat('en-US', { 
+            	    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    style: 'currency', 
+                    currency: 'IDR' 
+            }).format(grand).replace("IDR","");
                 
-            table += "<tr ><th style='border-top:1px solid black;'></th><th style='border-top:1px solid black;'></th><th style='text-align:right; border-top:1px solid black;'>"+totalFormat+" Psg</th></tr></table>";
+            table += "<tr ><th style='border-top:1px solid black;'></th><th style='border-top:1px solid black;'></th><th style='text-align:center; border-top:1px solid black;'>"+totalFormat+" Psg</th><th style='text-align:right; border-top:1px solid black;'>Rp"+grandtotalFormat+"</th></tr></table>";
         }
         else
         {
@@ -1669,6 +1723,61 @@ $(document).ready(function(){
             $(".loading3").show();
         }
         $(".tableCustomer").html(table);
+    }
+    
+    function setTableKota(label,value,valueGrand){
+               
+        $(".loading3").hide();
+        var table = "";
+        var total = 0;
+        var grand = 0;
+        if(label.length > 0)
+        {
+            table = "<table width='100%'  style=' border-collapse:separate; border-spacing: 0 10px;'>";
+            table += "<tr valign='top' ><th style='font-size:12pt;'>No </th><th width='55%' style='font-size:12pt; text-align:left;'>Detail</th><th width='10%' style='text-align:center; font-size:12pt;'>Jumlah</th><th style='text-align:right; font-size:12pt;'>Grand Total</th></tr>";
+            for(var x = 0 ; x < label.length;x++)
+            {
+                let jmlFormat = new Intl.NumberFormat('en-US', { 
+            	    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    style: 'currency', 
+                    currency: 'IDR' 
+                }).format(value[x]).replace("IDR","");
+                
+                let grandFormat = new Intl.NumberFormat('en-US', { 
+            	    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    style: 'currency', 
+                    currency: 'IDR' 
+                }).format(valueGrand[x]).replace("IDR","");
+                
+                table += "<tr valign='top'><td style='font-size:10pt;  text-align:left;'>"+(x+1)+".</td><td style='font-size:10pt; text-align:left;'>"+label[x]+"</td><td style='text-align:center;font-size:10pt;'>"+jmlFormat+" Psg</td><td style='text-align:right;font-size:10pt;'>Rp"+grandFormat+"</td></tr>";
+                total += parseInt(value[x]);
+                grand += parseInt(valueGrand[x]);
+            }
+            
+            let totalFormat = new Intl.NumberFormat('en-US', { 
+            	    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    style: 'currency', 
+                    currency: 'IDR' 
+            }).format(total).replace("IDR","");
+            
+            let grandtotalFormat = new Intl.NumberFormat('en-US', { 
+            	    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    style: 'currency', 
+                    currency: 'IDR' 
+            }).format(grand).replace("IDR","");
+                
+            table += "<tr ><th style='border-top:1px solid black;'></th><th style='border-top:1px solid black;'></th><th style='text-align:center; border-top:1px solid black;'>"+totalFormat+" Psg</th><th style='text-align:right; border-top:1px solid black;'>Rp"+grandtotalFormat+"</th></tr></table>";
+        }
+        else
+        {
+            $(".loading3").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
+            $(".loading3").show();
+        }
+        $(".tableKota").html(table);
     }
     
     function changeStok()

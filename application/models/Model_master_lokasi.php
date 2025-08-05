@@ -86,6 +86,38 @@ class Model_master_lokasi extends MY_Model{
 		return $data;
 	}
 	
+	public function comboGridMarketplace(){
+
+		/*$sql = "select IDLOKASI as ID, KODELOKASI as KODE, NAMALOKASI as NAMA, ALAMAT, KOTA, PROPINSI, NEGARA
+				from MLOKASI a
+				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 
+						and (KODELOKASI like ? or NAMALOKASI like ?)
+						and IDLOKASI in (
+							select IDLOKASI
+							from MUSERLOKASI
+							where IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and IDUSER = {$_SESSION[NAMAPROGRAM]['IDUSER']}
+						)
+						and 1=1 {$pagination['status']}
+				order by {$pagination['sort']} {$pagination['order']}
+				limit 0, 30";
+		$query = $this->db->query($sql, array('%'.$pagination['q'].'%','%'.$pagination['q'].'%'));*/
+		
+		$sql = "select a.IDLOKASI as VALUE, a.NAMALOKASI as TEXT,a.*
+				from MLOKASI a
+				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 
+						and a.IDLOKASI in (
+							select IDLOKASI
+							from MUSERLOKASI
+							where IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and IDUSER = {$_SESSION[NAMAPROGRAM]['IDUSER']} and GROUPLOKASI like '%MARKETPLACE%'
+						) and a.GROUPLOKASI like '%MARKETPLACE%'	
+				order by a.ONLINE desc, A.NAMALOKASI
+				";
+		$query = $this->db->query($sql);
+
+		$data['rows'] = $query->result();
+		return $data;
+	}
+	
 	public function cekGroupLokasi($group){
 
 		/*$sql = "select IDLOKASI as ID, KODELOKASI as KODE, NAMALOKASI as NAMA, ALAMAT, KOTA, PROPINSI, NEGARA

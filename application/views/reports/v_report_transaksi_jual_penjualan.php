@@ -117,14 +117,14 @@ if ($tampil=='REGISTER') {
 		$a_merge = array();
 		$a_merge2 = array();
 		
-		if ($tgltrans!=$r->TGLTRANS) {
+		if ($tgltrans!=date('Y-m-d', strtotime($r->TGLTRANS))) {
 		    $urutan = 0;
 		    
 		    if($tgltrans != "")
     		{		    
     	        $this->html_table->set_tr(array('bgcolor'=>'#B3E0FF'));
             	$this->html_table->set_td(array(
-            		array('align'=>'right', 'colspan'=> 4, 'id'=>'tabelket', 'values'=>'Total'),
+            		array('align'=>'right', 'colspan'=> 3, 'id'=>'tabelket', 'values'=>'Total'),
             		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotalharian'],true,0):'X'),
             		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potonganharian'],true,0):'X'),	
             		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotaldiskonharian'],true,0):'X'),
@@ -137,7 +137,7 @@ if ($tampil=='REGISTER') {
     	        $total['pembayaranharian'] = 0;
 		    }
 	        
-		    $tgltrans = $r->TGLTRANS;
+		    $tgltrans = date('Y-m-d', strtotime($r->TGLTRANS));
 	        
 		    $dataHari = [
     		    "Sunday"    => "MINGGU",   
@@ -161,7 +161,6 @@ if ($tampil=='REGISTER') {
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>30,  'values'=>'No.'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>60, 'values'=>'J. Trans'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>120, 'values'=>'No. Trans'),
-        		array('align'=>'center', 'id'=>'tabelket', 'width'=>200, 'values'=>'No. Desti / Marketplace'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Grand Total ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Potongan ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
         	    array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Grand Total * ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
@@ -180,22 +179,21 @@ if ($tampil=='REGISTER') {
 
 			$urutan++;
 			$urutan2 = 0;
-			if ($r->STATUS == 'I') $warna2 = '#FFFFFF';
-			else if ($r->STATUS == 'S') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];
-			else if ($r->STATUS == 'P') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
-			else if ($r->STATUS == 'D') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
+			if ($r->STATUS == 'I' || $r->STATUS == 1) $warna2 = '#FFFFFF';
+			else if ($r->STATUS == 'S' || $r->STATUS == 2) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];
+			else if ($r->STATUS == 'P' || ($r->STATUS == 3  && $r->STATUSMARKETPLACE == 'COMPLETED')) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
+			else if ($r->STATUS == 'D'|| ($r->STATUS == 3 && $r->STATUSMARKETPLACE == 'CANCELLED') || $r->STATUS == 4) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
 
 
 				$a_merge = array(
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$urutan),
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->JENISTRANSAKSI),
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->KODETRANS),
-					array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->KODETRANSREFERENSI),
 					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTAL,true,0):'X'),
 					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->POTONGANRP,true,0):'X'),
 				    array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTALDISKON,true,0):'X'),
 					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->PEMBAYARAN,true,0):'X'),
-					array('valign'=>'top',  'class'=>'det',     'bgcolor'=>$warna2, 'values'=>$r->NAMACUSTOMER." ".$r->CATATANCUSTOMER." ".$r->KOTA),
+					array('valign'=>'top',  'class'=>'det',     'bgcolor'=>$warna2, 'values'=>$r->NAMACUSTOMER."<br>".$r->KOTA."<br>".$r->CATATANCUSTOMER),
 				);
 				$a_merge2 = array(
 					array('valign'=>'top',  'align'=>'center',   'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->CATATAN),
@@ -215,7 +213,6 @@ if ($tampil=='REGISTER') {
 				$a_merge = array(
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det_kosong', 'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det_kosong', 'bgcolor'=>$warna2),
-					array('valign'=>'top',  'align'=>'center', 'class'=>'det_kosong', 'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'left', 'class'=>'det_kosong',   'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong', 'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong', 'bgcolor'=>$warna2),
@@ -228,7 +225,7 @@ if ($tampil=='REGISTER') {
 				);
 		}
 		$urutan2++;
-		$warna = $urutan2%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan2%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 		$diskon = $LIHATHARGA?$r->DISC:0;
 
@@ -247,7 +244,7 @@ if ($tampil=='REGISTER') {
 			$a_merge,
 			array(
 				array('valign'=>'top','class'=>'det', 'bgcolor'=>$warna, 'values'=>$r->NAMABARANG),
-				array('valign'=>'top','class'=>'det', 'bgcolor'=>$warna, 'align'=>'right', 'values'=>number($r->JML, true,$_SESSION[NAMAPROGRAM]['DECIMALDIGITQTY'])),
+				array('valign'=>'top','class'=>'det', 'bgcolor'=>$warna, 'align'=>'center', 'values'=>number($r->JML, true,$_SESSION[NAMAPROGRAM]['DECIMALDIGITQTY'])),
 				array('valign'=>'top','class'=>'det', 'bgcolor'=>$warna, 'align'=>'right', 'values'=>$LIHATHARGA?number($r->HARGAKURS,true,0):'X'),
 				array('valign'=>'top','class'=>'det', 'bgcolor'=>$warna, 'align'=>'right', 'values'=>$LIHATHARGA?number($r->SUBTOTALKURS,true,0):'X'),
 			),
@@ -259,7 +256,7 @@ if ($tampil=='REGISTER') {
 	
 	$this->html_table->set_tr(array('bgcolor'=>'#B3E0FF'));
     $this->html_table->set_td(array(
-    	array('align'=>'right', 'colspan'=> 4, 'id'=>'tabelket', 'values'=>'Total'),
+    	array('align'=>'right', 'colspan'=> 3, 'id'=>'tabelket', 'values'=>'Total'),
     	array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotalharian'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potonganharian'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotaldiskonharian'],true,0):'X'),
@@ -269,7 +266,7 @@ if ($tampil=='REGISTER') {
             	
     $this->html_table->set_tr(array('bgcolor'=>'#B3E0FF'));
 	$this->html_table->set_td(array(
-		array('align'=>'right', 'colspan'=> 4, 'id'=>'tabelket', 'values'=>'Grand Total'),
+		array('align'=>'right', 'colspan'=> 3, 'id'=>'tabelket', 'values'=>'Grand Total'),
 		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotal'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potongan'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotaldiskon'],true,0):'X'),
@@ -291,7 +288,6 @@ if ($tampil=='REGISTER') {
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>80,  'values'=>'Tgl. Trans'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>60,  'values'=>'J. Trans'),	
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>120,  'values'=>'No. Trans'),
-        array('align'=>'center', 'id'=>'tabelket', 'width'=>200, 'values'=>'No. Desti / Marketplace'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Total Barang'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Grand Total ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Potongan ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
@@ -307,14 +303,14 @@ if ($tampil=='REGISTER') {
 	$urutan = 0;
 	foreach($query as $r) {
 		$urutan++;
-		$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 		
 	
-		if ($r->STATUS == 'I') $warna2 = '#FFFFFF';
-		else if ($r->STATUS == 'S') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];
-		else if ($r->STATUS == 'P') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
-		else if ($r->STATUS == 'D') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
-		
+		if ($r->STATUS == 'I' || $r->STATUS == 1) $warna2 = '#FFFFFF';
+		else if ($r->STATUS == 'S' || $r->STATUS == 2) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];
+		else if ($r->STATUS == 'P' || ($r->STATUS == 3  && $r->STATUSMARKETPLACE == 'COMPLETED')) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
+		else if ($r->STATUS == 'D'|| ($r->STATUS == 3 && $r->STATUSMARKETPLACE == 'CANCELLED') || $r->STATUS == 4) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
+
 		$tgltrans = $r->TGLTRANS;
 	    
 	    $dataHari = [
@@ -341,20 +337,19 @@ if ($tampil=='REGISTER') {
 			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$tgltrans),
 			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->JENISTRANSAKSI),
 			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->KODETRANS),
-			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->KODETRANSREFERENSI),
 			array('valign'=>'top', 'align'=>'center',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>number($r->QTY,true,0)),
 			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTAL,true,0):'X'),
 			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->POTONGANRP,true,0):'X'),
 			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTALDISKON,true,0):'X'),
 			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->PEMBAYARAN,true,0):'X'),
-			array('valign'=>'top', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->NAMACUSTOMER." ".$r->CATATANCUSTOMER." ".$r->KOTA),
+			array('valign'=>'top', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->NAMACUSTOMER."<br>".$r->KOTA."<br>".$r->CATATANCUSTOMER),
 			array('valign'=>'top', 'align'=>'center',   'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->CATATAN),
 		));
 	}
 
 	$this->html_table->set_tr(array('bgcolor'=>'#B3E0FF'));
 	$this->html_table->set_td(array(
-		array('align'=>'right', 'id'=>'tabelket', 'colspan'=>6, 'values'=>'Grand Total'),
+		array('align'=>'right', 'id'=>'tabelket', 'colspan'=>5, 'values'=>'Grand Total'),
 		array('align'=>'center', 'id'=>'tabelket', 'values'=> number($total['qty'],true,0)),
 		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotal'],true,0):'X'),
 		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potonganrp'],true,0):'X'),
@@ -372,10 +367,10 @@ if ($tampil=='REGISTER') {
 	$urutan = 0;
 	foreach($query as $r) {
 	    
-	    if($tgltrans != $r->TGLTRANS)
+	    if($tgltrans != date('Y-m-d', strtotime($r->TGLTRANS)))
 	    {
 	        $urutan = 0;
-	        $tgltrans = $r->TGLTRANS;
+	        $tgltrans = date('Y-m-d', strtotime($r->TGLTRANS));
 	        
 	        $dataHari = [
     		    "Sunday"    => "MINGGU",   
@@ -398,7 +393,7 @@ if ($tampil=='REGISTER') {
         	$this->html_table->set_th(array(
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>20,  'values'=>'No'),	
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>200,  'values'=>'Produk'),		
-        		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Jumlah'),
+        		array('align'=>'center', 'id'=>'tabelket', 'width'=>60,  'values'=>'Jumlah'),
         	));
 	    }
 		$urutan++;
@@ -408,7 +403,7 @@ if ($tampil=='REGISTER') {
 		$this->html_table->set_td(array(
 			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$urutan),
 			array('valign'=>'top', 'align'=>'left', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->NAMABARANG),
-			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->JML,true,0):'X'),
+			array('valign'=>'top', 'align'=>'center',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->JML,true,0):'X'),
 		));
 	}
 	
@@ -422,20 +417,10 @@ if ($tampil=='REGISTER') {
     $this->html_table->set_th(array(
     	array('align'=>'center', 'id'=>'tabelket', 'width'=>20,  'values'=>'No'),	
     	array('align'=>'center', 'id'=>'tabelket', 'width'=>200,  'values'=>'Produk'),		
-    	array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Jumlah'),
+    	array('align'=>'center', 'id'=>'tabelket', 'width'=>60,  'values'=>'Jumlah'),
     ));
     
-	$sql = "select mbarang.kodebarang,mbarang.namabarang, SUM(tpenjualandtl.jml) as jml
-    	from tpenjualan 
-    	inner join tpenjualandtl  	on tpenjualan.idpenjualan=tpenjualandtl.idpenjualan
-    	inner join mbarang  		on tpenjualandtl.idbarang=mbarang.idbarang and mbarang.stok = 1
-    	left join mcustomer  		on tpenjualan.idcustomer=mcustomer.idcustomer
-    	left join mlokasi  			on tpenjualan.idlokasi = mlokasi.idlokasi
-    	where (1=1 $whereFilter) $wherePerusahaan $whereTanggal $whereLokasi $whereStatus and tpenjualandtl.KETERANGAN != 'ONGKIR' 
-    	group by mbarang.namabarang
-    	order by mbarang.kodebarang
-    ";
-    $query = $CI->db->query($sql)->result();
+    $query = $CI->db->query($sqlTotal)->result();
     
     foreach($query as $item){
         $urutan++;
@@ -444,7 +429,7 @@ if ($tampil=='REGISTER') {
 		$this->html_table->set_td(array(
 			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$urutan),
 			array('valign'=>'top', 'align'=>'left', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$item->NAMABARANG),
-			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($item->JML,true,0):'X'),
+			array('valign'=>'top', 'align'=>'center',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($item->JML,true,0):'X'),
 		));
     }
     echo $this->html_table->generate_table();

@@ -417,17 +417,8 @@ function exportDB(){
     $password =  $_SESSION[NAMAPROGRAM]['CONFIG']['password'];     // Your MySQL password
     $dbname =  $_SESSION[NAMAPROGRAM]['CONFIG']['database'];  // The name of the database to export
     
-    // Set the backup folder path (make sure this folder exists and is writable)
-    $backup_folder = 'backup_data/';
-
-    // Create the folder if it doesn't exist
-    if (!file_exists($backup_folder)) {
-        mkdir($backup_folder, 0777, true);
-    }
-    
     // Set the output file path
     $output_file = strtoupper('BACKUP_' . $dbname . '_' . date('Y-m-d_H-i-s') . '.sql');
-    $output_file = $backup_folder . $output_file;
     
     // Build the mysqldump command
     $command = "mysqldump --opt -h $host -u $username -p$password $dbname > $output_file";
@@ -446,7 +437,7 @@ function exportDB(){
         readfile($output_file);
     
         // Optionally, delete the file after download to clean up
-        // unlink($output_file);
+        unlink($output_file);
     } else {
         echo "Error in exporting database.";
     }
@@ -635,6 +626,21 @@ function comboGrid($model){
 	}
 	echo $html;
 }
+
+function comboGridMarketplace($model){
+	$CI =& get_instance();	
+	$CI->load->model($model);
+	$response = $CI->$model->comboGridMarketplace();
+	
+	for($i=0; $i < count($response["rows"]);$i++){
+		$VALUE = $response["rows"][$i]->VALUE;
+		$TEXT = $response["rows"][$i]->TEXT;
+		
+		$html.="<option value='".$VALUE."'>".$TEXT."</option>";
+	}
+	echo $html;
+}
+
 
 function comboGridTransReferensi($model){
 	$CI =& get_instance();	

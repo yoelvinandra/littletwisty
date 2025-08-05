@@ -1665,6 +1665,30 @@ abstract class CI_DB_query_builder extends CI_DB_driver {
 		$this->_reset_write();
 		return $this->query($sql);
 	}
+	
+	public function insertRaw($table = '', $set = NULL, $escape = NULL)
+	{
+		if ($set !== NULL)
+		{
+			$this->set($set, '', $escape);
+		}
+
+		if ($this->_validate_insert($table) === FALSE)
+		{
+			return FALSE;
+		}
+
+		$sql = $this->_insertRaw(
+			$this->protect_identifiers(
+				$this->qb_from[0], TRUE, $escape, FALSE
+			),
+			array_keys($this->qb_set),
+			array_values($this->qb_set)
+		);
+
+		$this->_reset_write();
+		return $this->queryRaw($sql);
+	}
 
 	// --------------------------------------------------------------------
 

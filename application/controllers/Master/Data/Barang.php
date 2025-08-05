@@ -162,7 +162,8 @@ class Barang extends MY_Controller {
 
 	public function dataGrid() {
 		$this->output->set_content_type('application/json');
-		$response = $this->model_master_barang->dataGrid();
+		$jenis = $this->input->post('jenis','');
+		$response = $this->model_master_barang->dataGrid($jenis);
 		echo json_encode($response);
 	}
 	
@@ -201,6 +202,16 @@ class Barang extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	public function comboGridMarketplace(){
+		$this->output->set_content_type('application/json');
+		$kategori = $this->input->post('kategori');
+		$marketplace = $this->input->post('marketplace');
+		
+		$response = $this->model_master_barang->comboGridMarketplace(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",$kategori))),$marketplace);
+
+		echo json_encode($response);
+	}
+	
 	public function comboGridTransaksiStok(){
 	    $this->output->set_content_type('application/json');
 	    $mode = $this->input->post('mode');
@@ -211,6 +222,12 @@ class Barang extends MY_Controller {
 		$code = "";
 		$qty = 1;
 		$response = $this->model_master_barang->comboGridTransaksiStok($code,$qty,$mode,$transaksi,$kategori,$tgltrans,$lokasi);
+	}
+	
+	public function comboGridKategoriSaja(){
+		$this->output->set_content_type('application/json');
+		$response = $this->model_master_barang->comboGridKategoriSaja($kategori);
+		echo json_encode($response);
 	}
 	
 	public function comboGridKategori(){
@@ -326,6 +343,14 @@ class Barang extends MY_Controller {
         			}
     			}
     			
+    			if($item->SKULAZADA != "")
+    			{
+        			$response = $this->model_master_barang->cek_valid_sku_lazada($item->SKULAZADA);
+        			if($response != ''){
+        				die(json_encode(array('errorMsg' => $response)));
+        			}
+    			}
+    			
     			$response = $this->model_master_barang->cek_valid_nama($nama);
     			if($response != ''){
     				die(json_encode(array('errorMsg' => $response)));
@@ -345,26 +370,27 @@ class Barang extends MY_Controller {
     		$data_values = array (
     			'IDPERUSAHAAN'   => $_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],
     			'KODEBARANG'     => $kode,
-    			'NAMABARANG'     => $nama,
-    			'BARCODE'     	 => $barcode,
-    			'WARNA'     	 => $warna,
+    			'NAMABARANG'     => strtoupper($nama),
+    			'BARCODE'     	 => strtoupper($barcode),
+    			'WARNA'     	 => strtoupper($warna),
     			'SIZE'     	     => $ukuran,
     			'KATEGORIONLINE' => $dataHeader->KATEGORIONLINE??'',
     			'KATEGORI'       => $kategori,
     			'DESKRIPSI'      => $dataHeader->DESKRIPSI??'',
     			'STOK'       	 => $stok,
-    			'SATUAN'         => $satuan,
-    			'SATUAN2'        => $satuan2,
+    			'SATUAN'         => strtoupper($satuan),
+    			'SATUAN2'        => strtoupper($satuan2),
     			'SATUAN3'        => "",
     			'KONVERSI1'      => $konversi1,
     			'KONVERSI2'      => 1,
     			'HARGABELI'      => $item->HARGABELI ?? 0,
     			'HARGAJUAL'      => $item->HARGAJUAL ?? 0,
     			'SKUGRAB'        => $item->SKUGRAB ?? "",
-    			'SKUGOJEK'       => $item->SKUGOJEK ?? "",
-    			'SKUSHOPEE'      => $item->SKUSHOPEE ?? "",
-    			'SKUTOKPED'      => $item->SKUTOKPED ?? "",
-    			'SKUTIKTOK'      => $item->SKUTIKTOK ?? "",
+    			'SKUGOJEK'       => strtoupper($item->SKUGOJEK ?? ""),
+    			'SKUSHOPEE'      => strtoupper($item->SKUSHOPEE ?? ""),
+    			'SKUTOKPED'      => strtoupper($item->SKUTOKPED ?? ""),
+    			'SKUTIKTOK'      => strtoupper($item->SKUTIKTOK ?? ""),
+    			'SKULAZADA'      => strtoupper($item->SKULAZADA ?? ""),
     			'BERAT'          => $dataHeader->BERAT ?? 0,
     			'PANJANG'        => $dataHeader->PANJANG ?? 0,
     			'LEBAR'          => $dataHeader->LEBAR ?? 0,

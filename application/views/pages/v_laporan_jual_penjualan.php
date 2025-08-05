@@ -75,6 +75,22 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="Status">Status Marketplace</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-addon">
+                                                        <i class="fa fa-sticky-note"></i>
+                                                    </div>
+                                                    <select class="form-control select2" multiple="multiple" id="cbStatusMarketplace" name="cbStatusMarketplace[]" style="width:97%;">
+                                                        <option value="1" selected>Pesanan Disiapkan</option>
+                                                        <option value="2" selected>Pesanan Dikirim</option>
+                                                        <option value="3|COMPLETED" selected>Pesanan Selesai</option>
+                                                        <option value="3|CANCELLED">Pesanan Batal</option>
+                                                        <option value="4">Retur Pesanan</option>
+                                                    </select>
+                                                </div>
+                                            </div>
 											<div class="form-group">
                                                 <label for="Kolom">Kolom</label>
                                                 <div class="input-group">
@@ -83,7 +99,7 @@
                                                     </div>
                                                     <select class="form-control select2 " id="kolom" name="kolom" placeholder="Kolom" style="width:97%;">
                                                         <option value="TPENJUALAN.KODEPENJUALAN">Kode Penjualan</option>
-                                                        <option value="TPENJUALAN.KODETRANSREFERENSI">Kode Desti/Marketplace</option>
+                                                        <option value="TPENJUALAN.KODEPENJUALAN">Kode Penjualan Marketplace</option>
 														<option value="MCUSTOMER.KODECUSTOMER">Kode Customer</option>
                                                         <option value="MCUSTOMER.NAMACUSTOMER">Nama Customer</option>
 														<option value="MBARANG.KODEBARANG">Kode Produk</option>
@@ -318,7 +334,7 @@
 				$('#hide_nilai_list_customer').hide();
                 $('#hide_nilai_list_ref').hide();
             } 
-            else if (namaKolom == 'Desti/Marketplace') {
+            else if (namaKolom == 'Penjualan Marketplace') {
                 $('#hide_nilai_list_ref').show();
                 $('#hide_nilai_list_jual').hide();
                 $('#hide_nilai_list_barang').hide();
@@ -384,7 +400,7 @@
 				$('#hide_nilai_list_customer').hide();
                 $('#hide_nilai_list_ref').hide();
             }
-            else if (namaKolom == 'Desti/Marketplace') {
+            else if (namaKolom == 'Penjualan Marketplace') {
                 $('#hide_nilai_list_ref').show();
                 $('#hide_nilai_list_jual').hide();
                 $('#hide_nilai_list_barang').hide();
@@ -480,7 +496,7 @@
             if (nilai != "" && nilai != null) {
                 checknilai = 1;
             }
-        } else if (namaKolom == 'Desti/Marketplace' && (operator == "Adalah" || operator == "Tidak mencakup")) {
+        } else if (namaKolom == 'Penjualan Marketplace' && (operator == "Adalah" || operator == "Tidak mencakup")) {
             nilai = $('#txt_nilai_list_ref').val();
             if (nilai != "" && nilai != null) {
                 checknilai = 1;

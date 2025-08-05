@@ -85,10 +85,13 @@ defined('EXIT__AUTO_MIN')      OR define('EXIT__AUTO_MIN', 9); // lowest automat
 defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
 
 
-
 // untuk set value tgl awal filter
 define('TGLAWALFILTER', date('Y-m-d', strtotime('-90 days', strtotime('now'))));
 define('TGLAKHIRFILTER', date('Y-m-d', strtotime('20 days', strtotime('now'))));
+
+
+define('TGLAWALFILTERMARKETPLACE', date('Y-m-d', strtotime('-14 days', strtotime('now'))));
+define('TGLAKHIRFILTERMARKETPLACE', date('Y-m-d'));
 
 //untuk ip servers
 define('IPSOCKET','127.0.0.1');

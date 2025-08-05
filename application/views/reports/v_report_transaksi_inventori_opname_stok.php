@@ -98,7 +98,7 @@ if ($tampil=='REGISTER') {
 		if ($KodeOpname!=$item->KODEOPNAMESTOK) {
 		    $KodeOpname = $item->KODEOPNAMESTOK;
 			$urutan++;
-			$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+			$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 			if ($item->STATUS == 'I') $warna2 = '#FFFFFF';
 			else if ($item->STATUS == 'S') $warna2=$_SESSION[WARNA_STATUS_S];
 			else if ($item->STATUS == 'P') $warna2=$_SESSION[WARNA_STATUS_P]; 
@@ -177,7 +177,7 @@ if ($tampil=='REGISTER') {
 		if ($KodeOpname!=$item->KODEOPNAMESTOK) {
 		    $KodeOpname=$item->KODEOPNAMESTOK;
 			$urutan++;
-			$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+			$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 			$a_merge = array(
 				array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'values'=>$urutan),
 				array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'values'=>$item->KODEOPNAMESTOK),
@@ -275,7 +275,7 @@ if ($tampil=='REGISTER') {
 
 			
 		$urutan++;
-		$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 		$this->html_table->set_tr(array('bgcolor'=>$warna));
 		$this->html_table->set_td(array(

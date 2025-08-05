@@ -1622,6 +1622,11 @@ abstract class CI_DB_driver {
 	{
 		return 'insert into '.strtolower($table).' ('.strtolower(implode(', ', $keys)).') VALUES ('.strtoupper(implode(', ', $values)).')';
 	}
+	
+	protected function _insertRaw($table, $keys, $values)
+	{
+		return 'insert into '.strtoupper($table).' ('.strtoupper(implode(', ', $keys)).') VALUES ('.(implode(', ', $values)).')';
+	}
 
 	// --------------------------------------------------------------------
 

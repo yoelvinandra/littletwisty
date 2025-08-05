@@ -40,12 +40,10 @@ class Model_jual_penjualan extends MY_Model{
 	
 	public function comboGridTransReferensi(){
 		
-		$sql = "select distinct a.KODETRANSREFERENSI as VALUE, concat(a.TGLTRANS,' - ',a.KODETRANSREFERENSI) as TEXT, a.USERENTRY,a.IDLOKASI, b.KODELOKASI,b.NAMALOKASI
-				from TPENJUALAN a
-				left join MLOKASI b on a.IDLOKASI = b.IDLOKASI
-				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}
-				and a.KODETRANSREFERENSI is not null and KODETRANSREFERENSI <> ''
-				order by a.TGLTRANS, a.KODEPENJUALAN DESC";
+		$sql = "select distinct a.KODEPENJUALANMARKETPLACE as VALUE, concat(a.TGLTRANS,' - ',a.KODEPENJUALANMARKETPLACE) as TEXT
+				from TPENJUALANMARKETPLACE a
+				where a.KODEPENJUALANMARKETPLACE is not null and KODEPENJUALANMARKETPLACE <> ''
+				order by a.TGLTRANS, a.KODEPENJUALANMARKETPLACE DESC";
 		$query = $this->db->query($sql);
 		$data['rows'] = $query->result();
 		return $data;
@@ -586,10 +584,14 @@ class Model_jual_penjualan extends MY_Model{
 	    
 	    $sql = "";
 	    $index = 0;
-	    
+	    $adaOnline = true;
 	    if($lokasi != "")
 	    {
 	        $whereLokasi = "and a.IDLOKASI in ($lokasi)";
+	        
+    	    //CARI LOKASI MARKETPLACE
+            $sqlMarketplace = "SELECT count(IDLOKASI) as ada FROM MLOKASI WHERE GROUPLOKASI like '%MARKETPLACE%' and IDLOKASI in ($lokasi)";
+            $adaOnline = $this->db->query($sqlMarketplace)->row()->ADA > 0 ? true : false;
 	    }
 	    
 	    foreach($data as $item)
@@ -600,11 +602,36 @@ class Model_jual_penjualan extends MY_Model{
 	        }
 	        
     	    //PENDAPATAN HARI INI
-            $sql .= "select '".$item['label']."' as LABEL, ifnull(SUM(a.GRANDTOTALDISKON),0) as GRANDTOTAL,count(a.IDPENJUALAN) as JMLNOTA,IFNULL(SUM(A.GRANDTOTALDISKON),0) AS GRANDTOTAL,COUNT(A.IDPENJUALAN) AS JMLNOTA,
+            $sql .= "select a.label, sum(a.GRANDTOTAL) as GRANDTOTAL, sum(a.JMLNOTA) as JMLNOTA, sum(a.TOTALBARANG) as TOTALBARANG
+                    from
+                    (select '".$item['label']."' as LABEL, ifnull(SUM(a.GRANDTOTALDISKON),0) as GRANDTOTAL,count(a.IDPENJUALAN) as JMLNOTA,
                     IFNULL(SUM((SELECT SUM(B.JML) FROM TPENJUALANDTL b WHERE a.IDPENJUALAN = b.IDPENJUALAN)) ,0) AS TOTALBARANG
                     from tpenjualan a
             		where (1=1)  and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}  $whereLokasi $whereCustomer AND a.tgltrans >= '".$item['tglawal']."' AND a.tgltrans <= '".$item['tglakhir']."' and a.status = 'S'
             ";
+            
+            if($adaOnline)
+            {
+                if($customer != 0)
+        	    {
+        	        $sqlCustomerMarketplace = "SELECT NAMACUSTOMER FROM MCUSTOMER WHERE IDCUSTOMER = $customer";
+        	        $customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
+        	        $whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
+        	    }
+        	    
+                $sql .= " UNION ALL ";
+                $sql .= "select '".$item['label']."' as LABEL, ifnull(SUM(a.TOTALPENDAPATANPENJUAL),0) as GRANDTOTAL,count(a.IDPENJUALANMARKETPLACE) as JMLNOTA,
+                        IFNULL(SUM(a.TOTALBARANG - if(a.BARANGSAMPAI = 1,a.TOTALBARANGPENGEMBALIAN,0)),0) AS TOTALBARANG
+                        from tpenjualanmarketplace a
+                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$item['tglawal']." 00:00:00' AND a.tgltrans <= '".$item['tglakhir']." 23:59:59' and a.statusmarketplace = 'COMPLETED')
+                		as a
+                		GROUP BY a.LABEL
+                ";
+            }
+            else
+            {
+                $sql .= ") as a GROUP BY a.LABEL";
+            }
             
             $index++;
 	    }
@@ -629,6 +656,17 @@ class Model_jual_penjualan extends MY_Model{
 	    $dataBarang = $this->db->query($sqlBarang)->result();
         $sql = "";
         $index = 0;
+        
+        $adaOnline = true;
+	    if($lokasi != "")
+	    {
+	        $whereLokasi = "and a.IDLOKASI in ($lokasi)";
+	        
+    	    //CARI LOKASI MARKETPLACE
+            $sqlMarketplace = "SELECT count(IDLOKASI) as ada FROM MLOKASI WHERE GROUPLOKASI like '%MARKETPLACE%' and IDLOKASI in ($lokasi)";
+            $adaOnline = $this->db->query($sqlMarketplace)->row()->ADA > 0 ? true : false;
+	    }
+	    
 	    foreach($dataBarang as $itemBarang)
 	    {
 	        if($index != 0)
@@ -637,12 +675,49 @@ class Model_jual_penjualan extends MY_Model{
 	        }
 	        
     	    //PENDAPATAN HARI INI
-            $sql .= "select '".explode(" | ",$itemBarang->NAMABARANG)[0]."' as NAMA,ifnull(SUM(b.jml),0) as QTY,'".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
+            $sql .= "select a.NAMA, sum(a.QTY) as QTY, URUTANTAMPIL
+                    from
+                    ( select '".explode(" | ",$itemBarang->NAMABARANG)[0]."' as NAMA, IFNULL(SUM(b.jml),0) as QTY,'".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
             		from TPENJUALAN a
             		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
             		inner join MBARANG c on b.IDBARANG = c.IDBARANG
             		where (1=1) $whereLokasi and c.kategori = '".$itemBarang->KATEGORI."' and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereCustomer AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
             ";
+            
+            if($adaOnline)
+            {
+                $whereBarangStok = "and c.kategori = '".$itemBarang->KATEGORI."'" ;
+                if($customer != 0)
+        	    {
+        	        $sqlCustomerMarketplace = "SELECT NAMACUSTOMER FROM MCUSTOMER WHERE IDCUSTOMER = $customer";
+        	        $customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
+        	        $whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
+        	    }
+        	    
+                $sql .= " UNION ALL ";
+                $sql .= "select '".explode(" | ",$itemBarang->NAMABARANG)[0]."' as NAMA, 
+                        (
+                        IFNULL(SUM(IF(d.MK = 'K', d.JML, -d.JML)),0)
+                        +
+                        IFNULL(SUM(IF(d1.MK = 'K', d1.JML, -d1.JML)),0)
+                        )  AS QTY,
+                        '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
+                        from tpenjualanmarketplace a
+                        inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
+                        inner join mbarang c on b.idbarang = c.idbarang
+                        left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
+                        left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
+                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+                		$whereBarangStok
+                		)
+                		as a
+                		GROUP BY a.NAMA
+                ";
+            }
+            else
+            {
+                $sql .= ") as a GROUP BY a.NAMA";
+            }
             
             $index++;
 	    }
@@ -688,12 +763,49 @@ class Model_jual_penjualan extends MY_Model{
 	        }
 	        
     	    //PENDAPATAN HARI INI
-            $sql .= "select '".$itemBarang->WARNA."' as WARNA,ifnull(SUM(b.jml),0) as QTY, '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
+            $sql .= "select a.WARNA, sum(a.QTY) as QTY, URUTANTAMPIL
+                    from
+                    (select '".$itemBarang->WARNA."' as WARNA,ifnull(SUM(b.jml),0) as QTY, '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
             		from TPENJUALAN a
             		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
             		inner join MBARANG c on b.IDBARANG = c.IDBARANG
             		where (1=1) $whereLokasi and c.kategori = '$itemBarang->KATEGORI' and c.warna = '".$itemBarang->WARNA."' and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereCustomer AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
             ";
+            
+            if($adaOnline)
+            {
+               $whereBarangStok = "and (c.kategori = '$itemBarang->KATEGORI' and c.warna = '$itemBarang->WARNA')";
+                if($customer != 0)
+        	    {
+        	        $sqlCustomerMarketplace = "SELECT NAMACUSTOMER FROM MCUSTOMER WHERE IDCUSTOMER = $customer";
+        	        $customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
+        	        $whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
+        	    }
+        	    
+                $sql .= " UNION ALL ";
+                $sql .= "select '".$itemBarang->WARNA."' as WARNA, 
+                        (
+                         IFNULL(SUM(IF(d.MK = 'K', d.JML, -d.JML)),0)
+                         +
+                         IFNULL(SUM(IF(d1.MK = 'K', d1.JML, -d1.JML)),0)
+                        )  AS QTY,
+                        '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
+                        from tpenjualanmarketplace a
+                        inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
+                        inner join mbarang c on b.idbarang = c.idbarang
+                        left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
+                        left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
+                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+                		$whereBarangStok
+                		)
+                		as a
+                		GROUP BY a.WARNA
+                ";
+            }
+            else
+            {
+                $sql .= ") as a GROUP BY a.WARNA";
+            }
             
             $index++;
 	    }
@@ -725,7 +837,7 @@ class Model_jual_penjualan extends MY_Model{
             return $b->QTY - $a->QTY;  // Descending order
         });
         
-         //UKURAN
+        //UKURAN
 	    $sqlBarang = "select * from mbarang where status = 1 and idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and mbarang.kodebarang <> 'XXXXX' and namabarang like '%".$kategoriSize."%' group by size";
 	    $dataBarang = $this->db->query($sqlBarang)->result();
         $sql = "";
@@ -738,12 +850,49 @@ class Model_jual_penjualan extends MY_Model{
 	        }
 	        
     	    //PENDAPATAN HARI INI
-            $sql .= "select '".$itemBarang->SIZE."' as SIZE,ifnull(SUM(b.jml),0) as QTY,'".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
+            $sql .= "select a.SIZE, sum(a.QTY) as QTY, URUTANTAMPIL
+                    from
+                    ( select '".$itemBarang->SIZE."' as SIZE,ifnull(SUM(b.jml),0) as QTY,'".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
             		from TPENJUALAN a
             		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
             		inner join MBARANG c on b.IDBARANG = c.IDBARANG
             		where (1=1) $whereLokasi and c.kategori = '$itemBarang->KATEGORI' and c.size = '".$itemBarang->SIZE."' and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereCustomer AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
             ";
+            
+            if($adaOnline)
+            {
+               $whereBarangStok = "and (c.kategori = '$itemBarang->KATEGORI' and c.size = '$itemBarang->SIZE')";
+                if($customer != 0)
+        	    {
+        	        $sqlCustomerMarketplace = "SELECT NAMACUSTOMER FROM MCUSTOMER WHERE IDCUSTOMER = $customer";
+        	        $customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
+        	        $whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
+        	    }
+        	    
+                $sql .= " UNION ALL ";
+                $sql .= "select '".$itemBarang->SIZE."' as SIZE, 
+                        (
+                         IFNULL(SUM(IF(d.MK = 'K', d.JML, -d.JML)),0)
+                         +
+                         IFNULL(SUM(IF(d1.MK = 'K', d1.JML, -d1.JML)),0)
+                        )  AS QTY,
+                        '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
+                        from tpenjualanmarketplace a
+                        inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
+                        inner join mbarang c on b.idbarang = c.idbarang
+                        left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
+                        left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
+                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+                		$whereBarangStok
+                		)
+                		as a
+                		GROUP BY a.SIZE
+                ";
+            }
+            else
+            {
+                $sql .= ") as a GROUP BY a.SIZE";
+            }
             
             $index++;
 	    }
@@ -786,24 +935,50 @@ class Model_jual_penjualan extends MY_Model{
 	}	
 	
 	function dashboardCustomer($periode,$tglawal,$tglakhir,$barang = "0"){
+	    
+	    //CUSTOMER
 	    $whereBarang = "";
+	    $whereBarangStok = "";
+	    $paramBarang = "a.GRANDTOTALDISKON";
+	    $paramBarangMarketplace = "a.TOTALPENDAPATANPENJUAL";
 	    if($barang != "0")
 	    {
 	        $kodebarang = explode(" | ",$barang)[0];
 	        $sqlBarang = "select IDBARANG from mbarang where kodebarang = '{$kodebarang}'";
 	        $idbarang = $this->db->query($sqlBarang)->row()->IDBARANG;
 	        $whereBarang = " and b.idbarang = $idbarang";
+	        $whereBarangStok = "and c.idbarang = '$idbarang'";
+	        $paramBarang = "b.SUBTOTALKURS";
+	        $paramBarangMarketplace = "b.TOTAL";
 	    }
 	    
         
 	    $sql = "
-                select c.KODECUSTOMER,c.NAMACUSTOMER as NAMA, ifnull(SUM(b.jml),0) as QTY
+	    SELECT a.KODECUSTOMER,a.NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
+	        from(
+                select c.KODECUSTOMER,c.NAMACUSTOMER as NAMA, ifnull(SUM(b.jml),0) as QTY, ifnull(SUM($paramBarang),0) as GRANDTOTAL
         		from TPENJUALAN a
         		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
         		inner join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
         		where (1=1) $whereBarang and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
         	    Group by c.KODECUSTOMER
-        	    Having QTY > 0
+        	    
+        	    UNION ALL
+        	    
+        	    select CONCAT('X',a.MARKETPLACE) as KODECUSTOMER,a.MARKETPLACE as NAMA, 
+        	    (SUM(IF(D.MK = 'K', IFNULL(D.JML,0), - IFNULL(D.JML,0))) + SUM(IF(D1.MK = 'K', IFNULL(D1.JML,0), - IFNULL(D1.JML,0)))) as QTY, 
+                ifnull(SUM($paramBarangMarketplace),0) as GRANDTOTAL
+        		from TPENJUALANMARKETPLACE a
+        		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
+                inner join mbarang c on b.idbarang = c.idbarang
+                left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
+                left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
+        		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+        		$whereBarangStok
+        	    Group by CONCAT('X', A.MARKETPLACE)
+        	) as a
+        	Group by a.KODECUSTOMER
+        	Having QTY > 0
         ";
         $dataCustomer = $this->db->query($sql)->result();
 	    
@@ -811,8 +986,56 @@ class Model_jual_penjualan extends MY_Model{
             return $b->QTY - $a->QTY;  // Descending order
         });
 	    
-        $data['result'] = $dataCustomer;
-        // $data['result'] = array_slice($data['result'], 0, 10);
+        $data['resultCustomer'] = $dataCustomer;
+        
+        
+        //KOTA
+        $whereBarang = "";
+	    $whereBarangStok = "";
+	    if($barang != "0")
+	    {
+	        $kodebarang = explode(" | ",$barang)[0];
+	        $sqlBarang = "select IDBARANG from mbarang where kodebarang = '{$kodebarang}'";
+	        $idbarang = $this->db->query($sqlBarang)->row()->IDBARANG;
+	        $whereBarang = " and b.idbarang = $idbarang";
+	        $whereBarangStok = "and mbarang.idbarang = '$idbarang'";
+	    }
+	    
+        
+	    $sql = "
+	    SELECT a.NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
+	        from(
+                select c.KOTA as NAMA, ifnull(SUM(b.jml),0) as QTY, ifnull(SUM($paramBarang),0) as GRANDTOTAL
+        		from TPENJUALAN a
+        		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
+        		inner join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
+        		where (1=1) $whereBarang and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
+        	    Group by NAMA
+        	    
+        	    UNION ALL
+        	    
+        	    select a.KOTA as NAMA, 
+        	    (SUM(IF(D.MK = 'K', IFNULL(D.JML,0), - IFNULL(D.JML,0))) + SUM(IF(D1.MK = 'K', IFNULL(D1.JML,0), - IFNULL(D1.JML,0)))) as QTY, 
+                ifnull(SUM($paramBarangMarketplace),0) as GRANDTOTAL
+        		from TPENJUALANMARKETPLACE a
+        		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
+                inner join mbarang c on b.idbarang = c.idbarang
+                left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
+                left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
+        		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+        		$whereBarangStok
+        	    Group by NAMA
+        	) as a
+        	Group by a.NAMA
+        	Having QTY > 0
+        ";
+        $dataKota = $this->db->query($sql)->result();
+	    
+	    usort($dataKota, function($a, $b) {
+            return $b->QTY - $a->QTY;  // Descending order
+        });
+	    
+        $data['resultKota'] = $dataKota;
         
         return $data;
 	}

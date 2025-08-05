@@ -110,7 +110,7 @@ if ($tampil=='REGISTER'){
 			}
 		    $KodeSaldoStok = $item->KODESALDOSTOK;
 			$urutan++;
-			$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+			$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 			if ($item->STATUS == 'I') $warna2 = '#FFFFFF';
 			else if ($item->STATUS == 'S') $warna2=$_SESSION[WARNA_STATUS_S];
 			else if ($item->STATUS == 'P') $warna2=$_SESSION[WARNA_STATUS_P]; 
@@ -182,7 +182,7 @@ if ($tampil=='REGISTER'){
 				$urutan++;
 				$KodeSaldoStok = $item->KODESALDOSTOK;
 				
-				$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+				$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 				if ($item->STATUS == 'I') $warna2 = '#FFFFFF';
 				else if ($item->STATUS == 'S') $warna2=$_SESSION[WARNA_STATUS_S];
 				else if ($item->STATUS == 'P') $warna2=$_SESSION[WARNA_STATUS_P]; 
@@ -291,7 +291,7 @@ if ($tampil=='REGISTER'){
 	$urutan = 0;
 	foreach($query as $r) {
 		$urutan++;
-		$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 		if ($r->STATUS == 'I') $warna2 = '#FFFFFF';
 		else if ($r->STATUS == 'S') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];

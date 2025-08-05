@@ -94,7 +94,7 @@ if ($tampil=='REGISTER') {
 			}
 			$temp_kodetrans = $item->KODEPENYESUAIANSTOK;
 			$urutan++;
-			$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+			$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 			$a_merge = array(
 				array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'values'=>$urutan),
@@ -205,7 +205,7 @@ if ($tampil=='REGISTER') {
 		if ($temp_kodetrans!=$item->KODEPENYESUAIANSTOK) {
 		    $temp_kodetrans = $item->KODEPENYESUAIANSTOK;
 			$urutan++;
-			$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+			$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 			$a_merge = array(
 				array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'values'=>$urutan),
@@ -335,7 +335,7 @@ if ($tampil=='REGISTER') {
 		if ($temp_kodetrans!=$item->KODEPENYESUAIANSTOK) {
 		    $temp_kodetrans = $item->KODEPENYESUAIANSTOK;
 			$urutan++;
-			$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+			$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 			$a_merge = array(
 				array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'values'=>$urutan),
@@ -409,7 +409,7 @@ if ($tampil=='REGISTER') {
 	$urutan = 0;
 	foreach($query as $r) {
 		$urutan++;
-		$warna = $urutan%2==0 ? '#FFFFCC' : '#FFFFFF';
+		$warna = $urutan%2==0 ? '#cfcfcf' : '#FFFFFF';
 
 		if ($r->STATUS == 'I') $warna2 = '#FFFFFF';
 		else if ($r->STATUS == 'S') $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];

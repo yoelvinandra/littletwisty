@@ -99,7 +99,9 @@
 <!-- <script src="<?php echo base_url(); ?>assets/js/moment.js"></script> -->
 
 <style>
-    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      text-align: left;
+    }
     .select2-container .select2-selection--multiple {
         height: auto !important; /* Make the height auto so it adapts to the content */
         padding: 5px !important; /* Adjust padding if needed */
@@ -125,7 +127,7 @@
     .select2-container--default .select2-selection--single {
       border: 1px solid #d2d6de; /* Change the border color to Tomato */
       border-radius: 1px; /* Rounded corners */
-      padding: 6px; /* Padding inside the select box */
+      padding: 6px 4px 6px 4px; /* Padding inside the select box */
       height:34px;
     }
     

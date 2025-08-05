@@ -9,6 +9,9 @@ $_SESSION[NAMAPROGRAM]['WARNA_STATUS_C'] = "#FF991C";
 $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'] = "#FFFDD1";
 $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'] = "#FF5959";
 
+
+$_SESSION[NAMAPROGRAM]['WARNA_STATUS_BELUM_BAYAR'] = "#CFECF7";
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -42,6 +45,20 @@ $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'] = "#FF5959";
         }
         .status-batal {
             background-color: <?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?> !important;
+        }
+        .status-belum-bayar{
+            background-color: <?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_BELUM_BAYAR']?> !important;
+        }
+        
+        .btn-docker-blue {
+            background-color: #000080;
+            border-color: #000080;
+            color: white;
+           filter:brightness(70%);
+        }
+        
+        .btn-docker-blue:hover {
+           color: white;
         }
         
         /* SIDEBAR MENU OPEN */
