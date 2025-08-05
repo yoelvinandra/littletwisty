@@ -4727,12 +4727,12 @@ class Shopee extends MY_Controller {
                 
                 
                 $param = array(
-                	"IDPERUSAHAAN"  => $dataBarang->IDPERUSAHAAN,
+                	"IDPERUSAHAAN"  => $dataBarang->IDPERUSAHAAN??"2",
                 	"IDLOKASI"      => $lokasi,
                 	"MODUL"         => 'PENJUALAN',
                 	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
                 	"KODETRANS"     => $resultPesanan->KODEPENJUALANMARKETPLACE,
-                	"IDBARANG"      => $dataBarang->IDBARANG,
+                	"IDBARANG"      => $dataBarang->IDBARANG??"0",
                 	"KONVERSI1"     => 1,
                 	"KONVERSI2"     => 1,
                 	"TGLTRANS"      => $resultPesanan->TGLTRANS,
@@ -4740,7 +4740,7 @@ class Shopee extends MY_Controller {
                 	"KETERANGAN"    => 'PENJUALAN SHOPEE KE '.$resultPesanan->USERNAME,
                 	"MK"            => 'K',
                 	"JML"           => explode("*",$item)[0],
-                	"TOTALHARGA"    => (explode("*",$item)[0] * $dataBarang->HARGA),
+                	"TOTALHARGA"    => (explode("*",$item)[0] * ($dataBarang->HARGA??"0")),
                 	"STATUS"        => '1',
                 );
                 $exe = $CI->db->insert($labelKartuStok,$param);
@@ -4861,12 +4861,12 @@ class Shopee extends MY_Controller {
                                     
                                     
                                     $param = array(
-                                    	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN,
+                                    	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN??"2",
                                     	"IDLOKASI"      => $lokasi,
                                     	"MODUL"         => 'RETUR JUAL',
                                     	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
                                     	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
-                                    	"IDBARANG"      => $dataBarangKembali->IDBARANG,
+                                    	"IDBARANG"      => $dataBarangKembali->IDBARANG??"0",
                                     	"KONVERSI1"     => 1,
                                     	"KONVERSI2"     => 1,
                                     	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
@@ -4874,7 +4874,7 @@ class Shopee extends MY_Controller {
                                     	"KETERANGAN"    => 'RETUR SHOPEE KE '.$resultPesanan->USERNAME,
                                     	"MK"            => 'M',
                                     	"JML"           => explode("*",$produkDataKembali[$t])[0],
-                                    	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * $dataBarangKembali->HARGA),
+                                    	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
                                     	"STATUS"        => '1',
                                     );
                                     $exe = $CI->db->insert($labelKartuStok,$param);
