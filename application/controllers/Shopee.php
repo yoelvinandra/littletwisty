@@ -5249,7 +5249,7 @@ class Shopee extends MY_Controller {
                                 array(
                                     'IDPENJUALANMARKETPLACE'    => $idtrans,
                                     'KODEPENJUALANMARKETPLACE'  => $finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'],
-                                    'IDBARANG'                  => $queryBarang->IDBARANG,
+                                    'IDBARANG'                  => $queryBarang->IDBARANG??0,
                                     'MARKETPLACE'               => 'SHOPEE',
                                     'SKU'                       => $sku,
                                     'URUTAN'                    => $urutan,
