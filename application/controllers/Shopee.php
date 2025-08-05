@@ -5109,7 +5109,7 @@ class Shopee extends MY_Controller {
                         $data['MARKETPLACE']                    = "SHOPEE";
                         $data['KODEPENJUALANMARKETPLACE']       = $dataDetail['order_sn'];
                         $data['TGLTRANS']                       = date("Y-m-d H:i:s", $dataDetail['create_time']);
-                        $data['USERNAME']                       = $dataDetail['buyer_username'];
+                        $data['USERNAME']                       = $dataDetail['buyer_username']??"-";
                         $data['NAME']                           = $dataDetail['recipient_address']['name'];
                         $data['TELP']                           = $dataDetail['recipient_address']['phone'];
                         $data['ALAMAT']                         = $dataDetail['recipient_address']['full_address'];
@@ -5199,7 +5199,7 @@ class Shopee extends MY_Controller {
                             $CI->db->where("KODEPENJUALANMARKETPLACE",$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'])
                             ->where('MARKETPLACE',"SHOPEE")
         		            ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                'USERNAME'                   => $finalData[$indexPackaging]['USERNAME'],
+                                'USERNAME'                   => $finalData[$indexPackaging]['USERNAME']??"-",
                                 'NAME'                       => $finalData[$indexPackaging]['NAME'],
                                 'TELP'                       => $finalData[$indexPackaging]['TELP'],
                                 'ALAMAT'                     => $finalData[$indexPackaging]['ALAMAT'],
