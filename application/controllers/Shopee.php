@@ -331,7 +331,17 @@ class Shopee extends MY_Controller {
                         $dataModel = $ret['response']['model'];
                         for($m = 0 ; $m < count($dataModel);$m++)
                         {
-                            $sql = "UPDATE MBARANG SET IDBARANGSHOPEE = ".$dataModel[$m]['model_id']." WHERE SKUSHOPEE = '".strtoupper($dataModel[$m]['model_sku'])."'";
+                            $sku = "";
+                            if($dataModel[$m]['model_sku'] == "")
+                            {
+                                 $sku = $dataModel[$m]['item_sku'];
+                            }
+                            else
+                            {
+                                 $sku = $dataModel[$m]['model_sku'];
+                            }
+                            
+                            $sql = "UPDATE MBARANG SET IDBARANGSHOPEE = ".$dataModel[$m]['model_id']." WHERE SKUSHOPEE = '".strtoupper($sku)."'";
                             $CI->db->query($sql);
                             echo $sql;
                             echo "\n";
@@ -5077,7 +5087,15 @@ class Shopee extends MY_Controller {
                         for($d = 0 ; $d < count($dataDetail['item_list']);$d++)
                         {
                             //KHUSUS SKU YANG KOSONG
-                            $sku = $dataDetail['item_list'][$d]['model_sku'];
+                            if($dataDetail['item_list'][$d]['model_sku'] == "")
+                            {
+                                $sku = $dataDetail['item_list'][$d]['item_sku'];
+                            }
+                            else
+                            {  
+                                $sku = $dataDetail['item_list'][$d]['model_sku'];
+                            }
+                            
                             if(strpos(strtoupper($dataDetail['item_list'][$d]['item_name']),"BIRTHDAY CARD") !== false){
                                 $sku = "LTWS";
                             }
@@ -5233,8 +5251,16 @@ class Shopee extends MY_Controller {
                             foreach($detailBarang as $itemBarang){
                                 $urutan++;
                                 
-                                //KHUSUS SKU YANG KOSONG
-                                $sku = $itemBarang['model_sku'];
+                               //KHUSUS SKU YANG KOSONG
+                                if($itemBarang['model_sku'] == "")
+                                {
+                                    $sku = $itemBarang['item_sku'];
+                                }
+                                else
+                                {  
+                                    $sku = $itemBarang['model_sku'];
+                                }
+                            
                                 if(strpos(strtoupper($itemBarang['item_name']),"BIRTHDAY CARD") !== false){
                                     $sku = "LTWS";
                                 }
