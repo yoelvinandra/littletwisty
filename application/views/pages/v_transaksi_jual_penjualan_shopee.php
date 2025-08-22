@@ -1040,38 +1040,38 @@
                      <button onclick="refundShopee(2)" id='returWaitShopee' class='btn btn-warning' style='width:100%; font-weight:bold;'>Menunggu&nbsp;&nbsp;Pengembalian&nbsp;&nbsp;Barang</button>
                 </div>
                 <div class="tab-pane" id="tab_retur_detail_shopee_3" style="padding:5px 0px 5px 0px;">
-                    <div id="DETAILRETURSHOPEE_3">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).</div>
-        		    <br>
-        		    <div>
-                  	    <label>Alasan Banding</label>
-            			<select id="cb_alasan_sengketa_shopee" name="cb_alasan_sengketa_shopee" class="form-control "  panelHeight="auto" required="true">
+                    <div id="DETAILRETURSHOPEE_3">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll). Transaksi dilakukan di aplikasi shopee, dan akan otomatis terupdate, ketika sinkronisasi.</div>
+        		    <!--<br>-->
+        		    <!--<div>-->
+              <!--    	    <label>Alasan Banding</label>-->
+            		<!--	<select id="cb_alasan_sengketa_shopee" name="cb_alasan_sengketa_shopee" class="form-control "  panelHeight="auto" required="true">-->
                   		
-                  		</select>
-                  	</div>
-            		<br>
-            		<div>
-                  	    <label>Penjelasan Banding</label>
-            		    <textarea id="deskripsi_sengketa_shopee" maxlines="2" style="width:100%; height:80px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>
-            		</div>
-            		<br>
-            		 <div>
-                  	    <label>Email Penanggung Jawab</label>
-            			<input type="email" class="form-control" id="email_sengketa_shopee" style="width:100%;" name="email_sengketa_shopee" placeholder="Cth : shopee@gmail.com">
-              		</div>
-                  	<br>
-                  	<div id="uploadBuktiShopee">
-                  	    <label>Upload Bukti</label>
-                  	    <div id="penjelasan_bukti_shopee"></div>
-            			<div id="proof_sengketa_shopee" style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:10px;">
+              <!--    		</select>-->
+              <!--    	</div>-->
+            		<!--<br>-->
+            		<!--<div>-->
+              <!--    	    <label>Penjelasan Banding</label>-->
+            		<!--    <textarea id="deskripsi_sengketa_shopee" maxlines="2" style="width:100%; height:80px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>-->
+            		<!--</div>-->
+            		<!--<br>-->
+            		<!-- <div>-->
+              <!--    	    <label>Email Penanggung Jawab</label>-->
+            		<!--	<input type="email" class="form-control" id="email_sengketa_shopee" style="width:100%;" name="email_sengketa_shopee" placeholder="Cth : shopee@gmail.com">-->
+              <!--		</div>-->
+              <!--    	<br>-->
+              <!--    	<div id="uploadBuktiShopee">-->
+              <!--    	    <label>Upload Bukti</label>-->
+              <!--    	    <div id="penjelasan_bukti_shopee"></div>-->
+            		<!--	<div id="proof_sengketa_shopee" style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:10px;">-->
             			    
-            			</div>
-            		 </div>
-                     <div style="width:100%; text-align:center;"><input type="hidden" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANSHOPEE_3" onkeyup="return numberInputTrans(event,3)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
-                     <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANSHOPEE_3">
-                     <input type="hidden" id="dataDisputeShopee">
-                     <input type="hidden" id="pilihanDisputeShopee">
-                     <input type="hidden" id="pilihDisputeShopee">
-                     <br>
+            		<!--	</div>-->
+            		<!-- </div>-->
+              <!--       <div style="width:100%; text-align:center;"><input type="hidden" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANSHOPEE_3" onkeyup="return numberInputTrans(event,3)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>-->
+              <!--       <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANSHOPEE_3">-->
+              <!--       <input type="hidden" id="dataDisputeShopee">-->
+              <!--       <input type="hidden" id="pilihanDisputeShopee">-->
+              <!--       <input type="hidden" id="pilihDisputeShopee">-->
+              <!--       <br>-->
                      <button onclick="refundShopee(3)" id='returDisputeShopee' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>
                 </div>
             </div>  
@@ -3886,63 +3886,63 @@ function refundShopee(x){
                     	}
                     });
                 }
-                // else if(x == 1)
-                // {
-                //     $.ajax({
-                //     	type    : 'POST',
-                //     	url     : base_url+'Shopee/returnRefund/',
-                //     	data    : {kodepengembalian: row.KODEPENGEMBALIAN,offeramount: $("#DANADIKEMBALIKANSHOPEE_1").val(),solution:rowDetail.NEGOTIATIONSOLUTION},
-                //     	dataType: 'json',
-                //     	success : function(msg){
+                else if(x == 1)
+                {
+                    $.ajax({
+                    	type    : 'POST',
+                    	url     : base_url+'Shopee/returnRefund/',
+                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,offeramount: $("#DANADIKEMBALIKANSHOPEE_1").val(),solution:rowDetail.NEGOTIATIONSOLUTION},
+                    	dataType: 'json',
+                    	success : function(msg){
                            
-                //             Swal.close();	
-                //             Swal.fire({
-                //             	title            :  msg.msg,
-                //             	type             : (msg.success?'success':'error'),
-                //             	showConfirmButton: false,
-                //             	timer            : 2000
-                //             });
-                //             if(msg.success)
-                //             {
-                //                 $("#modal-retur-shopee").modal("hide");
+                            Swal.close();	
+                            Swal.fire({
+                            	title            :  msg.msg,
+                            	type             : (msg.success?'success':'error'),
+                            	showConfirmButton: false,
+                            	timer            : 2000
+                            });
+                            if(msg.success)
+                            {
+                                $("#modal-retur-shopee").modal("hide");
                             
-                //                 setTimeout(() => {
-                //                   reloadShopee();
-                //                 }, "2000");
-                //             }
-                //     	}
-                //     });
-                // }
-                // else if(x == 11)
-                // {
-                //     $.ajax({
-                //         	type    : 'POST',
-                //         	url     : base_url+'Shopee/finalReturnRefund/',
-                //         	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
-                //         	dataType: 'json',
-                //         	success : function(msg){
+                                setTimeout(() => {
+                                  reloadShopee();
+                                }, "2000");
+                            }
+                    	}
+                    });
+                }
+                else if(x == 11)
+                {
+                    $.ajax({
+                        	type    : 'POST',
+                        	url     : base_url+'Shopee/finalReturnRefund/',
+                        	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
+                        	dataType: 'json',
+                        	success : function(msg){
                                
-                //                 Swal.close();	
-                //                 Swal.fire({
-                //                 	title            :  msg.msg,
-                //                 	type             : (msg.success?'success':'error'),
-                //                 	showConfirmButton: false,
-                //                 	timer            : 2000
-                //                 });
-                //                 if(msg.success)
-                //                 {
-                //                     $("#modal-retur-shopee").modal("hide");
+                                Swal.close();	
+                                Swal.fire({
+                                	title            :  msg.msg,
+                                	type             : (msg.success?'success':'error'),
+                                	showConfirmButton: false,
+                                	timer            : 2000
+                                });
+                                if(msg.success)
+                                {
+                                    $("#modal-retur-shopee").modal("hide");
                                 
-                //                     setTimeout(() => {
-                //                       reloadShopee();
-                //                     }, "2000");
-                //                 }
-                //         	}
-                //     });
-                // }
-                // if(x == -1){
+                                    setTimeout(() => {
+                                      reloadShopee();
+                                    }, "2000");
+                                }
+                        	}
+                    });
+                }
+                if(x == -1){
                     
-                // }
+                }
                 else if(x == 2)
                 {
                     
