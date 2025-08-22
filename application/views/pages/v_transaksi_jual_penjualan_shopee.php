@@ -1040,7 +1040,7 @@
                      <button onclick="refundShopee(2)" id='returWaitShopee' class='btn btn-warning' style='width:100%; font-weight:bold;'>Menunggu&nbsp;&nbsp;Pengembalian&nbsp;&nbsp;Barang</button>
                 </div>
                 <div class="tab-pane" id="tab_retur_detail_shopee_3" style="padding:5px 0px 5px 0px;">
-                    <div id="DETAILRETURSHOPEE_3">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll). Transaksi dilakukan di aplikasi shopee, dan akan otomatis terupdate, ketika sinkronisasi.</div>
+                    <div id="DETAILRETURSHOPEE_3">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).<br><br>Untuk transaksi hanya dapat dilakukan pada aplikasi shopee. Status transaksi dan stok akan terupdate, melalui sinkronisasi otomatis maupun sinkronisasi manual.</div>
         		    <!--<br>-->
         		    <!--<div>-->
               <!--    	    <label>Alasan Banding</label>-->
@@ -1072,7 +1072,7 @@
               <!--       <input type="hidden" id="pilihanDisputeShopee">-->
               <!--       <input type="hidden" id="pilihDisputeShopee">-->
               <!--       <br>-->
-                     <button onclick="refundShopee(3)" id='returDisputeShopee' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>
+                     <!--<button onclick="refundShopee(3)" id='returDisputeShopee' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>-->
                 </div>
             </div>  
         </div>
