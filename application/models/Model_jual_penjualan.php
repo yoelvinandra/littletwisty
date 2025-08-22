@@ -283,7 +283,7 @@ class Model_jual_penjualan extends MY_Model{
 		}
 		
 		$this->db->trans_commit();
-		return $idtrans;
+		return intval($idtrans);
 	}
 	
 	function batal($idtrans,$alasan){
@@ -454,9 +454,10 @@ class Model_jual_penjualan extends MY_Model{
 	}
 	
 	function dashboardGrandTotal($periode,$tglawal,$tglakhir,$customer = 0, $lokasi = ""){
+	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
 	    if($customer != 0)
 	    {
-	        $whereCustomer = " and a.idcustomer = $customer";
+	        $whereCustomer .= " and a.idcustomer = $customer";
 	    }
 	    
 	    $data = [];
@@ -642,9 +643,11 @@ class Model_jual_penjualan extends MY_Model{
 	}
 	
 	function dashboardItem($periode,$tglawal,$tglakhir,$customer = 0, $lokasi = "", $kategoriWarna = "", $kategoriSize = ""){
+	    
+	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
 	    if($customer != 0)
 	    {
-	        $whereCustomer = " and a.idcustomer = $customer";
+	        $whereCustomer .= " and a.idcustomer = $customer";
 	    }
 	    
 	    if($lokasi != "")
@@ -937,10 +940,15 @@ class Model_jual_penjualan extends MY_Model{
 	function dashboardCustomer($periode,$tglawal,$tglakhir,$barang = "0"){
 	    
 	    //CUSTOMER
+	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
 	    $whereBarang = "";
 	    $whereBarangStok = "";
-	    $paramBarang = "a.GRANDTOTALDISKON";
-	    $paramBarangMarketplace = "a.TOTALPENDAPATANPENJUAL";
+	    $paramBarang = "(SELECT SUM(x.GRANDTOTALDISKON) FROM TPENJUALAN x 
+	                        WHERE x.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.status = 'S' and c.IDCUSTOMER = x.IDCUSTOMER
+	                    )";
+	    $paramBarangMarketplace = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
+	                        WHERE x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE
+	                    )";
 	    if($barang != "0")
 	    {
 	        $kodebarang = explode(" | ",$barang)[0];
@@ -948,26 +956,27 @@ class Model_jual_penjualan extends MY_Model{
 	        $idbarang = $this->db->query($sqlBarang)->row()->IDBARANG;
 	        $whereBarang = " and b.idbarang = $idbarang";
 	        $whereBarangStok = "and c.idbarang = '$idbarang'";
-	        $paramBarang = "b.SUBTOTALKURS";
-	        $paramBarangMarketplace = "b.TOTAL";
+	        $paramBarang = "0";
+	        $paramBarangMarketplace = "0";
 	    }
 	    
         
 	    $sql = "
 	    SELECT a.KODECUSTOMER,a.NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
 	        from(
-                select c.KODECUSTOMER,c.NAMACUSTOMER as NAMA, ifnull(SUM(b.jml),0) as QTY, ifnull(SUM($paramBarang),0) as GRANDTOTAL
+                select c.KODECUSTOMER,c.NAMACUSTOMER as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
         		from TPENJUALAN a
         		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
         		inner join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
         		where (1=1) $whereBarang and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
+        		$whereCustomer
         	    Group by c.KODECUSTOMER
         	    
         	    UNION ALL
         	    
         	    select CONCAT('X',a.MARKETPLACE) as KODECUSTOMER,a.MARKETPLACE as NAMA, 
         	    (SUM(IF(D.MK = 'K', IFNULL(D.JML,0), - IFNULL(D.JML,0))) + SUM(IF(D1.MK = 'K', IFNULL(D1.JML,0), - IFNULL(D1.JML,0)))) as QTY, 
-                ifnull(SUM($paramBarangMarketplace),0) as GRANDTOTAL
+                $paramBarangMarketplace as GRANDTOTAL
         		from TPENJUALANMARKETPLACE a
         		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                 inner join mbarang c on b.idbarang = c.idbarang
@@ -992,31 +1001,37 @@ class Model_jual_penjualan extends MY_Model{
         //KOTA
         $whereBarang = "";
 	    $whereBarangStok = "";
+	    $paramBarangMarketplace  = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
+	                        WHERE x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE and X.KOTA = a.KOTA
+	                    )";
+	                    
 	    if($barang != "0")
 	    {
 	        $kodebarang = explode(" | ",$barang)[0];
 	        $sqlBarang = "select IDBARANG from mbarang where kodebarang = '{$kodebarang}'";
 	        $idbarang = $this->db->query($sqlBarang)->row()->IDBARANG;
 	        $whereBarang = " and b.idbarang = $idbarang";
-	        $whereBarangStok = "and mbarang.idbarang = '$idbarang'";
+	        $whereBarangStok = "and c.idbarang = '$idbarang'";
+	        $paramBarangMarketplace = "0";
 	    }
 	    
         
 	    $sql = "
 	    SELECT a.NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
 	        from(
-                select c.KOTA as NAMA, ifnull(SUM(b.jml),0) as QTY, ifnull(SUM($paramBarang),0) as GRANDTOTAL
+                select c.KOTA as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
         		from TPENJUALAN a
         		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
         		inner join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
         		where (1=1) $whereBarang and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
+        		$whereCustomer
         	    Group by NAMA
         	    
         	    UNION ALL
         	    
         	    select a.KOTA as NAMA, 
         	    (SUM(IF(D.MK = 'K', IFNULL(D.JML,0), - IFNULL(D.JML,0))) + SUM(IF(D1.MK = 'K', IFNULL(D1.JML,0), - IFNULL(D1.JML,0)))) as QTY, 
-                ifnull(SUM($paramBarangMarketplace),0) as GRANDTOTAL
+                $paramBarangMarketplace as GRANDTOTAL
         		from TPENJUALANMARKETPLACE a
         		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                 inner join mbarang c on b.idbarang = c.idbarang

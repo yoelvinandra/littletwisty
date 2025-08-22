@@ -243,7 +243,7 @@ class Penjualan extends MY_Controller {
 	
 		$response = $this->model_jual_penjualan->simpan($id,$data_values,$a_detail,$edit);
 		if (!is_int($response)){
-			die(json_encode(array('errorMsg' => $response)));
+			die(json_encode(array('errorMsg' => is_int($response))));
 		}
 
 		// panggil fungsi untuk log history

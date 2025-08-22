@@ -731,6 +731,12 @@ function checkBarangPadaTransaksi($idbarang)
 	$CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 	
 	$sql = "SELECT EXISTS (
+	    SELECT 1
+        FROM TPENJUALANMARKETPLACEDTL
+        WHERE idbarang = $idbarang
+        
+        UNION ALL
+        
         SELECT 1
         FROM TPENJUALANDTL
         WHERE idbarang = $idbarang

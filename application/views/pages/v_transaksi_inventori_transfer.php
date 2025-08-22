@@ -1159,6 +1159,75 @@ function batal(){
 						showConfirmButton: false,
 						timer            : 1500
 					});
+					
+					$.ajax({
+                        type      : 'POST',
+                        url       : base_url+'Shopee/setStokBarang',
+                        data      : {
+                            'idtrans' : row.IDTRANSFER, 
+                            'jenistrans' : 'TRANSFER_ASAL',
+                        },
+                        dataType  : 'json',
+                        beforeSend: function (){
+                            //$.messager.progress();
+                        },
+                        success: function(msg){
+                            if (msg.success) {
+                                if(msg.msg != "")
+                                {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'success',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            } else {
+                                Swal.fire({
+                                    title            : msg.msg,
+                                    type             : 'error',
+                                    showConfirmButton: false,
+                                    timer            : 1500
+                                });
+                            }
+                        },
+                        
+                    });
+                    
+                    $.ajax({
+                        type      : 'POST',
+                        url       : base_url+'Shopee/setStokBarang',
+                        data      : {
+                            'idtrans' : row.IDTRANSFER, 
+                            'jenistrans' : 'TRANSFER_TUJUAN',
+                        },
+                        dataType  : 'json',
+                        beforeSend: function (){
+                            //$.messager.progress();
+                        },
+                        success: function(msg){
+                            if (msg.success) {
+                                if(msg.msg != "")
+                                {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'success',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            } else {
+                                Swal.fire({
+                                    title            : msg.msg,
+                                    type             : 'error',
+                                    showConfirmButton: false,
+                                    timer            : 1500
+                                });
+                            }
+                        },
+                        
+                    });
+                    
 					$("#dataGrid").DataTable().ajax.reload();
 					$('.nav-tabs a[href="#tab_grid"]').tab('show');
 				} else {
@@ -1359,6 +1428,81 @@ function simpan(){
 						showConfirmButton: false,
 						timer            : 1500
 					});
+					
+					var dataBarang = [];
+					for(var x = 0 ; x < row.length; x++)
+					{
+					    dataBarang.push(row[x].idbarang);
+					}
+					
+					$.ajax({
+                        type      : 'POST',
+                        url       : base_url+'Shopee/setStokBarang',
+                        data      : {
+                            'idlokasi' : $("#LOKASIASAL").val(), 
+                            'databarang' : JSON.stringify(dataBarang),
+                        },
+                        dataType  : 'json',
+                        beforeSend: function (){
+                            //$.messager.progress();
+                        },
+                        success: function(msg){
+                            if (msg.success) {
+                                if(msg.msg != "")
+                                {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'success',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            } else {
+                                Swal.fire({
+                                    title            : msg.msg,
+                                    type             : 'error',
+                                    showConfirmButton: false,
+                                    timer            : 1500
+                                });
+                            }
+                        },
+                        
+                    });
+                    
+                    $.ajax({
+                        type      : 'POST',
+                        url       : base_url+'Shopee/setStokBarang',
+                        data      : {
+                            'idlokasi' : $("#LOKASITUJUAN").val(), 
+                            'databarang' : JSON.stringify(dataBarang),
+                        },
+                        dataType  : 'json',
+                        beforeSend: function (){
+                            //$.messager.progress();
+                        },
+                        success: function(msg){
+                            if (msg.success) {
+                                if(msg.msg != "")
+                                {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'success',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            } else {
+                                Swal.fire({
+                                    title            : msg.msg,
+                                    type             : 'error',
+                                    showConfirmButton: false,
+                                    timer            : 1500
+                                });
+                            }
+                        },
+                        
+                    });
+                    
 					$("#dataGrid").DataTable().ajax.reload();
 					$('.nav-tabs a[href="#tab_grid"]').tab('show');
 					reset();

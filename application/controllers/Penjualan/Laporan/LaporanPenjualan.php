@@ -64,15 +64,21 @@ class LaporanPenjualan extends MY_Controller {
 		$tgl_ak = ubah_tgl_firebird($tglTrans[1]);
 		
 		$whereTanggal = "and TPENJUALAN.tgltrans between '$tgl_aw' and '$tgl_ak'";
-		$whereTanggalMarketplace = "and TPENJUALANMARKETPLACE.tgltrans between '$tgl_aw' and '$tgl_ak'";
+		$whereTanggalMarketplace = "and TPENJUALANMARKETPLACE.tgltrans between '$tgl_aw 00:00:00' and '$tgl_ak 23:59:59'";
 
 		//STATUS
 		$whereStatus .= count($jenisStatus)>0 ? " and (TPENJUALAN.status='".implode("' or TPENJUALAN.status='", $jenisStatus)."')" : '';
 		
 		$whereStatusMarketplace = '';
+		$indexStatus = 0;
 		foreach($jenisStatusMarketplace as $itemStatusMarketplace)
 		{
            $parts = explode("|", $itemStatusMarketplace);
+           
+           if($indexStatus == 0)
+           {
+               $whereStatusMarketplace .= " AND ((1=1)";
+           }
            
            if (count($parts) == 2) {
                // Two values: map to two different fields
@@ -86,6 +92,12 @@ class LaporanPenjualan extends MY_Controller {
            
                $whereStatusMarketplace .= " OR (" . implode(" OR ", $conditions) . ")";
            }
+           $indexStatus++;
+		}
+		
+		if($whereStatusMarketplace != "")
+		{
+		    $whereStatusMarketplace .= ")";
 		}
 		
 		if (strpos($tampil,"REGISTER") !== FALSE) {
@@ -99,7 +111,7 @@ class LaporanPenjualan extends MY_Controller {
 					inner join mbarang  		on tpenjualandtl.idbarang=mbarang.idbarang and mbarang.stok = 1
 					left join mcustomer  		on tpenjualan.idcustomer=mcustomer.idcustomer
 					left join mlokasi  			on tpenjualan.idlokasi = mlokasi.idlokasi
-					where (1=1 $whereFilter) $wherePerusahaan $whereTanggal $whereLokasi $whereStatus 
+					where (1=1 $whereFilter) $wherePerusahaan $whereTanggal $whereLokasi $whereStatus and mcustomer.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 					";
 			
 			if($adaOnline)
@@ -130,6 +142,7 @@ class LaporanPenjualan extends MY_Controller {
 					left join mcustomer  		on tpenjualan.idcustomer=mcustomer.idcustomer
 					left join mlokasi  			on tpenjualan.idlokasi = mlokasi.idlokasi
 					where (1=1 $whereFilter) $wherePerusahaan $whereTanggal $whereLokasi $whereStatus and tpenjualandtl.KETERANGAN != 'ONGKIR' 
+					and mcustomer.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 				    group by tpenjualan.tgltrans,mbarang.namabarang
 					";
 					
@@ -164,6 +177,7 @@ class LaporanPenjualan extends MY_Controller {
 					left join mcustomer  		on tpenjualan.idcustomer=mcustomer.idcustomer
 					left join mlokasi  			on tpenjualan.idlokasi = mlokasi.idlokasi
 					where (1=1 $whereFilter) $wherePerusahaan $whereTanggal $whereLokasi $whereStatus and tpenjualandtl.KETERANGAN != 'ONGKIR' 
+				    and mcustomer.idcustomer not in (select idcustomer from mcustomer where kodecustomer  in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 				    group by mbarang.kodebarang
 					";
 					
@@ -199,6 +213,7 @@ class LaporanPenjualan extends MY_Controller {
 				left join mcustomer  		on tpenjualan.idcustomer=mcustomer.idcustomer
 				left join mlokasi  			on tpenjualan.idlokasi = mlokasi.idlokasi
 				where (1=1 $whereFilter) $wherePerusahaan $whereTanggal $whereLokasi $whereStatus 
+				and mcustomer.idcustomer not in (select idcustomer from mcustomer where kodecustomer  in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 				group by 1, tpenjualan.CATATAN, tpenjualan.TGLTRANS, tpenjualan.KODEPENJUALAN ";
 			
 			if($adaOnline)

@@ -23,8 +23,12 @@
      <div class="col-md-12">
         <div class="box">
             <div class="box-header" style="margin-top:-15px;">
-                <h3 style="font-weight:bold;">&nbsp;Atur Harga&nbsp;&nbsp;&nbsp;
+                <h3 style="font-weight:bold;">&nbsp;Atur Harga&nbsp;&nbsp;&nbsp; 
                 <span style="float:right;">&nbsp;&nbsp;&nbsp;<button onclick='simpanHarga()' class='btn btn-success'>Simpan</button></span>
+                
+                <span style="font-size:16px; font-weight:normal; font-style:italic;">
+                <br>&nbsp;Harga Jual Tampil = base price pada marketplace
+                <br>&nbsp;Harga Coret / Konsinyasi = harga acuan untuk harga promo / diskon pada marketplace.</span>
                 </h3>
                 <br>
                  <div class="row col-md-12" style="padding:0px;">
@@ -36,19 +40,19 @@
                      </div>
                      <div class="col-md-2">
                         <label>Harga Jual Tampil</label>
-                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllJual" value="" placeholder="0" min="0" max="100" onkeyup="hargaAll(event,'JUAL')" mouseup="hargaAll(event,'JUAL')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
+                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllJual" value="" placeholder="0" min="0" max="100" onblur="limitHargaAll(event,'JUAL')" onkeyup="hargaAll(event,'JUAL')" mouseup="hargaAll(event,'JUAL')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
                      </div>
                      <div class="col-md-2">
                         <label>Harga Coret</label>
-                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllCoret" value="" placeholder="0" min="0" max="100" onkeyup="hargaAll(event,'CORET')" mouseup="hargaAll(event,'CORET')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
+                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllCoret" value="" placeholder="0" min="0" max="100" onblur="limitHargaAll(event,'CORET')" onkeyup="hargaAll(event,'CORET')" mouseup="hargaAll(event,'CORET')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
                      </div>
                      <div class="col-md-2">
                         <label>Harga Konsinyasi</label>
-                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllKonsinyasi" value="" placeholder="0" min="0" max="100" onkeyup="hargaAll(event,'KONSINYASI')" mouseup="hargaAll(event,'KONSINYASI')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
+                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllKonsinyasi" value="" placeholder="0" min="0" max="100" onblur="limitHargaAll(event,'KONSINYASI')" onkeyup="hargaAll(event,'KONSINYASI')" mouseup="hargaAll(event,'KONSINYASI')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
                      </div>
                       <div class="col-md-2">
                         <label>Harga Beli</label>
-                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllBeli" value="" placeholder="0" min="0" max="100" onkeyup="hargaAll(event,'BELI')" mouseup="hargaAll(event,'BELI')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
+                        <input type="text" class="form-control" style="width:100px;" class="ubahHargaAll" id="hargaAllBeli" value="" placeholder="0" min="0" max="100" onblur="limitHargaAll(event,'BELI')" onkeyup="hargaAll(event,'BELI')" mouseup="hargaAll(event,'BELI')" onkeydown="return ( event.ctrlKey || event.altKey || (47<event.keyCode && event.keyCode<58 && event.shiftKey==false) || (95<event.keyCode && event.keyCode<106)|| (event.keyCode==8) || (event.keyCode==9) || (event.keyCode>34 && event.keyCode<40) || (event.keyCode==46) )"></input>
                      </div>
                  </div>
                 
@@ -113,8 +117,12 @@
 <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.7/dist/inputmask.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.2/xlsx.full.min.js"></script>
 <script>
+function currency(amount){
+   return Number(amount).toLocaleString()
+}
 var indexRow;
 $(document).ready(function() {
+    
     $("#btn_customer").hide();
     
     $("#CUSTOMER").prop('checked',true).iCheck('update').on('ifChanged', function(event) {
@@ -195,25 +203,25 @@ $(document).ready(function() {
             {
                 "targets": -4,
                 "render": function (data) {
-                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGAJUAL" value="' + data + '" placeholder="0" min="0" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
+                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGAJUAL '+data+'" value="' + data + '" placeholder="0" min="0" onblur="limitHarga(event)" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
                 },
             },
             {
                 "targets": -3,
                 "render": function (data) {
-                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGACORET" value="' + data + '" placeholder="0" min="0" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
+                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGACORET '+data+'" value="' + data + '" placeholder="0" min="0" onblur="limitHarga(event)" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
                 },
             },
             {
                 "targets": -2,
                 "render": function (data) {
-                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGAKONSINYASI" value="' + data + '" placeholder="0" min="0" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
+                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGAKONSINYASI '+data+'" value="' + data + '" placeholder="0" min="0" onblur="limitHarga(event)" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
                 },
             },
             {
                 "targets": -1,
                 "render": function (data) {
-                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGABELI" value="' + data + '" placeholder="0" min="0" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
+                    return '<input type="text" style="text-align:right; width:100px;" class="form-control HARGABELI '+data+'" value="' + data + '" placeholder="0" min="0" onblur="limitHarga(event)" onkeyup="harga(event)" mouseup="harga(event)" onkeydown="return ( event.ctrlKey || event.altKey || (47 < event.keyCode && event.keyCode < 58 && event.shiftKey == false) || (95 < event.keyCode && event.keyCode < 106) || (event.keyCode == 8) || (event.keyCode == 9) || (event.keyCode > 34 && event.keyCode < 40) || (event.keyCode == 46) )"></input>';
                 },
             },
         ],
@@ -290,12 +298,16 @@ $(document).ready(function() {
 		
 	});
 	
-     $("#hargaAllCoret").number(true, 0);
-     $("#hargaAllKonsinyasi").number(true, 0);
+	$("#hargaAllJual").number(true, 0);
+	$("#hargaAllBeli").number(true, 0);
+    $("#hargaAllCoret").number(true, 0);
+    $("#hargaAllKonsinyasi").number(true, 0);
 });
 
 function checkCondition(){
     var url = "";
+    $("#hargaAllJual").val("");
+	$("#hargaAllBeli").val("");
     $("#hargaAllCoret").val("");
     $("#hargaAllKonsinyasi").val("");
     $("#labelKeterangan").html("");
@@ -348,9 +360,23 @@ function exportTableToExcel() {
 }
 
 function hargaAll(data,jenis) {
+    var error = '';
     var inputElement = event.target;
     const classList = inputElement.classList;
-    const inputValue = inputElement.value;
+    const inputValue = parseInt(inputElement.value.replaceAll(",",""));
+    
+    if(inputValue < 0)
+    {
+        inputElement.value = 0;
+    }
+}
+
+function limitHargaAll(data,jenis)
+{
+    var error = '';
+    var inputElement = event.target;
+    const classList = inputElement.classList;
+    const inputValue = parseInt(inputElement.value.replaceAll(",",""));
     
     if(inputValue < 0)
     {
@@ -365,8 +391,23 @@ function hargaAll(data,jenis) {
             var rowData = this.data(); // Get the data for each row
             
             // Find the corresponding input field for the current row
-            var inputFieldCoret = $(this.node()).find('input.HARGABELI');
-            inputFieldCoret.val(parseInt(inputValue.replaceAll(",",""))); // Update the input field with the new value
+            var inputField = $(this.node()).find('input.HARGABELI');
+            const beforePrice = inputField.attr('class').toString().split(" ")[2];
+            
+            if(parseFloat(beforePrice) / parseFloat(inputValue) > 5 && parseFloat(beforePrice) > parseFloat(inputValue))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>karena Harga minimal adalah 5x lebih kecil dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else if(parseFloat(inputValue) / parseFloat(beforePrice) > 5 && parseFloat(inputValue) > parseFloat(beforePrice))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>Harga maksimal adalah 5x lebih besar dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else
+            {
+                inputField.val(currency(inputValue));
+            }
         });
     }
     else if(jenis == "JUAL")
@@ -377,9 +418,23 @@ function hargaAll(data,jenis) {
             var rowData = this.data(); // Get the data for each row
             
             // Find the corresponding input field for the current row
-            var inputFieldKonsinyasi = $(this.node()).find('input.HARGAJUAL');
-
-            inputFieldKonsinyasi.val(parseInt(inputValue.replaceAll(",",""))); // Update the input field with the new value
+            var inputField = $(this.node()).find('input.HARGAJUAL');
+            const beforePrice = inputField.attr('class').toString().split(" ")[2];
+            
+            if(parseFloat(beforePrice) / parseFloat(inputValue) > 5 && parseFloat(beforePrice) > parseFloat(inputValue))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>Harga minimal adalah 5x lebih kecil dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else if(parseFloat(inputValue) / parseFloat(beforePrice) > 5 && parseFloat(inputValue) > parseFloat(beforePrice))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>Harga maksimal adalah 5x lebih besar dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else
+            {
+                inputField.val(currency(inputValue));
+            }
         });
     }
     else if(jenis == "CORET")
@@ -390,8 +445,23 @@ function hargaAll(data,jenis) {
             var rowData = this.data(); // Get the data for each row
             
             // Find the corresponding input field for the current row
-            var inputFieldCoret = $(this.node()).find('input.HARGACORET');
-            inputFieldCoret.val(parseInt(inputValue.replaceAll(",",""))); // Update the input field with the new value
+            var inputField = $(this.node()).find('input.HARGACORET');
+            const beforePrice = inputField.attr('class').toString().split(" ")[2];
+            
+            if(parseFloat(beforePrice) / parseFloat(inputValue) > 5 && parseFloat(beforePrice) > parseFloat(inputValue))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>Harga minimal adalah 5x lebih kecil dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else if(parseFloat(inputValue) / parseFloat(beforePrice) > 5 && parseFloat(inputValue) > parseFloat(beforePrice))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>Harga maksimal adalah 5x lebih besar dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else
+            {
+                inputField.val(currency(inputValue));
+            }
         });
     }
     else if(jenis == "KONSINYASI")
@@ -402,9 +472,33 @@ function hargaAll(data,jenis) {
             var rowData = this.data(); // Get the data for each row
             
             // Find the corresponding input field for the current row
-            var inputFieldKonsinyasi = $(this.node()).find('input.HARGAKONSINYASI');
-
-            inputFieldKonsinyasi.val(parseInt(inputValue.replaceAll(",",""))); // Update the input field with the new value
+            var inputField = $(this.node()).find('input.HARGAKONSINYASI');
+            const beforePrice = inputField.attr('class').toString().split(" ")[2];
+            
+            if(parseFloat(beforePrice) / parseFloat(inputValue) > 5 && parseFloat(beforePrice) > parseFloat(inputValue))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>Harga minimal adalah 5x lebih kecil dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else if(parseFloat(inputValue) / parseFloat(beforePrice) > 5 && parseFloat(inputValue) > parseFloat(beforePrice))
+            {
+                error = "Beberapa harga produk tidak berubah,<br>Harga maksimal adalah 5x lebih besar dari harga saat ini";
+                inputField.val(currency(beforePrice));
+            }
+            else
+            {
+                inputField.val(currency(inputValue));
+            }
+        });
+    }
+    
+    if(error != "")
+    {
+        Swal.fire({
+            title            : error,
+            type             : 'warning',
+            showConfirmButton: false,
+            timer            : 1500
         });
     }
 }
@@ -412,11 +506,44 @@ function hargaAll(data,jenis) {
 function harga(data) {
     var inputElement = event.target;
     const classList = inputElement.classList;
-    const inputValue = inputElement.value;
+    const inputValue =  parseInt(inputElement.value.replaceAll(",",""));
     
     if(inputValue < 0)
     {
         inputElement.value = 0;
+    }
+}
+
+function limitHarga(data){
+    var inputElement = event.target;
+    const classList = inputElement.classList;
+    const inputValue =  parseInt(inputElement.value.replaceAll(",",""));
+    const beforePrice = classList.toString().split(" ")[2];
+    
+    if(inputValue < 0)
+    {
+        inputElement.value = 0;
+    }
+    
+    if(parseFloat(beforePrice) / parseFloat(inputValue) > 5 && parseFloat(beforePrice) > parseFloat(inputValue))
+    {
+        Swal.fire({
+            title            : "Harga minimal adalah 5x lebih kecil dari harga saat ini",
+            type             : 'warning',
+            showConfirmButton: false,
+            timer            : 1500
+        });
+        inputElement.value = currency(beforePrice);
+    }
+    else if(parseFloat(inputValue) / parseFloat(beforePrice) > 5 && parseFloat(inputValue) > parseFloat(beforePrice))
+    {
+         Swal.fire({
+            title            : "Harga maksimal adalah 5x lebih besar dari harga saat ini",
+            type             : 'warning',
+            showConfirmButton: false,
+            timer            : 1500
+        });
+        inputElement.value = currency(beforePrice);
     }
 }
 
@@ -426,7 +553,7 @@ function simpanHarga() {
     {
         Swal.fire({
             title            : "Pilih Customer Dahulu",
-            type             : 'error',
+            type             : 'warning',
             showConfirmButton: false,
             timer            : 1500
         });
@@ -493,6 +620,41 @@ function simpanHarga() {
                         timer            : 1500
                     });
                     $("#dataGrid").DataTable().ajax.reload();
+                                
+                    $.ajax({
+                        type      : 'POST',
+                        url       : base_url+'Shopee/setHargaBarang',
+                        data      : {
+                                        'allcustomer' : $("#CUSTOMER").prop("checked").toString() , 
+                                        'varian' : $("#VARIAN").prop("checked").toString(),
+                                        'data_detail' : JSON.stringify(allData),
+                        },
+                        dataType  : 'json',
+                        beforeSend: function (){
+                            //$.messager.progress();
+                        },
+                        success: function(msg){
+                            if (msg.success) {
+                                if(msg.msg != "")
+                                {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'success',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            } else {
+                                Swal.fire({
+                                    title            : msg.msg,
+                                    type             : 'error',
+                                    showConfirmButton: false,
+                                    timer            : 1500
+                                });
+                            }
+                        },
+                        
+                     });
                 } else {
                     Swal.fire({
                         title            : msg.errorMsg,

@@ -184,8 +184,6 @@
     }
 
   </style>
-
-  </style>
   
      <div class=" ">
         <!-- Main row -->
@@ -925,11 +923,11 @@
                    <div id="ALASANSHOPEEPILIHAN">-</div>
                    <br>
                    <label>Alasan Pengembalian Pembeli</label>
-                   <div id="ALASANSHOPEEPENGEMBALIAN">-</div>
+                   <div id="ALASANSHOPEEPENGEMBALIAN" style="max-height:70px; overflow-x:scroll;">-</div>
                    <br>
                    <label>Bukti Pengembalian Pembeli</label>
-          	    	<div id="GAMBARPENGEMBALIANSHOPEE"></div>
-          	    	<div id="VIDEOPENGEMBALIANSHOPEE"></div>
+          	    	<div id="GAMBARPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:scroll; width:50%;"></div>
+          	    	<div id="VIDEOPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:scroll; width:50%;"></div>
                 </div>
       	    	<!--SATU TABEL-->
       	    	<div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:6px; padding:0px;" >
@@ -1934,7 +1932,7 @@ $("#cb_alasan_sengketa_shopee").change(function(){
                 const hapusImage = document.getElementById('hapusProofShopee-'+y);
                 
                 previewImage.addEventListener('click', () => {
-                  if(fileInput.value != "")
+                  if(url.value != '')
                   {
                       lihatLebihJelasShopee(format.value,title.value,url.value);
                   }
@@ -2213,33 +2211,43 @@ function resetItemShopee(indexItem){
 }
 
 function ubahKonfirmShopee(){
-    var row = JSON.parse($("#rowDataShopee").val());
-    loading();
-    $.ajax({
-    	type    : 'POST',
-    	url     : base_url+'Shopee/ubah/',
-    	data    : {kode: row.KODEPESANAN, dataItem: $("#itemUbahShopee").val()},
-    	dataType: 'json',
-    	success : function(msg){
-    	    
-            if(msg.success)
-            {
-                Swal.close();
-                $("#modal-ubah-shopee").modal('hide');
-            }
-            
-    	    Swal.fire({
-            	title            :  msg.msg,
-            	type             : (msg.success?'success':'error'),
-            	showConfirmButton: false,
-            	timer            : 2000
-            });
-            
-            setTimeout(() => {
-              reloadShopee();
-            }, "2000");
-    	}
-    });
+     Swal.fire({
+        title: 'Anda Yakin Mengubah Pesanan Ini ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                var row = JSON.parse($("#rowDataShopee").val());
+                loading();
+                $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Shopee/ubah/',
+                	data    : {kode: row.KODEPESANAN, dataItem: $("#itemUbahShopee").val()},
+                	dataType: 'json',
+                	success : function(msg){
+                	    
+                        if(msg.success)
+                        {
+                            Swal.close();
+                            $("#modal-ubah-shopee").modal('hide');
+                        }
+                        
+                	    Swal.fire({
+                        	title            :  msg.msg,
+                        	type             : (msg.success?'success':'error'),
+                        	showConfirmButton: false,
+                        	timer            : 2000
+                        });
+                        
+                        setTimeout(() => {
+                          reloadShopee();
+                        }, "2000");
+                	}
+                });
+        	}
+        });
 }
 
 function setDetail(itemDetail,x,namaBarang,action=false)
@@ -2624,42 +2632,53 @@ function kirimShopee(){
 }
 
 function kirimKonfirmShopee(){
-    var row = JSON.parse($("#rowDataShopee").val());
-    var rows = [row];
     
-    rows[0].METHOD = $("#cb_penjemputan_shopee0").val();
-    if(rows[0].METHOD == "DROP_OFF")
-    {
-        rows[0].ADDRESS = "";
-        rows[0].PICKUP = "";
-    }
-    else
-    {
-        rows[0].ADDRESS = $("#cb_pickup_area_shopee0").val().split("|")[1];
-        rows[0].PICKUP = $("#cb_pickup_shopee0").val();
-    }
-    
-    loading();
-    $.ajax({
-     	type    : 'POST',
-     	url     : base_url+'Shopee/kirim/',
-     	data    : {dataAll:JSON.stringify(rows)},
-     	dataType: 'json',
-     	success : function(msg){
-     	        Swal.close();
-     	        Swal.fire({
-                		title            :  msg.msg,
-                		type             : (msg.success?'success':'error'),
-                		showConfirmButton: false,
-                		timer            : 2000
-                });
-                 $("#modal-kirim-shopee").modal('hide');
-                	
-              	setTimeout(() => {
-                reloadShopee();
-              }, "2000");
-     	}
-     });
+    Swal.fire({
+        title: 'Anda Yakin Mengirim Pesanan Ini ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                var row = JSON.parse($("#rowDataShopee").val());
+                var rows = [row];
+                
+                rows[0].METHOD = $("#cb_penjemputan_shopee0").val();
+                if(rows[0].METHOD == "DROP_OFF")
+                {
+                    rows[0].ADDRESS = "";
+                    rows[0].PICKUP = "";
+                }
+                else
+                {
+                    rows[0].ADDRESS = $("#cb_pickup_area_shopee0").val().split("|")[1];
+                    rows[0].PICKUP = $("#cb_pickup_shopee0").val();
+                }
+                
+                loading();
+                $.ajax({
+                 	type    : 'POST',
+                 	url     : base_url+'Shopee/kirim/',
+                 	data    : {dataAll:JSON.stringify(rows)},
+                 	dataType: 'json',
+                 	success : function(msg){
+                 	        Swal.close();
+                 	        Swal.fire({
+                            		title            :  msg.msg,
+                            		type             : (msg.success?'success':'error'),
+                            		showConfirmButton: false,
+                            		timer            : 2000
+                            });
+                             $("#modal-kirim-shopee").modal('hide');
+                            	
+                          	setTimeout(() => {
+                            reloadShopee();
+                          }, "2000");
+                 	}
+                 });
+        	}
+        });
 }
 
 function kirimShopeeSemua(){
@@ -3316,88 +3335,98 @@ function recountPengiriman() {
 }
 
 function kirimKonfirmAllShopee(){
-    var data = $("#dataGridShopee1").DataTable().rows().data();
-    var detailData = "";
-    var dataSimpan = [];
-    var dataPerKurir = [];
-    var rows = [];
-    for(var x = 0; x < data.length; x++)
-    {
-        if(data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM")
-        {
-            dataSimpan.push(data[x]);
-        }
-    }
-    
-    for(var x = 0; x < dataSimpan.length; x++)
-    {
-        var ada = false;
-        for(var y = 0 ; y < dataPerKurir.length;y++)
-        {
-            if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
-            {
-                ada = true;
-            }
-        }
-        
-        if(!ada)
-        {
-            dataPerKurir.push(dataSimpan[x]['KURIR']);
-        }
-    }
-    
-    for(var y = 0 ; y < dataPerKurir.length;y++)
-    {  
-        var index = 0;
-        
-        for(var x = 0 ; x < dataSimpan.length;x++)
-        {
-            if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
-            {
-                if($(".table-responsive-shopee-all-kirim_"+y+" #pilihKirimanShopee_"+index).prop('checked'))
+    Swal.fire({
+        title: 'Anda Yakin Mengirim Semua Pesanan Ini ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                var data = $("#dataGridShopee1").DataTable().rows().data();
+                var detailData = "";
+                var dataSimpan = [];
+                var dataPerKurir = [];
+                var rows = [];
+                for(var x = 0; x < data.length; x++)
                 {
-                    
-                    dataSimpan[x]['METHOD'] = $(".table-responsive-shopee-all-kirim_"+y+" #cb_penjemputan_shopee_"+index).val();
-                    if(dataSimpan[x]['METHOD'] == "DROP_OFF")
+                    if(data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM")
                     {
-                        dataSimpan[x].ADDRESS = "";
-                        dataSimpan[x].PICKUP = "";
+                        dataSimpan.push(data[x]);
                     }
-                    else
-                    {
-                        dataSimpan[x]['ADDRESS'] =  $(".table-responsive-shopee-all-kirim_"+y+" #addressKirimShopee_"+index).val();
-                        dataSimpan[x]['PICKUP'] = $(".table-responsive-shopee-all-kirim_"+y+" #pickupKirimShopee_"+index).val();
-                    }
-                    
-                    rows.push(dataSimpan[x]);
-                    
                 }
-            index++;
-            }
-        }
-    }
-    
-    loading();
-    $.ajax({
-     	type    : 'POST',
-     	url     : base_url+'Shopee/kirim/',
-     	data    : {dataAll:JSON.stringify(rows)},
-     	dataType: 'json',
-     	success : function(msg){
-     	        Swal.close();
-     	        Swal.fire({
-                		title            :  msg.msg,
-                		type             : (msg.success?'success':'error'),
-                		showConfirmButton: false,
-                		timer            : 2000
-                });
-                 $("#modal-kirim-shopee").modal('hide');
-                	
-              	setTimeout(() => {
-                reloadShopee();
-              }, "2000");
-     	}
-     });
+                
+                for(var x = 0; x < dataSimpan.length; x++)
+                {
+                    var ada = false;
+                    for(var y = 0 ; y < dataPerKurir.length;y++)
+                    {
+                        if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
+                        {
+                            ada = true;
+                        }
+                    }
+                    
+                    if(!ada)
+                    {
+                        dataPerKurir.push(dataSimpan[x]['KURIR']);
+                    }
+                }
+                
+                for(var y = 0 ; y < dataPerKurir.length;y++)
+                {  
+                    var index = 0;
+                    
+                    for(var x = 0 ; x < dataSimpan.length;x++)
+                    {
+                        if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
+                        {
+                            if($(".table-responsive-shopee-all-kirim_"+y+" #pilihKirimanShopee_"+index).prop('checked'))
+                            {
+                                
+                                dataSimpan[x]['METHOD'] = $(".table-responsive-shopee-all-kirim_"+y+" #cb_penjemputan_shopee_"+index).val();
+                                if(dataSimpan[x]['METHOD'] == "DROP_OFF")
+                                {
+                                    dataSimpan[x].ADDRESS = "";
+                                    dataSimpan[x].PICKUP = "";
+                                }
+                                else
+                                {
+                                    dataSimpan[x]['ADDRESS'] =  $(".table-responsive-shopee-all-kirim_"+y+" #addressKirimShopee_"+index).val();
+                                    dataSimpan[x]['PICKUP'] = $(".table-responsive-shopee-all-kirim_"+y+" #pickupKirimShopee_"+index).val();
+                                }
+                                
+                                rows.push(dataSimpan[x]);
+                                
+                            }
+                        index++;
+                        }
+                    }
+                }
+                
+                loading();
+                $.ajax({
+                 	type    : 'POST',
+                 	url     : base_url+'Shopee/kirim/',
+                 	data    : {dataAll:JSON.stringify(rows)},
+                 	dataType: 'json',
+                 	success : function(msg){
+                 	        Swal.close();
+                 	        Swal.fire({
+                            		title            :  msg.msg,
+                            		type             : (msg.success?'success':'error'),
+                            		showConfirmButton: false,
+                            		timer            : 2000
+                            });
+                             $("#modal-kirim-shopee").modal('hide');
+                            	
+                          	setTimeout(() => {
+                            reloadShopee();
+                          }, "2000");
+                 	}
+                 });
+        	}
+    });
 }
 
 function lacakShopee(){
@@ -3484,84 +3513,104 @@ function hapusShopee(){
 }
 
 function hapusKonfirmShopee(){
-    if($('#cb_alasan_pembatalan_shopee').val() == "")
-    {
-        Swal.fire({
-    		title            :  "Alasan Pembatalan Belum Dipilih",
-    		type             : 'warning',
-    		showConfirmButton: false,
-    		timer            : 2000
-    	});
-    }
-    else
-    {
-        $("#modal-alasan-shopee").modal('hide');
-        loading()
-         $.ajax({
-        	type    : 'POST',
-        	url     : base_url+'Shopee/hapus/',
-        	data    : {kode: $("#NOSHOPEEBATAL").text().split("#")[1], dataItem: $("#itemBatalShopee").val(),alasan:$('#cb_alasan_pembatalan_shopee').val()},
-        	dataType: 'json',
-        	success : function(msg){
-        	       Swal.close();
-        		    Swal.fire({
-                		title            :  msg.msg,
-                		type             : (msg.success?'success':'error'),
+    Swal.fire({
+        title: 'Anda Yakin Membatalkan Pesanan Ini ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                if($('#cb_alasan_pembatalan_shopee').val() == "")
+                {
+                    Swal.fire({
+                		title            :  "Alasan Pembatalan Belum Dipilih",
+                		type             : 'warning',
                 		showConfirmButton: false,
                 		timer            : 2000
                 	});
-                	
-                	setTimeout(() => {
-                     reloadShopee();
-                   }, "2000");
+                }
+                else
+                {
+                    $("#modal-alasan-shopee").modal('hide');
+                    loading()
+                     $.ajax({
+                    	type    : 'POST',
+                    	url     : base_url+'Shopee/hapus/',
+                    	data    : {kode: $("#NOSHOPEEBATAL").text().split("#")[1], dataItem: $("#itemBatalShopee").val(),alasan:$('#cb_alasan_pembatalan_shopee').val()},
+                    	dataType: 'json',
+                    	success : function(msg){
+                    	       Swal.close();
+                    		    Swal.fire({
+                            		title            :  msg.msg,
+                            		type             : (msg.success?'success':'error'),
+                            		showConfirmButton: false,
+                            		timer            : 2000
+                            	});
+                            	
+                            	setTimeout(() => {
+                                 reloadShopee();
+                               }, "2000");
+                    	}
+                    });
+                
+                }
         	}
         });
-    
-    }
 }
 
 function sinkronShopee(){
-    loading();
-    $.ajax({
-    	type    : 'POST',
-    	url     : base_url+'Shopee/cekStokLokasi/',
-    	dataType: 'json',
-    	success : function(msg){
-            if(!msg.success)
-            {
-                Swal.fire({
-                		title            :  msg.msg,
-                		type             : (msg.success?'success':'error'),
-                		showConfirmButton: false,
-                		timer            : 2000
-                });
-            }
-            else
-            {
-                totalPesananShopeeAll = 0;
-                sinkronShopeeState = true;
-                const date = new Date();
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-                const day = String(date.getDate()).padStart(2, '0');
-                
-                const formattedDate = `${year}-${month}-${day}`;
-                
-                 $.ajax({
-                	type    : 'GET',
-                	url     : base_url+'Shopee/init/'+ "<?=TGLAWALFILTERMARKETPLACE?>"+"/"+formattedDate,
+    Swal.fire({
+        title: 'Anda Yakin Melakukan Sinkronisasi ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                loading();
+                $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Shopee/cekStokLokasi/',
                 	dataType: 'json',
                 	success : function(msg){
-                	    totalPesananShopeeAll = msg.total;
-                        for(var x = 1; x <= 4 ; x++)
+                        if(!msg.success)
                         {
-                            doneSinkronShopee[x] = false;
-                            changeTabShopee(x);
+                            Swal.fire({
+                            		title            :  msg.msg,
+                            		type             : (msg.success?'success':'error'),
+                            		showConfirmButton: false,
+                            		timer            : 2000
+                            });
                         }
-                }});
-            }
-    	}
-    });
+                        else
+                        {
+                            totalPesananShopeeAll = 0;
+                            sinkronShopeeState = true;
+                            const date = new Date();
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                            const day = String(date.getDate()).padStart(2, '0');
+                            
+                            const formattedDate = `${year}-${month}-${day}`;
+                            
+                             $.ajax({
+                            	type    : 'GET',
+                            	url     : base_url+'Shopee/init/'+ "<?=TGLAWALFILTERMARKETPLACE?>"+"/"+formattedDate,
+                            	dataType: 'json',
+                            	success : function(msg){
+                            	    totalPesananShopeeAll = msg.total;
+                                    for(var x = 1; x <= 4 ; x++)
+                                    {
+                                        doneSinkronShopee[x] = false;
+                                        changeTabShopee(x);
+                                    }
+                            }});
+                        }
+                	}
+                });
+        	}
+        });
 }
 
 function catatanPenjualShopee(){
@@ -3583,70 +3632,80 @@ function catatanPenjualShopee(){
 }
 
 function noteKonfirmShopee(){
-    loading();
-     $.ajax({
-     	type    : 'POST',
-     	url     : base_url+'Shopee/catatanPenjual/',
-     	data    : {kode: $("#NOSHOPEECATATAN").text().split("#")[1], note: $("#note_shopee").val()},
-     	dataType: 'json',
-     	success : function(msg){
-     	        
-                Swal.close();
-                
-         		Swal.fire({
-                	title            :  msg.msg,
-                	type             : (msg.success?'success':'error'),
-                	showConfirmButton: false,
-                	timer            : 2000
-                });
-                 	
-     	        if(msg.success)
-                {
-                    $("#modal-note-shopee").modal('hide');
-                    if($("#fromNoteShopee").val().split("_")[0] == "KIRIMSHOPEE")
-                    {
-                        var indexKirim = $("#fromNoteShopee").val().split("_")[1];
-                        
-                        var rows = JSON.parse($("#rowDataPengirimanShopee").val());
-                        rows[indexKirim]['CATATANJUAL'] = `<i class='fa fa-edit' id='editNoteShopee' style='cursor:pointer;'></i>
-                              <div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
-                                            white-space: -moz-pre-wrap; /* Firefox */    
-                                            white-space: -pre-wrap;     /* Opera <7 */   
-                                            white-space: -o-pre-wrap;   /* Opera 7 */    
-                                            word-wrap: break-word;      /* IE */'>`+$("#note_shopee").val()+`</div>`;
-                        rows[indexKirim]['CATATANJUALRAW'] = $("#note_shopee").val();
-                        
-                        
-                        if($("#fromNoteShopee").val().split("_").length == 3)
-                        {
-                            var index = $("#fromNoteShopee").val().split("_")[2];
+    Swal.fire({
+        title: 'Anda Yakin Menyimpan Catatan Penjualan Ini ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                loading();
+                 $.ajax({
+                 	type    : 'POST',
+                 	url     : base_url+'Shopee/catatanPenjual/',
+                 	data    : {kode: $("#NOSHOPEECATATAN").text().split("#")[1], note: $("#note_shopee").val()},
+                 	dataType: 'json',
+                 	success : function(msg){
+                 	        
+                            Swal.close();
                             
-                            $(".table-responsive-shopee-all-kirim_"+index+" #editNoteShopeeDiv_"+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
-                            
-                            $("#rowDataPengirimanShopee").val(JSON.stringify(rows));
-                            $(".table-responsive-shopee-all-kirim_"+index+" #editNoteShopeeDiv_"+indexKirim).find('#editNoteShopee').click(function(){
-                               $("#fromNoteShopee").val("KIRIMSHOPEE_"+indexKirim+"_"+index);
-                               catatanPenjualShopee();
+                     		Swal.fire({
+                            	title            :  msg.msg,
+                            	type             : (msg.success?'success':'error'),
+                            	showConfirmButton: false,
+                            	timer            : 2000
                             });
-                        }
-                        else
-                        {
-                            $('#editNoteShopeeDiv'+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
-                            
-                            $("#rowDataPengirimanShopee").val(JSON.stringify(rows));
-                            $('#editNoteShopeeDiv'+indexKirim).find('#editNoteShopee').click(function(){
-                               $("#fromNoteShopee").val("KIRIMSHOPEE_"+indexKirim);
-                               catatanPenjualShopee();
-                            });
-                        }
-                    }
-                 	
-                 	setTimeout(() => {
-                      reloadShopee();
-                    }, "2000");
-                }
-     	}
-     });
+                             	
+                 	        if(msg.success)
+                            {
+                                $("#modal-note-shopee").modal('hide');
+                                if($("#fromNoteShopee").val().split("_")[0] == "KIRIMSHOPEE")
+                                {
+                                    var indexKirim = $("#fromNoteShopee").val().split("_")[1];
+                                    
+                                    var rows = JSON.parse($("#rowDataPengirimanShopee").val());
+                                    rows[indexKirim]['CATATANJUAL'] = `<i class='fa fa-edit' id='editNoteShopee' style='cursor:pointer;'></i>
+                                          <div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
+                                                        white-space: -moz-pre-wrap; /* Firefox */    
+                                                        white-space: -pre-wrap;     /* Opera <7 */   
+                                                        white-space: -o-pre-wrap;   /* Opera 7 */    
+                                                        word-wrap: break-word;      /* IE */'>`+$("#note_shopee").val()+`</div>`;
+                                    rows[indexKirim]['CATATANJUALRAW'] = $("#note_shopee").val();
+                                    
+                                    
+                                    if($("#fromNoteShopee").val().split("_").length == 3)
+                                    {
+                                        var index = $("#fromNoteShopee").val().split("_")[2];
+                                        
+                                        $(".table-responsive-shopee-all-kirim_"+index+" #editNoteShopeeDiv_"+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
+                                        
+                                        $("#rowDataPengirimanShopee").val(JSON.stringify(rows));
+                                        $(".table-responsive-shopee-all-kirim_"+index+" #editNoteShopeeDiv_"+indexKirim).find('#editNoteShopee').click(function(){
+                                           $("#fromNoteShopee").val("KIRIMSHOPEE_"+indexKirim+"_"+index);
+                                           catatanPenjualShopee();
+                                        });
+                                    }
+                                    else
+                                    {
+                                        $('#editNoteShopeeDiv'+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
+                                        
+                                        $("#rowDataPengirimanShopee").val(JSON.stringify(rows));
+                                        $('#editNoteShopeeDiv'+indexKirim).find('#editNoteShopee').click(function(){
+                                           $("#fromNoteShopee").val("KIRIMSHOPEE_"+indexKirim);
+                                           catatanPenjualShopee();
+                                        });
+                                    }
+                                }
+                             	
+                             	setTimeout(() => {
+                                  reloadShopee();
+                                }, "2000");
+                            }
+                 	}
+                 });
+        	}
+        });
 }
 
 function returShopee(){
@@ -3789,198 +3848,208 @@ function setMaksRefundShopee(){
 }
 
 function refundShopee(x){
-    var row = JSON.parse($("#rowDataShopee").val());
-    var rowDetail = JSON.parse($("#dataReturShopee").val());
-    loading();
-    if(x == 0)
-    {
-        $.ajax({
-        	type    : 'POST',
-        	url     : base_url+'Shopee/refund/',
-        	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
-        	dataType: 'json',
-        	success : function(msg){
-               
-                Swal.close();	
-                Swal.fire({
-                	title            :  msg.msg,
-                	type             : (msg.success?'success':'error'),
-                	showConfirmButton: false,
-                	timer            : 2000
-                });
-                if(msg.success)
+    Swal.fire({
+        title: 'Anda Yakin Melanjutkan Pengembalian Pesanan Ini ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                var row = JSON.parse($("#rowDataShopee").val());
+                var rowDetail = JSON.parse($("#dataReturShopee").val());
+                loading();
+                if(x == 0)
                 {
-                    $("#modal-retur-shopee").modal("hide");
-                
-                    setTimeout(() => {
-                      reloadShopee();
-                    }, "2000");
+                    $.ajax({
+                    	type    : 'POST',
+                    	url     : base_url+'Shopee/refund/',
+                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
+                    	dataType: 'json',
+                    	success : function(msg){
+                           
+                            Swal.close();	
+                            Swal.fire({
+                            	title            :  msg.msg,
+                            	type             : (msg.success?'success':'error'),
+                            	showConfirmButton: false,
+                            	timer            : 2000
+                            });
+                            if(msg.success)
+                            {
+                                $("#modal-retur-shopee").modal("hide");
+                            
+                                setTimeout(() => {
+                                  reloadShopee();
+                                }, "2000");
+                            }
+                    	}
+                    });
                 }
-        	}
-        });
-    }
-    // else if(x == 1)
-    // {
-    //     $.ajax({
-    //     	type    : 'POST',
-    //     	url     : base_url+'Shopee/returnRefund/',
-    //     	data    : {kodepengembalian: row.KODEPENGEMBALIAN,offeramount: $("#DANADIKEMBALIKANSHOPEE_1").val(),solution:rowDetail.NEGOTIATIONSOLUTION},
-    //     	dataType: 'json',
-    //     	success : function(msg){
-               
-    //             Swal.close();	
-    //             Swal.fire({
-    //             	title            :  msg.msg,
-    //             	type             : (msg.success?'success':'error'),
-    //             	showConfirmButton: false,
-    //             	timer            : 2000
-    //             });
-    //             if(msg.success)
-    //             {
-    //                 $("#modal-retur-shopee").modal("hide");
-                
-    //                 setTimeout(() => {
-    //                   reloadShopee();
-    //                 }, "2000");
-    //             }
-    //     	}
-    //     });
-    // }
-    // else if(x == 11)
-    // {
-    //     $.ajax({
-    //         	type    : 'POST',
-    //         	url     : base_url+'Shopee/finalReturnRefund/',
-    //         	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
-    //         	dataType: 'json',
-    //         	success : function(msg){
-                   
-    //                 Swal.close();	
-    //                 Swal.fire({
-    //                 	title            :  msg.msg,
-    //                 	type             : (msg.success?'success':'error'),
-    //                 	showConfirmButton: false,
-    //                 	timer            : 2000
-    //                 });
-    //                 if(msg.success)
-    //                 {
-    //                     $("#modal-retur-shopee").modal("hide");
+                // else if(x == 1)
+                // {
+                //     $.ajax({
+                //     	type    : 'POST',
+                //     	url     : base_url+'Shopee/returnRefund/',
+                //     	data    : {kodepengembalian: row.KODEPENGEMBALIAN,offeramount: $("#DANADIKEMBALIKANSHOPEE_1").val(),solution:rowDetail.NEGOTIATIONSOLUTION},
+                //     	dataType: 'json',
+                //     	success : function(msg){
+                           
+                //             Swal.close();	
+                //             Swal.fire({
+                //             	title            :  msg.msg,
+                //             	type             : (msg.success?'success':'error'),
+                //             	showConfirmButton: false,
+                //             	timer            : 2000
+                //             });
+                //             if(msg.success)
+                //             {
+                //                 $("#modal-retur-shopee").modal("hide");
+                            
+                //                 setTimeout(() => {
+                //                   reloadShopee();
+                //                 }, "2000");
+                //             }
+                //     	}
+                //     });
+                // }
+                // else if(x == 11)
+                // {
+                //     $.ajax({
+                //         	type    : 'POST',
+                //         	url     : base_url+'Shopee/finalReturnRefund/',
+                //         	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
+                //         	dataType: 'json',
+                //         	success : function(msg){
+                               
+                //                 Swal.close();	
+                //                 Swal.fire({
+                //                 	title            :  msg.msg,
+                //                 	type             : (msg.success?'success':'error'),
+                //                 	showConfirmButton: false,
+                //                 	timer            : 2000
+                //                 });
+                //                 if(msg.success)
+                //                 {
+                //                     $("#modal-retur-shopee").modal("hide");
+                                
+                //                     setTimeout(() => {
+                //                       reloadShopee();
+                //                     }, "2000");
+                //                 }
+                //         	}
+                //     });
+                // }
+                // if(x == -1){
                     
-    //                     setTimeout(() => {
-    //                       reloadShopee();
-    //                     }, "2000");
-    //                 }
-    //         	}
-    //     });
-    // }
-    // if(x == -1){
-        
-    // }
-    else if(x == 2)
-    {
-        
-        $.ajax({
-        	type    : 'POST',
-        	url     : base_url+'Shopee/menungguBarangDatang/',
-        	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
-        	dataType: 'json',
-        	success : function(msg){
-               
-                Swal.close();	
-                Swal.fire({
-                	title            :  msg.msg,
-                	type             : (msg.success?'success':'error'),
-                	showConfirmButton: false,
-                	timer            : 2000
-                });
-                if(msg.success)
+                // }
+                else if(x == 2)
                 {
-                    $("#modal-retur-shopee").modal("hide");
+                    
+                    $.ajax({
+                    	type    : 'POST',
+                    	url     : base_url+'Shopee/menungguBarangDatang/',
+                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
+                    	dataType: 'json',
+                    	success : function(msg){
+                           
+                            Swal.close();	
+                            Swal.fire({
+                            	title            :  msg.msg,
+                            	type             : (msg.success?'success':'error'),
+                            	showConfirmButton: false,
+                            	timer            : 2000
+                            });
+                            if(msg.success)
+                            {
+                                $("#modal-retur-shopee").modal("hide");
+                            
+                                setTimeout(() => {
+                                  reloadShopee();
+                                }, "2000");
+                            }
+                    	}
+                    });
+                }
+                else if(x == 3)
+                {
+                    var dataDisputeProof = [];
+                    var dataProof = [];
+                    var dataEvidence = $("#pilihanDisputeShopee").val()
+                    var modulEvidence = JSON.parse(dataEvidence);
+                    
+                    for(var y = 0 ; y < modulEvidence.length;y++)
+                    {
+                        //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
+                        if($("#src-input-shopee-"+y).val() != "")
+                        {
+                            dataDisputeProof.push({
+                                "index" : (y+1),
+                                "requirement" : $("#keterangan-input-shopee-"+y).val(),
+                                "thumbnail" : $("#src-input-shopee-"+y).val(),
+                                "url" : [$("#src-input-shopee-"+y).val()]
+                            });
+                            
+                            dataProof.push({
+                                "thumbnail" : $("#src-input-shopee-"+y).val(),
+                                "url" : $("#src-input-shopee-"+y).val()
+                            });
+                        }
+                    
+                    }
                 
-                    setTimeout(() => {
-                      reloadShopee();
-                    }, "2000");
+                    // $.ajax({
+                    // 	type    : 'POST',
+                    // 	url     : base_url+'Shopee/uploadProof/',
+                    // 	data    : {"kodepengembalian" : row.KODEPENGEMBALIAN, "kodepesanan" : row.KODEPESANAN, "dataDisputeProof" : JSON.stringify(dataDisputeProof), "dataProof" : JSON.stringify(dataProof), "description" : $("#deskripsi_sengketa_shopee").val()},
+                    //     dataType: 'json',
+                    // 	success : function(msg){
+                           
+                    //         Swal.close();	
+                    //         Swal.fire({
+                    //         	title            :  msg.msg,
+                    //         	type             : (msg.success?'success':'error'),
+                    //         	showConfirmButton: false,
+                    //         	timer            : 2000
+                    //         });
+                    //         if(msg.success)
+                    //         {
+                    //             $("#modal-retur-shopee").modal("hide");
+                            
+                    //             setTimeout(() => {
+                    //               reloadShopee();
+                    //             }, "2000");
+                    //         }
+                    // 	}
+                    // });
+                    
+                    $.ajax({
+                    	type    : 'POST',
+                    	url     : base_url+'Shopee/dispute/',
+                    	data    : {"kodepengembalian" : row.KODEPENGEMBALIAN, "kodepesanan" : row.KODEPESANAN, "data" : JSON.stringify(dataDisputeProof), "id" :  $("#pilihDisputeShopee").val(), "description" : $("#deskripsi_sengketa_shopee").val(), "email" : $("#email_sengketa_shopee").val()},
+                        dataType: 'json',
+                    	success : function(msg){
+                           
+                            Swal.close();	
+                            Swal.fire({
+                            	title            :  msg.msg,
+                            	type             : (msg.success?'success':'error'),
+                            	showConfirmButton: false,
+                            	timer            : 2000
+                            });
+                            if(msg.success)
+                            {
+                                $("#modal-retur-shopee").modal("hide");
+                            
+                                setTimeout(() => {
+                                  reloadShopee();
+                                }, "2000");
+                            }
+                    	}
+                    });
                 }
         	}
         });
-    }
-    else if(x == 3)
-    {
-        var dataDisputeProof = [];
-        var dataProof = [];
-        var dataEvidence = $("#pilihanDisputeShopee").val()
-        var modulEvidence = JSON.parse(dataEvidence);
-        
-        for(var y = 0 ; y < modulEvidence.length;y++)
-        {
-            //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
-            if($("#src-input-shopee-"+y).val() != "")
-            {
-                dataDisputeProof.push({
-                    "index" : (y+1),
-                    "requirement" : $("#keterangan-input-shopee-"+y).val(),
-                    "thumbnail" : $("#src-input-shopee-"+y).val(),
-                    "url" : [$("#src-input-shopee-"+y).val()]
-                });
-                
-                dataProof.push({
-                    "thumbnail" : $("#src-input-shopee-"+y).val(),
-                    "url" : $("#src-input-shopee-"+y).val()
-                });
-            }
-        
-        }
-    
-        // $.ajax({
-        // 	type    : 'POST',
-        // 	url     : base_url+'Shopee/uploadProof/',
-        // 	data    : {"kodepengembalian" : row.KODEPENGEMBALIAN, "kodepesanan" : row.KODEPESANAN, "dataDisputeProof" : JSON.stringify(dataDisputeProof), "dataProof" : JSON.stringify(dataProof), "description" : $("#deskripsi_sengketa_shopee").val()},
-        //     dataType: 'json',
-        // 	success : function(msg){
-               
-        //         Swal.close();	
-        //         Swal.fire({
-        //         	title            :  msg.msg,
-        //         	type             : (msg.success?'success':'error'),
-        //         	showConfirmButton: false,
-        //         	timer            : 2000
-        //         });
-        //         if(msg.success)
-        //         {
-        //             $("#modal-retur-shopee").modal("hide");
-                
-        //             setTimeout(() => {
-        //               reloadShopee();
-        //             }, "2000");
-        //         }
-        // 	}
-        // });
-        
-        $.ajax({
-        	type    : 'POST',
-        	url     : base_url+'Shopee/dispute/',
-        	data    : {"kodepengembalian" : row.KODEPENGEMBALIAN, "kodepesanan" : row.KODEPESANAN, "data" : JSON.stringify(dataDisputeProof), "id" :  $("#pilihDisputeShopee").val(), "description" : $("#deskripsi_sengketa_shopee").val(), "email" : $("#email_sengketa_shopee").val()},
-            dataType: 'json',
-        	success : function(msg){
-               
-                Swal.close();	
-                Swal.fire({
-                	title            :  msg.msg,
-                	type             : (msg.success?'success':'error'),
-                	showConfirmButton: false,
-                	timer            : 2000
-                });
-                if(msg.success)
-                {
-                    $("#modal-retur-shopee").modal("hide");
-                
-                    setTimeout(() => {
-                      reloadShopee();
-                    }, "2000");
-                }
-        	}
-        });
-    }
 }
 
 function reloadShopee(){

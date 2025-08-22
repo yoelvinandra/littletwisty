@@ -1,5 +1,10 @@
 <meta charset="UTF-8">
 <style>
+  #table_barang_naik_shopee td {
+    white-space: normal !important;
+    word-wrap: break-word;
+  }
+  
     /* Custom CSS */
    .image-upload-section {
        margin-top: 20px;
@@ -125,6 +130,25 @@
         overflow-y: auto;
         flex: 1 1 auto;
     }
+    
+    
+    #historyPerubahanShopee {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #historyPerubahanShopee thead {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+    }
+
+    #historyPerubahanShopee th, #historyPerubahanShopee td {
+      padding: 16px 20px;
+      text-align: left;
+    }
+    
 </style>
 
 <!-- Main content -->
@@ -136,19 +160,22 @@
             <div class="box" style="border:0px; padding:0px; margin:0px;">
             <div class="box-header form-inline" style="padding:0px;">
                 <button class="btn btn-success" onclick="javascript:tambahShopee()">Tambah</button>
+                &nbsp;&nbsp;
+                <button class="btn btn-primary" onclick="javascript:naikkanShopee()">Naikkan Produk</button>
             	<div class="pull-right" style="width:170px; margin-right:0px;">
                 	<div class="input-group " >
                 	 <div class="input-group-addon">
                 		 <i class="fa fa-filter"></i>
                 	 </div>
-                		<select id="cb_barang_status" name="cb_barang_status" class="form-control "  panelHeight="auto" required="true">
-                			<option value="SEMUA">SEMUA </option>
-                			<option value="NORMAL">NORMAL</option>
-                			<option value="UNLIST">UNLIST</option>
-                			<option value="BANNED">BANNED</option>
-                			<option value="REVIEWING">REVIEW</option>
-                			<option value="SELLER_DELETE">SELLER DELETE</option>
-                			<option value="SHOPEE_DELETE">SHOPEE DELETE</option>
+                		<select id="cb_barang_status_shopee" name="cb_barang_status_shopee" class="form-control "  panelHeight="auto" required="true">
+                			<option value="SEMUA">Semua </option>
+                			<option value="SEMUABARANGAKTIF" selected>Barang Aktif</option>
+                			<option value="NORMAL">Normal</option>
+                			<option value="UNLIST">Unlist</option>
+                			<option value="BANNED">Banned</option>
+                			<option value="REVIEWING">Masa Review</option>
+                			<option value="SELLER_DELETE">Penjual Hapus</option>
+                			<option value="SHOPEE_DELETE">Shopee Hapus</option>
                 		</select>
                 	</div>
                 </div>
@@ -160,6 +187,7 @@
                 <tr>
                     <th width="80px"></th>
                     <th>Nama Produk</th>
+                    <th width="100px">Terhubung Master</th>
                     <th width="100px">Ada Varian</th>
                     <th width="40px">Tgl. Input</th>
                     <th width="100px">Status</th>								
@@ -179,7 +207,8 @@
                   <input type="hidden" id="IDBARANGSHOPEE" name="IDBARANGSHOPEE">
                   <div class="row">
                       <div class="form-group col-md-12">
-                          <h3 style="font-weight:bold;" class="form-group">Tambah Produk</h3>
+                          <h3 style="font-weight:bold;" class="form-group" id="titleShopee">Tambah Produk</h3>
+                          <span id="checkShopee" style="font-size:12pt; float:right; margin-top:-40px; font-style:italic;">*Terdapat perubahan data pada master,&nbsp;&nbsp;<span style="text-decoration:underline; cursor:pointer;" onclick="checkShopeeDetail()">Lihat Perubahan</span></span>
                           <label>Hubungkan Master Barang <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
                           <select id="BARANGSHOPEE" name="BARANGSHOPEE" class="form-control select2" style="border:1px solid #B5B4B4; border-radius:1px; width:100%; height:32px; padding-left:12px; padding-right:12px;">
         
@@ -199,15 +228,15 @@
                                 </div>
                                 <div class="col-md-12">
                                     <br>
-                                    <label>Nama Produk <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
-                                    <input type="text" class="form-control" id="NAMASHOPEE" name="NAMASHOPEE" placeholder="Nama Produk" readonly>
+                                    <label>Nama Produk <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master, bisa diubah</i></label>
+                                    <input type="text" class="form-control" id="NAMASHOPEE" name="NAMASHOPEE" placeholder="Nama Produk">
                                 </div>
                                 <div class="col-md-12">
                                     <br>
-                                    <label>Deskripsi <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
-                                    <textarea class="form-control" rows="9" id="DESKRIPSISHOPEE" name="DESKRIPSISHOPEE" placeholder="Deskripsi....." readonly></textarea>
+                                    <label>Deskripsi <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master, bisa diubah</i></label>
+                                    <textarea class="form-control" rows="9" id="DESKRIPSISHOPEE" name="DESKRIPSISHOPEE" placeholder="Deskripsi....."></textarea>
                                 </div>
-                                 <div class ="form-group col-md-12">
+                                <div class="form-group col-md-12" id="DIVDATAVARIAN">
                                   <br>
                                   <label style="font-weight:bold; margin-bottom:-5px;">Varian Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
                                   <div style="margin-top:-28px !important;" >
@@ -217,13 +246,57 @@
                                           <tr>
                                               <th></th>
                                               <th>Nama</th>
-                                              <th width="100px">Harga</th>
-                                              <th width="200px">SKU</th>							
+                                              <th width="80px">Harga</th>
+                                              <th width="180px">SKU</th>	
+                                              <th width="50px">Aktif</th>							
                                           </tr>
                                           </thead>
                                       </table>  
-                                    </div>
-                              </div>
+                                   </div>
+                               </div>
+                               <div id="DIVDATANONVARIAN">
+                                   <div class="form-group col-md-6" >
+                                      <br>
+                                      <label style="font-weight:bold; margin-bottom:-5px;">Harga Jual Tampil <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
+                                      <input type="text" class="form-control" id="HARGAJUALMASTERSHOPEE" name="HARGAJUALMASTERSHOPEE" placeholder="Harga Jual Tampil" readonly>
+                                   </div>
+                                    <div class="form-group col-md-6" >
+                                      <br>
+                                      <label style="font-weight:bold; margin-bottom:-5px;">SKU <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
+                                      <input type="text" class="form-control" id="SKUMASTERSHOPEE" name="SKUMASTERSHOPEE" placeholder="SKU Shopee" readonly>
+                                   </div>
+                                </div>
+                          </div>
+                          <div class="row">
+                             <div class ="form-group col-md-12">
+                                 <br>
+                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 1)</i></h4>
+                                 <br>
+                                 <table id="gambarprodukshopee">
+                                 </table>  
+                             </div>
+                             <div class ="form-group col-md-12" id="DIVGAMBARVARIANSHOPEE">
+                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Setiap Varian)</i></h4>
+                                 <br>
+                                 <table id="gambarvarianshopee">
+                                 </table>    
+                             </div>
+                           </div>
+                           <div class="row" id="TABELUKURANSETTINGSHOPEE">
+                             <div class ="form-group col-md-12">
+                                 <h4 style="font-weight:bold; margin-bottom:-5px; margin-top:10px;">Tabel Ukuran<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></h4>
+                                 <br>
+                                 
+                                  <select id="TEMPLATESHOPEE" class="form-control select2 pull-left" name="TEMPLATESHOPEE" style="border:1px solid #B5B4B4; border-radius:1px; width:250px; height:32px; padding-left:12px; padding-right:12px;">
+                
+                                  </select>
+                                 <label>
+                                  &nbsp;&nbsp;&nbsp;<input type="checkbox" class="flat-blue" id="SIZETEMPLATESHOPEE" name="SIZETEMPLATESHOPEE" value="1" checked>&nbsp; Pilih Template</label>
+            
+                                 <table id="gambarukuranprodukshopee" style="margin-top:10px;">
+                                    
+                                 </table>  
+                             </div>
                           </div>
                       </div>
                       <div class="form-group col-md-4">
@@ -231,22 +304,22 @@
                           <div class="row" style="margin-top:10px;">
                               <div class="col-md-12">
                           	    <label>Berat (gram) <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
-                                  <input type="text" class="form-control" id="BERATSHOPEE" name="BERATSHOPEE" placeholder="Dalam Gram" readonly>
+                                  <input type="text" class="form-control" id="BERATMASTERSHOPEE" name="BERATMASTERSHOPEE" placeholder="Dalam Gram" readonly>
                               </div>
                           </div>
                           <div class="row">
                               <br>
                               <div class="col-md-4">
                                   <label>Panjang</label>
-                                  <input type="text" class="form-control" id="PANJANGSHOPEE" name="PANJANGSHOPEE" placeholder="Cm" readonly>
+                                  <input type="text" class="form-control" id="PANJANGMASTERSHOPEE" name="PANJANGMASTERSHOPEE" placeholder="Cm" readonly>
                               </div>
                               <div class="col-md-4">
                                   <label>Lebar</label>
-                                  <input type="text" class="form-control" id="LEBARSHOPEE" name="LEBARSHOPEE" placeholder="Cm" readonly>
+                                  <input type="text" class="form-control" id="LEBARMASTERSHOPEE" name="LEBARMASTERSHOPEE" placeholder="Cm" readonly>
                               </div>
                               <div class="col-md-4">
                                   <label>Tinggi</label>
-                                  <input type="text" class="form-control" id="TINGGISHOPEE" name="TINGGISHOPEE" placeholder="Cm" readonly>
+                                  <input type="text" class="form-control" id="TINGGIMASTERSHOPEE" name="TINGGIMASTERSHOPEE" placeholder="Cm" readonly>
                               </div>
                           </div>
                           <div class="row" style="height:200px;">
@@ -270,7 +343,7 @@
                           <div class="row" style="margin-top:45px;">
                               <br>
                               <div class="col-md-12">
-                                   <label>Spesifikasi <i style="color:grey;"></i></label> 
+                                   <label>Spesifikasi Produk <i style="color:grey;"></i></label> 
                                    <div style="margin-top:6px;">
                                         <table id="dataGridAttributShopee" class="table table-bordered table-striped table-hover display nowrap" width="200px">
                                             <!-- class="table-hover"> -->
@@ -287,39 +360,9 @@
                           </div>
                       </div>
                   </div>
-                 <div class="row">
-                   <div class ="form-group col-md-12">
-                       <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 1)</i></h4>
-                       <br>
-                       <table id="gambarprodukshopee">
-                       </table>  
-                   </div>
-                   <div class ="form-group col-md-12">
-                       <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Setiap Varian)</i></h4>
-                       <br>
-                       <table id="gambarvarianshopee">
-                       </table>    
-                   </div>
-                 </div>
-                 <div class="row" id="TABELUKURANSETTINGSHOPEE">
-                   <div class ="form-group col-md-12">
-                       <h4 style="font-weight:bold; margin-bottom:-5px; margin-top:10px;">Tabel Ukuran<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></h4>
-                       <br>
-                       
-                        <select id="TEMPLATESHOPEE" class="form-control select2 pull-left" name="TEMPLATESHOPEE" style="border:1px solid #B5B4B4; border-radius:1px; width:250px; height:32px; padding-left:12px; padding-right:12px;">
-    
-                        </select>
-                       <label>
-                        &nbsp;&nbsp;&nbsp;<input type="checkbox" class="flat-blue" id="SIZETEMPLATESHOPEE" name="SIZETEMPLATESHOPEE" value="1" checked>&nbsp; Pilih Template</label>
-
-                       <table id="gambarukuranprodukshopee" style="margin-top:10px;">
-                          
-                       </table>  
-                   </div>
-                 </div>
               </div>
               <div class="box-footer">
-                  <button type="button" id="btn_simpan_detail" class="btn btn-success" onclick="javascript:simpanShopee()">Simpan</button>
+                  <button type="button" id="btn_simpan_detail_shopee" class="btn btn-success" onclick="javascript:simpanShopee()">Simpan</button>
                   </div>
               </div>
   		</div>
@@ -391,9 +434,97 @@
 	    </div>
 	</div>
   </div>
+  
+  <div class="modal fade" id="modal-check-shopee">
+	<div class="modal-dialog">
+	<div class="modal-content">
+	    <div class="modal-header">
+            <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
+                <i class='fa fa-arrow-left' ></i>
+            </button>
+            <h4 class="modal-title"  style="float:left; padding-top:4px;">Perubahan Data Master</h4>
+        </div>
+		<div class="modal-body">
+      	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
+      	        <div class="col-md-12 col-sm-12 col-xs-12" style="padding:0px;">
+                   <table id="historyPerubahanShopee" width="100%" style="border:0.5px solid #cccccc">
+                      
+                   </table>
+                </div>
+      	    </div>
+      	  </div>
+	    </div>
+	</div>
+  </div>
+  
+  <div class="modal fade" id="modal-naik-produk-shopee">
+	<div class="modal-dialog modal-lg">
+	<div class="modal-content">
+	    <div class="modal-header">
+            <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
+                <i class='fa fa-arrow-left' ></i>
+            </button>
+            <h4 class="modal-title"  style="float:left; padding-top:4px;">Naikkan Produk</h4>
+        </div>
+		<div class="modal-body">
+		    <ul style="padding-left:20px;">
+		        <li>Hanya bisa menaikkan 5 produk untuk setiap toko dalam waktu bersamaan</li>
+                <li>Produk akan dinaikkan selama 4 jam</li>
+                <li>Hanya bisa pin 5 produk</li>
+                <li>Produk akan mulai dinaikkan ketika telah menyimpan pengaturan</li>
+                <li>Produk yang dicentang, adalah produk yang akan dinaikan secara permanen</li>
+            </ul>
+            <br>
+            <button type="button" style="float:left; position: relative; z-index: 10; margin-left:5px;"  id="btn_tambah_produk_naikkan_shopee" class="btn btn-success" onclick="javascript:tambahProdukNaik()">Tambah</button>
+      	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
+      	        <div class="col-md-12 col-sm-12 col-xs-12" style="padding:0px;">
+      	          <br>
+                  <table id="dataGridNaikkanProdukShopee" class="table table-bordered table-striped table-hover display nowrap" width="200px">
+                      <!-- class="table-hover"> -->
+                      <thead>
+                          <tr>
+                              <th>Permanen</th>
+                              <th></th>
+                              <th>Nama</th>
+                              <th width="100">Waktu</th>
+                          </tr>
+                      </thead>
+                  </table> 
+                </div>
+      	    </div>
+      	    <br>
+      	    <br>
+            <button id='btn_simpan_naik_produk_shopee'  class='btn btn-success' onclick="simpanProdukNaikData()">Simpan</button>
+      	  </div>
+	    </div>
+	</div>
+  </div>
+  
+   <!--MODAL BARANG-->
+  <div class="modal fade" id="modal-barang-naik-shopee">
+  	<div class="modal-dialog modal-lg">
+  	<div class="modal-content">
+  		<div class="modal-body">
+  		    <button type="button" id="simpan-barang-naik-shopee" class="btn btn-success" style="position:absolute; right:15px;" onclick="javascript:simpanProdukNaik()">Pilih Produk <span id="countProduk"></span></button>
+  			<table id="table_barang_naik_shopee" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+  				<thead>
+  					<tr>
+  					    <th><input type="checkbox" id="pilihProdukSemua"></th>
+  						<th>Nama</th>
+  						<th>Jml Varian</th>
+  						<th>Harga</th>
+  					</tr>
+  				</thead>
+  			</table>
+  		</div>
+  	</div>
+  	</div>
+  </div>
+  
   <!-- /.row (main row) -->
 </section>
 <input type="hidden" id="statusShopee">
+<input type="hidden" id="modeShopee">
 <!-- /.content -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.2/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
@@ -404,16 +535,31 @@ var attributShopeeOld = [];
 var dataMasterShopee = [];
 var warna = [];
 var ukuran = [];
+var historyPerubahanShopee = [];
 $(document).ready(function() {
+    
+    $("#HARGAJUALMASTERSHOPEE").number(true, 0);
+    const modal = document.getElementById('modal-detail-attribut-shopee');
+
+    window.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        kembaliAttribut();
+      }
+    });
+
     loading();
-    $("#statusShopee").val('NORMAL,UNLIST,BANNED,REVIEWING,SELLER_DELETE,SHOPEE_DELETE');
+    $("#statusShopee").val('NORMAL,UNLIST,REVIEWING');
     $("#TEMPLATESHOPEE").select2();
     //MENAMPILKAN TRANSAKSI
-    $("#cb_barang_status").change(function(event){
+    $("#cb_barang_status_shopee").change(function(event){
         loading();
     	if($(this).val()  == 'SEMUA' )
     	{
     		$("#statusShopee").val('NORMAL,UNLIST,BANNED,REVIEWING,SELLER_DELETE,SHOPEE_DELETE');
+    	}
+    	else if($(this).val()  == 'SEMUABARANGAKTIF' )
+    	{
+    		$("#statusShopee").val('NORMAL,UNLIST,REVIEWING');
     	}	
     	else
     	{
@@ -456,13 +602,14 @@ $(document).ready(function() {
 			dataSrc: "rows",
 			type   : "POST",
         	data   : function(e){
-        	    e.status 		 = getStatusShopee(index);
+        	    e.status 		 = getStatusShopee();
         	},
 		},
         columns:[
             // { data: 'IDBARANG', visible: false},
             {data: ''},
             {data: 'NAMABARANG'},
+            {data: 'MASTERCONNECTED', className:"text-center"},
             {data: 'VARIAN', className:"text-center"},
             {data: 'TGLENTRY', className:"text-center"},
             {data: 'STATUS', className:"text-center"},
@@ -473,6 +620,40 @@ $(document).ready(function() {
                 "data": null,
                 "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash' aria-hidden='true' ></button>"	
 			}
+			,
+			{
+			    "targets": -1,
+                "render" :function (data,display,row) 
+    			{
+    			    var status = "";
+                	if(data == "NORMAL")
+                	{
+                	    status = "Normal";
+                	}
+                	if(data == "UNLIST")
+                	{
+                	    status = "Unlist";
+                	}
+                	if(data == "BANNED")
+                	{
+                	    status = "Banned";
+                	}
+                	if(data == "REVIEWING")
+                	{
+                	  status = "Masa Review";
+                	}
+                	if(data == "SELLER_DELETE")
+                	{
+                	    status = "Penjual Hapus"; 
+                	}
+                	if(data == "SHOPEE_DELETE")
+                	{
+                	    status = "Shopee Hapus";
+                	}
+                			
+    			    return status;
+    			},		
+			}
 		],
     });
 
@@ -481,8 +662,8 @@ $(document).ready(function() {
 		var row = $('#dataGridShopee').DataTable().row( $(this).parents('tr') ).data();
 		var mode = $(this).attr("id");
 		
-		if(mode == "btn_ubah"){ ubahHeader(row); }
-		if(mode == "btn_hapus"){ hapusHeader(row); }
+		if(mode == "btn_ubah"){ ubahShopee(row); }
+		if(mode == "btn_hapus"){ hapusShopee(row); }
 	});
     
     $('#dataGridShopee').DataTable().on('xhr.dt', function () {
@@ -493,42 +674,62 @@ $(document).ready(function() {
         $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
     });
     
-    $('#dataGridVarianShopee').DataTable({
-        'paging'      : false,
-        'lengthChange': false,
-        'searching'   : true,
-        'ordering'    : false,
-        'info'        : true,
-        'autoWidth'   : false,
-    	"scrollX"	  : true,
-    	ajax		  : {
-    		url    : base_url+'Master/Data/Barang/getDataVarian',
-    		dataSrc: "rows",
-    	},
-        columns:[
-            {data: 'IDBARANG', visible:false},
-            {data: 'NAMABARANG'},
-            {data: 'HARGAJUAL', render:format_number, className:"text-right"},
-            {data: 'SKUSHOPEE', className:"text-center"},
-        ],
-    	'columnDefs': [
-    	    {
-    		    "targets": 1,
-                "render" :function (data) 
-    			{
-    			    var array = data.split(" | ");
-    			    if(array.length == 1)
-    			    {
-    				    return array[0];
-    			    }
-    			    else
-    			    {
-    				    return array[1]+" | "+array[2];
-    			    }
-    			},		
-    		},
-    	]
+   $('#dataGridVarianShopee').DataTable({
+      paging: false,
+      lengthChange: false,
+      searching: true,
+      ordering: false,
+      info: true,
+      autoWidth: false,
+      scrollX: true,
+      ajax: {
+        url: base_url + 'Master/Data/Barang/getDataVarian',
+        dataSrc: "rows",
+      },
+      columns: [
+        { data: 'IDBARANG', visible: false },
+        { data: 'NAMABARANG' },
+        { data: 'HARGAJUAL', render: format_number, className: "text-right" },
+        { data: 'SKUSHOPEE', className: "text-center" },
+        { data: 'STATUS', className: "text-center" } // <-- changed from 'AKTIF'
+      ],
+      columnDefs: [
+        {
+          targets: 1,
+          render: function (data) {
+            var array = data.split(" | ");
+            if (array.length == 1) {
+              return array[0];
+            } else {
+              return array[1] + " | " + array[2];
+            }
+          },
+        },
+        {
+          targets: -1,
+          render: function (data, type, row, meta) {
+            var checked = data == 1 ? "checked" : "";
+            return `<input type='checkbox' class='status-checkbox' disabled data-id='${row.IDBARANG}' ${checked}>`;
+          },
+        },
+      ],
+      drawCallback: function () {
+        $('.status-checkbox').on('change', function () {
+          var id = $(this).data('id');
+          var checked = $(this).is(':checked') ? 1 : 0;
+          var table = $('#dataGridVarianShopee').DataTable();
+    
+          var rowIndex = table.rows().eq(0).filter(function (rowIdx) {
+            return table.cell(rowIdx, 0).data() == id;
+          });
+    
+          if (rowIndex.length > 0) {
+            table.cell(rowIndex[0], 4).data(checked).draw(false); // column 4 = STATUS
+          }
+        });
+      }
     });
+
     
     $('#dataGridPengirimanShopee').DataTable({
         'paging'      : false,
@@ -547,26 +748,30 @@ $(document).ready(function() {
             {data: 'IDPENGIRIMAN', visible:false},
             {data: 'NAMAPENGIRIMAN'},
         ],
+        "initComplete": function () {
+             var table = this.api();
+        
+            $('#dataGridPengirimanShopee tbody').on('click', 'tr', function (e) {
+                var data = table.row(this).data();
+                var checkboxId = 'kirim_' + data.IDPENGIRIMAN;
+        
+                // ✅ Call your function manually
+                activeCheckboxPengiriman('label', checkboxId);
+            });
+        },
     	'columnDefs': [
-    	     {
-    		    "targets": 0,
-                "render" :function (data) 
-    			{
-    			    if(data == 1)
-    			    {
-    				    return "<input type='checkbox' class='choose-row' checked>";
-    			    }
-    			    else
-    			    {
-    				    return "<input type='checkbox' class='choose-row'>";
-    			    }
-    			},		
-    		},
+            {
+                "targets": 0,
+                "render": function (data, display, row) {
+                    var checked = data == 1 ? "checked" : "";
+                    return "<input id='kirim_" + row.IDPENGIRIMAN + "' type='checkbox' class='choose-row' " + checked + " onclick=\"event.stopPropagation(); activeCheckboxPengiriman('checkbox','kirim_" + row.IDPENGIRIMAN + "')\">";
+                }
+            },
     		{
     		    "targets": 2,
                 "render" :function (data,display,row) 
     			{
-    			    return data+'<span class="pull-right" onclick="checkDetailKirim('+(row.IDPENGIRIMAN)+')">Detail</span>';
+    			    return data+'<span class="pull-right" onclick="event.stopPropagation(); checkDetailKirim('+(row.IDPENGIRIMAN)+')">Detail</span>';
     			},		
     		},
     	]
@@ -632,277 +837,167 @@ $(document).ready(function() {
     
     $('#dataGridAttributShopee').DataTable().on('xhr.dt', function () {
         setTimeout(() => {
-            attributShopee = $('#dataGridAttributShopee').DataTable().rows().data().toArray();
-            attributShopeeOld = $('#dataGridAttributShopee').DataTable().rows().data().toArray();
+            attributShopee = JSON.parse(JSON.stringify($('#dataGridAttributShopee').DataTable().rows().data().toArray()));
+            attributShopeeOld = JSON.parse(JSON.stringify($('#dataGridAttributShopee').DataTable().rows().data().toArray()));
         }, "500");
+    });
+    
+    $('#dataGridNaikkanProdukShopee').DataTable({
+        'paging'      : false,
+        'lengthChange': false,
+        'searching'   : false,
+        'ordering'    : false,
+        'info'        : true,
+        'autoWidth'   : false,
+    	"scrollX"	  : true,
+    	ajax		  : {
+    		url    : base_url+'Shopee/getBoost',
+    		dataSrc: "rows",
+    	},
+        columns:[
+            {data: 'PERMANENT', className:"text-center"},
+            {data: 'ID', visible:false},
+            {data: 'NAMA'},
+            {data: 'WAKTU',width:100, className:"text-center"},
+        ],
+    	'columnDefs': [
+    	    {
+                "targets": 0, // Assuming VALUEATTRIBUT is column index 2
+                "render" :function (data,display,row) 
+    			{
+    			    var checked = (row.PERMANENT ? "checked":"");
+    	            return "<input type='checkbox' "+checked+" class='pilihDetailProduk' id='check_"+row.ID+"' >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class='fa fa-trash' style='color:red;' onclick='removeProdukNaik("+row.ID+")' aria-hidden='true' >";
+    			}
+            },
+            {
+                "targets": 3, // Assuming VALUEATTRIBUT is column index 2
+                "render" :function (data,display,row) 
+    			{
+    			   if(row.WAKTU != "-")
+    			   {
+        			  return '<span class="runtimenaik" id="'+(row.WAKTU??'-')+'">-</span>';
+    			   }
+    			   else
+    			   {
+    			       return '-';
+    			   }
+    			}
+            },
+    	]
+    });
+    
+    let intervalId; // Store the interval globally (or in a closure)
+    
+    $('#dataGridNaikkanProdukShopee').DataTable().on('xhr.dt', function () {
+        setTimeout(function () {
+            // Clear any previous interval
+            clearInterval(intervalId);
+        
+            let waktuJalan = parseInt($(".runtimenaik").attr("id"));
+        
+            if (!isNaN(waktuJalan) && $(".runtimenaik").attr("id") !== '-') {
+                intervalId = setInterval(function () {
+                    if ($(".runtimenaik").attr("id") !== '-') {
+                        waktuJalan--;
+                        $(".runtimenaik").html(msToHHMMSS(waktuJalan * 1000));
+                    }
+                }, 1000);
+            }
+        },1000);
+    });
+    
+    function msToHHMMSS(ms) {
+        let totalSeconds = Math.floor(ms / 1000);
+        let hours = Math.floor(totalSeconds / 3600);
+        let minutes = Math.floor((totalSeconds % 3600) / 60);
+        let seconds = totalSeconds % 60;
+    
+        // Pad with leading zeros if needed
+        let hh = String(hours).padStart(2, '0');
+        let mm = String(minutes).padStart(2, '0');
+        let ss = String(seconds).padStart(2, '0');
+    
+        return `${hh}:${mm}:${ss}`;
+    }
+    
+    //TABLE BARANG
+	$("#table_barang_naik_shopee").DataTable({
+        'retrieve'    : true,
+        'paging'      : false,
+        'lengthChange': false,
+        'searching'   : true,
+        'ordering'    : false,
+        'info'        : false,
+        'autoWidth'   : false,
+		"dom"		  : '<"pull-left"f><"pull-right"l>tip',
+		ajax		  : {
+			url    : base_url+'Master/Data/Barang/dataGrid',   // Master/Data/Barang/loadData
+        	dataSrc: function(json) {
+                // Filter rows with KATEGORI !== 0
+                json.rows = json.rows.filter(function(item) {
+                    return item.IDINDUKBARANGSHOPEE != 0;
+                });
+                return json.rows;
+            },
+			type   : "POST",
+    		data   : function(e){
+        	    e.marketplace = 'SHOPEE';
+        	},
+		},
+		language: {
+			search           : "Cari",
+			searchPlaceholder: "Nama Produk"
+		},
+        columns:[
+            { data: ''},
+            { data: 'KATEGORI'},
+            { data: 'JMLVARIAN', width:80,className:"text-center"},
+			{ data: 'RANGEHARGAUMUM', width:150,className:"text-center"},
+        ],
+        'columnDefs': [
+    		{
+    		    "targets": 0,
+                "render" :function (data,display,row) 
+    			{
+    			    return '<input type="checkbox" id="'+row.KATEGORI+'" class="pilihProduk"></input>';
+    			},	
+    		}
+    	]
+		
+    });
+    
+    $('#pilihProdukSemua').change(function (event) {
+        let isChecked = $(this).prop('checked');
+    
+        $(".pilihProduk").prop('checked',isChecked);
+        var totalCount = $('#table_barang_naik_shopee').DataTable().data().count();
+        if(isChecked)
+        {
+            $("#countProduk").html('('+totalCount+')');
+        }
+        else
+        {
+            $("#countProduk").html('');
+        }
+    });
+    
+    $(document).on('change', '.pilihDetailProduk', function (event) {
+        let isChecked = $(this).prop('checked');
+        var count = 0;
+        $('input.pilihDetailProduk:checked').each(function () {
+            count++;
+        });
+        
+        if(count > 5)
+        {
+            $(this).prop('checked',false);
+        }
     });
     
     $('#dataGridVarianShopee').DataTable().on('xhr.dt', function () {
         if($("#BARANGSHOPEE").val() != 0)
         {
             setTimeout(() => {
-                
-                //GAMBAR PRODUK
-               	var htmlGambarProduk = "<tr>";
-                   var utama = "Gambar Utama";
-                   
-                   for(var y = 0 ; y < 9 ;y++)
-                   {
-                       var marginRight = "30px";
-                       
-                       if(y % 9 == 0 && y != 0)
-                       {
-                           marginRight = "";
-                       }
-                       
-                       if(y % 5 == 0 && y != 0)
-                       {
-                           htmlGambarProduk +="</tr><tr>";
-                       }
-                       
-                       htmlGambarProduk += `
-                                       <td>
-                                           <input type="file" id="file-input-shopee-`+y+`" accept="image/*,video/*" style="display:none;" value="">
-                                           <input type="hidden"  id="format-input-shopee-`+y+`" value="">
-                                           <input type="hidden"  id="index-input-shopee-`+y+`" value="`+y+`">
-                                           <input type="hidden"  id="src-input-shopee-`+y+`" value="">
-                                           <input type="hidden"  id="keterangan-input-shopee-`+y+`" value="Gambar Produk `+(y+1).toString()+`">
-                                           <input type="hidden"  id="id-input-shopee-`+y+`" value="">
-                                           
-                                           <div style="margin-bottom:20px;">
-                                               <img id="preview-image-shopee-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
-                                               <div style="text-align:center; margin-right:`+marginRight+`"><b>`+utama+`</b><br>
-                                               <span id="ubahGambarProdukShopee-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
-                                               &nbsp;
-                                               <span id="hapusGambarProdukShopee-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
-                                               </div>
-                                           </div>
-                                       </td>`;  
-                                       
-                       utama = "";
-                   
-                   }
-                   htmlGambarProduk += "</tr>";
-                   $("#gambarprodukshopee").html(htmlGambarProduk);
-                   $("#gambarprodukshopee").css('margin-bottom','-40px');
-                   
-                   for(var y = 0 ; y < 9 ;y++)
-                   {
-                       const fileInput = document.getElementById('file-input-shopee-'+y);
-                       const previewImage = document.getElementById('preview-image-shopee-'+y);
-                       const title = document.getElementById('keterangan-input-shopee-'+y);
-                       const format = document.getElementById('format-input-shopee-'+y);
-                       const index = document.getElementById('index-input-shopee-'+y);
-                       const url =  document.getElementById('src-input-shopee-'+y);
-                       const id = document.getElementById('id-input-shopee-'+y);
-                       
-                       const ubahImage = document.getElementById('ubahGambarProdukShopee-'+y);
-                       const hapusImage = document.getElementById('hapusGambarProdukShopee-'+y);
-                       
-                       previewImage.addEventListener('click', () => {
-                         if(fileInput.value != "")
-                         {
-                             lihatLebihJelasShopee(format.value,title.value,url.value);
-                         }
-                         else
-                         {
-                           fileInput.click();
-                         }
-                       });
-                       
-                       ubahImage.addEventListener('click', () => {
-                         fileInput.click();
-                       });
-                       
-                       hapusImage.addEventListener('click', () => {
-                         fileInput.value = '';
-                         format.value = '';
-                         previewImage.src = base_url+"/assets/images/addphoto.webp";
-                         url.value = "";
-                         id.value = "";
-                         
-                         ubahImage.style.display = 'none';
-                         hapusImage.style.display = 'none';
-                       });
-                       
-                       fileInput.addEventListener('change', () => {
-                         const file = fileInput.files[0];
-                         if (!file) return;
-               
-                         // Jika file adalah gambar
-                         if (file.type.startsWith('image/')) {
-                           const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-                       
-                           if (!allowedTypes.includes(file.type.toLowerCase())) {
-                               fileInput.value = '';
-                             Swal.fire({
-                               title: 'Format gambar tidak didukung (hanya jpg/jpeg/png)',
-                               icon: 'warning',
-                               showConfirmButton: false,
-                               timer: 2000
-                             });
-                             return;
-                           }
-                       
-                           const maxSizeMB = 10;
-                           if (file.size > maxSizeMB * 1024 * 1024) {
-                               fileInput.value = '';
-                             Swal.fire({
-                               title: 'Ukuran gambar melebihi 10MB',
-                               icon: 'warning',
-                               showConfirmButton: false,
-                               timer: 2000
-                             });
-                             return;
-                           }
-                       
-                           // Upload file asli ke server
-                           const formData = new FormData();
-                           formData.append('index', index.value);
-                           formData.append('kode', $("#BARANGSHOPEE").val()+"_"+y);
-                           formData.append('file', file);
-                           formData.append('tipe', 'GAMBAR');
-                           formData.append('size', file.size);
-                           formData.append("reason","produk");
-                       
-                           loading();
-                           
-                           $.ajax({
-                             type: 'POST',
-                             url: base_url + 'Shopee/uploadLocalUrl/',
-                             data: formData,
-                             contentType: false,
-                             processData: false,
-                             dataType: 'json',
-                             success: function (msg) {
-                               Swal.close();
-                               if (msg.success) {
-                                format.value = "GAMBAR";
-                                previewImage.src = msg.url;
-                                url.value =  msg.url;
-                                id.value = msg.id;
-                       
-                                ubahImage.style.display = '';
-                                hapusImage.style.display = '';
-                               }
-                               else
-                               {
-                                   fileInput.value = '';
-                               }
-                             },
-                             error: function (xhr, status, error) {
-                               fileInput.value = '';
-                               Swal.fire({
-                                 title: 'Upload gagal!',
-                                 text: error,
-                                 icon: 'error'
-                               });
-                             }
-                           });
-                         }
-                         // Jika file adalah video
-                        //   else if (file.type.startsWith('video/')) {
-                        //     format.value = "VIDEO";
-                        //     const video = document.createElement("video");
-                        //     video.preload = "metadata";
-                       
-                        //     video.onloadedmetadata = function () {
-                        //       window.URL.revokeObjectURL(video.src);
-                       
-                        //       if (parseInt(video.duration) > 60) {
-                        //         Swal.fire({
-                        //         	title            : 'Durasi Min 1 Menit',
-                        //         	type             : 'warning',
-                        //         	showConfirmButton: false,
-                        //         	timer            : 2000
-                        //         });
-                        //         fileInput.value = ""; // Kosongkan input
-                        //         format.value = "";
-                        //         return;
-                        //       }
-                             
-                        //       const maxSizeMB = 10;
-                        //       if (file.size > maxSizeMB * 1024 * 1024) {
-                        //           fileInput.value = '';
-                        //          Swal.fire({
-                        //           title: 'Ukuran video melebihi 10MB',
-                        //           icon: 'warning',
-                        //           showConfirmButton: false,
-                        //           timer: 2000
-                        //          });
-                        //          return;
-                        //       }
-                             
-                        //      // Upload file asli ke server
-                        //       const formData = new FormData();
-                        //       formData.append('index', index.value);
-                        //       formData.append('kode', $("#BARANGSHOPEE").val()+"_"+y);
-                        //       formData.append('file', file);
-                        //       formData.append('tipe', 'VIDEO');
-                        //       formData.append('size', file.size);
-                        //       formData.append("reason","produk");
-                           
-                        //         loading();
-                               
-                        //         $.ajax({
-                        //           type: 'POST',
-                        //           url: base_url + 'Shopee/uploadLocalUrl/',
-                        //           data: formData,
-                        //           contentType: false,
-                        //           processData: false,
-                        //           dataType: 'json',
-                        //           success: function (msg) {
-                        //             Swal.close();
-                        //             if (msg.success) {
-                        //              format.value = "VIDEO";
-                        //              previewImage.src =  base_url+"/assets/images/video.webp";
-                        //              url.value =  msg.url;
-                           
-                        //              ubahImage.style.display = '';
-                        //              hapusImage.style.display = '';
-                        //             }
-                        //             else
-                        //             {
-                        //                 fileInput.value = '';
-                        //             }
-                        //           },
-                        //           error: function (xhr, status, error) {
-                        //             fileInput.value = '';
-                        //             Swal.fire({
-                        //               title: 'Upload gagal!',
-                        //               text: error,
-                        //               icon: 'error'
-                        //             });
-                        //           }
-                        //         });
-                        //     };
-                       
-                        //     video.onerror = () => {
-                        //       Swal.fire({
-                        //         	title            : 'Gagal memuat video dari file',
-                        //         	type             : 'warning',
-                        //         	showConfirmButton: false,
-                        //         	timer            : 2000
-                        //         });
-                        //       fileInput.value = "";
-                        //       format.value = "";
-                        //     };
-                       
-                        //     video.src = URL.createObjectURL(file);
-                        //   }
-                       
-                         // Tipe file tidak valid
-                         else {
-                            Swal.fire({
-                               	title            : 'Hanya mendukung file Gambar dan Video',
-                               	type             : 'warning',
-                               	showConfirmButton: false,
-                               	timer            : 2000
-                           });
-                         }
-                       });
-                   }
-               	
                	
                	//GAMBAR VARIAN
                	var varian = $('#dataGridVarianShopee').DataTable().rows().data().toArray();
@@ -911,18 +1006,8 @@ $(document).ready(function() {
                	ukuran = [];
                	for(var y = 0 ; y < varian.length; y++)
                	{
-               	    var array = varian[y].NAMABARANG.split(" | ");
-               	    var tempWarna = "";
-               	    var tempUk = "";
-               		if(array.length == 1)
-               		{
-               		    tempWarna = array[0];
-               		}
-               		else
-               		{
-               		    tempWarna = array[1];
-               		    tempUk = array[2].split("SIZE ")[1];
-               		}
+               	    var tempWarna = varian[y].WARNA;
+               	    var tempUk = varian[y].SIZE;
                		
                		adaWarna = false;
                		for(var w = 0 ; w < warna.length; w++)
@@ -971,7 +1056,7 @@ $(document).ready(function() {
                         
                         htmlGambarVarian += `
                                         <td>
-                                            <input type="file" id="file-input-varian-shopee-`+y+`" accept="image/*,video/*" style="display:none;" value="">
+                                            <input type="file" id="file-input-varian-shopee-`+y+`" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
                                             <input type="hidden"  id="format-input-varian-shopee-`+y+`" value="">
                                             <input type="hidden"  id="index-input-varian-shopee-`+y+`" value="`+y+`">
                                             <input type="hidden"  id="src-input-varian-shopee-`+y+`" value="">
@@ -1011,7 +1096,7 @@ $(document).ready(function() {
                        const hapusImage = document.getElementById('hapusGambarVarianShopee-'+y);
                        
                        previewImage.addEventListener('click', () => {
-                         if(fileInput.value != "")
+                         if(url.value != '')
                          {
                              lihatLebihJelasShopee(format.value,title.value,url.value);
                          }
@@ -1205,7 +1290,7 @@ $(document).ready(function() {
                          // Tipe file tidak valid
                          else {
                             Swal.fire({
-                               	title            : 'Hanya mendukung file Gambar dan Video',
+                               	title            : 'Hanya mendukung file Gambar',
                                	type             : 'warning',
                                	showConfirmButton: false,
                                	timer            : 2000
@@ -1236,12 +1321,14 @@ $(document).ready(function() {
            $("#KATEGORISHOPEE").select2();
         }
     });
-    
-      
+    getMasterBarang("");
+});
+
+function getMasterBarang(jenis){
     $.ajax({
         type      : 'POST',
         url       : base_url+'Master/Data/Barang/dataGrid',
-        data      : {'jenis' : 'SHOPEE'},
+        data      : {'jenis' : jenis},
         dataType  : 'json',
         beforeSend: function (){
             //$.messager.progress();
@@ -1259,8 +1346,16 @@ $(document).ready(function() {
            $("#BARANGSHOPEE").select2();
         }
     });
-   
-});
+}
+
+function checkShopeeDetail(){
+    $("#modal-check-shopee").modal('show');
+    $("#historyPerubahanShopee").html("<tr><th width='6%'>No</th><th width='60%'>Keterangan</th><th width='17.5%'>Saat Ini</th><th width='17.5%'>Sebelumnya</th></tr>");
+    for(var x = 0 ; x < historyPerubahanShopee.length; x++)
+    {
+        $("#historyPerubahanShopee").append("<tr valign='top'><td>"+(x+1)+". </td><td>"+historyPerubahanShopee[x].label+"</td><td>"+historyPerubahanShopee[x].baru+"</td><td>"+historyPerubahanShopee[x].lama+"</td></tr>");
+    }
+}
 
 function checkDetailKirim(id){
     for(var x = 0 ; x < pengirimanShopee.length; x++)
@@ -1282,6 +1377,16 @@ function checkDetailKirim(id){
             $("#modal-detail-pengiriman-shopee").modal('show');
         }
     }
+}
+
+function activeCheckboxPengiriman(type,id)
+{
+    if(type == "checkbox")
+    {
+         $("#"+id).prop("checked",!$("#"+id).prop("checked"));
+    }
+    
+    $("#"+id).prop("checked",!$("#"+id).prop("checked"));
 }
 
 function pilihDataAttribut(id){
@@ -1316,7 +1421,7 @@ function pilihDataAttribut(id){
                        checked = "checked"; 
                     }
                     
-                    htmlAttribut += ("<tr><td valign='top' width='50px' style='text-align:center; padding: 6px 8px;'><input "+checked+" type='checkbox' id='"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_"+attributShopee[x].JENISATTRIBUT[y].IDATTRIBUT+"' onclick='activeCheckbox(`checkbox`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_"+attributShopee[x].JENISATTRIBUT[y].IDATTRIBUT+"`)' ></td><td valign='top' style='padding: 6px 8px;' onclick='activeCheckbox(`label`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_"+attributShopee[x].JENISATTRIBUT[y].IDATTRIBUT+"`)' >"+attributShopee[x].JENISATTRIBUT[y].NAMAATTRIBUT+"</td></tr>");
+                    htmlAttribut += ("<tr><td valign='top' width='50px' style='text-align:center; padding: 6px 8px;'><input "+checked+" type='checkbox' id='"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_"+attributShopee[x].JENISATTRIBUT[y].IDATTRIBUT+"' onclick='activeCheckboxAttribute(`checkbox`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_"+attributShopee[x].JENISATTRIBUT[y].IDATTRIBUT+"`)' ></td><td valign='top' style='padding: 6px 8px;' onclick='activeCheckboxAttribute(`label`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_"+attributShopee[x].JENISATTRIBUT[y].IDATTRIBUT+"`)' >"+attributShopee[x].JENISATTRIBUT[y].NAMAATTRIBUT+"</td></tr>");
                 }
                 
                 if(attributShopee[x].JENISATTRIBUT.length == 0)
@@ -1352,7 +1457,7 @@ function tambahAttribut(x,id){
            'SELECTED'     : 0,
        });
        
-       var htmlAttribut = ("<tr><td valign='top' width='50px' style='text-align:center; padding: 6px 8px;'><input type='checkbox' id='"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_TEXT-"+(attributShopee[x].JENISATTRIBUT.length-1)+"' onclick='activeCheckbox(`checkbox`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_TEXT-"+(attributShopee[x].JENISATTRIBUT.length-1)+"`)' ></td><td valign='top' style='padding: 6px 8px;' onclick='activeCheckbox(`label`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_TEXT-"+(attributShopee[x].JENISATTRIBUT.length-1)+"`)' >"+attributShopee[x].JENISATTRIBUT[attributShopee[x].JENISATTRIBUT.length-1].NAMAATTRIBUT+"</td></tr>");
+       var htmlAttribut = ("<tr><td valign='top' width='50px' style='text-align:center; padding: 6px 8px;'><input type='checkbox' id='"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_TEXT-"+(attributShopee[x].JENISATTRIBUT.length-1)+"' onclick='activeCheckboxAttribute(`checkbox`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_TEXT-"+(attributShopee[x].JENISATTRIBUT.length-1)+"`)' ></td><td valign='top' style='padding: 6px 8px;' onclick='activeCheckboxAttribute(`label`,`"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_TEXT-"+(attributShopee[x].JENISATTRIBUT.length-1)+"`)' >"+attributShopee[x].JENISATTRIBUT[attributShopee[x].JENISATTRIBUT.length-1].NAMAATTRIBUT+"</td></tr>");
        if(oldLength == 0)
        {
         $("#JENISATTRIBUTSHOPEE table").html(htmlAttribut);    
@@ -1423,7 +1528,7 @@ function kembaliAttribut()
     attributShopee = JSON.parse(JSON.stringify(attributShopeeOld));
 }
 
-function activeCheckbox(type,id)
+function activeCheckboxAttribute(type,id)
 {
     if(type == "checkbox")
     {
@@ -1500,6 +1605,452 @@ function activeCheckbox(type,id)
     }
 }
 
+function ubahShopee(row){
+    historyPerubahanShopee = [];
+    setGambarProduk();
+    $("#checkShopee").hide();
+    $("#DIVDATAVARIAN").hide();
+    $("#DIVDATANONVARIAN").hide();
+    $("#DIVGAMBARVARIANSHOPEE").hide();
+    $("#titleShopee").html("Ubah Produk");
+    loading();
+    $("#modeShopee").val("UBAH");
+    if(row.KATEGORIMASTERBARANG != "")
+    {
+        getMasterBarang("");
+    }
+    else
+    {
+        getMasterBarang('SHOPEE');
+    }
+    setTimeout(() => { 
+        $("#btn_simpan_detail_shopee").show();
+        if(row.item_status == "UNLIST")
+        { 
+            $("#UNLISTED").prop('checked',true).iCheck('update');
+        }
+        else if(row.item_status == "NORMAL")
+        {  
+            $("#UNLISTED").prop('checked',false).iCheck('update');
+        }
+        else
+        {
+            $("#btn_simpan_detail_shopee").hide();
+        }
+        
+        $("#IDBARANGSHOPEE").val(row.item_id);
+    	
+        $("#modal-barang-shopee").modal("show");
+        $("#KATEGORISHOPEE").val(row.category_id);
+        $("#BARANGSHOPEE").val(row.KATEGORIMASTERBARANG);
+        $(".select2").trigger('change');
+        
+        $("#KATEGORISHOPEE").attr('disabled','disabled');
+        if(row.KATEGORIMASTERBARANG != "")
+        {
+            $("#BARANGSHOPEE").attr('disabled','disabled');
+        }
+        else
+        {
+            $("#BARANGSHOPEE").removeAttr('disabled');
+        }
+        
+        $("#NAMASHOPEE").val(row.item_name);
+    	$("#DESKRIPSISHOPEE").val(row.description.replaceAll("\R\N","\r\n").replaceAll("???? ",""));
+    	
+    // 	$("#BERATMASTERSHOPEE").val(row.weight);
+    // 	$("#PANJANGMASTERSHOPEE").val(row.dimension.package_length);
+    // 	$("#LEBARMASTERSHOPEE").val(row.dimension.package_width);
+    // 	$("#TINGGIMASTERSHOPEE").val(row.dimension.package_height);
+    	
+        var table = $('#dataGridVarianShopee').DataTable();
+        table.ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent(row.KATEGORIMASTERBARANG));
+    	table.ajax.reload();
+    	
+        $.ajax({
+        	type    : 'POST',
+        	url     : base_url+'Shopee/getDataBarang/',
+        	data    : {idindukbarangshopee: row.item_id},
+        	dataType: 'json',
+        	success : function(msg){
+        	    if(msg.dataVarian.length == 0 )
+        	    {
+        	        var price = 0 ;
+        	        for(var p = 0 ; p < row.price_info.length;p++)
+        	        {
+        	            if(row.price_info[p].currency == "IDR")
+        	            {
+        	                price = row.price_info[p].original_price;
+        	            }
+        	        }
+        	        
+        	       // $("#HARGAJUALMASTERSHOPEE").val(price);
+        	       // $("#SKUMASTERSHOPEE").val(row.item_sku);
+        	        
+        	        if(price != $("#HARGAJUALMASTERSHOPEE").val())
+        	        {
+        	            historyPerubahanShopee.push({
+        	                'label' : 'Harga Produk',
+        	                'lama'  : "Rp"+currency(price.toString()),
+        	                'baru'  : "Rp"+currency($("#HARGAJUALMASTERSHOPEE").val().toString())
+        	            });
+        	            $("#checkShopee").show();
+        	        }
+        	        if(row.item_sku != $("#SKUMASTERSHOPEE").val())
+        	        {
+        	            historyPerubahanShopee.push({
+        	                'label' : 'SKU Produk',
+        	                'lama'  : currency(row.item_sku.toString()),
+        	                'baru'  : currency($("#SKUMASTERSHOPEE").val().toString())
+        	            });
+        	            $("#checkShopee").show();
+        	        }
+        	        if(row.weight != $("#BERATMASTERSHOPEE").val())
+        	        {
+        	            historyPerubahanShopee.push({
+        	                'label' : 'Berat Produk',
+        	                'lama'  : currency(row.weight.toString())+" gram",
+        	                'baru'  : currency($("#BERATMASTERSHOPEE").val().toString())+" gram"
+        	            });
+        	            $("#checkShopee").show();
+        	        }
+        	        if(row.dimension.package_length != $("#PANJANGMASTERSHOPEE").val())
+        	        {
+        	            historyPerubahanShopee.push({
+        	                'label' : 'Panjang Produk',
+        	                'lama'  : currency(row.dimension.package_length.toString())+" cm",
+        	                'baru'  : currency($("#PANJANGMASTERSHOPEE").val().toString())+" cm"
+        	            });
+        	            $("#checkShopee").show();
+        	        }
+        	        if(row.dimension.package_width != $("#LEBARMASTERSHOPEE").val())
+        	        {
+        	            historyPerubahanShopee.push({
+        	                'label' : 'Lebar Produk',
+        	                'lama'  : currency(row.dimension.package_width.toString())+" cm",
+        	                'baru'  : currency($("#LEBARMASTERSHOPEE").val().toString())+" cm"
+        	            });
+        	            
+        	            $("#checkShopee").show();
+        	        }
+        	        if(row.dimension.package_height != $("#TINGGIMASTERSHOPEE").val())
+        	        {
+        	            historyPerubahanShopee.push({
+        	                'label' : 'Lebar Produk',
+        	                'lama'  : currency(row.dimension.package_height.toString())+" cm",
+        	                'baru'  : currency($("#TINGGIMASTERSHOPEE").val().toString())+" cm"
+        	            });
+        	            $("#checkShopee").show();
+        	        }
+        	        
+        	        $("#DIVDATAVARIAN").hide();
+                    $("#DIVDATANONVARIAN").show();
+                    $("#DIVGAMBARVARIANSHOPEE").hide();
+        	    }
+        	    else
+        	    {
+        	        $("#DIVDATAVARIAN").show();
+                    $("#DIVDATANONVARIAN").hide();
+                    $("#DIVGAMBARVARIANSHOPEE").show();
+        	    }
+        	    
+                loading();
+        	    setTimeout(() => { 
+        	            //VARIAN
+        	            // CEK ADA BARANG BARU APA NDAK
+                        table.rows().every(function () {
+                            var rowData = this.data();
+                            var ada = false;
+                    	    for(var x = 0 ; x < msg.dataVarian.length; x++)
+                    	    {
+                                if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                                    ada = true;
+                                }
+                    	    }
+                    	    
+                    	    if(!ada)
+                    	    {  
+                    	        historyPerubahanShopee.push({
+                	                'label' : 'Varian '+rowData.NAMABARANG,
+                	                'lama'  : '-',
+                	                'baru'  : 'Baru'
+                	            });
+                	            
+                                $("#checkShopee").show();
+                               // Update the NAMABARANG field
+                               rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:yellow; text-align:center; padding:5px; width:100px;'>Varian Baru</i>";
+                               rowData.MODE = "BARU";
+                               // Set the updated data back into the row
+                               this.data(rowData).draw(false); // draw(false) avoids full table redraw
+                    	    }
+                        });
+                        
+                        //CEK ADA YANG BERUBAH
+                        table.rows().every(function () {
+                            var rowData = this.data();
+                            var ada = false;
+                    	    for(var x = 0 ; x < msg.dataVarian.length; x++)
+                    	    {
+                                if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                                    if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
+                                    {
+                                        historyPerubahanShopee.push({
+                        	                'label' : 'Harga Varian '+rowData.NAMABARANG,
+                        	                'lama'  : "Rp"+currency(msg.dataVarian[x].HARGA.toString()),
+                        	                'baru'  : "Rp"+currency(rowData.HARGAJUAL.toString())
+                        	            });
+                	            
+                                       $("#checkShopee").show();
+                                    // Update the NAMABARANG field
+                                       rowData.IDBARANG   = msg.dataVarian[x].ID,
+                                       rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>Harga Diubah</i>";
+                                       rowData.MODE = "UBAH HARGA";
+                                       // Set the updated data back into the row
+                                       this.data(rowData).draw(false); // draw(false) avoids full table redraw
+                                    }
+                                    else if(rowData.SKUSHOPEE != msg.dataVarian[x].SKU)
+                                    {
+                                        historyPerubahanShopee.push({
+                        	                'label' : 'SKU Varian '+rowData.NAMABARANG,
+                        	                'lama'  : currency(msg.dataVarian[x].SKU.toString()),
+                        	                'baru'  : currency(rowData.SKUSHOPEE.toString())
+                        	            });
+                        	            
+                                        $("#checkShopee").show();
+                                    // Update the NAMABARANG field
+                                       rowData.IDBARANG   = msg.dataVarian[x].ID,
+                                       rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>SKU Diubah</i>";
+                                       rowData.MODE = "UBAH SKU";
+                                       // Set the updated data back into the row
+                                       this.data(rowData).draw(false); // draw(false) avoids full table redraw
+                                    }
+                                }
+                    	    }
+                        });
+                        
+                        // CEK ADA YANG DIHAPUS APA NDAK
+                        for(var x = 0 ; x < msg.dataVarian.length; x++)
+                    	{
+                            ada = false;
+                            table.rows().every(function () {
+                                var rowData = this.data();
+                        	    
+                                if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                                    ada = true;
+                                }
+                            });
+                            
+                            if(!ada)
+                            {
+                                historyPerubahanShopee.push({
+                        	        'label' : 'Varian '+msg.dataVarian[x].NAMABARANG,
+                        	        'lama'  : 'Dihapus',
+                        	        'baru'  : '-'
+                        	    });
+                        	            
+                               $("#checkShopee").show();
+                               var nama = msg.dataVarian[x].NAMA.replaceAll(',',' <span>|</span> SIZE ')+" <i class='pull-right' style='background:#FF5959; text-align:center; padding:5px; width:100px; color:white;'>Varian Dihapus</i>";
+
+                               // Update the NAMABARANG field
+                               var newRow = {
+                                  IDBARANG   : msg.dataVarian[x].ID,
+                                  NAMABARANG : nama,
+                                  HARGAJUAL : msg.dataVarian[x].HARGA,
+                                  SIZE : msg.dataVarian[x].SIZE,
+                                  WARNA : msg.dataVarian[x].WARNA,
+                                  HARGAJUAL : msg.dataVarian[x].HARGA,
+                                  SKUSHOPEE : msg.dataVarian[x].SKU,
+                                  MODE : 'HAPUS'
+                               };
+                               
+                               table.row.add(newRow).draw(false); // draw(false) avoids full table redraw
+                            }
+                    	}
+                    	
+                    	//LOGISTICS
+                    	var logistic = row.logistic_info;
+                    	for(var x = 0 ; x < logistic.length; x++)
+                    	{
+                    	    $("#kirim_"+logistic[x].logistic_id).prop('checked',logistic[x].enabled);
+                    	}
+                    	
+                    	var imageProduk = row.image;
+                    	//GAMBAR PRODUK
+                    	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                    	{
+                    	   // $("#file-input-shopee-"+y).val("-");
+                    	    $("#format-input-shopee-"+y).val('GAMBAR');
+                    	    $("#index-input-shopee-"+y).val(0);
+                    	    $("#src-input-shopee-"+y).val(imageProduk.image_url_list[y]);
+                    	    $("#keterangan-input-shopee-"+y).val("Gambar Produk "+(y+1).toString());
+                    	    $("#id-input-shopee-"+y).val(imageProduk.image_id_list[y]);
+                    	    $("#preview-image-shopee-"+y).attr("src",imageProduk.image_url_list[y]);
+                    	   
+                        	$("#ubahGambarProdukShopee-"+y).show();
+                        	$("#hapusGambarProdukShopee-"+y).show();
+                    	    
+                    	}
+                    	
+                    	//GAMBAR VARIAN
+                    	for(var y = 0 ; y < warna.length ; y++)
+                    	{
+                    	    for(var z = 0 ; z < msg.dataGambarVarian.length; z++)
+                    	    {
+                        	    if(msg.dataGambarVarian[z].WARNA == warna[y])
+                        	    {
+                            	   // $("#file-input-varian-shopee-"+y).val("-");
+                            	    $("#format-input-varian-shopee-"+y).val('GAMBAR');
+                            	    $("#index-input-varian-shopee-"+y).val(y);
+                            	    $("#src-input-varian-shopee-"+y).val(msg.dataGambarVarian[z].IMAGEURL);
+                            	    $("#keterangan-input-varian-shopee-"+y).val("Gambar Varian "+warna[y]);
+                            	    $("#id-input-varian-shopee-"+y).val(msg.dataGambarVarian[z].IMAGEID);
+                            	    $("#preview-image-varian-shopee-"+y).attr("src",msg.dataGambarVarian[z].IMAGEURL);
+                            	    
+                            	    $("#ubahGambarVarianShopee-"+y).show();
+                    	            $("#hapusGambarVarianShopee-"+y).show();
+                        	    }
+                    	    }
+                    	}
+                    	
+                    	//GAMBAR SIZE CHART
+        		        if(row.size_chart_id == 0 && row.size_chart != "")
+        		        {
+            		        $("#format-size-shopee").val('GAMBAR');
+                            $("#index-size-shopee").val(0);
+                            $("#src-size-shopee").val(row.size_chart);
+                            $("#keterangan-size-shopee").val("Gambar Size Chart");
+                            $("#id-size-shopee").val(row.size_chart.split("/")[row.size_chart.split("/").length-1]);
+                            $("#preview-size-shopee").attr("src",row.size_chart);
+                            
+                            if(row.SIZECHARTID != "" || row.SIZECHARTURL)
+                            {
+                                $("#ubahSizeProdukShopee").show();
+                                $("#hapusSizeProdukShopee").show();
+                            }
+                            $("#SIZETEMPLATESHOPEE").prop('checked',false).iCheck('update');
+                            $("#TEMPLATESHOPEE").attr("disabled", "disabled");
+                            $("#gambarukuranprodukshopee").show();
+        		        }
+        		        else if(row.size_chart == "" && row.size_chart_id != 0)
+        		        {
+                           $("#SIZETEMPLATESHOPEE").prop('checked',true).iCheck('update');
+        		           $("#TEMPLATESHOPEE").val(row.size_chart_id);
+        		           $("#TEMPLATESHOPEE").trigger('change'); 
+                           $("#TEMPLATESHOPEE").removeAttr("disabled");
+                           $("#gambarukuranprodukshopee").hide();
+        		        }
+                    	
+                    	//DATA ATTRIBUT
+                    	var dataAttribut = row.attribute_list;
+                    	
+                    	if(dataAttribut != undefined)
+                    	{
+                        
+                            // Find the row with the given IDATTRIBUT
+                            var rowIndex = -1;
+                            for(var a = 0 ; a < dataAttribut.length; a++)
+                            {
+                                $('#dataGridAttributShopee').DataTable().rows().every(function(x, tableLoop, rowLoop) {
+                                    var data = this.data();
+                                    if(attributShopee[x].IDATTRIBUT == dataAttribut[a].attribute_id)
+                                    {
+                                        attributShopee[x].SELECTED = 1;
+                                        var newValue = "";
+                                        for(var j = 0 ; j < dataAttribut[a].attribute_value_list.length;j++)
+                                        {
+                                            
+                                            if(attributShopee[x].SYARATATTRIBUT['COMPONENT'] == "FREETEXTFILED")
+                                            {
+                                                newValue += (dataAttribut[a].attribute_value_list[j].original_value_name+",");
+                                            }
+                                            else
+                                            {
+                                                for(var d = 0 ; d < attributShopee[x].JENISATTRIBUT.length;d++)
+                                                {
+                                                    if(dataAttribut[a].attribute_value_list[j].value_id == attributShopee[x].JENISATTRIBUT[d].IDATTRIBUT)
+                                                    {
+                                                        $("#"+attributShopee[x].IDATTRIBUT+"_"+attributShopee[x].SYARATATTRIBUT['COMPONENT']+"_"+attributShopee[x].JENISATTRIBUT[d].IDATTRIBUT).prop("checked",true);
+                                                        attributShopee[x].JENISATTRIBUT[d].SELECTED = 1;  
+                                                        newValue += (attributShopee[x].JENISATTRIBUT[d].NAMAATTRIBUT+",");
+                                                    }
+                                                }
+                                                
+                                                if(dataAttribut[a].attribute_value_list[j].value_id == 0){
+                                                    var oldLength = attributShopee[x].JENISATTRIBUT.length;
+                                                    attributShopee[x].JENISATTRIBUT.push({
+                                                        'IDATTRIBUT'   : "TEXT-"+(attributShopee[x].JENISATTRIBUT.length),
+                                                        'NAMAATTRIBUT' : dataAttribut[a].attribute_value_list[j].original_value_name,
+                                                        'SELECTED'     : 1,
+                                                    });
+                                                    newValue += (attributShopee[x].JENISATTRIBUT[d].NAMAATTRIBUT+",");
+                                                }
+                                            }
+                                        }
+                
+                                        newValue = newValue.slice(0, -1);
+                                        
+                                        attributShopee[x].VALUEATTRIBUT = newValue;
+                                        data.VALUEATTRIBUT = newValue;
+                                        $('#dataGridAttributShopee').DataTable().row(x).data(data).invalidate().draw(false); // Redraw without resetting pagination
+                                    }
+                                    
+                                });
+                            }
+                            
+                            attributShopeeOld = JSON.parse(JSON.stringify(attributShopee));
+                    	}
+                    	
+                    	
+                        
+                        Swal.close();
+        	     }, "1500");
+        	    
+        	}
+           
+        });
+    	
+    }, "1500");
+
+}
+
+function hapusShopee(row){
+    Swal.fire({
+        title: 'Anda Yakin Akan Menghapus Barang ini di Shopee <br>'+row.NAMABARANG+' ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+        	     loading();
+        	     $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Shopee/removeBarang/',
+                	data    : {idindukbarangshopee: row.item_id},
+                	dataType: 'json',
+                	success : function(msg){
+                	    Swal.close();	
+                        Swal.fire({
+                        	title            :  msg.msg,
+                        	type             : (msg.success?'success':'error'),
+                        	showConfirmButton: false,
+                        	timer            : 2000
+                        });
+                        
+                        setTimeout(() => { 
+                            if(msg.success)
+                            {
+                                $("#dataGridShopee").DataTable().ajax.reload();
+                                reset();
+                            }
+                        }, "1000");
+                	}
+        	        
+        	     });
+            }
+    });
+}
+
 function reset() {
     $("#dataGridVarianShopee").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian');
     $("#dataGridVarianShopee").DataTable().ajax.reload();
@@ -1510,14 +2061,19 @@ function reset() {
     
     $("#NAMASHOPEE").val("");
     $("#DESKRIPSISHOPEE").val("");
-    $("#BERATSHOPEE").val("");
-    $("#PANJANGSHOPEE").val("");
-    $("#LEBARSHOPEE").val("");
-    $("#TINGGISHOPEE").val("");
+    $("#BERATMASTERSHOPEE").val("");
+    $("#PANJANGMASTERSHOPEE").val("");
+    $("#LEBARMASTERSHOPEE").val("");
+    $("#TINGGIMASTERSHOPEE").val("");
     $("#IDBARANGSHOPEE").val(0);
+    $("#HARGAJUALMASTERSHOPEE").val(0);
+    $("#SKUMASTERSHOPEE").val("");
     
     $("#SIZETEMPLATESHOPEE").prop('checked',true).iCheck('update');
     $("#UNLISTED").prop('checked',false).iCheck('update');
+    
+    $("#KATEGORISHOPEE").removeAttr('disabled');
+    $("#BARANGSHOPEE").removeAttr('disabled');
     
 	$("#gambarprodukshopee").html("");
 	$("#gambarprodukshopee").css('margin-bottom','0px');
@@ -1529,6 +2085,7 @@ function reset() {
     ukuran = [];
     attributShopee = [];
     attributShopeeOld = [];
+    historyPerubahanShopee = [];
 }
 
 $("#KATEGORISHOPEE").change(function(){
@@ -1585,7 +2142,7 @@ $("#KATEGORISHOPEE").change(function(){
               var htmlGambarSize = `
                 <tr>
                  <td>
-                     <input type="file" id="file-size-shopee" accept="image/*,video/*" style="display:none;" value="">
+                     <input type="file" id="file-size-shopee" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
                      <input type="hidden"  id="format-size-shopee" value="">
                      <input type="hidden"  id="index-size-shopee" value="0">
                      <input type="hidden"  id="src-size-shopee" value="">
@@ -1618,9 +2175,9 @@ $("#KATEGORISHOPEE").change(function(){
                 const hapusImage = document.getElementById('hapusSizeProdukShopee');
                 
                 previewImage.addEventListener('click', () => {
-                  if(fileInput.value != "")
+                  if(url.value != '')
                   {
-                      lihatLebihJelasShopee(format.value,title.value,url.value);
+                    lihatLebihJelasShopee(format.value,title.value,url.value);
                   }
                   else
                   {
@@ -1812,7 +2369,7 @@ $("#KATEGORISHOPEE").change(function(){
                   // Tipe file tidak valid
                   else {
                      Swal.fire({
-                        	title            : 'Hanya mendukung file Gambar dan Video',
+                        	title            : 'Hanya mendukung file Gambar',
                         	type             : 'warning',
                         	showConfirmButton: false,
                         	timer            : 2000
@@ -1849,15 +2406,36 @@ $("#BARANGSHOPEE").change(function(){
 		    {
 		        $("#NAMASHOPEE").val(dataMasterShopee[x].KATEGORI);
 		        $("#DESKRIPSISHOPEE").val(dataMasterShopee[x].DESKRIPSI.replaceAll("\R\N","\r\n").replaceAll("???? ",""));
-		        $("#BERATSHOPEE").val(dataMasterShopee[x].BERAT);
-		        $("#PANJANGSHOPEE").val(dataMasterShopee[x].PANJANG);
-		        $("#LEBARSHOPEE").val(dataMasterShopee[x].LEBAR);
-		        $("#TINGGISHOPEE").val(dataMasterShopee[x].TINGGI);
+		        $("#BERATMASTERSHOPEE").val(dataMasterShopee[x].BERAT);
+		        $("#PANJANGMASTERSHOPEE").val(dataMasterShopee[x].PANJANG);
+		        $("#LEBARMASTERSHOPEE").val(dataMasterShopee[x].LEBAR);
+		        $("#TINGGIMASTERSHOPEE").val(dataMasterShopee[x].TINGGI);
+		        
+		        if(dataMasterShopee[x].JMLVARIAN > 0)
+		        {
+		            $("#DIVDATAVARIAN").show();
+		            $("#DIVDATANONVARIAN").hide();
+		            $("#DIVGAMBARVARIANSHOPEE").show();
+                    $("#dataGridVarianShopee").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent($(this).val()));
+            		$("#dataGridVarianShopee").DataTable().ajax.reload();
+            		$("#HARGAJUALMASTERSHOPEE").val(0);
+                    $("#SKUMASTERSHOPEE").val('');
+		        }
+		        else
+		        {
+		            $("#DIVDATAVARIAN").hide();
+		            $("#DIVDATANONVARIAN").show();
+		            $("#DIVGAMBARVARIANSHOPEE").hide();
+		            
+		            $("#HARGAJUALMASTERSHOPEE").val(dataMasterShopee[x].HARGAJUAL);
+                    $("#SKUMASTERSHOPEE").val(dataMasterShopee[x].SKUSHOPEE);
+                    $("#dataGridVarianShopee").DataTable().clear().draw();
+                    warna = [];
+                    ukuran = [];
+
+		        }
 		    }
 		}
-		
-        $("#dataGridVarianShopee").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent($(this).val()));
-		$("#dataGridVarianShopee").DataTable().ajax.reload();
     }
 })
 
@@ -1883,11 +2461,25 @@ function lihatLebihJelasShopee(jenis,title,url){
     }
 }
 
+function naikkanShopee(){
+    $("#dataGridNaikkanProdukShopee").DataTable().ajax.reload();
+    $("#modal-naik-produk-shopee").modal('show');
+}
+
 function tambahShopee(){
+    $("#checkShopee").hide();
+    $("#DIVDATAVARIAN").hide();
+    $("#DIVDATANONVARIAN").hide();
+    $("#DIVGAMBARVARIANSHOPEE").hide();
+    $("#titleShopee").html("Tambah Produk");
+    $("#modeShopee").val("TAMBAH");
+    reset();
+    getMasterBarang('SHOPEE');
     $("#modal-barang-shopee").modal("show");
     $("#KATEGORISHOPEE").val(0);
     $("#BARANGSHOPEE").val(0);
     $(".select2").trigger('change');
+    setGambarProduk();
 }
 
 function simpanShopee(){
@@ -1920,13 +2512,17 @@ function simpanShopee(){
         {
             if(pengirimanShopee[x].IDPENGIRIMAN == this.data().IDPENGIRIMAN) //&& checkbox.prop('checked')
             {
-                for(var y = 0 ; y < pengirimanShopee[x].JENISPENGIRIMAN.length;y++)
-                {
-                    arrLogistics.push({
-                     'enabled'     : checkbox.prop('checked'),
-                     'logistic_id' : pengirimanShopee[x].JENISPENGIRIMAN[y].IDPENGIRIMAN 
-                    });
-                }
+                // for(var y = 0 ; y < pengirimanShopee[x].JENISPENGIRIMAN.length;y++)
+                // {
+                //     arrLogistics.push({
+                //      'enabled'     : checkbox.prop('checked'),
+                //      'logistic_id' : pengirimanShopee[x].JENISPENGIRIMAN[y].IDPENGIRIMAN 
+                //     });
+                // }
+                arrLogistics.push({
+                 'enabled'     : checkbox.prop('checked'),
+                 'logistic_id' : pengirimanShopee[x].IDPENGIRIMAN 
+                });
             }
         }
     });
@@ -1994,35 +2590,38 @@ function simpanShopee(){
     
     var sizeChart = "";
     var sizeChartID = "";
+    var sizeChartTipe = "";
     if($("#TEMPLATESHOPEE").val() != 0)
     {
+        sizeChartTipe = 'COMBOBOX';
         sizeChartID = $("#TEMPLATESHOPEE").val();
-        sizeChart = "";
+        sizeChart = $('#TEMPLATESHOPEE option:selected').text();
     }
     else if($("#id-size-shopee").val() != "")
     {
-        
-        sizeChartID = 0;
-        sizeChart = $("#id-size-shopee").val();
+        sizeChartTipe = 'GAMBAR';
+        sizeChartID = $("#id-size-shopee").val();
+        sizeChart = $("#src-size-shopee").val();
     }
     else
     {
+        sizeChartTipe = "";
         sizeChartID = 0;
         sizeChart = "";
     }
     
-    if(($("#KATEGORISHOPEE").val() == 0 || $("#KATEGORISHOPEE").val() == null) || ($("#BARANGSHOPEE").val() == 0 || $("#BARANGSHOPEE").val() == null) || arrLogistics.length == 0 || arrImage.length == 0 || arrImageVarian.length != warna.length || (useSize && (sizeChartID == 0 && sizeChart == "")) || countValueAttribute != countRequiredAttribute) // || base64Images.length == 0
+    if(($("#KATEGORISHOPEE").val() == 0 || $("#KATEGORISHOPEE").val() == null) || ($("#BARANGSHOPEE").val() == 0 || $("#BARANGSHOPEE").val() == null) || arrLogistics.length == 0 || arrImage.length == 0 || arrImageVarian.length != warna.length || (useSize && (sizeChartID == 0 || sizeChartID == "")) || countValueAttribute != countRequiredAttribute) // || base64Images.length == 0
     {
         Swal.fire({ 
         	title            : "Terdapat Data Produk yang belum diisi",
-        	type             : 'error',
+        	type             : 'warning',
         	showConfirmButton: false,
         	timer            : 1500
         });
     }
     else
     {
-        
+        loading();
         $.ajax({
         	type    : 'POST',
         	url     : base_url+'Shopee/setBarang/',
@@ -2031,24 +2630,27 @@ function simpanShopee(){
         	   "KATEGORI"       : $("#KATEGORISHOPEE").val(), 
         	   "NAMA"           : $("#NAMASHOPEE").val(), 
         	   "DESKRIPSI"      : $("#DESKRIPSISHOPEE").val(), 
-        	   "BERAT"          : $("#BERATSHOPEE").val(), 
-        	   "PANJANG"        : $("#PANJANGSHOPEE").val(), 
-        	   "LEBAR"          : $("#LEBARSHOPEE").val(), 
-        	   "TINGGI"         : $("#TINGGISHOPEE").val(), 
+        	   "BERAT"          : $("#BERATMASTERSHOPEE").val(), 
+        	   "PANJANG"        : $("#PANJANGMASTERSHOPEE").val(), 
+        	   "LEBAR"          : $("#LEBARMASTERSHOPEE").val(), 
+        	   "TINGGI"         : $("#TINGGIMASTERSHOPEE").val(), 
+        	   "HARGA"          : $("#HARGAJUALMASTERSHOPEE").val(),      
+        	   "SKU"            : $("#SKUMASTERSHOPEE").val(), 
         	   "UNLISTED"       : $("#UNLISTED").prop("checked")? 1 : 0,
         	   "VARIAN"         : JSON.stringify($('#dataGridVarianShopee').DataTable().rows().data().toArray()),
         	   "WARNA"          : JSON.stringify(warna),
         	   "UKURAN"         : JSON.stringify(ukuran),
-        	   "ATTRIBUT"      : JSON.stringify(arrAttribut),
+        	   "ATTRIBUT"       : JSON.stringify(arrAttribut),
         	   "GAMBARPRODUK"   : JSON.stringify(arrImage),
         	   "GAMBARVARIAN"   : JSON.stringify(arrImageVarian),
         	   "SIZECHART"      : sizeChart,
         	   "SIZECHARTID"    : sizeChartID,
+        	   "SIZECHARTTIPE"  : sizeChartTipe,
         	   "LOGISTICS"      : JSON.stringify(arrLogistics),
         	},
             dataType: 'json',
         	success : function(msg){
-               
+                
                 Swal.close();	
                 Swal.fire({
                 	title            :  msg.msg,
@@ -2056,17 +2658,416 @@ function simpanShopee(){
                 	showConfirmButton: false,
                 	timer            : 2000
                 });
-                if(msg.success)
-                {
-                    $("#modal-retur-shopee").modal("hide");
                 
-                    setTimeout(() => {
-                      reloadShopee();
-                    }, "2000");
-                }
+                setTimeout(() => { 
+                    if(msg.success)
+                    {
+                        $("#modal-barang-shopee").modal("hide");
+                        $("#dataGridShopee").DataTable().ajax.reload();
+                        reset();
+                    }
+                }, "1000");
         	}
         }); 
     }
+}
+
+function setGambarProduk(){
+    
+    //GAMBAR PRODUK
+    var htmlGambarProduk = "<tr>";
+    var utama = "Gambar Utama";
+    
+    for(var y = 0 ; y < 9 ;y++)
+    {
+        var marginRight = "30px";
+        
+        if(y % 9 == 0 && y != 0)
+        {
+            marginRight = "";
+        }
+        
+        if(y % 5 == 0 && y != 0)
+        {
+            htmlGambarProduk +="</tr><tr>";
+        }
+        
+        htmlGambarProduk += `
+                        <td>
+                            <input type="file" id="file-input-shopee-`+y+`" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
+                            <input type="hidden"  id="format-input-shopee-`+y+`" value="">
+                            <input type="hidden"  id="index-input-shopee-`+y+`" value="`+y+`">
+                            <input type="hidden"  id="src-input-shopee-`+y+`" value="">
+                            <input type="hidden"  id="keterangan-input-shopee-`+y+`" value="Gambar Produk `+(y+1).toString()+`">
+                            <input type="hidden"  id="id-input-shopee-`+y+`" value="">
+                            
+                            <div style="margin-bottom:20px;">
+                                <img id="preview-image-shopee-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
+                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+utama+`</b><br>
+                                <span id="ubahGambarProdukShopee-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
+                                &nbsp;
+                                <span id="hapusGambarProdukShopee-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
+                                </div>
+                            </div>
+                        </td>`;  
+                        
+        utama = "";
+    
+    }
+    htmlGambarProduk += "</tr>";
+    $("#gambarprodukshopee").html(htmlGambarProduk);
+    $("#gambarprodukshopee").css('margin-bottom','-40px');
+    
+    for(var y = 0 ; y < 9 ;y++)
+    {
+        const fileInput = document.getElementById('file-input-shopee-'+y);
+        const previewImage = document.getElementById('preview-image-shopee-'+y);
+        const title = document.getElementById('keterangan-input-shopee-'+y);
+        const format = document.getElementById('format-input-shopee-'+y);
+        const index = document.getElementById('index-input-shopee-'+y);
+        const url =  document.getElementById('src-input-shopee-'+y);
+        const id = document.getElementById('id-input-shopee-'+y);
+        
+        const ubahImage = document.getElementById('ubahGambarProdukShopee-'+y);
+        const hapusImage = document.getElementById('hapusGambarProdukShopee-'+y);
+        
+        previewImage.addEventListener('click', () => {
+          if(url.value != '')
+          {
+              lihatLebihJelasShopee(format.value,title.value,url.value);
+          }
+          else
+          {
+            fileInput.click();
+          }
+        });
+        
+        ubahImage.addEventListener('click', () => {
+          fileInput.click();
+        });
+        
+        hapusImage.addEventListener('click', () => {
+          fileInput.value = '';
+          format.value = '';
+          previewImage.src = base_url+"/assets/images/addphoto.webp";
+          url.value = "";
+          id.value = "";
+          
+          ubahImage.style.display = 'none';
+          hapusImage.style.display = 'none';
+        });
+        
+        fileInput.addEventListener('change', () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+    
+          // Jika file adalah gambar
+          if (file.type.startsWith('image/')) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        
+            if (!allowedTypes.includes(file.type.toLowerCase())) {
+                fileInput.value = '';
+              Swal.fire({
+                title: 'Format gambar tidak didukung (hanya jpg/jpeg/png)',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+              });
+              return;
+            }
+        
+            const maxSizeMB = 10;
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                fileInput.value = '';
+              Swal.fire({
+                title: 'Ukuran gambar melebihi 10MB',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+              });
+              return;
+            }
+        
+            // Upload file asli ke server
+            const formData = new FormData();
+            formData.append('index', index.value);
+            formData.append('kode', $("#BARANGSHOPEE").val()+"_"+y);
+            formData.append('file', file);
+            formData.append('tipe', 'GAMBAR');
+            formData.append('size', file.size);
+            formData.append("reason","produk");
+        
+            loading();
+            
+            $.ajax({
+              type: 'POST',
+              url: base_url + 'Shopee/uploadLocalUrl/',
+              data: formData,
+              contentType: false,
+              processData: false,
+              dataType: 'json',
+              success: function (msg) {
+                Swal.close();
+                if (msg.success) {
+                 format.value = "GAMBAR";
+                 previewImage.src = msg.url;
+                 url.value =  msg.url;
+                 id.value = msg.id;
+        
+                 ubahImage.style.display = '';
+                 hapusImage.style.display = '';
+                }
+                else
+                {
+                    fileInput.value = '';
+                }
+              },
+              error: function (xhr, status, error) {
+                fileInput.value = '';
+                Swal.fire({
+                  title: 'Upload gagal!',
+                  text: error,
+                  icon: 'error'
+                });
+              }
+            });
+          }
+          // Jika file adalah video
+         //   else if (file.type.startsWith('video/')) {
+         //     format.value = "VIDEO";
+         //     const video = document.createElement("video");
+         //     video.preload = "metadata";
+        
+         //     video.onloadedmetadata = function () {
+         //       window.URL.revokeObjectURL(video.src);
+        
+         //       if (parseInt(video.duration) > 60) {
+         //         Swal.fire({
+         //         	title            : 'Durasi Min 1 Menit',
+         //         	type             : 'warning',
+         //         	showConfirmButton: false,
+         //         	timer            : 2000
+         //         });
+         //         fileInput.value = ""; // Kosongkan input
+         //         format.value = "";
+         //         return;
+         //       }
+              
+         //       const maxSizeMB = 10;
+         //       if (file.size > maxSizeMB * 1024 * 1024) {
+         //           fileInput.value = '';
+         //          Swal.fire({
+         //           title: 'Ukuran video melebihi 10MB',
+         //           icon: 'warning',
+         //           showConfirmButton: false,
+         //           timer: 2000
+         //          });
+         //          return;
+         //       }
+              
+         //      // Upload file asli ke server
+         //       const formData = new FormData();
+         //       formData.append('index', index.value);
+         //       formData.append('kode', $("#BARANGSHOPEE").val()+"_"+y);
+         //       formData.append('file', file);
+         //       formData.append('tipe', 'VIDEO');
+         //       formData.append('size', file.size);
+         //       formData.append("reason","produk");
+            
+         //         loading();
+                
+         //         $.ajax({
+         //           type: 'POST',
+         //           url: base_url + 'Shopee/uploadLocalUrl/',
+         //           data: formData,
+         //           contentType: false,
+         //           processData: false,
+         //           dataType: 'json',
+         //           success: function (msg) {
+         //             Swal.close();
+         //             if (msg.success) {
+         //              format.value = "VIDEO";
+         //              previewImage.src =  base_url+"/assets/images/video.webp";
+         //              url.value =  msg.url;
+            
+         //              ubahImage.style.display = '';
+         //              hapusImage.style.display = '';
+         //             }
+         //             else
+         //             {
+         //                 fileInput.value = '';
+         //             }
+         //           },
+         //           error: function (xhr, status, error) {
+         //             fileInput.value = '';
+         //             Swal.fire({
+         //               title: 'Upload gagal!',
+         //               text: error,
+         //               icon: 'error'
+         //             });
+         //           }
+         //         });
+         //     };
+        
+         //     video.onerror = () => {
+         //       Swal.fire({
+         //         	title            : 'Gagal memuat video dari file',
+         //         	type             : 'warning',
+         //         	showConfirmButton: false,
+         //         	timer            : 2000
+         //         });
+         //       fileInput.value = "";
+         //       format.value = "";
+         //     };
+        
+         //     video.src = URL.createObjectURL(file);
+         //   }
+        
+          // Tipe file tidak valid
+          else {
+             Swal.fire({
+                	title            : 'Hanya mendukung file Gambar',
+                	type             : 'warning',
+                	showConfirmButton: false,
+                	timer            : 2000
+            });
+          }
+        });
+    }
+}
+
+function tambahProdukNaik(){
+    $("#table_barang_naik_shopee").DataTable().ajax.reload();
+    $("#modal-barang-naik-shopee").modal('show');
+}
+
+function simpanProdukNaik(){
+    $("#modal-barang-naik-shopee").modal('hide');
+    
+    var tableBarangShopee = $('#table_barang_naik_shopee').DataTable();
+    var dataBarang = tableBarangShopee.rows().data(); 
+    
+    var table = $('#dataGridNaikkanProdukShopee').DataTable();
+    var allData = table.rows().data(); 
+    var listIDBarang = [];
+    
+    $('input.pilihProduk:checked').each(function () {
+       var kategori = $(this).attr('id');
+       for(var x  = 0 ; x < dataBarang.length ; x++)
+       {
+           if(dataBarang[x].KATEGORI == kategori)
+           {
+                var ada = false;
+                allData.each(function (value, index) {
+                   if(value.ID == dataBarang[x].IDINDUKBARANGSHOPEE)
+                   {
+                       ada = true;
+                   }
+                });
+                
+                if(!ada)
+                {
+                    var newRow = {
+                        'PERMANENT' : 1,
+                        'ID'        : dataBarang[x].IDINDUKBARANGSHOPEE,
+                        'NAMA'      : dataBarang[x].KATEGORI,
+                        'WAKTU'     : "-"
+                    };
+                    
+                    // Add the row
+                    var table = $('#dataGridNaikkanProdukShopee').DataTable();
+                    table.row.add(newRow).draw();
+                     
+                }
+           }
+       }
+    });
+}
+
+function removeProdukNaik(id){
+   Swal.fire({
+        title: 'Anda Yakin Tidak Menaikkan Produk ini di Shopee ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+        	    var table = $('#dataGridNaikkanProdukShopee').DataTable();
+                var dataLama = [];
+                // Find the row where the ID column matches the given id
+                table.rows().every(function(rowIdx, tableLoop, rowLoop){
+                    var data = this.data();
+                    if(data.ID != id){
+                        var newRow = {
+                            'PERMANENT' : data.PERMANENT,
+                            'ID'        : data.ID,
+                            'NAMA'      : data.NAMA,
+                            'WAKTU'     : data.WAKTU
+                        };
+                        dataLama.push(newRow);
+                    }
+                });
+                
+                table.clear().draw();
+                
+                var table = $('#dataGridNaikkanProdukShopee').DataTable();
+                for(var n = 0 ; n < dataLama.length; n++)
+                {
+                    table.row.add(dataLama[n]).draw();
+                }
+    
+                Swal.close();	
+                Swal.fire({
+                	title            :  msg.msg,
+                	type             : (msg.success?'success':'error'),
+                	showConfirmButton: false,
+                	timer            : 2000
+                });
+            }
+    }); 
+}
+
+function simpanProdukNaikData(){
+   
+   var arrayBoost = [];
+   var arrayDataBoost = [];
+   $('input.pilihDetailProduk:checked').each(function () {
+       var id = $(this).attr('id').replaceAll("check_","");
+       arrayBoost.push(id);
+   });
+   
+   $('input.pilihDetailProduk').each(function () {
+       var id = $(this).attr('id').replaceAll("check_","");
+       arrayDataBoost.push(id);
+   });
+   
+   
+    loading();
+        $.ajax({
+        	type    : 'POST',
+        	url     : base_url+'Shopee/setBoost/',
+        	data    : {
+        	   "databarangpermanent"      : JSON.stringify(arrayBoost),
+        	   "databarangall"   : JSON.stringify(arrayDataBoost),
+        	},
+            dataType: 'json',
+        	success : function(msg){
+                Swal.close();	
+                Swal.fire({
+                	title            :  msg.msg,
+                	type             : (msg.success?'success':'error'),
+                	showConfirmButton: false,
+                	timer            : 2000
+                });
+                
+               if(msg.success)
+               {
+                   $("#modal-naik-produk-shopee").modal("hide");
+                   reset();
+               }
+        	}
+        }); 
 }
 
 function loading(){

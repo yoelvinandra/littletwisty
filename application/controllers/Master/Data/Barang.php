@@ -212,6 +212,24 @@ class Barang extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	public function comboGridAllMarketplace(){
+	    $this->output->set_content_type('application/json');
+		$marketplace = $this->input->post('marketplace');
+		
+		$response = $this->model_master_barang->comboGridAllMarketplace($marketplace);
+
+		echo json_encode($response);
+	}
+	
+	public function comboGridAllMarketplaceVarian(){
+	    $this->output->set_content_type('application/json');
+		$marketplace = $this->input->post('marketplace');
+		
+		$response = $this->model_master_barang->comboGridAllMarketplaceVarian($marketplace);
+
+		echo json_encode($response);
+	}
+	
 	public function comboGridTransaksiStok(){
 	    $this->output->set_content_type('application/json');
 	    $mode = $this->input->post('mode');
@@ -385,7 +403,7 @@ class Barang extends MY_Controller {
     			'KONVERSI2'      => 1,
     			'HARGABELI'      => $item->HARGABELI ?? 0,
     			'HARGAJUAL'      => $item->HARGAJUAL ?? 0,
-    			'SKUGRAB'        => $item->SKUGRAB ?? "",
+    			'SKUGRAB'        => strtoupper($item->SKUGRAB ?? ""),
     			'SKUGOJEK'       => strtoupper($item->SKUGOJEK ?? ""),
     			'SKUSHOPEE'      => strtoupper($item->SKUSHOPEE ?? ""),
     			'SKUTOKPED'      => strtoupper($item->SKUTOKPED ?? ""),

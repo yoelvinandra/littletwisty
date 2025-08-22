@@ -10,7 +10,7 @@ class Init extends MY_Controller {
         //GET INIT
         
 	    curl_setopt_array($curl, array(
-          CURLOPT_URL => "https://".$_SERVER['SERVER_NAME'] ."/pos/Shopee/init/".TGLAWALFILTERMARKETPLACE."/".date("Y-m-d"),
+          CURLOPT_URL => $this->config->item('base_url')."/Shopee/init/".TGLAWALFILTERMARKETPLACE."/".date("Y-m-d"),
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,

@@ -230,6 +230,71 @@ class Model_master_barang extends MY_Model{
 		return $data;
 	}
 	
+	function comboGridAllMarketplace($marketplace){
+
+		    
+	    $sql = "select a.IDBARANG as ID, a.KODEBARANG as KODE, a.NAMABARANG as NAMA, if(c.KONSINYASI = 1,b.HARGAKONSINYASI,b.HARGACORET) as HARGA, SKU".$marketplace." as SKU, '' as NAMALABEL,  a.WARNA, a.SIZE,a.HARGAJUAL,a.KATEGORI,
+	                IDINDUKBARANG".$marketplace.",IDBARANG".$marketplace."
+    				from MBARANG a
+    				inner join MHARGA b on a.IDBARANG = b.IDBARANG
+    				inner join MCUSTOMER c on c.IDCUSTOMER = b.IDCUSTOMER
+    				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 
+    				and a.KODEBARANG != 'XXXXX'
+    				and c.NAMACUSTOMER = '$marketplace'
+    				group by a.KATEGORI
+    				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
+    		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC
+    				";
+	    
+    	$query = $this->db->query($sql);
+    	
+    	//CEK PAKAI BARCODE ATAU TIDAK
+    	$data["rows"]  = $query->result();
+    	
+    	foreach($data['rows'] as $item)
+    	{
+    	    $item->NAMALABEL = explode(" | ",$item->NAMA)[0];
+    	    if(explode(" | ",$item->NAMA) > 1)
+    	    {
+    	        $item->NAMALABEL .= "<br><i>".$item->WARNA.", ".$item->SIZE."</i>";
+    	    }
+    	}
+		
+		return $data;
+	}
+	
+	function comboGridAllMarketplaceVarian($marketplace){
+
+		    
+	    $sql = "select a.IDBARANG as ID, a.KODEBARANG as KODE, a.NAMABARANG as NAMA, if(c.KONSINYASI = 1,b.HARGAKONSINYASI,b.HARGACORET) as HARGA, SKU".$marketplace." as SKU, '' as NAMALABEL,  a.WARNA, a.SIZE,a.HARGAJUAL,a.KATEGORI,
+	                IDINDUKBARANG".$marketplace.",IDBARANG".$marketplace."
+    				from MBARANG a
+    				inner join MHARGA b on a.IDBARANG = b.IDBARANG
+    				inner join MCUSTOMER c on c.IDCUSTOMER = b.IDCUSTOMER
+    				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 
+    				and a.KODEBARANG != 'XXXXX'
+    				and c.NAMACUSTOMER = '$marketplace'
+    				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
+    		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC
+    				";
+	    
+    	$query = $this->db->query($sql);
+    	
+    	//CEK PAKAI BARCODE ATAU TIDAK
+    	$data["rows"]  = $query->result();
+    	
+    	foreach($data['rows'] as $item)
+    	{
+    	    $item->NAMALABEL = explode(" | ",$item->NAMA)[0];
+    	    if(explode(" | ",$item->NAMA) > 1)
+    	    {
+    	        $item->NAMALABEL .= "<br><i>".$item->WARNA.", ".$item->SIZE."</i>";
+    	    }
+    	}
+		
+		return $data;
+	}
+	
 	function comboGridTransaksi($kode,$qty,$mode,$transaksi="",$kategori = ""){
 	    $jenis_nomor = explode("_",$transaksi);
 	    $gunakanHarga = "a.HARGAJUAL";
@@ -421,19 +486,21 @@ class Model_master_barang extends MY_Model{
 	    $whereItemJenis = "";
 	    if($jenis == "SHOPEE")
 	    {
-	        $whereItemJenis = "and a.idbarangshopee = 0";
+	        $whereItemJenis = "and a.idindukbarangshopee = 0";
 	    }
 	    else if($jenis == "TIKTOK")
 	    {
-	        $whereItemJenis = "and a.idbarangtiktok = 0";
+	        $whereItemJenis = "and a.idindukbarangtiktok = 0";
 	    }
 	    else if($jenis == "LAZADA")
 	    {
-	        $whereItemJenis = "and a.idbaranglazada = 0";
+	        $whereItemJenis = "and a.idindukbaranglazada = 0";
 	    }
 	    
 		$data = [];
-		$sql = "select a.KATEGORIONLINE, a.KATEGORI,count(a.KATEGORI) as JMLVARIAN,if(MIN(a.HARGAJUAL) <> MAX(a.HARGAJUAL),CONCAT(FORMAT(MIN(a.HARGAJUAL),0),'  -  ',FORMAT(MAX(a.HARGAJUAL),0)),FORMAT(MAX(a.HARGAJUAL),0)) as RANGEHARGAUMUM,MAX(a.TGLENTRY) as TGLENTRY,if(sum(a.STATUS) > 0,1,0) as STATUS,a.DESKRIPSI,a.PANJANG,a.LEBAR,a.TINGGI,a.BERAT
+		$sql = "select a.KATEGORIONLINE, a.KATEGORI,(SELECT count(x.KATEGORI) FROM MBARANG x WHERE x.KATEGORI = a.KATEGORI and (x.WARNA <> '' || x.WARNA <> 0)) as JMLVARIAN,if(MIN(a.HARGAJUAL) <> MAX(a.HARGAJUAL),CONCAT(FORMAT(MIN(a.HARGAJUAL),0),'  -  ',FORMAT(MAX(a.HARGAJUAL),0)),FORMAT(MAX(a.HARGAJUAL),0)) as RANGEHARGAUMUM,MAX(a.TGLENTRY) as TGLENTRY,
+		        if(sum(a.STATUS) > 0,1,0) as STATUS,a.DESKRIPSI,a.PANJANG,a.LEBAR,a.TINGGI,a.BERAT,a.KODEBARANG,a.IDBARANG,a.IDINDUKBARANGSHOPEE,a.IDINDUKBARANGTIKTOK,a.IDINDUKBARANGLAZADA,
+		        a.HARGAJUAL,a.HARGABELI,a.SKUGOJEK,a.SKUGRAB,a.SKUSHOPEE,a.SKUTIKTOK,a.SKULAZADA,a.SKUTOKPED,a.BARCODE,a.SATUAN
 				from MBARANG a
 				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereItemJenis
 				group by a.KATEGORI
@@ -461,12 +528,15 @@ class Model_master_barang extends MY_Model{
 		    }
 		    
     		$sql = "select a.IDBARANG, a.KODEBARANG, a.NAMABARANG,
+    		               a.IDBARANGSHOPEE,a.IDBARANGTIKTOK,a.IDBARANGLAZADA,
+    		               a.IDINDUKBARANGSHOPEE,a.IDINDUKBARANGTIKTOK,a.IDINDUKBARANGLAZADA,
     					   a.SATUAN, a.SIZE,a.WARNA,
     					   a.HARGABELI, a.HARGAJUAL, a.CATATAN, 
-    					   a.TGLENTRY, a.STATUS, e.USERNAME as USERBUAT,a.SKUSHOPEE,a.SKUTOKPED,a.SKUTIKTOK,a.SKULAZADA,'' as MODE,a.BARCODE
+    					   a.TGLENTRY, a.STATUS, e.USERNAME as USERBUAT,a.SKUSHOPEE,a.SKUTOKPED,a.SKUTIKTOK,a.SKULAZADA,'' as MODE,a.BARCODE, '' as MODE
     				from MBARANG a
     				left join MUSER e on a.USERENTRY = e.USERID
     				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}
+    				and (a.WARNA <> '' or a.SIZE <> 0)
     				$whereKategori
     				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
     		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC";
@@ -487,7 +557,7 @@ class Model_master_barang extends MY_Model{
         		from MBARANG a
         		left join MUSER e on a.USERENTRY = e.USERID
         		where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}
-        		
+        		and (a.WARNA <> '' or a.SIZE <> 0)
         		order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
     		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC";
         		
@@ -539,6 +609,48 @@ class Model_master_barang extends MY_Model{
 		if ($this->db->trans_status() === FALSE){
 			$this->db->trans_rollback();
 			return 'Gagal menyimpan pada database';
+		}
+		
+		//UPDATE IDBARANG TIAP MARKETPLACE
+		
+		$kategori = str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",$data['KATEGORI'])));
+	    $arrKategori = explode("%",$kategori);
+	    
+		if(count($arrKategori) > 1)
+		{ 
+		     $whereKategori = " KATEGORI like '$kategori' ";
+		}
+		else
+		{
+	        $whereKategori = " KATEGORI = '$kategori' ";
+		}
+		
+		$sql = "SELECT IDINDUKBARANGSHOPEE,IDINDUKBARANGTIKTOK,IDINDUKBARANGLAZADA,BOOSTSHOPEE 
+		           FROM MBARANG  
+		           WHERE 
+		            $whereKategori
+		            AND ((IDINDUKBARANGSHOPEE <> 0 || IDINDUKBARANGSHOPEE <> '')
+		            OR (IDINDUKBARANGTIKTOK <> 0 || IDINDUKBARANGTIKTOK <> '')
+		            OR (IDINDUKBARANGLAZADA <> 0 || IDINDUKBARANGLAZADA <> ''))
+		          ";
+		
+		$induk = $this->db->queryRaw($sql)->row()??"";
+
+		if($induk != "")
+		{
+    			$sql = "UPDATE MBARANG SET 
+    			   BOOSTSHOPEE = '$induk->BOOSTSHOPEE',
+    			   IDINDUKBARANGSHOPEE = '$induk->IDINDUKBARANGSHOPEE',
+    			   IDINDUKBARANGTIKTOK = '$induk->IDINDUKBARANGTIKTOK',
+    			   IDINDUKBARANGLAZADA = '$induk->IDINDUKBARANGLAZADA' 
+    			   WHERE 
+    			    $whereKategori
+		            AND ((IDINDUKBARANGSHOPEE = 0 || IDINDUKBARANGSHOPEE = '')
+		            OR (IDINDUKBARANGTIKTOK = 0 || IDINDUKBARANGTIKTOK = '')
+		            OR (IDINDUKBARANGLAZADA = 0 || IDINDUKBARANGLAZADA = ''))
+		          ";
+		
+		    $this->db->queryRaw($sql);
 		}
 		
 		

@@ -101,24 +101,23 @@
 		<div class="nav-tabs-custom" >
             <ul class="nav nav-tabs" id="tab_transaksi">
 				<li class="active"><a href="#tab_grid" data-toggle="tab">Grid</a></li>
-			    <li><a href="#tab_form" data-toggle="tab" onclick="tambah_ubah_mode()" >Tambah</a></li>
-			    <li class="pull-right" style="width:250px">
-                	<div class="input-group " >
-                	 <div class="input-group-addon">
-                		 <i class="fa fa-filter"></i>
-                	 </div>
-                		<select id="cb_trans_status" name="cb_trans_status" class="form-control "  panelHeight="auto" required="true">
-                			<option value="SEMUA">Semua Transaksi </option>
-                			<option value="AKTIF">Transaksi Aktif</option>
-                			<option value="HAPUS">Transaksi Hapus</option>
-                		</select>
-                	</div>
-                </li>
+					<li><a href="#tab_form" data-toggle="tab" onclick="tambah_ubah_mode()" >Tambah</a></li>
 				
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" id="tab_grid">
                     <div class="box-body">
+						<div class="input-group pull-right" style="width:24%;">
+						 <div class="input-group-addon">
+							 <i class="fa fa-filter"></i>
+						 </div>
+							<select id="cb_trans_status" name="cb_trans_status" class="form-control "  panelHeight="auto" required="true">
+								<option value="SEMUA">Tampilkan Semua Transaksi </option>
+								<option value="AKTIF">Tampilkan Transaksi Aktif</option>
+								<option value="HAPUS">Tampilkan Transaksi Hapus</option>
+							</select>
+						</div>
+						<br><br>
                         <table id="dataGrid" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                             <!-- class="table-hover"> -->
                             <thead>
@@ -1558,6 +1557,41 @@ function batal(){
 						showConfirmButton: false,
 						timer            : 1500
 					});
+					
+    				$.ajax({
+                        type      : 'POST',
+                        url       : base_url+'Shopee/setStokBarang',
+                        data      : {
+                            'idtrans' : row.IDBELI, 
+                            'jenistrans' : 'BELI',
+                        },
+                        dataType  : 'json',
+                        beforeSend: function (){
+                            //$.messager.progress();
+                        },
+                        success: function(msg){
+                            if (msg.success) {
+                                if(msg.msg != "")
+                                {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'success',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            } else {
+                                Swal.fire({
+                                    title            : msg.msg,
+                                    type             : 'error',
+                                    showConfirmButton: false,
+                                    timer            : 1500
+                                });
+                            }
+                        },
+                        
+                    });
+                        
 					$("#dataGrid").DataTable().ajax.reload();
 					$('.nav-tabs a[href="#tab_grid"]').tab('show');
 				} else {
@@ -1743,9 +1777,54 @@ function simpan(){
 						showConfirmButton: false,
 						timer            : 1500
 					});
+					
+					var dataBarang = [];
+					for(var x = 0 ; x < row.length; x++)
+					{
+					    dataBarang.push(row[x].idbarang);
+					}
+					
+					$.ajax({
+                        type      : 'POST',
+                        url       : base_url+'Shopee/setStokBarang',
+                        data      : {
+                            'idlokasi' : $("#LOKASI").val(), 
+                            'databarang' : JSON.stringify(dataBarang),
+                        },
+                        dataType  : 'json',
+                        beforeSend: function (){
+                            //$.messager.progress();
+                        },
+                        success: function(msg){
+                            if (msg.success) {
+                                if(msg.msg != "")
+                                {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'success',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            } else {
+                                Swal.fire({
+                                    title            : msg.msg,
+                                    type             : 'error',
+                                    showConfirmButton: false,
+                                    timer            : 1500
+                                });
+                            }
+                        },
+                        
+                    });
+                     
+                     
 					$("#dataGrid").DataTable().ajax.reload();
 					$('.nav-tabs a[href="#tab_grid"]').tab('show');
+					
+					
 					reset();
+                     
 				}else {
 					Swal.fire({
 							title            : msg.errorMsg,
