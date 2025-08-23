@@ -191,7 +191,8 @@
             <div class="col-md-12">
               <div class="box" style="border:0px; padding:0px; margin:0px;">
                   <div class="box-header form-inline">
-      				<button class="btn" style="background:#EE4D2D; color:white;" onclick="javascript:sinkronShopee()">Sinkronisasi 15 Hari Terakhir</button>
+                    <button class="btn" style="background:#EE4D2D; color:white;" onclick="javascript:sinkronShopeeNow()">Sinkronisasi Hari Ini</button>&nbsp;
+      				<button class="btn" style="background:white; color:#EE4D2D; border:1px solid #EE4D2D;" onclick="javascript:sinkronShopee()">Sinkronisasi 15 Hari Terakhir</button>
       				<div id="filter_tgl_shopee_1" style="display: inline" class="pull-right">
       					<input type="text" class="form-control" id="tgl_awal_filter_shopee_1" style="width:100px;" name="tgl_awal_filter_shopee_1" readonly> - 
       					<input type="text" class="form-control" id="tgl_akhir_filter_shopee_1" style="width:100px;" name="tgl_akhir_filter_shopee_1" readonly>&nbsp;
@@ -389,7 +390,7 @@
             </button>
             <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp;Detail Pesanan&nbsp;&nbsp;<b id="NOSHOPEE" style="font-size:14pt;"></b>&nbsp;&nbsp;&nbsp;-&nbsp;<i id="STATUSSHOPEE"  style="font-size:12pt;"></i></h4>
             <button onclick="ubahShopee()" id="ubahShopeeDetail" style="margin-left:15px;" class='btn btn-primary'>Ubah</button> 
-            <button onclick="hapusShopee()" id="hapusShopeeDetail" style="margin-left:5px;" class='btn btn-danger'>Batas</button>
+            <button onclick="hapusShopee()" id="hapusShopeeDetail" style="margin-left:5px;" class='btn btn-danger'>Batal</button>
             <button onclick="cetakShopee()" id="cetakShopeeDetail" style="margin-left:5px;" class='btn btn-warning'>Cetak</button>
             <button onclick="kirimShopee()" id='kirimShopeeDetail' class='btn btn-success' style='float:right;'>Atur Pengiriman</button>
             <button onclick="lacakShopee()" id='lacakShopeeDetail' class='btn btn-success' style='float:right;'>Lacak Pesanan</button>
@@ -923,11 +924,11 @@
                    <div id="ALASANSHOPEEPILIHAN">-</div>
                    <br>
                    <label>Alasan Pengembalian Pembeli</label>
-                   <div id="ALASANSHOPEEPENGEMBALIAN" style="max-height:70px; overflow-x:scroll;">-</div>
+                   <div id="ALASANSHOPEEPENGEMBALIAN" style="max-height:70px; overflow-x:hidden;">-</div>
                    <br>
                    <label>Bukti Pengembalian Pembeli</label>
-          	    	<div id="GAMBARPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:scroll; width:50%;"></div>
-          	    	<div id="VIDEOPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:scroll; width:50%;"></div>
+          	    	<div id="GAMBARPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:hidden; width:50%;"></div>
+          	    	<div id="VIDEOPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:hidden; width:50%;"></div>
                 </div>
       	    	<!--SATU TABEL-->
       	    	<div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:6px; padding:0px;" >
@@ -1096,6 +1097,16 @@ setTimeout(() => {
     changeTabShopee(2);
     changeTabShopee(3);
     changeTabShopee(4);
+	
+	$("#filter_status_shopee_"+1+", #filter_tgl_shopee_"+1).show();
+    
+    for(var x = 1; x <= 4 ; x++)
+    {
+       if(1 != x)
+       {
+            $("#filter_status_shopee_"+x+", #filter_tgl_shopee_"+x).hide();
+       }
+    }
 }, "100");
 
 $(document).ready(function(){
@@ -1114,16 +1125,6 @@ $(document).ready(function(){
 	$("#statusShopee2").val('SHIPPED,TO_CONFIRM_RECEIVE,RETRY_SHIP');
 	$("#statusShopee3").val('COMPLETED,CANCELLED');
 	$("#statusShopee4").val('TO_RETURN|REQUESTED,TO_RETURN|PROCESSING,TO_RETURN|JUDGING-SELLER_DISPUTE');
-	
-	$("#filter_status_shopee_"+1+", #filter_tgl_shopee_"+1).show();
-    
-    for(var x = 1; x <= 4 ; x++)
-    {
-       if(1 != x)
-       {
-            $("#filter_status_shopee_"+x+", #filter_tgl_shopee_"+x+"").hide();
-       }
-    }
 	
 	$('body').keyup(function(e){
 		hotkey(e);
@@ -1305,6 +1306,30 @@ function changeTabShopee(index){
     {
         loading();
     }
+    
+    
+    // if(firsTimeShopee[1])
+    // {
+    //      $.ajax({
+    //     	type    : 'POST',
+    //     	url     : base_url+'Shopee/init/<?=date('Y-m-d')?>/<?=date('Y-m-d')?>/update_time',
+    //     	dataType: 'json',
+    //     	success : function(msg){
+        	    
+    //     	}
+	   //  });
+    // }
+    // else if(!firsTimeShopee[index])
+    // {
+    //      $.ajax({
+    //     	type    : 'POST',
+    //     	url     : base_url+'Shopee/init/<?=date('Y-m-d')?>/<?=date('Y-m-d')?>/update_time',
+    //     	dataType: 'json',
+    //     	success : function(msg){
+        	    
+    //     	}
+	   //  });
+    // }
     
     $("#filter_status_shopee_"+index+", #filter_tgl_shopee_"+index).show();
     
@@ -3418,7 +3443,7 @@ function kirimKonfirmAllShopee(){
                             		showConfirmButton: false,
                             		timer            : 2000
                             });
-                             $("#modal-kirim-shopee").modal('hide');
+                             $("#modal-kirim-all-shopee").modal('hide');
                             	
                           	setTimeout(() => {
                             reloadShopee();
@@ -3555,6 +3580,54 @@ function hapusKonfirmShopee(){
                     });
                 
                 }
+        	}
+        });
+}
+
+function sinkronShopeeNow(){
+    Swal.fire({
+        title: 'Anda Yakin Melakukan Sinkronisasi ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                loading();
+                $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Shopee/cekStokLokasi/',
+                	dataType: 'json',
+                	success : function(msg){
+                        if(!msg.success)
+                        {
+                            Swal.fire({
+                            		title            :  msg.msg,
+                            		type             : (msg.success?'success':'error'),
+                            		showConfirmButton: false,
+                            		timer            : 2000
+                            });
+                        }
+                        else
+                        {
+                            totalPesananShopeeAll = 0;
+                            sinkronShopeeState = true;
+                            var dateNow = "<?=date('Y-m-d')?>";
+                             $.ajax({
+                            	type    : 'GET',
+                            	url     : base_url+'Shopee/init/'+dateNow+'/'+dateNow+'/update',
+                            	dataType: 'json',
+                            	success : function(msg){
+                            	    totalPesananShopeeAll = msg.total;
+                                    for(var x = 1; x <= 4 ; x++)
+                                    {
+                                        doneSinkronShopee[x] = false;
+                                        changeTabShopee(x);
+                                    }
+                            }});
+                        }
+                	}
+                });
         	}
         });
 }

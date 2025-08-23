@@ -3149,7 +3149,7 @@ class Shopee extends MY_Controller {
         
         $tgl_aw = $tgl_aw." 00:00:00"; 
         $tgl_ak = $tgl_ak." 23:59:59";
-        
+	    
         $result;
         $statusVar = "";
         if(count($status)>1)
@@ -5511,12 +5511,12 @@ class Shopee extends MY_Controller {
             
             }
 		}
-		
+		sleep(3); 
 		$nopesanan = "";
         for($x = 0 ; $x < count($dataAll);$x++)
         {
             $nopesanan .= $dataAll[$x]['KODEPESANAN'];
-            if(($x % 49 == 0 && $x != 0) || $x == count($result)-1)
+            if(($x % 49 == 0 && $x != 0) || $x == count($dataAll)-1)
             {
                 //GET ORDER DETAIL
                 $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
@@ -5524,7 +5524,6 @@ class Shopee extends MY_Controller {
                 // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
                 
                 $curl = curl_init();
-            
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -5553,16 +5552,33 @@ class Shopee extends MY_Controller {
                      for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
                      {
                         $dataDetail = $ret['response']['order_list'][$y];
-                        $data;
-                        $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                        $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                  
-                        $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
+
+                        $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
                         ->where('MARKETPLACE',"SHOPEE")
                          ->updateRaw("TPENJUALANMARKETPLACE", array(
-                            'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                            'STATUS'                     => $data['STATUS'],
-                        ));    
+                            'STATUSMARKETPLACE'          => $dataDetail['order_status'],
+                            'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
+                        ));   
+                        
+                        //JAGA2x
+                        if($dataDetail['order_status'] == "READY_TO_SHIP")
+                        {
+                           $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
+                            ->where('MARKETPLACE',"SHOPEE")
+                             ->updateRaw("TPENJUALANMARKETPLACE", array(
+                                'STATUSMARKETPLACE'          => 'PROCESSED',
+                                'STATUS'                     => $this->getStatus('PROCESSED')['state'],
+                            ));   
+                        }
+                        else
+                        {
+                            $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
+                            ->where('MARKETPLACE',"SHOPEE")
+                             ->updateRaw("TPENJUALANMARKETPLACE", array(
+                                'STATUSMARKETPLACE'          => $dataDetail['order_status'],
+                                'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
+                            ));   
+                        }
                      }
                 }
                 $nopesanan = "";
@@ -6866,7 +6882,13 @@ class Shopee extends MY_Controller {
         
 	}
 	
-	public function init($tgl_aw,$tgl_ak) {
+	public function init($tgl_aw,$tgl_ak,$jenis = 'create_time') {
+	    
+	    if($jenis == "update")
+	    {
+	        $jenis = "update_time";
+	    }
+	    
 		$this->output->set_content_type('application/json');
         $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
@@ -6915,7 +6937,7 @@ class Shopee extends MY_Controller {
                  
             while($cursor != ""  && $statusok)
             {
-                 $parameter = "&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=100&cursor=".$cursor;
+                 $parameter = "&time_range_field=".$jenis."&time_from=".$tglAw."&time_to=".$tglAk."&page_size=100&cursor=".$cursor;
                 //  echo $parameter."\n";
                  array_push($history,$parameter." ".$tglcobaAW." | ".$tglcobaAK);
                  $curl = curl_init();
@@ -7137,9 +7159,9 @@ class Shopee extends MY_Controller {
                 {
                     for($x = 0 ;$x < count($ret['response']['success_list']); $x++)
                     {
-                        $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACE 
-                                WHERE MARKETPLACE = 'SHOPEE' and TGLTRANS BETWEEN '".($tgl_aw." 00:00:00")."' and '".($tgl_ak." 23:59:59")."' 
-                                and KODEPENJUALANMARKETPLACE = '".$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE']."'";
+                       $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACE 
+                                    WHERE MARKETPLACE = 'SHOPEE' 
+                                    and KODEPENJUALANMARKETPLACE = '".$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE']."'";
                                 
                         $dataPesananDB = $CI->db->query($sql)->row();
                         
