@@ -406,30 +406,30 @@
                             								</div>
                             							<!--MODAL BARANG-->
                             								<div class="modal fade" id="modal-barang">
-                            									<div class="modal-dialog">
-                            									<div class="modal-content">
-                            										<div class="modal-body">
-                            											<table id="table_barang" class="table table-bordered table-striped table-hover display nowrap" width="100%">
-                            												<thead>
-                            													<tr>
-                            														<th hidden>ID</th>	
-                            														<th width="50px">Kode</th>
-                            														<th>Nama</th>
-                            														<th>Harga</th>
-                            													</tr>
-                            												</thead>
-                            											</table>
-                            											
-                            											<input type="text" class="form-control has-feedback-left" id="jml" onkeyup="return numberInput(event,'',1)" placeholder="Jml" value="1" style="position:absolute; width:24.5%; left:73%; top:13px; ">
-                            											<div width="100%">
-                            											<input type="text" class="form-control " id="namaservice" placeholder="Keterangan Biaya Lain" style="width:60%;">
-                            								            <div style="width:39.5%; float:right;">   
-                                											<div style="width:49%;margin-top:-33.8px; float:left;"><input type="text" class="form-control " id="biaya" onkeyup="return numberInput(event,'',1)" placeholder="Biaya" style="width:97.5%;"  value="0"></div>
-                                											<button type="button" id="btn_biaya" class="btn btn-success" onclick="tambahBiaya()" style=" margin-top:-33.8px; float:left;">Tambah Biaya</button>
-                            								            </div>
-                            											</div>
-                            										</div>
-                            									</div>
+                            									<div class="modal-dialog" style="width:700px;">
+                                									<div class="modal-content">
+                                										<div class="modal-body">
+                                											<table id="table_barang" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                                												<thead>
+                                													<tr>
+                                														<th hidden>ID</th>	
+                                														<th width="50px">Kode</th>
+                                														<th>Nama</th>
+                                														<th>Harga</th>
+                                													</tr>
+                                												</thead>
+                                											</table>
+                                											
+                                											<input type="text" class="form-control has-feedback-left" id="jml" onkeyup="return numberInput(event,'',1)" placeholder="Jml" value="1" style="position:absolute; width:24.5%; left:73%; top:13px; ">
+                                											<div width="100%">
+                                											<input type="text" class="form-control " id="namaservice" placeholder="Keterangan Biaya Lain" style="width:60%;">
+                                								            <div style="width:39.5%; float:right;">   
+                                    											<div style="width:49%;margin-top:-33.8px; float:left;"><input type="text" class="form-control " id="biaya" onkeyup="return numberInput(event,'',1)" placeholder="Biaya" style="width:97.5%;"  value="0"></div>
+                                    											<button type="button" id="btn_biaya" class="btn btn-success" onclick="tambahBiaya()" style=" margin-top:-33.8px; float:left;">Tambah Biaya</button>
+                                								            </div>
+                                											</div>
+                                										</div>
+                                									</div>
                             									</div>
                             								</div>
                             							<!--MODAL CUSTOMER-->

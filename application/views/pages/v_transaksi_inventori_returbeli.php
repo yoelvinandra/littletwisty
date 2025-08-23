@@ -344,7 +344,7 @@
 										</div>
 										<!--MODAL BARANG-->
 										<div class="modal fade" id="modal-barang">
-											<div class="modal-dialog">
+											<div class="modal-dialog" style="width:700px;">
 												<div class="modal-content">
 													<div class="modal-body">												
 														<table id="table_barang" class="table table-bordered table-striped table-hover display nowrap" width="100%">

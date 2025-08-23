@@ -155,7 +155,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 			                Customer 
 			            </div>
 			            <div class="col-md-10 col-sm-10 col-xs-10">
-			             <select class="form-control" id="CUSTOMER_TERLARIS" name="CUSTOMER_TERLARIS" placeholder="Customer..." style="width:100%;"  onchange="getCustomerTerlaris(this.value);">
+			                <select class="form-control" id="CUSTOMER_TERLARIS" name="CUSTOMER_TERLARIS" placeholder="Customer..." style="width:100%;"  onchange="getCustomerTerlaris(this.value);">
                   	            <option value="0">Semua Customer</option>
                         		<?=comboGridDashboard("model_master_customer")?>
                         	</select>
@@ -272,7 +272,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
       <div class="row">
         <div class="col-md-6 col-sm-12 col-xs-12" >
           <div class="box box-warning">
-            <div class="box-header with-border" style="height:650px; margin:0px 0px 0px 30px">
+            <div class="box-header with-border" style="height:700px; margin:0px 0px 0px 30px">
 			    <div class="row col-md-12">
 			         <h3 class="HEADERPERIODE" style="font-weight:bold;">Data Penjualan Terbanyak</h3>
     			</div>
@@ -336,6 +336,14 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
                             </div> 
                             <div class="tab-pane" id="tab_dashboard_kota_terbanyak"  style="height:200px;">
                                 <div class="row col-md-12">
+                                    <select class="form-control" id="CUSTOMER_KOTA" name="CUSTOMER_KOTA" placeholder="Customer..." style="width:100%;"  onchange="getCustomerKota(this.value);">
+                          	            <option value="0">Semua Customer</option>
+                                		<?=comboGridDashboard("model_master_customer")?>
+                                	</select>
+                            	</div>
+                            	<br>
+                            	<br>
+                                <div class="row col-md-12">
                     			      <div class="loading3" style="text-align:center;"><br><br>Tunggu Sebentar...</div>
                     			      <div class="tableKota" style="overflow-y:scroll; height:390px; padding-right:15px;" >
                                              
@@ -353,7 +361,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
         </div>
         <div class="col-md-6 col-sm-12 col-xs-12" >
           <div class="box box-danger">
-            <div class="box-header with-border" style="height:650px; margin:0px 0px 0px 30px">
+            <div class="box-header with-border" style="height:700px; margin:0px 0px 0px 30px">
 			    <div class="row col-md-12">
 			        <div class="col-md-10 col-sm-10 col-xs-10" style="padding: 0px 0px 5px 0px">
 			            <h3 class="HEADERPERIODE" style="font-weight:bold;">Kebutuhan Stok Barang</h3>
@@ -489,7 +497,7 @@ $(document).ready(function(){
     });
     
     $("#TGLAKHIRCUSTOMER").change(function() {
-       if(periodeCustomer == "99" && $(this).val() != "")setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer);
+       if(periodeCustomer == "99" && $(this).val() != "")setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer,customerKota);
     });
 	
 	$('#TGLAWALPENJUALAN, #TGLAKHIRPENJUALAN, #TGLAWALTERLARIS, #TGLAKHIRTERLARIS, #TGLAWALCUSTOMER, #TGLAKHIRCUSTOMER, #TGLSTOK').attr('disabled','disabled');
@@ -548,6 +556,7 @@ $(document).ready(function(){
     });
     
     var barangCustomer = "0"; 
+    var customerKota = "0";
     var tglawalCustomer =  today;
     var tglakhirCustomer =  today;
     var periodeCustomer = "3";
@@ -1611,7 +1620,7 @@ $(document).ready(function(){
     	     $("#TGLAKHIRCUSTOMER").datepicker('setDate',tglakhirCustomer);
     	     $("#TGLAWALCUSTOMER,#TGLAKHIRCUSTOMER").attr('disabled','disabled');
     	    
-    	   setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer);
+    	   setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer,customerKota);
         }
         else
         {
@@ -1622,14 +1631,14 @@ $(document).ready(function(){
     function getBarangCustomer(barangVal)
     {
         barangCustomer = barangVal;
-        setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer);
+        setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer,customerKota);
     }
     
     var labelCustomer = [];
     var qtyCustomer = [];
     var grandtotalCustomer = [];
     
-    function setPeriodeCustomer(periode,tglawal,tglakhir,barang){ 
+    function setPeriodeCustomer(periode,tglawal,tglakhir,barang,customer){ 
         $(".tableCustomer").html("");
         $(".tableKota").html("");
         $(".loading3").html("<br><br><br><br><br><br><br><br>Tunggu Sebentar...");
@@ -1637,7 +1646,7 @@ $(document).ready(function(){
         $.ajax({
         	type    : 'POST',
         	url     : base_url+'Penjualan/Transaksi/Penjualan/dashboardCustomer',
-        	data    : {periode:periode,tglawal:tglawal,tglakhir:tglakhir,barang:barang},
+        	data    : {periode:periode,tglawal:tglawal,tglakhir:tglakhir,barang:barang,customer:customer},
         	dataType: 'json',
         	success : function(msg){
                 $(".loading3").hide();
@@ -1723,6 +1732,12 @@ $(document).ready(function(){
             $(".loading3").show();
         }
         $(".tableCustomer").html(table);
+    }
+    
+    function getCustomerKota(customerVal)
+    {
+        customerKota = customerVal;
+        setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer,customerKota);
     }
     
     function setTableKota(label,value,valueGrand){

@@ -358,7 +358,7 @@
 								</div>
 							<!--MODAL BARANG-->
 								<div class="modal fade" id="modal-barang">
-									<div class="modal-dialog">
+									<div class="modal-dialog" style="width:700px;">
 									<div class="modal-content">
 										<div class="modal-body">
 											

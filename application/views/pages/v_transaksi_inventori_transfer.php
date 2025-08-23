@@ -303,23 +303,23 @@
                 						</div>
                 					<!--MODAL BARANG-->
                 						<div class="modal fade" id="modal-barang">
-                							<div class="modal-dialog">
-                							<div class="modal-content">
-                								<div class="modal-body">
-                									
-                									<table id="table_barang" class="table table-bordered table-striped table-hover display nowrap" width="100%">
-															<thead>
-																<tr>
-																	<th hidden>ID</th>	
-																	<th width="50px">Kode</th>
-																	<th>Nama</th>
-																	
-																</tr>
-															</thead>
-													</table>
-													<input type="text" class="form-control has-feedback-left" id="jml" onkeyup="return numberInput(event,'',1)" placeholder="Jml" style="position:absolute; left:88%;top:10px; width:50px;" value="1">
-                								</div>
-                							</div>
+                							<div class="modal-dialog" style="width:700px;">
+                    							<div class="modal-content">
+                    								<div class="modal-body">
+                    									
+                    									<table id="table_barang" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+    															<thead>
+    																<tr>
+    																	<th hidden>ID</th>	
+    																	<th width="50px">Kode</th>
+    																	<th>Nama</th>
+    																	
+    																</tr>
+    															</thead>
+    													</table>
+    													<input type="text" class="form-control has-feedback-left" id="jml" onkeyup="return numberInput(event,'',1)" placeholder="Jml" style="position:absolute; left:88%;top:10px; width:50px;" value="1">
+                    								</div>
+                    							</div>
                 							</div>
                 						</div>
                 					</div>

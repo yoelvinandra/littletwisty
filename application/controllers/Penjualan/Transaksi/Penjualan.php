@@ -372,7 +372,7 @@ class Penjualan extends MY_Controller {
 	
 	function dashboardCustomer(){
 		$this->output->set_content_type('application/json');
-		$response = $this->model_jual_penjualan->dashboardCustomer($this->input->post('periode'),$this->input->post('tglawal'),$this->input->post('tglakhir'),$this->input->post('barang')??'0');
+		$response = $this->model_jual_penjualan->dashboardCustomer($this->input->post('periode'),$this->input->post('tglawal'),$this->input->post('tglakhir'),$this->input->post('barang')??'0',$this->input->post('customer')??'0');
 		
 		echo json_encode($response);
 	}

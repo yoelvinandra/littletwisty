@@ -937,7 +937,7 @@ class Model_jual_penjualan extends MY_Model{
         return $data;
 	}	
 	
-	function dashboardCustomer($periode,$tglawal,$tglakhir,$barang = "0"){
+	function dashboardCustomer($periode,$tglawal,$tglakhir,$barang = "0", $customer = "0"){
 	    
 	    //CUSTOMER
 	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
@@ -1015,11 +1015,22 @@ class Model_jual_penjualan extends MY_Model{
 	        $paramBarangMarketplace = "0";
 	    }
 	    
+	    $whereCustomer = "";
+	    $whereCustomerMarketplace = "";
+	    
+	    if($customer != "0")
+	    {
+	        $whereCustomer = " and c.IDCUSTOMER = $customer";
+	        $sqlCustomerMarketplace = "SELECT NAMACUSTOMER FROM MCUSTOMER WHERE IDCUSTOMER = $customer";
+        	$customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
+        	$whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
+	    }
+	    
         
 	    $sql = "
 	    SELECT a.NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
 	        from(
-                select c.KOTA as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
+                select if(c.NAMACUSTOMER = 'UMUM','UMUM',KOTA) as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
         		from TPENJUALAN a
         		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
         		inner join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
@@ -1038,7 +1049,7 @@ class Model_jual_penjualan extends MY_Model{
                 left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
                 left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
         		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
-        		$whereBarangStok
+        		$whereBarangStok $whereCustomerMarketplace
         	    Group by NAMA
         	) as a
         	Group by a.NAMA
