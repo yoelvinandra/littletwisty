@@ -1015,12 +1015,14 @@ class Model_jual_penjualan extends MY_Model{
 	        $paramBarangMarketplace = "0";
 	    }
 	    
-	    $whereCustomer = "";
+	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
+	    
 	    $whereCustomerMarketplace = "";
 	    
 	    if($customer != "0")
 	    {
-	        $whereCustomer = " and c.IDCUSTOMER = $customer";
+	        $whereCustomer .= " and c.IDCUSTOMER = $customer";
+	        
 	        $sqlCustomerMarketplace = "SELECT NAMACUSTOMER FROM MCUSTOMER WHERE IDCUSTOMER = $customer";
         	$customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
         	$whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
