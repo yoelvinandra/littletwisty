@@ -7312,7 +7312,7 @@ class Shopee extends MY_Controller {
         for($f = 0 ; $f < count($finalData) ; $f++)
         {
             //INSERT KARTUSTOK
-            if($this->getStatus($finalData[$f]['STATUSMARKETPLACE'])['state'] != 1)
+            if($this->getStatus($finalData[$f]['STATUSMARKETPLACE'])['state'] != 1 && $finalData[$f]['STATUSMARKETPLACE'] != "CANCELLED" )
             {
                 $this->insertKartuStokPesanan($finalData[$f]['KODEPENJUALANMARKETPLACE'],$finalData[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
             }
