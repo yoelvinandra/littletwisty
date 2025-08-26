@@ -5590,86 +5590,86 @@ class Shopee extends MY_Controller {
             
         }
         
-        //CEK LOKASI PICKUP
-        $lokasi = "0";
-        $parameter="";
-        $curl = curl_init();
+    //     //CEK LOKASI PICKUP
+    //     $lokasi = "0";
+    //     $parameter="";
+    //     $curl = curl_init();
         
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
+    //     curl_setopt_array($curl, array(
+    //       CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+    //       CURLOPT_RETURNTRANSFER => true,
+    //       CURLOPT_ENCODING => '',
+    //       CURLOPT_MAXREDIRS => 10,
+    //       CURLOPT_TIMEOUT => 30,
+    //       CURLOPT_FOLLOWLOCATION => true,
+    //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //       CURLOPT_CUSTOMREQUEST => 'POST',
+    //       CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
+    //       CURLOPT_HTTPHEADER => array(
+    //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+    //       ),
+    //     ));
         
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
-        {
-            echo $ret['error']." : ".$ret['message'];
-        }
-        else
-        {
-            $dataAddress = $ret['response']['address_list'];
-        }
+    //     $response = curl_exec($curl);
+    //     curl_close($curl);
+    //     $ret =  json_decode($response,true);
+    //     if($ret['error'] != "")
+    //     {
+    //         echo $ret['error']." : ".$ret['message'];
+    //     }
+    //     else
+    //     {
+    //         $dataAddress = $ret['response']['address_list'];
+    //     }
         
-	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
+	   // $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
 	    
-        for($f = 0 ; $f < count($dataAll) ; $f++)
-        {
-            //DROP OFF
-            if($dataAll[$f]['ADDRESS'] == "")
-            {
-                for($x = 0 ; $x < count($dataAddress);$x++)
-                {
+    //     for($f = 0 ; $f < count($dataAll) ; $f++)
+    //     {
+    //         //DROP OFF
+    //         if($dataAll[$f]['ADDRESS'] == "")
+    //         {
+    //             for($x = 0 ; $x < count($dataAddress);$x++)
+    //             {
                     
-                    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                    $pickup = false;
-                    // $default = false;
+    //                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+    //                 $pickup = false;
+    //                 // $default = false;
                     
-                    for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                    {
-                        if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                        {
-                            $pickup = true;
-                        }
-                        // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                        // {
-                        //     $default = true;
-                        // }
-                    }
+    //                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
+    //                 {
+    //                     if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
+    //                     {
+    //                         $pickup = true;
+    //                     }
+    //                     // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
+    //                     // {
+    //                     //     $default = true;
+    //                     // }
+    //                 }
                     
                     
                 
-                    if($pickup)
-                    {
-                        $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                    }
-                }
-            }
-            //PICKUP
-            else
-            {
-                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAll[$f]['ADDRESS']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                 $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-            }
+    //                 if($pickup)
+    //                 {
+    //                     $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+    //                 }
+    //             }
+    //         }
+    //         //PICKUP
+    //         else
+    //         {
+    //              $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAll[$f]['ADDRESS']." AND GROUPLOKASI like '%MARKETPLACE%'";
+    //              $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+    //         }
             
-            //INSERT KARTUSTOK
-            if($this->getStatus($dataAll[$f]['STATUSMARKETPLACE'])['state'] != 1)
-            {
-                $this->insertKartuStokPesanan($dataAll[$f]['KODEPESANAN'],$dataAll[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
-            }
-        }
-        //CEK LOKASI PICKUP
+    //         //INSERT KARTUSTOK
+    //         if($this->getStatus($dataAll[$f]['STATUSMARKETPLACE'])['state'] != 1)
+    //         {
+    //             $this->insertKartuStokPesanan($dataAll[$f]['KODEPESANAN'],$dataAll[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
+    //         }
+    //     }
+    //     //CEK LOKASI PICKUP
         
         echo(json_encode($data));
         
