@@ -699,17 +699,11 @@ class Model_jual_penjualan extends MY_Model{
         	    
                 $sql .= " UNION ALL ";
                 $sql .= "select '".explode(" | ",$itemBarang->NAMABARANG)[0]."' as NAMA, 
-                        (
-                        IFNULL(SUM(IF(d.MK = 'K', d.JML, -d.JML)),0)
-                        +
-                        IFNULL(SUM(IF(d1.MK = 'K', d1.JML, -d1.JML)),0)
-                        )  AS QTY,
+                        IFNULL(SUM(b.jml),0) as QTY,
                         '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
                         from tpenjualanmarketplace a
                         inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                         inner join mbarang c on b.idbarang = c.idbarang
-                        left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
-                        left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
                 		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
                 		$whereBarangStok
                 		)
@@ -787,17 +781,11 @@ class Model_jual_penjualan extends MY_Model{
         	    
                 $sql .= " UNION ALL ";
                 $sql .= "select '".$itemBarang->WARNA."' as WARNA, 
-                        (
-                         IFNULL(SUM(IF(d.MK = 'K', d.JML, -d.JML)),0)
-                         +
-                         IFNULL(SUM(IF(d1.MK = 'K', d1.JML, -d1.JML)),0)
-                        )  AS QTY,
+                        IFNULL(SUM(b.jml),0) as QTY ,
                         '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
                         from tpenjualanmarketplace a
                         inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                         inner join mbarang c on b.idbarang = c.idbarang
-                        left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
-                        left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
                 		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
                 		$whereBarangStok
                 		)
@@ -812,6 +800,7 @@ class Model_jual_penjualan extends MY_Model{
             
             $index++;
 	    }
+	    
 	    
 	    if(count($dataBarang) > 0)
 	    {
@@ -874,17 +863,11 @@ class Model_jual_penjualan extends MY_Model{
         	    
                 $sql .= " UNION ALL ";
                 $sql .= "select '".$itemBarang->SIZE."' as SIZE, 
-                        (
-                         IFNULL(SUM(IF(d.MK = 'K', d.JML, -d.JML)),0)
-                         +
-                         IFNULL(SUM(IF(d1.MK = 'K', d1.JML, -d1.JML)),0)
-                        )  AS QTY,
+                        IFNULL(SUM(b.jml),0) as QTY ,
                         '".$itemBarang->URUTANTAMPIL."' as URUTANTAMPIL
                         from tpenjualanmarketplace a
                         inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                         inner join mbarang c on b.idbarang = c.idbarang
-                        left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
-                        left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
                 		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
                 		$whereBarangStok
                 		)
@@ -975,13 +958,11 @@ class Model_jual_penjualan extends MY_Model{
         	    UNION ALL
         	    
         	    select CONCAT('X',a.MARKETPLACE) as KODECUSTOMER,a.MARKETPLACE as NAMA, 
-        	    (SUM(IF(D.MK = 'K', IFNULL(D.JML,0), - IFNULL(D.JML,0))) + SUM(IF(D1.MK = 'K', IFNULL(D1.JML,0), - IFNULL(D1.JML,0)))) as QTY, 
+        	    IFNULL(SUM(b.jml),0) as QTY, 
                 $paramBarangMarketplace as GRANDTOTAL
         		from TPENJUALANMARKETPLACE a
         		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                 inner join mbarang c on b.idbarang = c.idbarang
-                left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
-                left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
         		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
         		$whereBarangStok
         	    Group by CONCAT('X', A.MARKETPLACE)
@@ -1043,13 +1024,11 @@ class Model_jual_penjualan extends MY_Model{
         	    UNION ALL
         	    
         	    select a.KOTA as NAMA, 
-        	    (SUM(IF(D.MK = 'K', IFNULL(D.JML,0), - IFNULL(D.JML,0))) + SUM(IF(D1.MK = 'K', IFNULL(D1.JML,0), - IFNULL(D1.JML,0)))) as QTY, 
+        	    IFNULL(SUM(b.jml),0) as QTY, 
                 $paramBarangMarketplace as GRANDTOTAL
         		from TPENJUALANMARKETPLACE a
         		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                 inner join mbarang c on b.idbarang = c.idbarang
-                left join kartustok d on d.idbarang = c.idbarang and (d.kodetrans = a.kodepenjualanmarketplace or d.kodetrans = a.kodepengembalianmarketplace)
-                left join kartustoktemp d1 on d1.idbarang = c.idbarang and (d1.kodetrans = a.kodepenjualanmarketplace or d1.kodetrans = a.kodepengembalianmarketplace)
         		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
         		$whereBarangStok $whereCustomerMarketplace
         	    Group by NAMA
