@@ -228,12 +228,12 @@
                                 </div>
                                 <div class="col-md-12">
                                     <br>
-                                    <label>Nama Produk <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master, bisa diubah</i></label>
+                                    <label>Nama Produk <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
                                     <input type="text" class="form-control" id="NAMASHOPEE" name="NAMASHOPEE" placeholder="Nama Produk">
                                 </div>
                                 <div class="col-md-12">
                                     <br>
-                                    <label>Deskripsi <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master, bisa diubah</i></label>
+                                    <label>Deskripsi <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
                                     <textarea class="form-control" rows="9" id="DESKRIPSISHOPEE" name="DESKRIPSISHOPEE" placeholder="Deskripsi....."></textarea>
                                 </div>
                                 <div class="form-group col-md-12" id="DIVDATAVARIAN">
@@ -1155,7 +1155,7 @@ $(document).ready(function() {
                            // Upload file asli ke server
                            const formData = new FormData();
                            formData.append('index', index.value);
-                           formData.append('kode', $("#BARANGSHOPEE").val()+"_"+warna[y]);
+                           formData.append('kode', $("#BARANGSHOPEE").val()+"_"+warna[index.value]);
                            formData.append('file', file);
                            formData.append('tipe', 'GAMBAR');
                            formData.append('size', file.size);
@@ -1606,6 +1606,7 @@ function activeCheckboxAttribute(type,id)
 }
 
 function ubahShopee(row){
+    reset();
     historyPerubahanShopee = [];
     setGambarProduk();
     $("#checkShopee").hide();
@@ -2074,6 +2075,9 @@ function reset() {
     
     $("#KATEGORISHOPEE").removeAttr('disabled');
     $("#BARANGSHOPEE").removeAttr('disabled');
+    
+    $("#NAMASHOPEE").prop('readonly',true);
+    $("#DESKRIPSISHOPEE").prop('readonly',true);
     
 	$("#gambarprodukshopee").html("");
 	$("#gambarprodukshopee").css('margin-bottom','0px');
@@ -2791,7 +2795,7 @@ function setGambarProduk(){
             // Upload file asli ke server
             const formData = new FormData();
             formData.append('index', index.value);
-            formData.append('kode', $("#BARANGSHOPEE").val()+"_"+y);
+            formData.append('kode', $("#BARANGSHOPEE").val()+"_"+index.value);
             formData.append('file', file);
             formData.append('tipe', 'GAMBAR');
             formData.append('size', file.size);

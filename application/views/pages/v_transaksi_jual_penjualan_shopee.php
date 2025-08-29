@@ -927,7 +927,7 @@
                    <div id="ALASANSHOPEEPENGEMBALIAN" style="max-height:70px; overflow-x:hidden;">-</div>
                    <br>
                    <label>Bukti Pengembalian Pembeli</label>
-          	    	<div id="GAMBARPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:hidden; width:50%;"></div>
+          	    	<div id="GAMBARPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:hidden; width:50%; float:left;"></div>
           	    	<div id="VIDEOPENGEMBALIANSHOPEE" style="max-height:70px; overflow-x:hidden; width:50%;"></div>
                 </div>
       	    	<!--SATU TABEL-->

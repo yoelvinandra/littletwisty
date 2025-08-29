@@ -1434,6 +1434,112 @@ class Shopee extends MY_Controller {
         echo json_encode($data);
 	}
 	
+	function getDataBarangdanVarian(){
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		$itemid = $this->input->post('idindukbarangshopee');
+		
+		$data = [];
+        $data['dataVarian'] = [];
+        $data['dataGambarInduk'];
+        $data['dataGambarVarian'] = [];
+	     //GET ORDER DETAIL
+        $parameter = "&item_id_list=".(int)$itemid;
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_base_info','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+         
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['error'] != "")
+        {
+            echo $ret['error']." : ".$ret['message'];
+            $statusok = false;
+        }
+        else
+        {
+            $data['dataInduk'] = $ret['response']['item_list'][0];
+        }
+        
+        $parameter = '';
+        //GET MODEL
+        $parameter = "&item_id=".(int)$itemid;
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['error'] != "")
+        {
+            echo $ret['error']." : ".$ret['message'];
+            $statusok = false;
+        }
+        else
+        {
+            $dataUrutan = $ret['response']['tier_variation'][0]['option_list']; //URUTKAN DARI WARNA
+            $dataModel = $ret['response']['model'];
+            $dataGambarModel = $ret['response']['standardise_tier_variation'][0]['variation_option_list'];
+            for($u = 0 ; $u < count($dataUrutan); $u++)
+            {
+                for($m = 0 ; $m < count($dataModel);$m++)
+                {
+                    $model = explode(",",$dataModel[$m]['model_name']);
+                    if($dataUrutan[$u]['option'] == $model[0])
+                    {
+                        array_push($data['dataVarian'], array(
+                            'ID'    => $dataModel[$m]['model_id'],
+                            'NAMA'  => strtoupper($dataModel[$m]['model_name']),
+                            'WARNA'  => strtoupper($model[0]),
+                            'SIZE'  => strtoupper($model[1]),
+                            'SKU'   => $dataModel[$m]['model_sku'],
+                            "HARGA" => $dataModel[$m]['price_info'][0]['original_price']
+                        ));
+                    }
+                }
+            }
+            
+            for($g = 0 ; $g < count($dataGambarModel); $g++)
+            {
+                array_push($data['dataGambarVarian'], array(
+                    'WARNA'     => strtoupper($dataGambarModel[$g]['variation_option_name']),
+                    'IMAGEID'   => $dataGambarModel[$g]['image_id'],
+                    "IMAGEURL"  => $dataGambarModel[$g]['image_url'],
+                ));
+            }
+        }
+        echo(json_encode($data));
+	}
+	
 	function getDataBarang(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
@@ -1612,8 +1718,8 @@ class Shopee extends MY_Controller {
 		$parameter['condition'] = "NEW";
 		
 		$parameter['brand'] = array(
-		    'brand_id' => 3873176,
-		    'original_brand_name' => "Little Twisty",
+		    'brand_id' => 0, //3873176
+		    'original_brand_name' => "", //Little Twisty
 		);
 		
 		$parameter['seller_stock'] = [];
@@ -1724,21 +1830,28 @@ class Shopee extends MY_Controller {
                     {
                         for($x = 0 ; $x < count($dataVarian); $x++)
                         {
-                            if($dataVarian[$x]->WARNA == $optionWarna[$w]['option'] && $dataVarian[$x]->SIZE == $optionUkuran[$u]['option'])
+                            if(strtoupper($dataVarian[$x]->WARNA) == strtoupper($optionWarna[$w]['option']) && $dataVarian[$x]->SIZE == $optionUkuran[$u]['option'])
                             {
-                                $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGSHOPEE = ".$dataVarian[$x]->IDBARANG. " or IDBARANG = ".$dataVarian[$x]->IDBARANG ;
-
-                                $itemHeader = $CI->db->query($sql)->row();
-                                $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
-                                $saldoQty = $result->QTY??0;
+                                if($dataVarian[$x]->MODE != "HAPUS")
+                                {
+                                    $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGSHOPEE = ".$dataVarian[$x]->IDBARANG. " or IDBARANG = ".$dataVarian[$x]->IDBARANG ;
+    
+                                    $itemHeader = $CI->db->query($sql)->row();
+                                    $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+                                    $saldoQty = $result->QTY??0;
+                                }
+                                else
+                                {
+                                    $saldoQty = 0;
+                                }
                                              
                                 array_push($dataModel,array(
                                     'model_id'          => $dataVarian[$x]->IDBARANG,
                                     'tier_index'        => array((int)$w,(int)$u),
                                     'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
                                     'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
-                                    'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
-                                    'seller_stock'      => array(array('stock' => $saldoQty )),
+                                    // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
+                                    'seller_stock'      => array(array('stock' => (int)$saldoQty )),
                                     'weight'            => (float)$this->input->post("BERAT"),
                                     'dimension'         => array(
                                         'package_height' => (int)$this->input->post("TINGGI"),
@@ -1776,7 +1889,7 @@ class Shopee extends MY_Controller {
         		{
         		    $endpointModel = "product/update_tier_variation";
         		}
-                
+        		
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -1807,6 +1920,8 @@ class Shopee extends MY_Controller {
                 else
                 {
                     
+                  sleep(3);
+                    
                   //CEK JIKA ADA VARIAN BARU, ADD MODEL
                   if(count($dataModelBaru) > 0)
                   {
@@ -1815,7 +1930,6 @@ class Shopee extends MY_Controller {
                        $parameter['model_list'] = $dataModelBaru;
                 
                         $curl = curl_init();
-                        
                         curl_setopt_array($curl, array(
                           CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
@@ -1842,6 +1956,7 @@ class Shopee extends MY_Controller {
                             $data['success'] = false;
                             $data['msg'] =  $ret['error']." MODEL BARU : ".$ret['message'];
                             die(json_encode($data));
+                          
                         }
                   }
                   
@@ -1903,7 +2018,6 @@ class Shopee extends MY_Controller {
                       }
                       
                       $curl = curl_init();
-                            
                       curl_setopt_array($curl, array(
                         CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
                         CURLOPT_RETURNTRANSFER => true,
@@ -1974,6 +2088,7 @@ class Shopee extends MY_Controller {
                       }
                   }
                   
+                  sleep(3);
                   
                   $parameter = '';
                   //GET MODEL
@@ -2125,7 +2240,7 @@ class Shopee extends MY_Controller {
         }
         else
         {
-            $sql = "UPDATE MBARANG SET IDBARANGSHOPEE = '' , IDINDUKBARANGSHOPEE = '' WHERE IDINDUKBARANGSHOPEE = '".$idBarang."'";
+            $sql = "UPDATE MBARANG SET IDBARANGSHOPEE = '0' , IDINDUKBARANGSHOPEE = '0' WHERE IDINDUKBARANGSHOPEE = '".$idBarang."'";
             $CI->db->query($sql);
             
             $data['success'] = true;
@@ -2141,7 +2256,8 @@ class Shopee extends MY_Controller {
 		$this->output->set_content_type('application/json');
 		
 		$sql = "SELECT ROW_NUMBER() OVER (ORDER BY USERNAME ASC) AS NO, CONCAT(NAME,' (',USERNAME,') ') AS NAMA, TELP,ALAMAT,KOTA,
-		        SUM(TOTALBARANG) as TOTALBARANG, SUM(TOTALBAYAR) as TOTALBAYAR, COUNT(IDPENJUALANMARKETPLACE) as TOTALPESANAN
+		        SUM(TOTALBARANG) as TOTALBARANG, SUM(TOTALBAYAR) as TOTALBAYAR, COUNT(IDPENJUALANMARKETPLACE) as TOTALPESANAN, 
+		        0 as TOTALPESANANSUKSES, 0 as TOTALPESANANRETUR, USERNAME
 		        FROM TPENJUALANMARKETPLACE
 		        WHERE STATUSMARKETPLACE != 'CANCELLED' 
 		        GROUP BY USERNAME
@@ -2155,6 +2271,14 @@ class Shopee extends MY_Controller {
                                                 white-space: -pre-wrap;      
                                                 white-space: -o-pre-wrap;     
                                                 word-wrap: break-word;'>".$itemCustomer->ALAMAT."</div>" ;
+                                                
+            $sql="SELECT SUM(IF(KODEPENGEMBALIANMARKETPLACE = '',1,0)) as TOTALPESANANSUKSES,  SUM(IF(KODEPENGEMBALIANMARKETPLACE != '',1,0)) as TOTALPESANANRETUR 
+                  FROM TPENJUALANMARKETPLACE
+                  WHERE USERNAME = '$itemCustomer->USERNAME' AND STATUSMARKETPLACE != 'CANCELLED' ";
+            $dataTransaksi = $CI->db->query($sql)->row();
+            
+            $itemCustomer->TOTALPESANANSUKSES   = $dataTransaksi->TOTALPESANANSUKSES;
+            $itemCustomer->TOTALPESANANRETUR = $dataTransaksi->TOTALPESANANRETUR;
 		}
 		
 		$data["rows"]  = $dataCustomer;

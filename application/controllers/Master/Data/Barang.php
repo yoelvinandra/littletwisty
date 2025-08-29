@@ -295,6 +295,22 @@ class Barang extends MY_Controller {
         	// generate an error... or use the log_message() function to log your error
         	die(json_encode(array('errorMsg' => $response)));
         }
+        
+        $dataGambar = json_decode($this->input->post('datagambar'));
+        $response = $this->simpanGambar($dataHeader,$dataGambar);
+	   
+        if ($response != ''){
+        	// generate an error... or use the log_message() function to log your error
+        	die(json_encode(array('errorMsg' => $response)));
+        }
+        
+        $dataGambarVarian = json_decode($this->input->post('datagambarvarian'));
+        $response = $this->simpanGambarVarian($dataHeader,$dataGambarVarian);
+	   
+        if ($response != ''){
+        	// generate an error... or use the log_message() function to log your error
+        	die(json_encode(array('errorMsg' => $response)));
+        }
 
 	    echo json_encode(array('success' => true,'errorMsg' => ''));
 	}
@@ -446,6 +462,16 @@ class Barang extends MY_Controller {
 	    
     		
     	return '';
+	}
+	
+	public function simpanGambar($dataHeader,$dataGambar){
+        $jsonData = json_encode($dataGambar, JSON_PRETTY_PRINT); // optional formatting
+        file_put_contents('assets/foto-produk/INDUK_'.$dataHeader->KATEGORI.'.json', $jsonData);
+	}
+	
+	public function simpanGambarVarian($dataHeader,$dataGambarVarian){
+        $jsonData = json_encode($dataGambarVarian, JSON_PRETTY_PRINT); // optional formatting
+        file_put_contents('assets/foto-produk/VARIAN_'.$dataHeader->KATEGORI.'.json', $jsonData);
 	}
 	
 	public function ubahUrutanTampil(){

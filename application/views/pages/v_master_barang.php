@@ -195,7 +195,8 @@
                                                 <form role="form" id="form_input">
                                                     <input type="hidden" id="mode" name="mode">
                                                     <input type="hidden" id="datavarian" name="datavarian">
-                                                    <input type="hidden" id="BASE64IMAGES" name="BASE64IMAGES">
+                                                    <input type="hidden" id="datagambar" name="datagambar">
+                                                    <input type="hidden" id="datagambarvarian" name="datagambarvarian">
                                                         <div class="box-body">
                                                             <div class="form-group col-md-8">
                                                                 <h3 style="font-weight:bold;">Informasi Produk</h3>
@@ -230,7 +231,7 @@
                                                                         </div>
                                                                     </div>
                                                                     <br>
-                                                                    <label>Ukuran Barang (cm)</label>
+                                                                    <label>Ukuran Barang (cm) <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
                                                                     <div class="row">
                                                                         <div class="col-md-4">
                                                                             <label>Panjang</label>
@@ -245,25 +246,6 @@
                                                                             <input type="text" class="form-control" id="TINGGI" name="TINGGI" placeholder="Dalam Centimeter">
                                                                         </div>
                                                                     </div>
-                                                                <!--<br><br><br>-->
-                                                                <!--<br><br>-->
-                                                                <!--<h3 style="font-weight:bold;">Gambar Produk <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></h3>-->
-                                                                <!--<br>-->
-                                                                <!--    <div class="row">-->
-                                                                        <!-- Image Upload Box -->
-                                                                <!--        <div class="col-md-12">-->
-                                                                <!--            <div class="box box-primary image-upload-box">-->
-                                                                <!--                <div class="box-body">-->
-                                                                <!--                    <div class="file-input-container">-->
-                                                                <!--                        <input type="file" id="imageUpload" accept="image/*" multiple>-->
-                                                                <!--                        <label for="imageUpload"><i class="fa fa-upload"></i> Pilih Gambar</label>-->
-                                                                <!--                    </div>-->
-                                                                <!--                    <div id="message" class="alert-message"></div>-->
-                                                                <!--                    <div id="imageContainer" class="image-preview"></div>-->
-                                                                <!--                </div>-->
-                                                                <!--            </div>-->
-                                                                <!--        </div>-->
-                                                                <!--    </div>-->
                                                             </div>
                                                             <div class ="form-group col-md-8" id="checkbox-variation">
                                                                 <label><input type="checkbox" class="flat-blue" id="VARIANSET" name="VARIANSET" value="1">&nbsp; Produk ini menggunakan varian &nbsp;&nbsp;&nbsp;</label>
@@ -366,9 +348,23 @@
                                                                     </table>  
                                                                 </div>
                                                             </div>
+                                                            <div class ="form-group col-md-12">
+                                                                <br>
+                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 1), Isi gambar terakhir dengan tabel ukuran</i></h3>
+                                                                <br>
+                                                                <table id="gambarproduk">
+                                                                </table>  
+                                                            </div>
+                                                            <div class ="form-group col-md-12" id="DIVGAMBARVARIANSHOPEE">
+                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Setiap Varian)</i></h3>
+                                                                <br>
+                                                                <table id="gambarvarian">
+                                                                </table>    
+                                                            </div>
                                                         </div>
-                                                    <div class="box-footer">&nbsp;&nbsp;&nbsp;&nbsp;
-                                                        <button type="button" id="btn_simpan" class="btn btn-primary" onclick="javascript:simpanHeader()">Simpan</button>
+                                                        <div class="box-footer">&nbsp;&nbsp;&nbsp;&nbsp;
+                                                            <button type="button" id="btn_simpan" class="btn btn-primary" onclick="javascript:simpanHeader()">Simpan</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                            <button type="button" id="btn_simpan_shopee" class="btn" style="background:#EE4D2D; color:white;" onclick="javascript:simpanHeader('SHOPEE')">Simpan & Hubungkan Shopee</button>
                                                         </div>
                                                     </div>
                         						</form>
@@ -534,6 +530,7 @@
                         								</div>
                         							</div>
                         						</div>
+                        						
                         					  </div>
                                                     <!-- /.box-body -->
                                             </div>
@@ -551,6 +548,26 @@
     </div>
     <!-- /.col -->
   </div>
+  
+  <div class="modal fade" id="modal-lebih-jelas" style="z-index:999999999999999999999999999;">
+	<div class="modal-dialog modal-lg">
+    	<div class="modal-content">
+        	<div class="modal-header">
+                    <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
+                        <i class='fa fa-arrow-left' ></i>
+                    </button>
+                    <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; <span id="titleLebihJelas" style="font-size:14pt;"></span></h4>
+                    <!--<button id='btn_cetak_konfirm_shopee'  style="float:right;" class='btn btn-warning' onclick="noteKonfirmShopee()">Cetak</button>-->
+            </div>
+    		<div class="modal-body">
+    		    <div id="previewLebihJelas">
+    		        
+    		    </div>
+    		</div>
+    	</div>
+	</div>
+ </div>
+ 
   <!-- /.row (main row) -->
 </section>
 <!-- /.content -->
@@ -566,10 +583,111 @@ if('<?=$_SESSION[NAMAPROGRAM]['USERNAME'] == 'USERTES'?>')
     $("#header_tiktok").hide();
     $("#header_lazada").hide();
 }
-const maxImages = 10;
-let base64Images = [];  // Array to store base64 encoded images
 var dataVarianLama = [];
 var dataLama = {};
+var kategoriBarangShopee = [
+    100688,
+    101060,
+    101068,
+    101336,
+    100685
+];
+var indukBarangShopee = 0;
+var	dataGambar = [
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+        	];
+var dataGambarVarian = [
+        	    {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+        	
+        	];
 
 const params = new URLSearchParams(window.location.search);
 
@@ -620,9 +738,11 @@ $('#VARIANSET').on('ifChanged', function (event) {
     if (isChecked) {
         $("#FORMDATAINDUK").hide();
         $("#FORMDATAVARIAN").show();
+        $("#DIVGAMBARVARIANSHOPEE").show();
     } else {
         $("#FORMDATAINDUK").show();
         $("#FORMDATAVARIAN").hide();
+        $("#DIVGAMBARVARIANSHOPEE").hide();
     }
 });
 
@@ -1081,141 +1201,120 @@ function checkValid(data) {
         inputElement.value = 35;
     }
 }
-    
-// Handle file input change (when user selects files)
-$('#imageUpload').on('change', function(e) {
-    let files = e.target.files;
-    const messageElement = $('#message');
-    messageElement.text('');  // Clear the message
-
-    // Check if the number of files exceeds the limit
-    if (files.length + base64Images.length > maxImages) {
-        messageElement.text('Maksimal 10 Gambar');
-        return;
-    }
-
-    // Loop through all selected files
-    for (let i = 0; i < files.length; i++) {
-        if (base64Images.length >= maxImages) break; // Stop if 10 images are already uploaded
-
-        let file = files[i];
-
-        // Validate that the file is an image
-        if (!file.type.startsWith('image/')) {
-            messageElement.text('Hanya Boleh File Gambar');
-            continue;
-        }
-
-        // Create a FileReader to read the image
-        let reader = new FileReader();
-        reader.onload = function(event) {
-            let base64String = event.target.result;  // Get the base64 string
-            base64Images.push(base64String);  // Store base64 string
-            displayImage(base64String);  // Display the image
-        };
-
-        // Convert the file to base64
-        reader.readAsDataURL(file);
-    }
-});
-
-// Function to display the base64 image with remove and change buttons
-function displayImage(base64String) {
-    const imageContainer = $('#imageContainer');
-    let imageItem = $('<div class="image-item"></div>');
-
-    // Add image element
-    let imgElement = $('<img>').attr('src', base64String);
-    imageItem.append(imgElement);
-
-    // Add remove button
-    let removeBtn = $('<span class="remove-btn" style="margin-top:7px;"><i class="fa fa-times"></i></span>');
-    removeBtn.on('click', function() {
-        removeImage(base64String);
-    });
-
-    // Add change button
-    let changeBtn = $('<span class="change-btn" style="margin-top:85px;"><i class="fa fa-pencil"></i></span>');
-    changeBtn.on('click', function() {
-        changeImage(base64String);
-    });
-
-    // Append buttons
-    imageItem.append(removeBtn);
-    imageItem.append(changeBtn);
-
-    // Append image item to container
-    imageContainer.append(imageItem);
-}
-
-// Function to remove image
-function removeImage(base64String) {
-    // Remove image from the display
-    const imageItems = $('#imageContainer .image-item');
-    imageItems.each(function() {
-        let imgSrc = $(this).find('img').attr('src');
-        if (imgSrc === base64String) {
-            $(this).remove();
-        }
-    });
-
-    // Remove image from the base64 array
-    base64Images = base64Images.filter(img => img !== base64String);
-}
-
-// Function to change an image
-function changeImage(base64String) {
-    // Find the index of the image
-    const index = base64Images.indexOf(base64String);
-
-    if (index !== -1) {
-        // Prompt for a new image file
-        let fileInput = $('<input type="file" accept="image/*">');
-        fileInput.click();
-        fileInput.on('change', function(e) {
-            let file = e.target.files[0];
-            if (file) {
-                // Read new file and convert to Base64
-                let reader = new FileReader();
-                reader.onload = function(event) {
-                    let newBase64String = event.target.result;
-                    // Replace the image in the array
-                    base64Images[index] = newBase64String;
-                    // Update the image in the display
-                    $(imageContainer).find('img').eq(index).attr('src', newBase64String);
-
-                    $('#imageContainer').html("");
-                	for(var x = 0 ; x < base64Images.length ; x++)
-                    {
-                       displayImage(base64Images[x]);
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-}
 
 function tambahHeader(){
+    indukBarangShopee = 0;
     $("#FORMDATAINDUK").hide();
-    $("#FORMDATAVARIAN").hide();
+    $("#FORMDATAVARIAN").hide();	
+	$("#dataGridVarian").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/');
+	$("#dataGridVarian").DataTable().ajax.reload();
     get_akses_user('<?=$_GET['kode']?>', function(data){
 		if (data.TAMBAH==1) {
 			$("#mode").val('tambah');
 
 			//pindah tab & ganti judul tab
 			$('.nav-tabs a[href="#tab_form"]').tab('show');
-			$('.nav-tabs a[href="#tab_form"]').html('Tambah');	
-			
-			$("#dataGridVarian").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/');
-		    $("#dataGridVarian").DataTable().ajax.reload();
+			$('.nav-tabs a[href="#tab_form"]').html('Tambah');
 			
         	dataVarianLama = [];
-        	base64Images = [];
-        	$("#BASE64IMAGES").val(JSON.stringify(base64Images));
+        	dataGambar = [
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+        	];
+        	dataGambarVarian = [
+        	    {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+        	
+        	];
+        	
             $('#KATEGORIONLINE option:first').prop('selected', true);
 	        $("#VARIANSET").prop('checked',true).iCheck('update');
-        	$('#imageContainer').html("");
         	$("#BERAT").val("");
         	$("#PANJANG").val("");
         	$("#LEBAR").val("");
@@ -1241,6 +1340,9 @@ function tambahHeader(){
         	
             $("#FORMDATAINDUK").hide();
             $("#FORMDATAVARIAN").show();
+            $("#DIVGAMBARVARIANSHOPEE").show();
+	        setGambarProdukMaster();
+	        setGambarVarianMaster();
     
 		} else {
 			Swal.fire({
@@ -1255,6 +1357,7 @@ function tambahHeader(){
 }
 
 function ubahHeader(row){
+     indukBarangShopee = row.IDINDUKBARANGSHOPEE;
      $("#FORMDATAINDUK").hide();
      $("#FORMDATAVARIAN").hide();
      $('#checkbox-variation').hide();
@@ -1294,31 +1397,106 @@ function ubahHeader(row){
         	dataLama = row;
         	
         	dataVarianLama = [];
-		    base64Images = [];
-    		$("#BASE64IMAGES").val(JSON.stringify(base64Images));
-    		$('#imageContainer').html("");
+        	dataGambar = [
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	{
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+        	];
+        	dataGambarVarian = [
+        	    {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+            	 {
+            	    'ID'    : '',
+            	    'NAMA'  : '',
+            	    'URL'   : ''
+            	},
+        	
+        	];
     		setTimeout(function() {
                 
             $('#dataGridVarian').DataTable().rows().every(function () {
-             
                 var rowData = this.data();
                 dataVarianLama.push(rowData);
-                // $.ajax({
-                //      type      : 'POST',
-                //      url       : base_url+'Master/Data/Barang/getGambarBarang',
-                //      data      : {"idbarang" : rowData.IDBARANG},
-                //      dataType  : 'json',
-                //      beforeSend: function (){
-                //          //$.messager.progress();
-                //      },
-                //      success: function(gambar){
-                //         for(var x = 0 ; x < gambar.length ; x++)
-                //         {
-                //           base64Images.push(gambar[x]);
-                //           displayImage(gambar[x]);
-                //         }
-                //      }
-                //  });
             })
             
             if(dataVarianLama.length > 0)
@@ -1326,13 +1504,152 @@ function ubahHeader(row){
                 $("#VARIANSET").prop('checked',true).iCheck('update');
                 $("#FORMDATAINDUK").hide();
                 $("#FORMDATAVARIAN").show();
+                $("#DIVGAMBARVARIANSHOPEE").show();
+                setGambarVarianMaster();
             }
             else
             {
                 $("#VARIANSET").prop('checked',false).iCheck('update');
                 $("#FORMDATAINDUK").show();
                 $("#FORMDATAVARIAN").hide();
+                $("#DIVGAMBARVARIANSHOPEE").hide();
             }
+	        setGambarProdukMaster();
+	        
+	        if(indukBarangShopee != 0)
+	        {
+    	        $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Shopee/getDataBarangdanVarian/',
+                	data    : {idindukbarangshopee: row.IDINDUKBARANGSHOPEE},
+                	dataType: 'json',
+                	success : function(msg){
+                	    
+                	    var imageProduk = msg.dataInduk.image;
+                    	//GAMBAR PRODUK
+                    	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                    	{
+                    	   // $("#file-input-"+y).val("-");
+                    	    $("#format-input-"+y).val('GAMBAR');
+                    	    $("#index-input-"+y).val(y);
+                    	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
+                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                    	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
+                    	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
+                    	   
+                        	$("#ubahGambarProduk-"+y).show();
+                        	$("#hapusGambarProduk-"+y).show();
+                        	
+                        	dataGambar[y] = {
+                               'ID'   : $("#id-input-"+y).val(),
+                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                               'URL'  : $("#preview-image-"+y).attr("src"),
+                            };
+                    	    
+                    	}
+                    	
+                	    var imageVarian = msg.dataGambarVarian;
+                	    for(var y = 0 ; y < imageVarian.length ; y++)
+                    	{
+                    	    dataGambarVarian[y] = {
+                               'ID'   : '',
+                               'NAMA' : '',
+                               'URL'  : '',
+                            };
+                                                                   
+                    	    for(var z = 0 ; z < imageVarian.length ; z++)
+                    	    {
+                    	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
+                    	        {
+                            	    // $("#file-input-varian-"+y).val("-");
+                                    $("#format-input-varian-"+y).val('GAMBAR');
+                                    $("#index-input-varian-"+y).val(y);
+                                    $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
+                                    $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
+                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
+                                    
+                                    $("#ubahGambarVarian"+y).show();
+                            	    $("#hapusGambarVarian"+y).show();
+                            	    
+                            	    dataGambarVarian[y] = {
+                                       'ID'   : $("#id-input-varian-"+y).val(),
+                                       'NAMA' : imageVarian[z].WARNA,
+                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                    };
+                    	        }
+                    	    }
+                    	}
+                	}
+                	    
+                });
+	        }
+	        else if($("#IDBARANGINDUK").val() != 0)
+	        {
+	            $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Master/Data/Barang/getGambarBarang/',
+                	data    : {idbarang: $("#IDBARANGINDUK").val()},
+                	dataType: 'json',
+                	success : function(msg){
+                	    
+                	    var imageProduk = msg.dataInduk;
+                    	//GAMBAR PRODUK
+                    	for(var y = 0 ; y < imageProduk.length ; y++)
+                    	{
+                    	   // $("#file-input-"+y).val("-");
+                    	    $("#format-input-"+y).val('GAMBAR');
+                    	    $("#index-input-"+y).val(y);
+                    	    $("#src-input-"+y).val(imageProduk[y].URL);
+                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                    	    $("#id-input-"+y).val(imageProduk[y].ID);
+                    	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
+                    	   
+                        	$("#ubahGambarProduk-"+y).show();
+                        	$("#hapusGambarProduk-"+y).show();
+                        	
+                        	dataGambar[y] = {
+                               'ID'   : $("#id-input-"+y).val(),
+                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                               'URL'  : $("#preview-image-"+y).attr("src"),
+                            };
+                    	    
+                    	}
+                    	
+                	    var imageVarian = msg.dataGambarVarian;
+                	    for(var y = 0 ; y < imageVarian.length ; y++)
+                    	{
+                    	    dataGambarVarian[y] = {
+                               'ID'   : '',
+                               'NAMA' : '',
+                               'URL'  : '',
+                            };
+                                                                   
+                    	    for(var z = 0 ; z < imageVarian.length ; z++)
+                    	    {
+                    	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
+                    	        {
+                            	    // $("#file-input-varian-"+y).val("-");
+                                    $("#format-input-varian-"+y).val('GAMBAR');
+                                    $("#index-input-varian-"+y).val(y);
+                                    $("#src-input-varian-"+y).val(imageVarian[z].URL);
+                                    $("#id-input-varian-"+y).val(imageVarian[z].ID);
+                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
+                                    
+                                    $("#ubahGambarVarian"+y).show();
+                            	    $("#hapusGambarVarian"+y).show();
+                            	    
+                            	    dataGambarVarian[y] = {
+                                       'ID'   : $("#id-input-varian-"+y).val(),
+                                       'NAMA' : imageVarian[z].NAMA,
+                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                    };
+                    	        }
+                    	    }
+                    	}
+                	}
+                	    
+                });
+	        }
         }, 1000);
     	
 			
@@ -1350,7 +1667,10 @@ function ubahHeader(row){
 
 
 
-function simpanHeader() {
+function simpanHeader(jenis = '') {
+    
+    loadingMaster();
+    
     var tableVarian = $('#dataGridVarian').DataTable();
     tableVarian.rows().eq(0).each(function (index) {
          var row = tableVarian.row(index).data();
@@ -1363,8 +1683,49 @@ function simpanHeader() {
              }
          }
     });
-	
-	if(($('#VARIANSET').prop("checked") && tableVarian.rows().data().length == 0) || ($("#KATEGORIONLINE").val() == "" || $("#KATEGORI").val() == "" || $("#DESKRIPSI").val() == "" || $("#BERAT").val() == "" || $("#BERAT").val() == "0")){ // || base64Images.length == 0
+    
+    var arrGambar = [];
+    for(var g = 0 ; g < dataGambar.length;g++)
+    {
+        if(dataGambar[g].ID != "")
+        {
+            arrGambar.push(dataGambar[g]);
+        }
+    }
+    $("#datagambar").val(JSON.stringify(arrGambar)); 
+    
+    var arrGambarVarian = [];
+    for(var gv = 0 ; gv < dataGambarVarian.length;gv++)
+    {
+        if(dataGambarVarian[gv].ID != "")
+        {
+            arrGambarVarian.push(dataGambarVarian[gv]);
+        }
+    }
+    $("#datagambarvarian").val(JSON.stringify(arrGambarVarian)); 
+    
+    var varian = $('#dataGridVarian').DataTable().rows().data().toArray();
+    var warna = [];
+    for(var y = 0 ; y < varian.length; y++)
+    {
+        var tempWarna = varian[y].WARNA;
+    	
+    	adaWarna = false;
+    	for(var w = 0 ; w < warna.length; w++)
+    	{
+    	    if(warna[w] == tempWarna)
+    	    {
+    	        adaWarna = true;
+    	    }
+    	}
+    	
+    	if(!adaWarna)
+    	{
+    	    warna.push(tempWarna);
+    	}
+    }
+
+	if(($('#VARIANSET').prop("checked") && tableVarian.rows().data().length == 0) || ($("#KATEGORIONLINE").val() == "" || $("#KATEGORI").val() == "" || $("#DESKRIPSI").val() == "" || $("#BERAT").val() == "" || $("#BERAT").val() == "0")){
         Swal.fire({ 
         	title            : "Terdapat Data Produk yang belum diisi",
         	type             : 'warning',
@@ -1380,9 +1741,25 @@ function simpanHeader() {
         	timer            : 1500
         });
     }
-    else if($("#KATEGORI").val().length < 5 || $("#KATEGORI").val().length > 50){
+    else if($("#KATEGORI").val().length < 5){
          Swal.fire({ 
-        	title            : "Panjang Nama Produk min 5 dan maks 50 ",
+        	title            : "Panjang Nama Produk min 5",
+        	type             : 'warning',
+        	showConfirmButton: false,
+        	timer            : 1500
+        });
+    }
+    else if(arrGambar.length < 2){
+         Swal.fire({ 
+        	title            : "Isi Gambar Min 2",
+        	type             : 'warning',
+        	showConfirmButton: false,
+        	timer            : 1500
+        });
+    }
+    else if(arrGambarVarian.length != warna.length){
+         Swal.fire({ 
+        	title            : "Gambar Varian harus diisi semua",
         	type             : 'warning',
         	showConfirmButton: false,
         	timer            : 1500
@@ -1390,10 +1767,7 @@ function simpanHeader() {
     }
     else
     {
-        $("#BASE64IMAGES").val(JSON.stringify(base64Images));
-	
     	var dataVarian = [];
-        
         if(!$("#VARIANSET").prop('checked'))
         {
             var status = 0;
@@ -1403,21 +1777,21 @@ function simpanHeader() {
             }
         
             var data = {
-                'IDBARANG'     : $("#IDBARANGINDUK").val(),     
-                'KODEBARANG'   : $("#KODEBARANGINDUK").val(),      
-                'NAMABARANG'   : $("#KATEGORI").val(),        
-                'HARGAJUAL'    : $("#HARGAJUALINDUK").val(), 
-                'HARGABELI'    : $("#HARGABELIINDUK").val(),  
-                'SKUGRAB'      : $("#SKUGRABINDUK").val(),  
-                'SKUGOJEK'     : $("#SKUGOJEKINDUK").val(),  
-                'SKUSHOPEE'    : $("#SKUSHOPEEINDUK").val(),  
-                'SKUTOKPED'    : $("#SKUTOKPEDINDUK").val(),  
-                'SKUTIKTOK'    : $("#SKUTIKTOKINDUK").val(),  
-                'SKULAZADA'    : $("#SKULAZADAINDUK").val(),  
-                'SATUAN'       : $("#SATUANINDUK").val(),   
-                'BARCODE'      : $("#BARCODEINDUK").val(),   
-                'STATUS'       : status,   
-                'MODE'         : $("#mode").val()
+                'IDBARANG'          : $("#IDBARANGINDUK").val(),     
+                'KODEBARANG'        : $("#KODEBARANGINDUK").val(),      
+                'NAMABARANG'        : $("#KATEGORI").val(),        
+                'HARGAJUAL'         : $("#HARGAJUALINDUK").val(), 
+                'HARGABELI'         : $("#HARGABELIINDUK").val(),  
+                'SKUGRAB'           : $("#SKUGRABINDUK").val(),  
+                'SKUGOJEK'          : $("#SKUGOJEKINDUK").val(),  
+                'SKUSHOPEE'         : $("#SKUSHOPEEINDUK").val(),  
+                'SKUTOKPED'         : $("#SKUTOKPEDINDUK").val(),  
+                'SKUTIKTOK'         : $("#SKUTIKTOKINDUK").val(),  
+                'SKULAZADA'         : $("#SKULAZADAINDUK").val(),  
+                'SATUAN'            : $("#SATUANINDUK").val(),   
+                'BARCODE'           : $("#BARCODEINDUK").val(), 
+                'STATUS'            : status,   
+                'MODE'              : $("#mode").val()
             };
             
 		    dataVarian.push(data);
@@ -1438,7 +1812,7 @@ function simpanHeader() {
             });
         }
         
-        $("#datavarian").val(JSON.stringify(dataVarian)); 
+        $("#datavarian").val(JSON.stringify(dataVarian));
         
         $.ajax({
             type      : 'POST',
@@ -1450,15 +1824,40 @@ function simpanHeader() {
             },
             success: function(msg){
                 if (msg.success) {
-                    Swal.fire({
-                        title            : 'Simpan Data Sukses',
-                        type             : 'success',
-                        showConfirmButton: false,
-                        timer            : 1500
-                    });
-                    $("#dataGrid").DataTable().ajax.reload();
-                    tambahHeader();
-                    $('.nav-tabs a[href="#tab_grid"]').tab('show');
+                    
+                    //IDBARANGINDUK
+                    $("#IDBARANGINDUK").val();
+                    
+                    if(jenis == 'SHOPEE')
+                    {
+                         $.ajax({
+                            type      : 'POST',
+                            url       : base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()),
+                            data      : $('#form_input :input').serialize(),
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                simpanHeaderShopee(msg.rows[0].IDBARANG);
+                            }
+                             
+                         });
+                    }
+                    else
+                    {
+                        Swal.close();
+                        Swal.fire({
+                            title            : 'Simpan Data Sukses',
+                            type             : 'success',
+                            showConfirmButton: false,
+                            timer            : 1500
+                        });
+                    
+                        $("#dataGrid").DataTable().ajax.reload();
+                        tambahHeader();
+                        $('.nav-tabs a[href="#tab_grid"]').tab('show');
+                    }
                     
                 } else {
                     Swal.fire({
@@ -1471,6 +1870,261 @@ function simpanHeader() {
             }
         });
 	}
+}
+
+async function simpanHeaderShopee(){
+    
+    var arrLogistics = [];
+    var unlisted = 0;
+    
+    // Helper: convert jQuery ajax to Promise
+    function ajaxPost(url, data = {}) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: data,
+                dataType: 'json',
+                success: resolve,
+                error: reject
+            });
+        });
+    }
+    
+    
+    if(indukBarangShopee != 0)
+    {
+        var msg = await ajaxPost(base_url + 'Shopee/getDataBarangdanVarian/', { idindukbarangshopee: indukBarangShopee });
+       	var logistic = msg.dataInduk.logistic_info;
+        for(var x = 0 ; x < logistic.length; x++)
+        {
+            arrLogistics.push({
+                 'enabled'     : logistic[x].enabled,
+                 'logistic_id' : logistic[x].logistic_id 
+             });
+        }
+        
+        if(msg.dataInduk.item_status == "UNLIST")
+        { 
+            unlisted = 1;
+        }
+       
+    }
+    else
+    {
+        var msg = await ajaxPost(base_url + 'Shopee/getPengiriman/');
+        for(var x = 0 ; x < msg.rows.length ; x++)
+        {
+        	  arrLogistics.push({
+               'enabled'     : true,
+               'logistic_id' : msg.rows[x].IDPENGIRIMAN 
+            });
+        }
+    }
+    
+    var arrAttribut = [];
+    var arrImage = [];
+        
+    var sizeChart = "";
+    var sizeChartID = "";
+    var sizeChartTipe = "GAMBAR";
+    
+    for(var g = 0 ; g < dataGambar.length;g++)
+    {
+        if(dataGambar[g].ID != "")
+        {
+            arrImage.push(dataGambar[g].ID);
+            sizeChartID = dataGambar[g].ID;
+            sizeChart = dataGambar[g].URL;
+        }
+    }
+    
+    var arrImageVarian = [];
+    for(var gv = 0 ; gv < dataGambarVarian.length;gv++)
+    {
+        if(dataGambarVarian[gv].ID != "")
+        {
+            arrImageVarian.push(dataGambarVarian[gv].ID);
+        }
+    }
+    
+    var varian = $('#dataGridVarian').DataTable().rows().data().toArray();
+    var warna = [];
+    var ukuran = [];
+    for(var y = 0 ; y < varian.length; y++)
+    {
+        var tempWarna = varian[y].WARNA;
+        var tempUk = varian[y].SIZE;
+    	
+    	adaWarna = false;
+    	for(var w = 0 ; w < warna.length; w++)
+    	{
+    	    if(warna[w] == tempWarna)
+    	    {
+    	        adaWarna = true;
+    	    }
+    	}
+    	
+    	if(!adaWarna)
+    	{
+    	    warna.push(tempWarna);
+    	}
+    	
+    	adaUkuran = false;
+    	for(var u = 0 ; u < ukuran.length; u++)
+    	{
+    	    if(ukuran[u] == tempUk)
+    	    {
+    	        adaUkuran = true;
+    	    }
+    	}
+    	
+    	if(!adaUkuran)
+    	{
+    	    ukuran.push(tempUk);
+    	}
+    }
+    
+    var dataVarianSimpan = [];
+    var dataVarianMaster = [];
+    
+    const resMaster = await ajaxPost(base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()));
+    dataVarianMaster = resMaster.rows;
+    dataVarianSimpan = [...dataVarianMaster];
+    
+    //DATA KLO BLM ADA PAKE YANG DIBAWAH INI GPP, TAPI KLO DAH DISIMPEN DI DB DLU. JADI KEDOBELAN
+    
+    if(indukBarangShopee != 0)
+    {
+        const msg = await ajaxPost(base_url + 'Shopee/getDataBarang/', { idindukbarangshopee: indukBarangShopee });
+
+        for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+        {
+            var rowData = dataVarianMaster[dv];
+            var ada = false;
+            for(var x = 0 ; x < msg.dataVarian.length; x++)
+            {
+                if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                    ada = true;
+                }
+            }
+            
+            if(!ada)
+            {  
+               // Update the NAMABARANG field
+               rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:yellow; text-align:center; padding:5px; width:100px;'>Varian Baru</i>";
+               rowData.MODE = "BARU";
+               dataVarianSimpan[dv] = rowData;
+            }
+        }
+        
+        //CEK ADA YANG BERUBAH
+        for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+        {
+            var rowData = dataVarianMaster[dv];
+            var ada = false;
+            for(var x = 0 ; x < msg.dataVarian.length; x++)
+            {
+                if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                    if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
+                    {
+                    // Update the NAMABARANG field
+                       rowData.IDBARANG   = msg.dataVarian[x].ID,
+                       rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>Harga Diubah</i>";
+                       rowData.MODE = "UBAH HARGA";
+                       dataVarianSimpan[dv] = rowData;
+                    }
+                    else if(rowData.SKUSHOPEE != msg.dataVarian[x].SKU)
+                    {
+                    // Update the NAMABARANG field
+                       rowData.IDBARANG   = msg.dataVarian[x].ID,
+                       rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>SKU Diubah</i>";
+                       rowData.MODE = "UBAH SKU";
+                       // Set the updated data back into the row
+                       dataVarianSimpan[dv] = rowData;
+                    }
+                }
+            }
+        }
+        
+        // CEK ADA YANG DIHAPUS APA NDAK
+        for(var x = 0 ; x < msg.dataVarian.length; x++)
+        {
+            ada = false;
+            for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+            {
+                var rowData = dataVarianMaster[dv];
+        	    
+                if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                    ada = true;
+                }
+            }
+            
+            if(!ada)
+            {
+               var nama = msg.dataVarian[x].NAMA.replaceAll(',',' <span>|</span> SIZE ')+" <i class='pull-right' style='background:#FF5959; text-align:center; padding:5px; width:100px; color:white;'>Varian Dihapus</i>";
+    
+               // Update the NAMABARANG field
+               var newRow = {
+                  IDBARANG   : msg.dataVarian[x].ID,
+                  NAMABARANG : nama,
+                  HARGAJUAL : msg.dataVarian[x].HARGA,
+                  SIZE : msg.dataVarian[x].SIZE,
+                  WARNA : msg.dataVarian[x].WARNA,
+                  HARGAJUAL : msg.dataVarian[x].HARGA,
+                  SKUSHOPEE : msg.dataVarian[x].SKU,
+                  MODE : 'HAPUS'
+               };
+               
+               dataVarianSimpan.push(newRow);
+            }
+        }
+    }
+
+    $.ajax({
+    	type    : 'POST',
+    	url     : base_url+'Shopee/setBarang/',
+    	data    : {
+    	   "IDBARANG"       : indukBarangShopee,
+    	   "KATEGORI"       : kategoriBarangShopee[document.getElementById('KATEGORIONLINE').selectedIndex], 
+    	   "NAMA"           : $("#KATEGORI").val(), 
+    	   "DESKRIPSI"      : $("#DESKRIPSI").val(), 
+    	   "BERAT"          : $("#BERAT").val(), 
+    	   "PANJANG"        : $("#PANJANG").val(), 
+    	   "LEBAR"          : $("#LEBAR").val(), 
+    	   "TINGGI"         : $("#TINGGI").val(), 
+    	   "HARGA"          : $("#HARGAJUALINDUK").val(),      
+    	   "SKU"            : $("#SKUSHOPEEINDUK").val(), 
+    	   "UNLISTED"       : unlisted,
+    	   "VARIAN"         : JSON.stringify(dataVarianSimpan),
+    	   "WARNA"          : JSON.stringify(warna),
+    	   "UKURAN"         : JSON.stringify(ukuran),
+    	   "ATTRIBUT"       : JSON.stringify(arrAttribut),
+    	   "GAMBARPRODUK"   : JSON.stringify(arrImage),
+    	   "GAMBARVARIAN"   : JSON.stringify(arrImageVarian),
+    	   "SIZECHART"      : sizeChart,
+    	   "SIZECHARTID"    : sizeChartID,
+    	   "SIZECHARTTIPE"  : sizeChartTipe,
+    	   "LOGISTICS"      : JSON.stringify(arrLogistics),
+    	},
+        dataType: 'json',
+    	success : function(msg){
+    	    Swal.close();
+    	    Swal.fire({
+                	title            :  msg.msg,
+                	type             : (msg.success?'success':'error'),
+                	showConfirmButton: false,
+                	timer            : 2000
+            });
+            
+            if(msg.success)
+            {
+                $("#dataGrid").DataTable().ajax.reload();
+                tambahHeader();
+                $('.nav-tabs a[href="#tab_grid"]').tab('show');
+            }
+    	}
+    }); 
 }
 
 function hapusHeader(row){
@@ -1577,7 +2231,7 @@ function simpanMassal(){
     var arrayWarna = [];
     var arrayUkuran = [];
     $('#PILIHWARNAMASSAL option:selected').each(function() {
-        arrayWarna.push($(this).text());
+        arrayWarna.push($(this).text().toUpperCase());
     });
     
     $('#PILIHUKURANMASSAL option:selected').each(function() {
@@ -1653,12 +2307,146 @@ function simpanMassal(){
                 table.row.add(newRowData).draw();
             });
         });
+        setGambarVarianMaster();
     	$("#modal-set-varian").modal('hide');	
+    	
+    	 if(indukBarangShopee != 0)
+	     {
+    	        $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Shopee/getDataBarangdanVarian/',
+                	data    : {idindukbarangshopee: indukBarangShopee},
+                	dataType: 'json',
+                	success : function(msg){
+                	    
+                	    var imageProduk = msg.dataInduk.image;
+                    	//GAMBAR PRODUK
+                    	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                    	{
+                    	   // $("#file-input-"+y).val("-");
+                    	    $("#format-input-"+y).val('GAMBAR');
+                    	    $("#index-input-"+y).val(y);
+                    	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
+                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                    	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
+                    	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
+                    	   
+                        	$("#ubahGambarProduk-"+y).show();
+                        	$("#hapusGambarProduk-"+y).show();
+                        	
+                        	dataGambar[y] = {
+                               'ID'   : $("#id-input-"+y).val(),
+                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                               'URL'  : $("#preview-image-"+y).attr("src"),
+                            };
+                    	    
+                    	}
+                    	
+                	    var imageVarian = msg.dataGambarVarian;
+                	    for(var y = 0 ; y < imageVarian.length ; y++)
+                    	{
+                    	    dataGambarVarian[y] = {
+                               'ID'   : '',
+                               'NAMA' : '',
+                               'URL'  : '',
+                            };
+                                                                   
+                    	    for(var z = 0 ; z < imageVarian.length ; z++)
+                    	    {
+                    	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
+                    	        {
+                            	    // $("#file-input-varian-"+y).val("-");
+                                    $("#format-input-varian-"+y).val('GAMBAR');
+                                    $("#index-input-varian-"+y).val(y);
+                                    $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
+                                    $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
+                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
+                                    
+                                    $("#ubahGambarVarian"+y).show();
+                            	    $("#hapusGambarVarian"+y).show();
+                            	    
+                            	    dataGambarVarian[y] = {
+                                       'ID'   : $("#id-input-varian-"+y).val(),
+                                       'NAMA' : imageVarian[z].WARNA,
+                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                    };
+                    	        }
+                    	    }
+                    	}
+                	}
+                	    
+                });
+	        }
+	        else if($("#IDBARANGINDUK").val() != 0)
+	        {
+	            $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Master/Data/Barang/getGambarBarang/',
+                	data    : {idbarang: $("#IDBARANGINDUK").val()},
+                	dataType: 'json',
+                	success : function(msg){
+                	    
+                	    var imageProduk = msg.dataInduk;
+                    	//GAMBAR PRODUK
+                    	for(var y = 0 ; y < imageProduk.length ; y++)
+                    	{
+                    	   // $("#file-input-"+y).val("-");
+                    	    $("#format-input-"+y).val('GAMBAR');
+                    	    $("#index-input-"+y).val(y);
+                    	    $("#src-input-"+y).val(imageProduk[y].URL);
+                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                    	    $("#id-input-"+y).val(imageProduk[y].ID);
+                    	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
+                    	   
+                        	$("#ubahGambarProduk-"+y).show();
+                        	$("#hapusGambarProduk-"+y).show();
+                        	
+                        	dataGambar[y] = {
+                               'ID'   : $("#id-input-"+y).val(),
+                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                               'URL'  : $("#preview-image-"+y).attr("src"),
+                            };
+                    	    
+                    	}
+                    	
+                	    var imageVarian = msg.dataGambarVarian;
+                	    for(var y = 0 ; y < imageVarian.length ; y++)
+                    	{
+                    	    dataGambarVarian[y] = {
+                               'ID'   : '',
+                               'NAMA' : '',
+                               'URL'  : '',
+                            };
+                    	    for(var z = 0 ; z < imageVarian.length ; z++)
+                    	    {
+                    	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
+                    	        {
+                            	    // $("#file-input-varian-"+y).val("-");
+                                    $("#format-input-varian-"+y).val('GAMBAR');
+                                    $("#index-input-varian-"+y).val(y);
+                                    $("#src-input-varian-"+y).val(imageVarian[z].URL);
+                                    $("#id-input-varian-"+y).val(imageVarian[z].ID);
+                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
+                                    
+                                    $("#ubahGambarVarian"+y).show();
+                            	    $("#hapusGambarVarian"+y).show();
+                            	    
+                            	    dataGambarVarian[y] = {
+                                       'ID'   : $("#id-input-varian-"+y).val(),
+                                       'NAMA' : imageVarian[z].NAMA,
+                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                    };
+                    	        }
+                    	    }
+                    	}
+                	}
+                	    
+                });
+	        }
     }
 }
 
 function simpan(){
-
     var cheapest = 999999999999999999999999;
     var tableVarian = $('#dataGridVarian').DataTable();
     tableVarian.rows().eq(0).each(function (index) {
@@ -1680,7 +2468,7 @@ function simpan(){
         	timer            : 1500
         });
     }
-    else if(parseFloat($("#HARGAJUAL").val()) / parseFloat(cheapest) > 5 && parseFloat($("#HARGAJUAL").val()) >= parseFloat(cheapest)){
+    else if(parseFloat($("#HARGAJUAL").val()) / parseFloat(cheapest) > 5 && parseFloat($("#HARGAJUAL").val()) >= parseFloat(cheapest) && tableVarian.length > 1){
         Swal.fire({
         	title            : "Harga varian maksimal adalah 5x dari harga varian terendah",
         	type             : 'warning',
@@ -1688,7 +2476,7 @@ function simpan(){
         	timer            : 1500
         });
     }
-    else if(parseFloat(cheapest) / parseFloat($("#HARGAJUAL").val()) > 5 && parseFloat($("#HARGAJUAL").val()) < parseFloat(cheapest)){
+    else if(parseFloat(cheapest) / parseFloat($("#HARGAJUAL").val()) > 5 && parseFloat($("#HARGAJUAL").val()) < parseFloat(cheapest) && tableVarian.length > 1){
         Swal.fire({
         	title            : "Harga varian maksimal adalah 5x dari harga varian terendah",
         	type             : 'warning',
@@ -1714,7 +2502,7 @@ function simpan(){
         var warna = "";
         if($("#WARNABARANG").val() != "")
         {
-            warna = " | "+$("#WARNABARANG").val();
+            warna = " | "+$("#WARNABARANG").val().toUpperCase();
         }
         var ukuran = "";
         if($("#UKURANBARANG").val() != "0" && $("#UKURANBARANG").val() != "")
@@ -1745,7 +2533,7 @@ function simpan(){
             else
             {
                 let randomDecimal = Math.random();
-                $("#IDBARANG").val("X"+$("#WARNABARANG").val()+"X"+$("#UKURANBARANG").val()+"X"+randomDecimal.toString());
+                $("#IDBARANG").val("X"+$("#WARNABARANG").val().toUpperCase()+"X"+$("#UKURANBARANG").val()+"X"+randomDecimal.toString());
             }
         }
         
@@ -1755,7 +2543,7 @@ function simpan(){
             SKUTIKTOK: $("#SKUTIKTOK").val(),
             SKULAZADA: $("#SKULAZADA").val(),
             IDBARANG: $("#IDBARANG").val(),
-            WARNA: $("#WARNABARANG").val(),
+            WARNA: $("#WARNABARANG").val().toUpperCase(),
             SIZE: $("#UKURANBARANG").val(),
             BARCODE: $("#BARCODE").val(),
             KODEBARANG: $("#KODEBARANG").val(),
@@ -1790,9 +2578,9 @@ function simpan(){
                 row.invalidate().draw();
             }
         }
-        
-    	$("#modal-varian").modal('hide');	
+    	$("#modal-varian").modal('hide');
     }
+    
 }
 
 function ubah(row){
@@ -1820,7 +2608,6 @@ function ubah(row){
 	$("#WARNABARANG").attr("readonly","readonly");
 	$("#UKURANBARANG").attr("readonly","readonly");
     $("#btn_simpan_detail").html('Ubah');
-
 }
 
 function hapus(row){
@@ -1861,6 +2648,140 @@ function hapus(row){
                     						showConfirmButton: false,
                     						timer            : 1500
                     					});
+                                        setGambarVarianMaster();
+                                        
+                                           if(indukBarangShopee != 0)
+                                        	     {
+                                            	        $.ajax({
+                                                        	type    : 'POST',
+                                                        	url     : base_url+'Shopee/getDataBarangdanVarian/',
+                                                        	data    : {idindukbarangshopee: indukBarangShopee},
+                                                        	dataType: 'json',
+                                                        	success : function(msg){
+                                                        	    
+                                                        	    var imageProduk = msg.dataInduk.image;
+                                                            	//GAMBAR PRODUK
+                                                            	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                                                            	{
+                                                            	   // $("#file-input-"+y).val("-");
+                                                            	    $("#format-input-"+y).val('GAMBAR');
+                                                            	    $("#index-input-"+y).val(y);
+                                                            	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
+                                                            	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                                                            	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
+                                                            	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
+                                                            	   
+                                                                	$("#ubahGambarProduk-"+y).show();
+                                                                	$("#hapusGambarProduk-"+y).show();
+                                                                	
+                                                                	dataGambar[y] = {
+                                                                       'ID'   : $("#id-input-"+y).val(),
+                                                                       'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                                                       'URL'  : $("#preview-image-"+y).attr("src"),
+                                                                    };
+                                                            	    
+                                                            	}
+                                                            	
+                                                        	    var imageVarian = msg.dataGambarVarian;
+                                                        	    for(var y = 0 ; y < imageVarian.length ; y++)
+                                                            	{
+                                                            	    dataGambarVarian[y] = {
+                                                                      'ID'   : '',
+                                                                      'NAMA' : '',
+                                                                      'URL'  : '',
+                                                                    };
+                                                            	    for(var z = 0 ; z < imageVarian.length ; z++)
+                                                            	    {
+                                                            	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
+                                                            	        {
+                                                                    	    // $("#file-input-varian-"+y).val("-");
+                                                                            $("#format-input-varian-"+y).val('GAMBAR');
+                                                                            $("#index-input-varian-"+y).val(y);
+                                                                            $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
+                                                                            $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
+                                                                            $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
+                                                                            
+                                                                            $("#ubahGambarVarian"+y).show();
+                                                                    	    $("#hapusGambarVarian"+y).show();
+                                                                    	    
+                                                                    	    dataGambarVarian[y] = {
+                                                                               'ID'   : $("#id-input-varian-"+y).val(),
+                                                                               'NAMA' : imageVarian[z].WARNA,
+                                                                               'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                                                            };
+                                                            	        }
+                                                            	    }
+                                                            	}
+                                                        	}
+                                                        	    
+                                                        });
+                                        	        }
+                                        	        else if($("#IDBARANGINDUK").val() != 0)
+                                        	        {
+                                        	            $.ajax({
+                                                        	type    : 'POST',
+                                                        	url     : base_url+'Master/Data/Barang/getGambarBarang/',
+                                                        	data    : {idbarang: $("#IDBARANGINDUK").val()},
+                                                        	dataType: 'json',
+                                                        	success : function(msg){
+                                                        	    
+                                                        	    var imageProduk = msg.dataInduk;
+                                                            	//GAMBAR PRODUK
+                                                            	for(var y = 0 ; y < imageProduk.length ; y++)
+                                                            	{
+                                                            	   // $("#file-input-"+y).val("-");
+                                                            	    $("#format-input-"+y).val('GAMBAR');
+                                                            	    $("#index-input-"+y).val(y);
+                                                            	    $("#src-input-"+y).val(imageProduk[y].URL);
+                                                            	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                                                            	    $("#id-input-"+y).val(imageProduk[y].ID);
+                                                            	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
+                                                            	   
+                                                                	$("#ubahGambarProduk-"+y).show();
+                                                                	$("#hapusGambarProduk-"+y).show();
+                                                                	
+                                                                	dataGambar[y] = {
+                                                                       'ID'   : $("#id-input-"+y).val(),
+                                                                       'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                                                       'URL'  : $("#preview-image-"+y).attr("src"),
+                                                                    };
+                                                            	    
+                                                            	}
+                                                            	
+                                                        	    var imageVarian = msg.dataGambarVarian;
+                                                        	    for(var y = 0 ; y < imageVarian.length ; y++)
+                                                            	{
+                                                            	    dataGambarVarian[y] = {
+                                                                      'ID'   : '',
+                                                                      'NAMA' : '',
+                                                                      'URL'  : '',
+                                                                    };
+                                                            	    for(var z = 0 ; z < imageVarian.length ; z++)
+                                                            	    {
+                                                            	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
+                                                            	        {
+                                                                    	    // $("#file-input-varian-"+y).val("-");
+                                                                            $("#format-input-varian-"+y).val('GAMBAR');
+                                                                            $("#index-input-varian-"+y).val(y);
+                                                                            $("#src-input-varian-"+y).val(imageVarian[z].URL);
+                                                                            $("#id-input-varian-"+y).val(imageVarian[z].ID);
+                                                                            $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
+                                                                            
+                                                                            $("#ubahGambarVarian"+y).show();
+                                                                    	    $("#hapusGambarVarian"+y).show();
+                                                                    	    
+                                                                    	    dataGambarVarian[y] = {
+                                                                               'ID'   : $("#id-input-varian-"+y).val(),
+                                                                               'NAMA' : imageVarian[z].NAMA,
+                                                                               'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                                                            };
+                                                            	        }
+                                                            	    }
+                                                            	}
+                                                        	}
+                                                        	    
+                                                        });
+                                        	        }
                                     }
                                 }
                                 else
@@ -1893,32 +2814,149 @@ function hapus(row){
                                                 }
                                                 
                     						    dataVarianLama = [];
-                                        	    base64Images = [];
-                                                $("#BASE64IMAGES").val(JSON.stringify(base64Images));
-                                                $('#imageContainer').html("");
                                                 setTimeout(function() {
                                                     
                                                 $('#dataGridVarian').DataTable().rows().every(function () {
-                                                 
-                                                    var rowData = this.data();
-                                                    dataVarianLama.push(rowData);
-                                                        $.ajax({
-                                                             type      : 'POST',
-                                                             url       : base_url+'Master/Data/Barang/getGambarBarang',
-                                                             data      : {"idbarang" : rowData.IDBARANG},
-                                                             dataType  : 'json',
-                                                             beforeSend: function (){
-                                                                 //$.messager.progress();
-                                                             },
-                                                             success: function(gambar){
-                                                                for(var x = 0 ; x < gambar.length ; x++)
-                                                                {
-                                                                   base64Images.push(gambar[x]);
-                                                                   displayImage(gambar[x]);
-                                                                }
-                                                             }
-                                                         });
-                                                    });
+                                                
+                                                var rowData = this.data();
+                                                dataVarianLama.push(rowData);
+                                                });
+                                                setGambarVarianMaster();
+                                
+                                                 if(indukBarangShopee != 0)
+                                        	     {
+                                            	        $.ajax({
+                                                        	type    : 'POST',
+                                                        	url     : base_url+'Shopee/getDataBarangdanVarian/',
+                                                        	data    : {idindukbarangshopee: indukBarangShopee},
+                                                        	dataType: 'json',
+                                                        	success : function(msg){
+                                                        	    
+                                                        	    var imageProduk = msg.dataInduk.image;
+                                                            	//GAMBAR PRODUK
+                                                            	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                                                            	{
+                                                            	   // $("#file-input-"+y).val("-");
+                                                            	    $("#format-input-"+y).val('GAMBAR');
+                                                            	    $("#index-input-"+y).val(y);
+                                                            	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
+                                                            	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                                                            	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
+                                                            	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
+                                                            	   
+                                                                	$("#ubahGambarProduk-"+y).show();
+                                                                	$("#hapusGambarProduk-"+y).show();
+                                                                	
+                                                                	dataGambar[y] = {
+                                                                       'ID'   : $("#id-input-"+y).val(),
+                                                                       'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                                                       'URL'  : $("#preview-image-"+y).attr("src"),
+                                                                    };
+                                                            	    
+                                                            	}
+                                                            	
+                                                        	    var imageVarian = msg.dataGambarVarian;
+                                                        	    for(var y = 0 ; y < imageVarian.length ; y++)
+                                                            	{
+                                                            	   dataGambarVarian[y] = {
+                                                                      'ID'   : '',
+                                                                      'NAMA' : '',
+                                                                      'URL'  : '',
+                                                                   };
+                                                                   
+                                                            	    for(var z = 0 ; z < imageVarian.length ; z++)
+                                                            	    {
+                                                            	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
+                                                            	        {
+                                                                    	    // $("#file-input-varian-"+y).val("-");
+                                                                            $("#format-input-varian-"+y).val('GAMBAR');
+                                                                            $("#index-input-varian-"+y).val(y);
+                                                                            $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
+                                                                            $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
+                                                                            $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
+                                                                            
+                                                                            $("#ubahGambarVarian"+y).show();
+                                                                    	    $("#hapusGambarVarian"+y).show();
+                                                                    	    
+                                                                    	    dataGambarVarian[y] = {
+                                                                               'ID'   : $("#id-input-varian-"+y).val(),
+                                                                               'NAMA' : imageVarian[z].WARNA,
+                                                                               'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                                                            };
+                                                            	        }
+                                                            	    }
+                                                            	}
+                                                        	}
+                                                        	    
+                                                        });
+                                        	        }
+                                        	        else if($("#IDBARANGINDUK").val() != 0)
+                                        	        {
+                                        	            $.ajax({
+                                                        	type    : 'POST',
+                                                        	url     : base_url+'Master/Data/Barang/getGambarBarang/',
+                                                        	data    : {idbarang: $("#IDBARANGINDUK").val()},
+                                                        	dataType: 'json',
+                                                        	success : function(msg){
+                                                        	    
+                                                        	    var imageProduk = msg.dataInduk;
+                                                            	//GAMBAR PRODUK
+                                                            	for(var y = 0 ; y < imageProduk.length ; y++)
+                                                            	{
+                                                            	   // $("#file-input-"+y).val("-");
+                                                            	    $("#format-input-"+y).val('GAMBAR');
+                                                            	    $("#index-input-"+y).val(y);
+                                                            	    $("#src-input-"+y).val(imageProduk[y].URL);
+                                                            	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                                                            	    $("#id-input-"+y).val(imageProduk[y].ID);
+                                                            	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
+                                                            	   
+                                                                	$("#ubahGambarProduk-"+y).show();
+                                                                	$("#hapusGambarProduk-"+y).show();
+                                                                	
+                                                                	dataGambar[y] = {
+                                                                       'ID'   : $("#id-input-"+y).val(),
+                                                                       'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                                                       'URL'  : $("#preview-image-"+y).attr("src"),
+                                                                    };
+                                                            	    
+                                                            	}
+                                                            	
+                                                        	    var imageVarian = msg.dataGambarVarian;
+                                                        	    for(var y = 0 ; y < imageVarian.length ; y++)
+                                                            	{
+                                                            	   dataGambarVarian[y] = {
+                                                                      'ID'   : '',
+                                                                      'NAMA' : '',
+                                                                      'URL'  : '',
+                                                                   };
+                                                                            
+                                                            	    for(var z = 0 ; z < imageVarian.length ; z++)
+                                                            	    {
+                                                            	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
+                                                            	        {
+                                                                    	    // $("#file-input-varian-"+y).val("-");
+                                                                            $("#format-input-varian-"+y).val('GAMBAR');
+                                                                            $("#index-input-varian-"+y).val(y);
+                                                                            $("#src-input-varian-"+y).val(imageVarian[z].URL);
+                                                                            $("#id-input-varian-"+y).val(imageVarian[z].ID);
+                                                                            $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
+                                                                            
+                                                                            $("#ubahGambarVarian"+y).show();
+                                                                    	    $("#hapusGambarVarian"+y).show();
+                                                                    	    
+                                                                    	    dataGambarVarian[y] = {
+                                                                               'ID'   : $("#id-input-varian-"+y).val(),
+                                                                               'NAMA' : imageVarian[z].NAMA,
+                                                                               'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                                                            };
+                                                            	        }
+                                                            	    }
+                                                            	}
+                                                        	}
+                                                        	    
+                                                        });
+                                        	        }
                                                 
                                                 }, 1000);
                     						} else {
@@ -1947,6 +2985,425 @@ function hapus(row){
 	});
 }
 
+function setGambarProdukMaster(){
+    
+    //GAMBAR PRODUK
+    var htmlGambarProduk = "<tr>";
+    var utama = "Gambar Utama";
+    
+    for(var y = 0 ; y < 9 ;y++)
+    {
+        var marginRight = "30px";
+        
+        if(y % 9 == 0 && y != 0)
+        {
+            marginRight = "";
+        }
+        
+        if(y % 5 == 0 && y != 0)
+        {
+            htmlGambarProduk +="</tr><tr>";
+        }
+        
+        htmlGambarProduk += `
+                        <td>
+                            <input type="file" id="file-input-`+y+`" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
+                            <input type="hidden"  id="format-input-`+y+`" value="">
+                            <input type="hidden"  id="index-input-`+y+`" value="`+y+`">
+                            <input type="hidden"  id="src-input-`+y+`" value="">
+                            <input type="hidden"  id="keterangan-input-`+y+`" value="Gambar Produk `+(y+1).toString()+`">
+                            <input type="hidden"  id="id-input-`+y+`" value="">
+                            
+                            <div style="margin-bottom:20px;">
+                                <img id="preview-image-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
+                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+utama+`</b><br>
+                                <span id="ubahGambarProduk-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
+                                &nbsp;
+                                <span id="hapusGambarProduk-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
+                                </div>
+                            </div>
+                        </td>`;  
+                        
+        utama = "";
+    
+    }
+    htmlGambarProduk += "</tr>";
+    $("#gambarproduk").html(htmlGambarProduk);
+    $("#gambarproduk").css('margin-bottom','-40px');
+    
+    for(var y = 0 ; y < 9 ;y++)
+    {
+        const fileInput = document.getElementById('file-input-'+y);
+        const previewImage = document.getElementById('preview-image-'+y);
+        const title = document.getElementById('keterangan-input-'+y);
+        const format = document.getElementById('format-input-'+y);
+        const index = document.getElementById('index-input-'+y);
+        const url =  document.getElementById('src-input-'+y);
+        const id = document.getElementById('id-input-'+y);
+        
+        const ubahImage = document.getElementById('ubahGambarProduk-'+y);
+        const hapusImage = document.getElementById('hapusGambarProduk-'+y);
+        
+        previewImage.addEventListener('click', () => {
+          if(url.value != '')
+          {
+              lihatLebihJelas(format.value,title.value,url.value);
+          }
+          else
+          {
+            fileInput.click();
+          }
+        });
+        
+        ubahImage.addEventListener('click', () => {
+          fileInput.click();
+        });
+        
+        hapusImage.addEventListener('click', () => {
+          for(var k = 0 ; k < dataGambar.length; k++)
+          {
+              if(dataGambar[k].ID == id.value)
+              {
+                  dataGambar[k].ID   = "";
+                  dataGambar[k].NAMA = "";
+                  dataGambar[k].URL  = "";
+              }
+          }
+          
+          fileInput.value = '';
+          format.value = '';
+          previewImage.src = base_url+"/assets/images/addphoto.webp";
+          url.value = "";
+          id.value = "";
+          
+          ubahImage.style.display = 'none';
+          hapusImage.style.display = 'none';
+        });
+        
+        fileInput.addEventListener('change', () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+    
+          // Jika file adalah gambar
+          if (file.type.startsWith('image/')) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        
+            if (!allowedTypes.includes(file.type.toLowerCase())) {
+                fileInput.value = '';
+              Swal.fire({
+                title: 'Format gambar tidak didukung (hanya jpg/jpeg/png)',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+              });
+              return;
+            }
+        
+            const maxSizeMB = 10;
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                fileInput.value = '';
+              Swal.fire({
+                title: 'Ukuran gambar melebihi 10MB',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+              });
+              return;
+            }
+        
+            // Upload file asli ke server
+            const formData = new FormData();
+            formData.append('index', index.value);
+            formData.append('kode', "INDUK_"+index.value);
+            formData.append('file', file);
+            formData.append('tipe', 'GAMBAR');
+            formData.append('size', file.size);
+            formData.append("reason","produk");
+            
+            $.ajax({
+              type: 'POST',
+              url: base_url + 'Shopee/uploadLocalUrl/',
+              data: formData,
+              contentType: false,
+              processData: false,
+              dataType: 'json',
+              success: function (msg) {
+               
+                if (msg.success) {
+                 format.value = "GAMBAR";
+                 previewImage.src = msg.url;
+                 url.value =  msg.url;
+                 id.value = msg.id;
+                 
+                 dataGambar[index.value] = {
+                    'ID'   : id.value,
+                    'NAMA' : "INDUK_"+index.value,
+                    'URL'  : url.value,
+                 };
+        
+                 ubahImage.style.display = '';
+                 hapusImage.style.display = '';
+                }
+                else
+                {
+                    fileInput.value = '';
+                }
+              },
+              error: function (xhr, status, error) {
+                fileInput.value = '';
+                Swal.fire({
+                  title: 'Upload gagal!',
+                  text: error,
+                  icon: 'error'
+                });
+              }
+            });
+          }
+        
+          // Tipe file tidak valid
+          else {
+             Swal.fire({
+                	title            : 'Hanya mendukung file Gambar',
+                	type             : 'warning',
+                	showConfirmButton: false,
+                	timer            : 2000
+            });
+          }
+        });
+    }
+}
+
+function setGambarVarianMaster(){
+    var varian = $('#dataGridVarian').DataTable().rows().data().toArray();
+   
+    var warna = [];
+    var ukuran = [];
+    for(var y = 0 ; y < varian.length; y++)
+    {
+        var tempWarna = varian[y].WARNA;
+        var tempUk = varian[y].SIZE;
+    	
+    	adaWarna = false;
+    	for(var w = 0 ; w < warna.length; w++)
+    	{
+    	    if(warna[w] == tempWarna)
+    	    {
+    	        adaWarna = true;
+    	    }
+    	}
+    	
+    	if(!adaWarna)
+    	{
+    	    warna.push(tempWarna);
+    	}
+    	
+    	adaUkuran = false;
+    	for(var u = 0 ; u < ukuran.length; u++)
+    	{
+    	    if(ukuran[u] == tempUk)
+    	    {
+    	        adaUkuran = true;
+    	    }
+    	}
+    	
+    	if(!adaUkuran)
+    	{
+    	    ukuran.push(tempUk);
+    	}
+    }
+    
+    var htmlGambarVarian = "<tr>";
+        
+    for(var y = 0 ; y < warna.length ;y++)
+    {
+         var marginRight = "30px";
+         
+         if(y % 9 == 0 && y != 0)
+         {
+             marginRight = "";
+         }
+         
+         if(y % 5 == 0 && y != 0)
+         {
+             htmlGambarVarian +="</tr><tr>";
+         }
+         
+         htmlGambarVarian += `
+                         <td>
+                             <input type="file" id="file-input-varian-`+y+`" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
+                             <input type="hidden"  id="format-input-varian-`+y+`" value="">
+                             <input type="hidden"  id="index-input-varian-`+y+`" value="`+y+`">
+                             <input type="hidden"  id="src-input-varian-`+y+`" value="">
+                             <input type="hidden"  id="keterangan-input-varian-`+y+`" value="Gambar Varian `+warna[y]+`">
+                             <input type="hidden"  id="id-input-varian-`+y+`" value="">
+                            
+                             <div style="margin-bottom:20px;">
+                                 <img id="preview-image-varian-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
+                                 <div style="text-align:center; margin-right:`+marginRight+`"><b>`+warna[y]+`</b><br>
+                                 <span id="ubahGambarVarian`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
+                                 &nbsp;
+                                 <span id="hapusGambarVarian`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
+                                 </div>
+                             </div>
+                         </td>`;  
+                         
+         utama = "";
+     
+    }
+    
+    htmlGambarVarian += "</tr>";
+    $("#gambarvarian").html(htmlGambarVarian);
+    $("#gambarvarian").css('margin-bottom','-20px');
+    
+     for(var y = 0 ; y < warna.length ;y++)
+    {
+      
+        const fileInput = document.getElementById('file-input-varian-'+y);
+        const previewImage = document.getElementById('preview-image-varian-'+y);
+        const title = document.getElementById('keterangan-input-varian-'+y);
+        const format = document.getElementById('format-input-varian-'+y);
+        const index = document.getElementById('index-input-varian-'+y);
+        const url =  document.getElementById('src-input-varian-'+y);
+        const id =  document.getElementById('id-input-varian-'+y);
+        
+        const ubahImage = document.getElementById('ubahGambarVarian'+y);
+        const hapusImage = document.getElementById('hapusGambarVarian'+y);
+        
+        previewImage.addEventListener('click', () => {
+          if(url.value != '')
+          {
+              lihatLebihJelas(format.value,title.value,url.value);
+          }
+          else
+          {
+            fileInput.click();
+          }
+        });
+        
+        ubahImage.addEventListener('click', () => {
+          fileInput.click();
+        });
+        
+        hapusImage.addEventListener('click', () => {
+          for(var k = 0 ; k < dataGambarVarian.length; k++)
+          {
+              if(dataGambarVarian[k].ID == id.value)
+              {
+                  dataGambarVarian.splice(k,1);
+              }
+          }
+          
+          fileInput.value = '';
+          format.value = '';
+          previewImage.src = base_url+"/assets/images/addphoto.webp";
+          url.value = "";
+          id.value = "";
+          
+          ubahImage.style.display = 'none';
+          hapusImage.style.display = 'none';
+        });
+        
+        fileInput.addEventListener('change', () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+    
+          // Jika file adalah gambar
+          if (file.type.startsWith('image/')) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        
+            if (!allowedTypes.includes(file.type.toLowerCase())) {
+                fileInput.value = '';
+              Swal.fire({
+                title: 'Format gambar tidak didukung (hanya jpg/jpeg/png)',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+              });
+              return;
+            }
+        
+            const maxSizeMB = 10;
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                fileInput.value = '';
+              Swal.fire({
+                title: 'Ukuran gambar melebihi 10MB',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+              });
+              return;
+            }
+        
+            // Upload file asli ke server
+            const formData = new FormData();
+            formData.append('index', index.value);
+            formData.append('kode', warna[index.value]);
+            formData.append('file', file);
+            formData.append('tipe', 'GAMBAR');
+            formData.append('size', file.size);
+            formData.append("reason","produk");
+            
+            $.ajax({
+              type: 'POST',
+              url: base_url + 'Shopee/uploadLocalUrl/',
+              data: formData,
+              contentType: false,
+              processData: false,
+              dataType: 'json',
+              success: function (msg) {
+              
+                if (msg.success) {
+                 format.value = "GAMBAR";
+                 previewImage.src = msg.url;
+                 url.value =  msg.url;
+                 id.value = msg.id;
+                 
+                 dataGambarVarian[index.value] = {
+                    'ID'   : id.value,
+                    'NAMA' : warna[index.value],
+                    'URL'  : url.value,
+                 };
+        
+                 ubahImage.style.display = '';
+                 hapusImage.style.display = '';
+                }
+                else
+                {
+                    fileInput.value = '';
+                }
+              },
+              error: function (xhr, status, error) {
+                fileInput.value = '';
+                Swal.fire({
+                  title: 'Upload gagal!',
+                  text: error,
+                  icon: 'error'
+                });
+              }
+            });
+          }
+        });
+    }
+}
+
+function lihatLebihJelas(jenis,title,url){
+
+    $("#modal-lebih-jelas").modal("show");
+    $("#titleLebihJelas").html(title);
+    $("#previewLebihJelas").css("color","#3296ff");
+    $("#previewLebihJelas").css("cursor","pointer");
+    $("#previewLebihJelas").css("text-align","center");
+    $("#previewLebihJelas").css("background","#d4d4d7");
+    if(jenis == "GAMBAR")
+    {
+        $("#previewLebihJelas").html("<img src='"+url+"' max-width=100%; height=600px;>");
+    }
+    else
+    {
+        $("#previewLebihJelas").html("<iframe src='"+url+"' max-width=100%; height=600px;>");
+    }
+}
+
 function get_akses_user(kodemenu, callback) {
 	$.ajax({
 		dataType: "json",
@@ -1970,6 +3427,19 @@ function openFileExcelUrutan(){
 
 function importExcelUrutan(){
     document.getElementById("excelFormUrutan").submit();
+}
+
+function loadingMaster(){
+    Swal.fire({
+      title: '',
+      html: '<div style="font-size:20pt; font-weight:600;">Menghubungkan Master Barang dengan Shopee... <div>',                // no text or HTML content
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 }
 
 </script>

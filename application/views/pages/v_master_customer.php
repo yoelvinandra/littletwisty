@@ -26,7 +26,7 @@
                          <div class="row">
                            <div class="col-md-12">
                                 <div class="box" style="border:0px; padding:0px; margin:0px;">
-                                   <div class="col-md-10" style="margin:10px;">
+                                   <div class="col-md-12" style="margin:10px;">
                                        <br>
                                         <div style="font-size:12pt; font-weight:bold;">*Data tidak termasuk pesanan yang dibatalkan.
                                         </div>
@@ -41,6 +41,8 @@
                                                        <th >Alamat</th>
                                                        <th width="100px" >Kota</th>
                                                        <th width="80px">T. Pesanan</th>
+                                                       <th width="80px">T. Pesanan Sukses</th>
+                                                       <th width="80px">T. Pesanan Retur</th>
                                                        <th width="80px">T. Barang</th>
                                                        <th width="80px">T. Bayar</th>
                                                    </tr>
@@ -371,6 +373,8 @@ $(document).ready(function() {
             { data: 'ALAMAT' },
             { data: 'KOTA' , className:"text-center" },
             { data: 'TOTALPESANAN' , render:format_number , className:"text-center" },
+            { data: 'TOTALPESANANSUKSES' , render:format_number , className:"text-center" },
+            { data: 'TOTALPESANANRETUR' , render:format_number , className:"text-center" },
             { data: 'TOTALBARANG' ,  render:format_number , className:"text-center"},
             { data: 'TOTALBAYAR',  render:format_number, className:"text-right" },
         ],

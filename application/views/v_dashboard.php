@@ -59,6 +59,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 			            </div>
     			    </div>
 				</div>
+				
 				<div class="row col-md-12" style="padding-top:12px;" id="periodepenjualantanggal" >
     			    <div class="row col-md-12 col-sm-12 col-xs-12" style="padding: 0px 0px 0px 0px; font-size:12pt;" >
 			            <div class="col-md-2 col-sm-2 col-xs-2">
@@ -393,6 +394,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 			            </div>
     			    </div>
     			</div>
+    			
     			<div class="row col-md-12" style="padding-top:5px;" >
     			    <div class="row col-md-12 col-sm-12 col-xs-12" style="padding: 0px 0px 0px 0px; font-size:12pt">
 			            <div class="col-md-2 col-sm-2 col-xs-2" style="padding-top:9px;">
@@ -1114,6 +1116,7 @@ $(document).ready(function(){
     var total = [];
     
     function setPeriode(periode,tglawal,tglakhir,customer){
+        $("#txt_group_lokasi,#CUSTOMER,#PERIODE,#bln_penjualan").attr("disabled","disabled");
         var lineGrandTotal = document.getElementById('myChartGrandTotal').getContext('2d');
         if (window.myChartGrandTotal instanceof Chart) {
              myChartGrandTotal.destroy();
@@ -1136,6 +1139,7 @@ $(document).ready(function(){
         	data    : {periode:periode,tglawal:tglawal,tglakhir:tglakhir,customer:customer,lokasi:$("#txt_group_lokasi").val()},
         	dataType: 'json',
         	success : function(msg){
+        	    $("#txt_group_lokasi,#CUSTOMER,#PERIODE,#bln_penjualan").removeAttr("disabled");
                 $(".loading1").hide();
             	var data = msg.result;
             	label = [];
@@ -1359,6 +1363,7 @@ $(document).ready(function(){
                 ];
     
     function setPeriodeTerlaris(periode,tglawal,tglakhir,customer){ 
+        $("#txt_group_lokasi_terlaris,#CUSTOMER_TERLARIS,#PERIODE_TERLARIS,#modelWarna,#modelSize").attr("disabled","disabled");
         
         $(".legendDoughnut").html("");
         
@@ -1385,6 +1390,7 @@ $(document).ready(function(){
         	data    : {periode:periode,tglawal:tglawal,tglakhir:tglakhir,customer:customer,lokasi:$("#txt_group_lokasi_terlaris").val(),kategoriWarna:$("#modelWarna").val(),kategoriSize:$("#modelSize").val()},
         	dataType: 'json',
         	success : function(msg){
+				$("#txt_group_lokasi_terlaris,#CUSTOMER_TERLARIS,#PERIODE_TERLARIS,#modelWarna,#modelSize").removeAttr("disabled");
                 $(".loading2").hide();
             	var data = msg.result;
             	label1 = [];
@@ -1639,6 +1645,7 @@ $(document).ready(function(){
     var grandtotalCustomer = [];
     
     function setPeriodeCustomer(periode,tglawal,tglakhir,barang,customer){ 
+        $("#BARANGCUSTOMER,#PERIODE_CUSTOMER").attr("disabled","disabled");
         $(".tableCustomer").html("");
         $(".tableKota").html("");
         $(".loading3").html("<br><br><br><br><br><br><br><br>Tunggu Sebentar...");
@@ -1649,6 +1656,7 @@ $(document).ready(function(){
         	data    : {periode:periode,tglawal:tglawal,tglakhir:tglakhir,barang:barang,customer:customer},
         	dataType: 'json',
         	success : function(msg){
+                $("#BARANGCUSTOMER,#PERIODE_CUSTOMER").removeAttr("disabled");
                 $(".loading3").hide();
             	var dataCustomer = msg.resultCustomer;
             	labelCustomer = [];
@@ -1808,6 +1816,7 @@ $(document).ready(function(){
     var labelStok = [];
     var qtyStok = [];
     function getStok(lokasi,limitStok){ 
+        $("#LOKASI_STOK,#LIMITSTOK").attr("disabled","disabled");
         $(".tableStok").html("");
         $(".loading4").html("<br><br><br><br><br><br><br><br>Tunggu Sebentar...");
         $(".loading4").show();
@@ -1817,6 +1826,7 @@ $(document).ready(function(){
         	data    : {lokasi:lokasi,limitStok : limitStok },
         	dataType: 'json',
         	success : function(msg){
+                $("#LOKASI_STOK,#LIMITSTOK").removeAttr("disabled");
                 $(".loading4").hide();
             	var data = msg.result;
             	labelStok = [];

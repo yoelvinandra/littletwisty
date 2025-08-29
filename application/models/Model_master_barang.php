@@ -841,8 +841,20 @@ class Model_master_barang extends MY_Model{
 	}
 	
 	function getGambarBarang($idbarang){
-	    $file = 'assets/barang/dataGambar_'.$idbarang.'.json';
-	    return json_decode(file_get_contents($file),true);
+	    $sql = "select KATEGORI 
+				from MBARANG 
+				where IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 
+					  and IDBARANG = $idbarang";
+					  
+		$query = $this->db->query($sql)->row();
+		
+	    $file = 'assets/foto-produk/INDUK_'.$query->KATEGORI.'.json';
+	    $data['dataInduk'] = json_decode(file_get_contents($file),true);
+	    
+	    $file = 'assets/foto-produk/VARIAN_'.$query->KATEGORI.'.json';
+	    $data['dataGambarVarian'] = json_decode(file_get_contents($file),true);
+	     
+	    return $data;
 	}
 	
 	function getDataBarangBySKU($sku){
