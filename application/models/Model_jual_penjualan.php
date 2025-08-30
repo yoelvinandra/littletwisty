@@ -622,12 +622,19 @@ class Model_jual_penjualan extends MY_Model{
         	    
                 $sql .= " UNION ALL ";
                 $sql .= "select '".$item['label']."' as LABEL, ifnull(SUM(a.TOTALPENDAPATANPENJUAL),0) as GRANDTOTAL,count(a.IDPENJUALANMARKETPLACE) as JMLNOTA,
-                        IFNULL(SUM(a.TOTALBARANG - if(a.BARANGSAMPAI = 1,a.TOTALBARANGPENGEMBALIAN,0)),0) AS TOTALBARANG
+                        IFNULL(SUM(a.TOTALBARANG),0) AS TOTALBARANG
                         from tpenjualanmarketplace a
                 		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$item['tglawal']." 00:00:00' AND a.tgltrans <= '".$item['tglakhir']." 23:59:59' and a.statusmarketplace = 'COMPLETED')
                 		as a
                 		GROUP BY a.LABEL
                 ";
+                
+                // select '".$item['label']."' as LABEL, ifnull(SUM(a.TOTALPENDAPATANPENJUAL),0) as GRANDTOTAL,count(a.IDPENJUALANMARKETPLACE) as JMLNOTA,
+                //         IFNULL(SUM(a.TOTALBARANG - if(a.BARANGSAMPAI = 1,a.TOTALBARANGPENGEMBALIAN,0)),0) AS TOTALBARANG
+                //         from tpenjualanmarketplace a
+                // 		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$item['tglawal']." 00:00:00' AND a.tgltrans <= '".$item['tglakhir']." 23:59:59' and a.statusmarketplace = 'COMPLETED')
+                // 		as a
+                // 		GROUP BY a.LABEL
             }
             else
             {
@@ -1013,7 +1020,7 @@ class Model_jual_penjualan extends MY_Model{
 	    $sql = "
 	    SELECT a.NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
 	        from(
-                select if(c.NAMACUSTOMER = 'UMUM','UMUM',KOTA) as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
+                select if(c.NAMACUSTOMER = 'UMUM','UMUM',IFNULL(KOTA,'TANPA KOTA')) as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
         		from TPENJUALAN a
         		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
         		inner join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
@@ -1023,7 +1030,7 @@ class Model_jual_penjualan extends MY_Model{
         	    
         	    UNION ALL
         	    
-        	    select a.KOTA as NAMA, 
+        	    select IFNULL(a.KOTA,'TANPA KOTA') as NAMA, 
         	    IFNULL(SUM(b.jml),0) as QTY, 
                 $paramBarangMarketplace as GRANDTOTAL
         		from TPENJUALANMARKETPLACE a
