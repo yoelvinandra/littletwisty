@@ -40,11 +40,11 @@
                                                        <th width="100px">Telp</th>
                                                        <th >Alamat</th>
                                                        <th width="100px" >Kota</th>
-                                                       <th width="80px">T. Pesanan</th>
-                                                       <th width="80px">T. Pesanan Sukses</th>
-                                                       <th width="80px">T. Pesanan Retur</th>
-                                                       <th width="80px">T. Barang</th>
-                                                       <th width="80px">T. Bayar</th>
+                                                       <th width="80px">Total Pesanan</th>
+                                                       <th width="80px">Total Pesanan Selesai</th>
+                                                       <th width="80px">Total Pesanan Retur</th>
+                                                       <th width="80px">Total Barang</th>
+                                                       <th width="80px">Total Bayar</th>
                                                    </tr>
                                                </thead>
                                          </table>

@@ -2255,13 +2255,22 @@ class Shopee extends MY_Controller {
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		
-		$sql = "SELECT ROW_NUMBER() OVER (ORDER BY USERNAME ASC) AS NO, CONCAT(NAME,' (',USERNAME,') ') AS NAMA, TELP,ALAMAT,KOTA,
-		        SUM(TOTALBARANG) as TOTALBARANG, SUM(TOTALBAYAR) as TOTALBAYAR, COUNT(IDPENJUALANMARKETPLACE) as TOTALPESANAN, 
-		        0 as TOTALPESANANSUKSES, 0 as TOTALPESANANRETUR, USERNAME
-		        FROM TPENJUALANMARKETPLACE
-		        WHERE STATUSMARKETPLACE != 'CANCELLED' 
-		        GROUP BY USERNAME
-		        ORDER BY USERNAME ASC";
+		$sql = "SELECT 
+            ROW_NUMBER() OVER (ORDER BY USERNAME ASC) AS NO,
+            CONCAT(NAME,' (',USERNAME,') ') AS NAMA,
+            TELP,
+            ALAMAT,
+            KOTA,
+            SUM(TOTALBARANG) AS TOTALBARANG,
+            SUM(TOTALBAYAR) AS TOTALBAYAR,
+            COUNT(IDPENJUALANMARKETPLACE) AS TOTALPESANAN,
+            SUM(CASE WHEN KODEPENGEMBALIANMARKETPLACE = ''  THEN 1 ELSE 0 END) AS TOTALPESANANSUKSES,
+            SUM(CASE WHEN KODEPENGEMBALIANMARKETPLACE != '' THEN 1 ELSE 0 END) AS TOTALPESANANRETUR,
+            USERNAME
+        FROM TPENJUALANMARKETPLACE
+        WHERE STATUSMARKETPLACE != 'CANCELLED'
+        GROUP BY USERNAME, NAME, TELP, ALAMAT, KOTA
+        ORDER BY NO ASC";
 		$dataCustomer = $CI->db->query($sql)->result(); 
 		
 		foreach($dataCustomer as $itemCustomer)
@@ -2271,14 +2280,6 @@ class Shopee extends MY_Controller {
                                                 white-space: -pre-wrap;      
                                                 white-space: -o-pre-wrap;     
                                                 word-wrap: break-word;'>".$itemCustomer->ALAMAT."</div>" ;
-                                                
-            $sql="SELECT SUM(IF(KODEPENGEMBALIANMARKETPLACE = '',1,0)) as TOTALPESANANSUKSES,  SUM(IF(KODEPENGEMBALIANMARKETPLACE != '',1,0)) as TOTALPESANANRETUR 
-                  FROM TPENJUALANMARKETPLACE
-                  WHERE USERNAME = '$itemCustomer->USERNAME' AND STATUSMARKETPLACE != 'CANCELLED' ";
-            $dataTransaksi = $CI->db->query($sql)->row();
-            
-            $itemCustomer->TOTALPESANANSUKSES   = $dataTransaksi->TOTALPESANANSUKSES;
-            $itemCustomer->TOTALPESANANRETUR = $dataTransaksi->TOTALPESANANRETUR;
 		}
 		
 		$data["rows"]  = $dataCustomer;

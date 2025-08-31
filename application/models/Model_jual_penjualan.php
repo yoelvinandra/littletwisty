@@ -935,9 +935,10 @@ class Model_jual_penjualan extends MY_Model{
 	    $whereBarangStok = "";
 	    $paramBarang = "(SELECT SUM(x.GRANDTOTALDISKON) FROM TPENJUALAN x 
 	                        WHERE x.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.status = 'S' and c.IDCUSTOMER = x.IDCUSTOMER
+	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 	                    )";
 	    $paramBarangMarketplace = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
-	                        WHERE x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE
+	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE
 	                    )";
 	    if($barang != "0")
 	    {
@@ -989,8 +990,13 @@ class Model_jual_penjualan extends MY_Model{
         //KOTA
         $whereBarang = "";
 	    $whereBarangStok = "";
+	    $paramBarang = "(SELECT SUM(x.GRANDTOTALDISKON) FROM TPENJUALAN x 
+	    	                inner join MCUSTOMER xc on x.IDCUSTOMER = xc.IDCUSTOMER
+	                        WHERE x.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.status = 'S' and xc.KOTA = c.KOTA
+	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
+	                    )";
 	    $paramBarangMarketplace  = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
-	                        WHERE x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE and X.KOTA = a.KOTA
+	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE and x.KOTA = a.KOTA
 	                    )";
 	                    
 	    if($barang != "0")
