@@ -311,6 +311,14 @@ class Barang extends MY_Controller {
         	// generate an error... or use the log_message() function to log your error
         	die(json_encode(array('errorMsg' => $response)));
         }
+        
+        $dataHapusVarian = json_decode($this->input->post('datavarianhapus'));
+        $response = $this->hapus($dataHeader,$dataHapusVarian);
+	   
+        if ($response != ''){
+        	// generate an error... or use the log_message() function to log your error
+        	die(json_encode(array('errorMsg' => $response)));
+        }
 
 	    echo json_encode(array('success' => true,'errorMsg' => ''));
 	}
@@ -486,23 +494,35 @@ class Barang extends MY_Controller {
 
 	    echo json_encode(array('success' => true,'errorMsg' => ''));
 	}
+	
+	function cekHapusData(){
+	    $id = $this->input->post('idbarang');
+	    if(checkBarangPadaTransaksi($id) == 1)
+		{
+		     die(json_encode(array('errorMsg'=> 'Data Barang Tidak Dapat Dihapus, Data Sudah Digunakan Pada Transaksi'))); 
+		}
+		echo json_encode(array('success' => true,'errorMsg' => ''));
+	}
 
-	function hapus(){
-		$id = $this->input->post('id');
-		$kode = $this->input->post('kode');
-
-		$exe = $this->model_master_barang->hapus($id);
-		if ($exe != '') { die(json_encode(array('errorMsg'=>$exe))); }
-		
-		echo json_encode(array('success' => true));
-
-		log_history(
-			$kode,
-			'MASTER BARANG',
-			'HAPUS',
-			[],
-			$_SESSION[NAMAPROGRAM]['USERID']
-		);
+	function hapus($dataHeader,$dataVarian){
+	    foreach($dataVarian as $item)
+	    { 
+    		$response = $this->model_master_barang->hapus($item);
+    
+    		log_history(
+    			$kode,
+    			'MASTER BARANG',
+    			'HAPUS',
+    			[],
+    			$_SESSION[NAMAPROGRAM]['USERID']
+    		);
+    		
+    		if($response != "")
+    		{
+    		return $response;
+    		}
+	    }
+	    return '';
 	}
 	
 	function hapusAll(){
