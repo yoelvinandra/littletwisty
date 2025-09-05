@@ -548,6 +548,42 @@ class Model_master_barang extends MY_Model{
 		return $data;
 	}
 	
+	public function getDataInduk($kategori=""){
+		$data['rows'] = [];
+		if($kategori != "")
+		{
+		    
+		    $arrKategori = explode("%",$kategori);
+		    if(count($arrKategori) > 1)
+		    { 
+		         $whereKategori = "and a.KATEGORI like '$kategori' ";
+		    }
+		    else
+		    {
+			    $whereKategori = "and a.KATEGORI = '$kategori' ";
+		    }
+		    
+    		$sql = "select a.IDBARANG, a.KODEBARANG, a.NAMABARANG,
+    		               a.IDBARANGSHOPEE,a.IDBARANGTIKTOK,a.IDBARANGLAZADA,
+    		               a.IDINDUKBARANGSHOPEE,a.IDINDUKBARANGTIKTOK,a.IDINDUKBARANGLAZADA,
+    					   a.SATUAN, a.SIZE,a.WARNA,
+    					   a.HARGABELI, a.HARGAJUAL, a.CATATAN, 
+    					   a.TGLENTRY, a.STATUS, e.USERNAME as USERBUAT,a.SKUSHOPEE,a.SKUTOKPED,a.SKUTIKTOK,a.SKULAZADA,'' as MODE,a.BARCODE, '' as MODE
+    				from MBARANG a
+    				left join MUSER e on a.USERENTRY = e.USERID
+    				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}
+    				and (a.WARNA = '' or a.SIZE = 0)
+    				$whereKategori
+    				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
+    		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC";
+    		$query = $this->db->query($sql);
+    		
+    		$data['rows'] = $query->result();
+		}
+
+		return $data;
+	}
+	
 	public function dataGridVarian(){
 	    
 		$sql = "select a.KATEGORIONLINE,a.KATEGORI, a.KODEBARANG, a.NAMABARANG,a.BARCODE,

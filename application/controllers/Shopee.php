@@ -1823,73 +1823,138 @@ class Shopee extends MY_Controller {
                 $dataModelUbahHarga = [];
                 $dataModelUbahSKU = [];
                 $dataModelHapus = [];
-               
-                for($w = 0 ; $w < count($optionWarna); $w++)
-                {
-                    for($u = 0 ; $u < count($optionUkuran); $u++)
-                    {
-                        for($x = 0 ; $x < count($dataVarian); $x++)
-                        {
-                            if(strtoupper($dataVarian[$x]->WARNA) == strtoupper($optionWarna[$w]['option']) && $dataVarian[$x]->SIZE == $optionUkuran[$u]['option'])
-                            {
-                                if($dataVarian[$x]->MODE != "HAPUS")
-                                {
-                                    $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGSHOPEE = ".$dataVarian[$x]->IDBARANG. " or IDBARANG = ".$dataVarian[$x]->IDBARANG ;
-    
-                                    $itemHeader = $CI->db->query($sql)->row();
-                                    $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
-                                    $saldoQty = $result->QTY??0;
-                                }
-                                else
-                                {
-                                    $saldoQty = 0;
-                                }
-                                             
-                                array_push($dataModel,array(
-                                    'model_id'          => $dataVarian[$x]->IDBARANG,
-                                    'tier_index'        => array((int)$w,(int)$u),
-                                    'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
-                                    'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
-                                    // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
-                                    'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                                    'weight'            => (float)$this->input->post("BERAT"),
-                                    'dimension'         => array(
-                                        'package_height' => (int)$this->input->post("TINGGI"),
-                                        'package_width'  => (int)$this->input->post("LEBAR"),
-                                        'package_length' => (int)$this->input->post("PANJANG"),
-                                    ),
-                                ));
-                                if($dataVarian[$x]->MODE == "BARU")
-                                {
-                                    array_push($dataModelBaru,$dataModel[count($dataModel)-1]);
-                                }
-                                else if($dataVarian[$x]->MODE == "UBAH HARGA")
-                                {
-                                    array_push($dataModelUbahHarga,$dataModel[count($dataModel)-1]);
-                                }
-                                else if($dataVarian[$x]->MODE == "UBAH SKU")
-                                {
-                                     array_push($dataModelUbahSKU,$dataModel[count($dataModel)-1]);
-                                }
-                                else if($dataVarian[$x]->MODE == "HAPUS")
-                                {
-                                    array_push($dataModelHapus,$dataModel[count($dataModel)-1]);
-                                }
-                            }
-                        }
-                    }   
-                }
-            
-                $parameter['model'] = $dataModel;
                 
+                for($x = 0 ; $x < count($dataVarian); $x++)
+                {
+                    $barangAda = false;
+                    for($w = 0 ; $w < count($optionWarna); $w++)
+                    {
+                        for($u = 0 ; $u < count($optionUkuran); $u++)
+                        {
+                           
+                           if(strtoupper($dataVarian[$x]->WARNA) == strtoupper($optionWarna[$w]['option']) && $dataVarian[$x]->SIZE == $optionUkuran[$u]['option'])
+                           {
+                               $barangAda = true;
+                               if($dataVarian[$x]->MODE != "HAPUS")
+                               {
+                                   $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGSHOPEE = ".$dataVarian[$x]->IDBARANG. " or IDBARANG = ".$dataVarian[$x]->IDBARANG ;
+        
+                                   $itemHeader = $CI->db->query($sql)->row();
+                                   $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+                                   $saldoQty = $result->QTY??0;
+                               }
+                               else
+                               {
+                                   $saldoQty = 0;
+                               }
+                                            
+                               array_push($dataModel,array(
+                                   'model_id'          => $dataVarian[$x]->IDBARANG,
+                                   'tier_index'        => array((int)$w,(int)$u),
+                                   'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
+                                   'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
+                                   // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
+                                   'seller_stock'      => array(array('stock' => (int)$saldoQty )),
+                                   'weight'            => (float)$this->input->post("BERAT"),
+                                   'dimension'         => array(
+                                       'package_height' => (int)$this->input->post("TINGGI"),
+                                       'package_width'  => (int)$this->input->post("LEBAR"),
+                                       'package_length' => (int)$this->input->post("PANJANG"),
+                                   ),
+                               ));
+                               
+                               if(strpos($dataVarian[$x]->MODE, 'BARU') !== false)
+                               {
+                                   array_push($dataModelBaru,$dataModel[count($dataModel)-1]);
+                               }
+                               if(strpos($dataVarian[$x]->MODE, 'UBAH HARGA') !== false)
+                               {
+                                   array_push($dataModelUbahHarga,$dataModel[count($dataModel)-1]);
+                               }
+                               if(strpos($dataVarian[$x]->MODE, 'UBAH SKU') !== false)
+                               { 
+                                   array_push($dataModelUbahSKU,$dataModel[count($dataModel)-1]);
+                               }
+                               if(strpos($dataVarian[$x]->MODE, 'HAPUS') !== false)
+                               {
+                                   array_push($dataModelHapus,$dataModel[count($dataModel)-1]);
+                               }
+                           }
+                        }
+                    }
+                
+                    
+                    if(!$barangAda && $dataVarian[$x]->MODE == "HAPUS")
+                    {
+                        $dataHapus = array(
+                            'model_id'          => $dataVarian[$x]->IDBARANG,
+                            'tier_index'        => array((int)$w,(int)$u),
+                            'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
+                            'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
+                            // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
+                            'seller_stock'      => array(array('stock' => (int)$saldoQty )),
+                            'weight'            => (float)$this->input->post("BERAT"),
+                            'dimension'         => array(
+                                'package_height' => (int)$this->input->post("TINGGI"),
+                                'package_width'  => (int)$this->input->post("LEBAR"),
+                                'package_length' => (int)$this->input->post("PANJANG"),
+                            ),
+                        );
+                        
+                        array_push($dataModelHapus,$dataHapus);
+                    }
+                } 
+                
+                //CEK JIKA ADA VARIAN DIHAPUS, DELETE MODEL
+                if(count($dataModelHapus) > 0)
+                {
+                   for($h = 0 ; $h < count($dataModelHapus); $h++)
+                   {
+                        $parameterHapus = [];
+                        $parameterHapus['item_id'] = $itemid;
+                        $parameterHapus['model_id'] = $dataModelHapus[$h]['model_id'];
+                 
+                         $curl = curl_init();
+                         
+                         curl_setopt_array($curl, array(
+                           CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                           CURLOPT_RETURNTRANSFER => true,
+                           CURLOPT_ENCODING => '',
+                           CURLOPT_MAXREDIRS => 10,
+                           CURLOPT_TIMEOUT => 30,
+                           CURLOPT_FOLLOWLOCATION => true,
+                           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                           CURLOPT_CUSTOMREQUEST => 'POST',
+                           CURLOPT_POSTFIELDS =>  array(
+                           'endpoint' => 'product/delete_model',
+                           'parameter' => json_encode($parameterHapus)),
+                           CURLOPT_HTTPHEADER => array(
+                             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                           ),
+                         ));
+                           
+                         $response = curl_exec($curl);
+                         curl_close($curl);
+                         $ret =  json_decode($response,true);
+                      
+                         if($ret['error'] != "")
+                         {
+                             $data['success'] = false;
+                             $data['msg'] =  $ret['error']." MODEL HAPUS : ".$ret['message'];
+                             die(json_encode($data));
+                         }
+                   }
+                }
+                
+                
+                $parameter['model'] = $dataModel;
                 $curl = curl_init();
                 
                 $endpointModel = "product/init_tier_variation";
                 if($idBarang != 0)
-        		{
-        		    $endpointModel = "product/update_tier_variation";
-        		}
-        		
+            	{
+            	    $endpointModel = "product/update_tier_variation";
+            	}
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -1910,7 +1975,7 @@ class Shopee extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-             
+                
                 if($ret['error'] != "")
                 {
                     $data['success'] = false;
@@ -1919,12 +1984,12 @@ class Shopee extends MY_Controller {
                 }
                 else
                 {
-                    
+                  
                   sleep(3);
                     
                   //CEK JIKA ADA VARIAN BARU, ADD MODEL
                   if(count($dataModelBaru) > 0)
-                  {
+                  {  
                        $parameter = [];
                        $parameter['item_id'] = $itemid;
                        $parameter['model_list'] = $dataModelBaru;
@@ -2001,10 +2066,11 @@ class Shopee extends MY_Controller {
                       {
                           $data['success'] = false;
                           $data['msg'] =  $ret['error']." MODEL UBAH HARGA : ".$ret['message'];
-                          print_r($ret);
                           die(json_encode($data));
                       }
                   }
+                  
+                  sleep(3);
                   
                   //CEK JIKA ADA VARIAN UBAH SKU, UPDATE MODEL
                   if(count($dataModelUbahSKU) > 0)
@@ -2044,47 +2110,6 @@ class Shopee extends MY_Controller {
                           $data['success'] = false;
                           $data['msg'] =  $ret['error']." MODEL UBAH SKU : ".$ret['message'];
                           die(json_encode($data));
-                      }
-                  }
-                  
-                  //CEK JIKA ADA VARIAN DIHAPUS, DELETE MODEL
-                  if(count($dataModelHapus) > 0)
-                  {
-                      for($h = 0 ; $h < count($dataModelHapus); $h++)
-                      {
-                           $parameter = [];
-                           $parameter['item_id'] = $itemid;
-                           $parameter['model_id'] = $dataModelHapus[$h]['model_id'];
-                    
-                            $curl = curl_init();
-                            
-                            curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                              CURLOPT_RETURNTRANSFER => true,
-                              CURLOPT_ENCODING => '',
-                              CURLOPT_MAXREDIRS => 10,
-                              CURLOPT_TIMEOUT => 30,
-                              CURLOPT_FOLLOWLOCATION => true,
-                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                              CURLOPT_CUSTOMREQUEST => 'POST',
-                              CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'product/delete_model',
-                              'parameter' => json_encode($parameter)),
-                              CURLOPT_HTTPHEADER => array(
-                                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                              ),
-                            ));
-                              
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $ret =  json_decode($response,true);
-                         
-                            if($ret['error'] != "")
-                            {
-                                $data['success'] = false;
-                                $data['msg'] =  $ret['error']." MODEL HAPUS : ".$ret['message'];
-                                die(json_encode($data));
-                            }
                       }
                   }
                   
@@ -2192,10 +2217,10 @@ class Shopee extends MY_Controller {
                                         IDINDUKBARANGSHOPEE = ".$itemid." 
                                         WHERE SKUSHOPEE = '".strtoupper($skuInduk)."'";
                               $CI->db->queryRaw($sql);
-                sleep(3);              
+            
                 $data['success'] = true;
-                          $data['msg'] = "Barang berhasil tersimpan di Shopee";
-                          echo(json_encode($data));
+                $data['msg'] = "Barang berhasil tersimpan di Shopee";
+                echo(json_encode($data));
             }
         }
 	   

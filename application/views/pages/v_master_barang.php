@@ -352,7 +352,7 @@
                                                             </div>
                                                             <div class ="form-group col-md-12">
                                                                 <br>
-                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 1), Isi gambar terakhir dengan tabel ukuran</i></h3>
+                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2), Jika perlu tabel ukuran akan mengambil dari gambar terakhir</i></h3>
                                                                 <br>
                                                                 <table id="gambarproduk">
                                                                 </table>  
@@ -1532,6 +1532,74 @@ function ubahHeader(row){
             }
 	        setGambarProdukMaster();
 	        
+	        if($("#IDBARANGINDUK").val() != 0)
+	        {
+	            $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Master/Data/Barang/getGambarBarang/',
+                	data    : {idbarang: $("#IDBARANGINDUK").val()},
+                	dataType: 'json',
+                	success : function(msg){
+                	    
+                	    var imageProduk = msg.dataInduk;
+                    	//GAMBAR PRODUK
+                    	for(var y = 0 ; y < imageProduk.length ; y++)
+                    	{
+                    	   // $("#file-input-"+y).val("-");
+                    	    $("#format-input-"+y).val('GAMBAR');
+                    	    $("#index-input-"+y).val(y);
+                    	    $("#src-input-"+y).val(imageProduk[y].URL);
+                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                    	    $("#id-input-"+y).val(imageProduk[y].ID);
+                    	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
+                    	   
+                        	$("#ubahGambarProduk-"+y).show();
+                        	$("#hapusGambarProduk-"+y).show();
+                        	
+                        	dataGambar[y] = {
+                               'ID'   : $("#id-input-"+y).val(),
+                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                               'URL'  : $("#preview-image-"+y).attr("src"),
+                            };
+                    	    
+                    	}
+                    	
+                	    var imageVarian = msg.dataGambarVarian;
+                	    for(var y = 0 ; y < imageVarian.length ; y++)
+                    	{
+                    	    dataGambarVarian[y] = {
+                               'ID'   : '',
+                               'NAMA' : '',
+                               'URL'  : '',
+                            };
+                                                                   
+                    	    for(var z = 0 ; z < imageVarian.length ; z++)
+                    	    {
+                    	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
+                    	        {
+                            	    // $("#file-input-varian-"+y).val("-");
+                                    $("#format-input-varian-"+y).val('GAMBAR');
+                                    $("#index-input-varian-"+y).val(y);
+                                    $("#src-input-varian-"+y).val(imageVarian[z].URL);
+                                    $("#id-input-varian-"+y).val(imageVarian[z].ID);
+                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
+                                    
+                                    $("#ubahGambarVarian"+y).show();
+                            	    $("#hapusGambarVarian"+y).show();
+                            	    
+                            	    dataGambarVarian[y] = {
+                                       'ID'   : $("#id-input-varian-"+y).val(),
+                                       'NAMA' : imageVarian[z].NAMA,
+                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                    };
+                    	        }
+                    	    }
+                    	}
+                	}
+                	    
+                });
+	        }
+	        
 	        if(indukBarangShopee != 0)
 	        {
     	        $.ajax({
@@ -1590,73 +1658,6 @@ function ubahHeader(row){
                             	    dataGambarVarian[y] = {
                                        'ID'   : $("#id-input-varian-"+y).val(),
                                        'NAMA' : imageVarian[z].WARNA,
-                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
-                                    };
-                    	        }
-                    	    }
-                    	}
-                	}
-                	    
-                });
-	        }
-	        else if($("#IDBARANGINDUK").val() != 0)
-	        {
-	            $.ajax({
-                	type    : 'POST',
-                	url     : base_url+'Master/Data/Barang/getGambarBarang/',
-                	data    : {idbarang: $("#IDBARANGINDUK").val()},
-                	dataType: 'json',
-                	success : function(msg){
-                	    
-                	    var imageProduk = msg.dataInduk;
-                    	//GAMBAR PRODUK
-                    	for(var y = 0 ; y < imageProduk.length ; y++)
-                    	{
-                    	   // $("#file-input-"+y).val("-");
-                    	    $("#format-input-"+y).val('GAMBAR');
-                    	    $("#index-input-"+y).val(y);
-                    	    $("#src-input-"+y).val(imageProduk[y].URL);
-                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
-                    	    $("#id-input-"+y).val(imageProduk[y].ID);
-                    	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
-                    	   
-                        	$("#ubahGambarProduk-"+y).show();
-                        	$("#hapusGambarProduk-"+y).show();
-                        	
-                        	dataGambar[y] = {
-                               'ID'   : $("#id-input-"+y).val(),
-                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
-                               'URL'  : $("#preview-image-"+y).attr("src"),
-                            };
-                    	    
-                    	}
-                    	
-                	    var imageVarian = msg.dataGambarVarian;
-                	    for(var y = 0 ; y < imageVarian.length ; y++)
-                    	{
-                    	    dataGambarVarian[y] = {
-                               'ID'   : '',
-                               'NAMA' : '',
-                               'URL'  : '',
-                            };
-                                                                   
-                    	    for(var z = 0 ; z < imageVarian.length ; z++)
-                    	    {
-                    	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
-                    	        {
-                            	    // $("#file-input-varian-"+y).val("-");
-                                    $("#format-input-varian-"+y).val('GAMBAR');
-                                    $("#index-input-varian-"+y).val(y);
-                                    $("#src-input-varian-"+y).val(imageVarian[z].URL);
-                                    $("#id-input-varian-"+y).val(imageVarian[z].ID);
-                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
-                                    
-                                    $("#ubahGambarVarian"+y).show();
-                            	    $("#hapusGambarVarian"+y).show();
-                            	    
-                            	    dataGambarVarian[y] = {
-                                       'ID'   : $("#id-input-varian-"+y).val(),
-                                       'NAMA' : imageVarian[z].NAMA,
                                        'URL'  : $("#preview-image-varian-"+y).attr("src"),
                                     };
                     	        }
@@ -1864,19 +1865,43 @@ function simpanHeader(jenis = '') {
                     
                     if(jenis == 'SHOPEE')
                     {
+                        $("#mode").val("ubah");
                         loadingMaster();
-                         $.ajax({
-                            type      : 'POST',
-                            url       : base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()),
-                            dataType  : 'json',
-                            beforeSend: function (){
-                                //$.messager.progress();
-                            },
-                            success: function(msg){
-                                simpanHeaderShopee();
-                            }
+                        
+                        if(!$("#VARIANSET").prop('checked'))
+                        {
+                             $.ajax({
+                                type      : 'POST',
+                                url       : base_url + 'Master/Data/Barang/getDataInduk/' + encodeURIComponent($("#KATEGORI").val()),
+                                dataType  : 'json',
+                                beforeSend: function (){
+                                    //$.messager.progress();
+                                },
+                                success: function(msg){
+                                    $("#KODEBARANGINDUK").val(msg.rows[0].KODEBARANG);
+                                    simpanHeaderShopee();
+                                }
+                                 
+                             });
+                        }
+                        else
+                        {
+                            $("#dataGridVarian").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent($("#KATEGORI").val()));
+                            $("#dataGridVarian").DataTable().ajax.reload();
+                            simpanHeaderShopee();
+                        }
+                        //  $.ajax({
+                        //     type      : 'POST',
+                        //     url       : base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()),
+                        //     dataType  : 'json',
+                        //     beforeSend: function (){
+                        //         //$.messager.progress();
+                        //     },
+                        //     success: function(msg){
+                        //         simpanHeaderShopee();
+                        //     }
                              
-                         });
+                        //  });
                     }
                     else
                     {
@@ -2060,20 +2085,25 @@ async function simpanHeaderShopee(){
             for(var x = 0 ; x < msg.dataVarian.length; x++)
             {
                 if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                    rowData.MODE = "";
                     if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
                     {
                     // Update the NAMABARANG field
                        rowData.IDBARANG   = msg.dataVarian[x].ID,
                        rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>Harga Diubah</i>";
-                       rowData.MODE = "UBAH HARGA";
+                       rowData.MODE += "UBAH HARGA";
                        dataVarianSimpan[dv] = rowData;
                     }
-                    else if(rowData.SKUSHOPEE != msg.dataVarian[x].SKU)
+                    if(rowData.SKUSHOPEE != msg.dataVarian[x].SKU)
                     {
+                        if(rowData.MODE != "")
+                        {
+                            rowData.MODE += "|";
+                        }
                     // Update the NAMABARANG field
                        rowData.IDBARANG   = msg.dataVarian[x].ID,
                        rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>SKU Diubah</i>";
-                       rowData.MODE = "UBAH SKU";
+                       rowData.MODE += "UBAH SKU";
                        // Set the updated data back into the row
                        dataVarianSimpan[dv] = rowData;
                     }
@@ -2174,7 +2204,7 @@ function hapusHeader(row){
                 		}).then((result) => {
                 		/* Read more about isConfirmed, isDenied below */
                 			if (result.value) {
-        	     
+        	                        
                     				$("#mode").val('hapus');
                     		
                                     $.ajax({
@@ -2194,6 +2224,7 @@ function hapusHeader(row){
                 			        
                             			        if(row.IDINDUKBARANGSHOPEE != 0)
                             			        {
+                            			             loadingMaster();
                                 			         $.ajax({
                                                     	type    : 'POST',
                                                     	url     : base_url+'Shopee/removeBarang/',

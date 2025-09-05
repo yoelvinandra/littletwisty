@@ -179,6 +179,12 @@ class Barang extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	public function getDataInduk($kategori=""){
+		$this->output->set_content_type('application/json');
+		$response = $this->model_master_barang->getDataInduk(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",$kategori))));
+		echo json_encode($response);
+	}
+	
 	public function comboGridTransaksi(){
 		$this->output->set_content_type('application/json');
 		$mode = $this->input->post('mode');
@@ -497,10 +503,13 @@ class Barang extends MY_Controller {
 	
 	function cekHapusData(){
 	    $id = $this->input->post('idbarang');
-	    if(checkBarangPadaTransaksi($id) == 1)
-		{
-		     die(json_encode(array('errorMsg'=> 'Data Barang Tidak Dapat Dihapus, Data Sudah Digunakan Pada Transaksi'))); 
-		}
+	    if($id[0] != "X")
+	    {
+    	    if(checkBarangPadaTransaksi($id) == 1)
+    		{
+    		     die(json_encode(array('errorMsg'=> 'Data Barang Tidak Dapat Dihapus, Data Sudah Digunakan Pada Transaksi'))); 
+    		}
+	    }
 		echo json_encode(array('success' => true,'errorMsg' => ''));
 	}
 

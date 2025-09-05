@@ -270,7 +270,7 @@
                           <div class="row">
                              <div class ="form-group col-md-12">
                                  <br>
-                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 1)</i></h4>
+                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2)</i></h4>
                                  <br>
                                  <table id="gambarprodukshopee">
                                  </table>  
@@ -1655,14 +1655,6 @@ function ubahShopee(row){
         {
             $("#BARANGSHOPEE").removeAttr('disabled');
         }
-        
-        $("#NAMASHOPEE").val(row.item_name);
-    	$("#DESKRIPSISHOPEE").val(row.description.replaceAll("\R\N","\r\n").replaceAll("???? ",""));
-    	
-    // 	$("#BERATMASTERSHOPEE").val(row.weight);
-    // 	$("#PANJANGMASTERSHOPEE").val(row.dimension.package_length);
-    // 	$("#LEBARMASTERSHOPEE").val(row.dimension.package_width);
-    // 	$("#TINGGIMASTERSHOPEE").val(row.dimension.package_height);
     	
         var table = $('#dataGridVarianShopee').DataTable();
         table.ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent(row.KATEGORIMASTERBARANG));
@@ -1685,9 +1677,6 @@ function ubahShopee(row){
         	            }
         	        }
         	        
-        	       // $("#HARGAJUALMASTERSHOPEE").val(price);
-        	       // $("#SKUMASTERSHOPEE").val(row.item_sku);
-        	        
         	        if(price != $("#HARGAJUALMASTERSHOPEE").val())
         	        {
         	            historyPerubahanShopee.push({
@@ -1701,8 +1690,8 @@ function ubahShopee(row){
         	        {
         	            historyPerubahanShopee.push({
         	                'label' : 'SKU Produk',
-        	                'lama'  : currency(row.item_sku.toString()),
-        	                'baru'  : currency($("#SKUMASTERSHOPEE").val().toString())
+        	                'lama'  : (row.item_sku.toString()),
+        	                'baru'  : ($("#SKUMASTERSHOPEE").val().toString())
         	            });
         	            $("#checkShopee").show();
         	        }
@@ -1790,11 +1779,14 @@ function ubahShopee(row){
                         table.rows().every(function () {
                             var rowData = this.data();
                             var ada = false;
+                            var perubahan = false;
                     	    for(var x = 0 ; x < msg.dataVarian.length; x++)
                     	    {
                                 if (rowData.IDBARANGSHOPEE == msg.dataVarian[x].ID) {
+                                    rowData.MODE = "";
                                     if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
                                     {
+                                        perubahan = true;
                                         historyPerubahanShopee.push({
                         	                'label' : 'Harga Varian '+rowData.NAMABARANG,
                         	                'lama'  : "Rp"+currency(msg.dataVarian[x].HARGA.toString()),
@@ -1804,28 +1796,37 @@ function ubahShopee(row){
                                        $("#checkShopee").show();
                                     // Update the NAMABARANG field
                                        rowData.IDBARANG   = msg.dataVarian[x].ID,
-                                       rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>Harga Diubah</i>";
-                                       rowData.MODE = "UBAH HARGA";
+                                       rowData.MODE += "UBAH HARGA";
                                        // Set the updated data back into the row
                                        this.data(rowData).draw(false); // draw(false) avoids full table redraw
                                     }
-                                    else if(rowData.SKUSHOPEE != msg.dataVarian[x].SKU)
+                                    if(rowData.SKUSHOPEE != msg.dataVarian[x].SKU)
                                     {
+                                        perubahan = true;
+                                        if(rowData.MODE != "")
+                                        {
+                                            rowData.MODE += "|";
+                                        }
+                                        
                                         historyPerubahanShopee.push({
                         	                'label' : 'SKU Varian '+rowData.NAMABARANG,
-                        	                'lama'  : currency(msg.dataVarian[x].SKU.toString()),
-                        	                'baru'  : currency(rowData.SKUSHOPEE.toString())
+                        	                'lama'  : (msg.dataVarian[x].SKU.toString()),
+                        	                'baru'  : (rowData.SKUSHOPEE.toString())
                         	            });
                         	            
                                         $("#checkShopee").show();
                                     // Update the NAMABARANG field
                                        rowData.IDBARANG   = msg.dataVarian[x].ID,
-                                       rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>SKU Diubah</i>";
-                                       rowData.MODE = "UBAH SKU";
+                                       rowData.MODE += "UBAH SKU";
                                        // Set the updated data back into the row
                                        this.data(rowData).draw(false); // draw(false) avoids full table redraw
                                     }
                                 }
+                    	    }
+                    	    if(perubahan)
+                    	    {
+                                rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>Data Diubah</i>";
+                                this.data(rowData).draw(false);
                     	    }
                         });
                         
@@ -2614,7 +2615,7 @@ function simpanShopee(){
         sizeChart = "";
     }
     
-    if(($("#KATEGORISHOPEE").val() == 0 || $("#KATEGORISHOPEE").val() == null) || ($("#BARANGSHOPEE").val() == 0 || $("#BARANGSHOPEE").val() == null) || arrLogistics.length == 0 || arrImage.length == 0 || arrImageVarian.length != warna.length || (useSize && (sizeChartID == 0 || sizeChartID == "")) || countValueAttribute != countRequiredAttribute) // || base64Images.length == 0
+    if(($("#KATEGORISHOPEE").val() == 0 || $("#KATEGORISHOPEE").val() == null) || ($("#BARANGSHOPEE").val() == 0 || $("#BARANGSHOPEE").val() == null) || arrLogistics.length == 0 || arrImage.length < 2 || arrImageVarian.length != warna.length || (useSize && (sizeChartID == 0 || sizeChartID == "")) || countValueAttribute != countRequiredAttribute) // || base64Images.length == 0
     {
         Swal.fire({ 
         	title            : "Terdapat Data Produk yang belum diisi",
