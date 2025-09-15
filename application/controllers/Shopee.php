@@ -1691,7 +1691,7 @@ class Shopee extends MY_Controller {
 		$parameter = [];
 		$parameter['original_price']    = count($dataVarian) > 0 ?(int)$dataVarian[0]->HARGAJUAL:(int)$hargaInduk;
 		$parameter['description']       = $this->input->post("DESKRIPSI");
-		$parameter['weight']            = (float)$this->input->post("BERAT") / 1000;
+		$parameter['weight']            = (float)$this->input->post("BERAT");
 		$parameter['item_name']         = $this->input->post("NAMA");
 		$parameter['item_status']       = ($this->input->post("UNLISTED") == 1 ? "UNLIST" : "NORMAL");
 		$parameter['dimension'] = array(
@@ -1855,7 +1855,7 @@ class Shopee extends MY_Controller {
                                    'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
                                    // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
                                    'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                                   'weight'            => (float)$this->input->post("BERAT") / 1000,
+                                   'weight'            => (float)$this->input->post("BERAT"),
                                    'dimension'         => array(
                                        'package_height' => (int)$this->input->post("TINGGI"),
                                        'package_width'  => (int)$this->input->post("LEBAR"),
@@ -1893,7 +1893,7 @@ class Shopee extends MY_Controller {
                             'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
                             // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
                             'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                            'weight'            => (float)$this->input->post("BERAT") / 1000,
+                            'weight'            => (float)$this->input->post("BERAT"),
                             'dimension'         => array(
                                 'package_height' => (int)$this->input->post("TINGGI"),
                                 'package_width'  => (int)$this->input->post("LEBAR"),
@@ -8112,6 +8112,169 @@ class Shopee extends MY_Controller {
         }
         
         //SET BOOST
+        
+        
+        //SET STOK
+        $dataBarang = [];
+        //SET STOK
+        $curl = curl_init();
+        $parameter = "";
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        $lokasi = 0;
+        $countSuccess = 0 ;
+        if($ret['error'] != "")
+        {
+            echo $ret['error']." LOKASI : ".$ret['message'];
+        }
+        else
+        {
+            $dataAddress = $ret['response']['address_list'];
+            for($x = 0 ; $x < count($dataAddress);$x++)
+            {
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $pickup = false;
+                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
+                {
+                    if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
+                    {
+                        $pickup = true;
+                    }
+                    // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
+                    // {
+                    //     $default = true;
+                    // }
+                }
+                
+                if($pickup)
+                {
+                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                }
+            }
+                
+            $sql = "select IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
+            				from MBARANG
+            				WHERE IDINDUKBARANGSHOPEE is not null AND
+            				IDINDUKBARANGSHOPEE <> '' AND
+            				IDINDUKBARANGSHOPEE <> 0
+            				order by IDINDUKBARANGSHOPEE
+            				";	
+            		
+            	$dataHeader = $this->db->query($sql)->result();
+            		
+             $idHeader = 0;
+             $parameter = [];
+            	 foreach($dataHeader as $itemHeader)
+            	 {
+            	     if($itemHeader->IDINDUKBARANGSHOPEE != $idHeader)
+            	     {
+            	         if(count($parameter) > 0)
+            	         {
+            	            echo json_encode($parameter);
+            	            $curl = curl_init();
+                        curl_setopt_array($curl, array(
+                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                          CURLOPT_RETURNTRANSFER => true,
+                          CURLOPT_ENCODING => '',
+                          CURLOPT_MAXREDIRS => 10,
+                          CURLOPT_TIMEOUT => 30,
+                          CURLOPT_FOLLOWLOCATION => true,
+                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                          CURLOPT_CUSTOMREQUEST => 'POST',
+                          CURLOPT_POSTFIELDS =>  array(
+                          'endpoint' => 'product/update_stock',
+                          'parameter' => json_encode($parameter)),
+                          CURLOPT_HTTPHEADER => array(
+                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                          ),
+                        ));
+                          
+                        $response = curl_exec($curl);
+                        curl_close($curl);
+                        $ret =  json_decode($response,true);
+                        
+                        if($ret['error'] != "")
+                        {
+                            $data['success'] = false;
+                            $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
+                            die(json_encode($data));
+                            print_r($ret);
+                        }
+            	         }
+            	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
+            	         
+            	         //UPDATE KE SHOPEENYA
+                    $parameter = [];
+                 	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGSHOPEE;
+                 	$parameter['stock_list'] = [];
+            	     }
+            	     
+                 $result   = get_saldo_stok_new($_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
+                 $saldoQty = $result->QTY??0;
+                
+                $modelId = 0;
+                
+                if($itemHeader->IDBARANGSHOPEE != $itemHeader->IDINDUKBARANGSHOPEE)
+                {
+                    $modelId = $itemHeader->IDBARANGSHOPEE;
+                }
+                
+                 array_push($parameter['stock_list'],array(
+                    'model_id'      => (int)$modelId,
+                    'seller_stock'  => array(
+                         array('stock' => (int)$saldoQty)
+                    ))
+                );
+            	}
+            	
+            	echo  json_encode($parameter);
+            	$curl = curl_init();
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS =>  array(
+              'endpoint' => 'product/update_stock',
+              'parameter' => json_encode($parameter)),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+              
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            
+            if($ret['error'] != "")
+            {
+                $data['success'] = false;
+                $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
+                die(json_encode($data));
+            }
+        }
+        //SET STOK
         	
         
         $finalResult["history"] = $history;
