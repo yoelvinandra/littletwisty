@@ -162,6 +162,7 @@
                 <button class="btn btn-success" onclick="javascript:tambahShopee()">Tambah</button>
                 &nbsp;&nbsp;
                 <button class="btn btn-primary" onclick="javascript:naikkanShopee()">Naikkan Produk</button>
+                <!--<button class="btn btn-primary" onclick="javascript:sinkronisasiShopee()">Sinkronisasi Stok Produk</button>-->
             	<div class="pull-right" style="width:170px; margin-right:0px;">
                 	<div class="input-group " >
                 	 <div class="input-group-addon">

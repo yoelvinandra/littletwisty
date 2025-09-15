@@ -1160,6 +1160,8 @@ function batal(){
 						timer            : 1500
 					});
 					
+					loadingMaster();
+					
 					$.ajax({
                         type      : 'POST',
                         url       : base_url+'Shopee/setStokBarang',
@@ -1172,6 +1174,7 @@ function batal(){
                             //$.messager.progress();
                         },
                         success: function(msg){
+                            Swal.close();
                             if (msg.success) {
                                 if(msg.msg != "")
                                 {
@@ -1206,6 +1209,7 @@ function batal(){
                             //$.messager.progress();
                         },
                         success: function(msg){
+                            Swal.close();
                             if (msg.success) {
                                 if(msg.msg != "")
                                 {
@@ -1429,6 +1433,8 @@ function simpan(){
 						timer            : 1500
 					});
 					
+					loadingMaster();
+					
 					var dataBarang = [];
 					for(var x = 0 ; x < row.length; x++)
 					{
@@ -1447,6 +1453,7 @@ function simpan(){
                             //$.messager.progress();
                         },
                         success: function(msg){
+                            Swal.close();
                             if (msg.success) {
                                 if(msg.msg != "")
                                 {
@@ -1481,6 +1488,7 @@ function simpan(){
                             //$.messager.progress();
                         },
                         success: function(msg){
+                            Swal.close();
                             if (msg.success) {
                                 if(msg.msg != "")
                                 {
@@ -1659,6 +1667,19 @@ function get_akses_user(kodemenu, callback) {
 			}
 		}
 	});
+}
+
+function loadingMaster(){
+    Swal.fire({
+      title: '',
+      html: '<div style="font-size:20pt; font-weight:600;">Menghubungkan Master Barang dengan Shopee... <div>',                // no text or HTML content
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 }
 </script>
 

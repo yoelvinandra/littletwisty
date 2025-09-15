@@ -1691,7 +1691,7 @@ class Shopee extends MY_Controller {
 		$parameter = [];
 		$parameter['original_price']    = count($dataVarian) > 0 ?(int)$dataVarian[0]->HARGAJUAL:(int)$hargaInduk;
 		$parameter['description']       = $this->input->post("DESKRIPSI");
-		$parameter['weight']            = (float)$this->input->post("BERAT");
+		$parameter['weight']            = (float)$this->input->post("BERAT") / 1000;
 		$parameter['item_name']         = $this->input->post("NAMA");
 		$parameter['item_status']       = ($this->input->post("UNLISTED") == 1 ? "UNLIST" : "NORMAL");
 		$parameter['dimension'] = array(
@@ -1855,7 +1855,7 @@ class Shopee extends MY_Controller {
                                    'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
                                    // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
                                    'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                                   'weight'            => (float)$this->input->post("BERAT"),
+                                   'weight'            => (float)$this->input->post("BERAT") / 1000,
                                    'dimension'         => array(
                                        'package_height' => (int)$this->input->post("TINGGI"),
                                        'package_width'  => (int)$this->input->post("LEBAR"),
@@ -1893,7 +1893,7 @@ class Shopee extends MY_Controller {
                             'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
                             // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
                             'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                            'weight'            => (float)$this->input->post("BERAT"),
+                            'weight'            => (float)$this->input->post("BERAT") / 1000,
                             'dimension'         => array(
                                 'package_height' => (int)$this->input->post("TINGGI"),
                                 'package_width'  => (int)$this->input->post("LEBAR"),
