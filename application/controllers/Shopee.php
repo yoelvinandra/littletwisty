@@ -8187,7 +8187,6 @@ class Shopee extends MY_Controller {
             	     {
             	         if(count($parameter) > 0)
             	         {
-            	            echo json_encode($parameter);
             	            $curl = curl_init();
                         curl_setopt_array($curl, array(
                           CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
@@ -8244,7 +8243,6 @@ class Shopee extends MY_Controller {
                 );
             	}
             	
-            	echo  json_encode($parameter);
             	$curl = curl_init();
             curl_setopt_array($curl, array(
               CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
