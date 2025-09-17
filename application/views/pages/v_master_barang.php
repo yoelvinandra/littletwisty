@@ -321,7 +321,7 @@
                                                                 
                                                                 <!--<button type="button" style="margin-bottom:-50px;" id="btn_tambah_varian" onclick="tambah()" class="btn btn-success btn-flat" data-toggle="modal" data-target="#modal-varian"data-id="7">Tambah Varian</button> &nbsp;&nbsp;&nbsp;&nbsp;-->
                                                                 <button type="button" style="margin-bottom:-50px; margin-top:10px;" id="btn_set_varian" onclick="tambahMassal()" class="btn btn-success btn-flat pull-left" data-toggle="modal" data-target="#modal-set-varian"data-id="7">Tambah Varian</button>
-                                                                <div style="font-style:italic; margin-left:130px; margin-top:17px;">*Geser keatas atau kebawah, dan simpan untuk merubah urutan varian</div>
+                                                                <!--<div style="font-style:italic; margin-left:130px; margin-top:17px;">*Geser keatas atau kebawah, dan simpan untuk merubah urutan varian</div>-->
                                                                 <div style="margin-top:-57px;">
                                                                     <table id="dataGridVarian" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                                                         <!-- class="table-hover"> -->
@@ -1107,53 +1107,53 @@ $(document).ready(function() {
     	});
     	
     	const tbodyvarian = $('#dataGridVarian tbody')[0];
-        const sortablevarian = new Sortable(tbodyvarian, {
-            animation: 150,
-            ghostClass: 'dragging',
-            handle: 'tr',
-            onEnd: function(evt) {
+        // const sortablevarian = new Sortable(tbodyvarian, {
+        //     animation: 150,
+        //     ghostClass: 'dragging',
+        //     handle: 'tr',
+        //     onEnd: function(evt) {
                 
-                let movedData = $('#dataGridVarian').DataTable().row(evt.oldIndex).data();
-                let temp;
+        //         let movedData = $('#dataGridVarian').DataTable().row(evt.oldIndex).data();
+        //         let temp;
                 
-                var dataList = $('#dataGridVarian').DataTable().rows().data();
-                $('#dataGridVarian').DataTable().clear();
+        //         var dataList = $('#dataGridVarian').DataTable().rows().data();
+        //         $('#dataGridVarian').DataTable().clear();
                 
-                for(var x = 0 ; x < dataList.length; x++)
-                {
-                    if(evt.newIndex <= evt.oldIndex)
-                    {
+        //         for(var x = 0 ; x < dataList.length; x++)
+        //         {
+        //             if(evt.newIndex <= evt.oldIndex)
+        //             {
                         
-                       if(x == evt.newIndex)
-                       {
-                           temp = dataList[x];
-                           dataList[x] = movedData;
-                           movedData = temp;
-                       }
-                       else if(x <= evt.oldIndex && x > evt.newIndex)
-                       {
-                           temp = dataList[x];
-                           dataList[x] = movedData;
-                           movedData = temp;
-                       }
-                         $('#dataGridVarian').DataTable().row.add(dataList[x]).draw();
-                    }
-                    else
-                    {
-                       if(x >= evt.oldIndex && x < evt.newIndex)
-                       {
-                           dataList[x] = dataList[x+1];
-                       }
-                       else if(x == evt.newIndex)
-                       {
-                           dataList[x] = movedData;
-                       }
-                     $('#dataGridVarian').DataTable().row.add(dataList[x]).draw();
-                    }
-                }
+        //               if(x == evt.newIndex)
+        //               {
+        //                   temp = dataList[x];
+        //                   dataList[x] = movedData;
+        //                   movedData = temp;
+        //               }
+        //               else if(x <= evt.oldIndex && x > evt.newIndex)
+        //               {
+        //                   temp = dataList[x];
+        //                   dataList[x] = movedData;
+        //                   movedData = temp;
+        //               }
+        //                  $('#dataGridVarian').DataTable().row.add(dataList[x]).draw();
+        //             }
+        //             else
+        //             {
+        //               if(x >= evt.oldIndex && x < evt.newIndex)
+        //               {
+        //                   dataList[x] = dataList[x+1];
+        //               }
+        //               else if(x == evt.newIndex)
+        //               {
+        //                   dataList[x] = movedData;
+        //               }
+        //              $('#dataGridVarian').DataTable().row.add(dataList[x]).draw();
+        //             }
+        //         }
                 
-            }
-        });
+        //     }
+        // });
     }
             
 });
