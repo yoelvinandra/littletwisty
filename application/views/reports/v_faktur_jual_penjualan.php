@@ -60,12 +60,14 @@ $sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCU
 $r = $CI->db->query($sql, [$idtrans])->row();
 
 $namacustomer = $r->NAMACUSTOMER;
+$catatancustomer = format_remark($r->CATATANCUSTOMER);
 
 //ALAMAT CUSTOMER
 		$alamat = alamat_length($r->ALAMATCUSTOMER);
 		if($r->KOTACUSTOMER != null  && alamat_length($r->ALAMATCUSTOMER) != null){$kota = "-"; } 
 		$kota.=$r->KOTACUSTOMER;
-		$propinsi = "<br>".$r->PROPINSICUSTOMER;
+		if($alamat != "" ||$kota != "") $propinsi = "<br>";
+		$propinsi .= $r->PROPINSICUSTOMER;
 		if($r->NEGARACUSTOMER != null && $r->PROPINSICUSTOMER != null){$negara = "-"; }
 		$negara.=$r->NEGARACUSTOMER;
 
@@ -143,7 +145,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 									<td valign="top"class="font-header" >Kepada Yth </td>	
 								</tr>
 								<tr>
-									<td valign="top"class="font-body">'.$namacustomer.'<br>'.$alamat.$kota.$propinsi.$negara.'</td>
+									<td valign="top"class="font-body">'.$namacustomer.'<br>'.$alamat.$kota.$propinsi.$negara.$catatancustomer.'</td>
 								</tr>
 								<tr>
 									<td valign="top" class="font-body">'.$NPWP.'</td>
