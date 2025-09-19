@@ -402,4 +402,19 @@ class PesananPembelian extends MY_Controller {
 		//$data['namasubcustomer'] = $namaSubcustomer;
 		$this->load->view('reports/v_faktur_beli_pemesanan.php', $data);
 	}
+	
+	function checkPOBelumTutup($idbarang){
+	    $response['rows']   = $this->model_inventori_pesananbeli->checkPOBelumTutup($idbarang);
+		$response['count'] = count($response['rows']);
+	    echo json_encode($response);
+	}
+	
+	function tutupPO(){
+	   	$a_detail  = json_decode($_POST['dataTutupPO']);
+
+		$exe = $this->model_inventori_pesananbeli->tutupPO($a_detail);
+		if ($exe != '') { die(json_encode(array('errorMsg'=>$exe))); }
+		
+		echo json_encode(array('success' => true));
+	}
 }

@@ -106,6 +106,7 @@
             <ul class="nav nav-tabs" id="tab_transaksi">
 				<li class="active"><a href="#tab_grid" data-toggle="tab">Grid</a></li>
 				<li><a href="#tab_form" data-toggle="tab" onclick="tambah_ubah_mode()" >Tambah</a></li>
+				<li><a href="#tab_tutup" data-toggle="tab" >Tutup PO</a></li>
 				<li class="pull-right" style="width:250px">
                 	<div class="input-group " >
                 	 <div class="input-group-addon">
@@ -425,6 +426,58 @@
                 </div>
                 <!-- /.tab-pane -->
             </div>
+            <div class="tab-pane" id="tab_tutup">
+                    <div class="box-body row" >
+                        <div class="col-md-6">
+                            <h3 style="font-weight:bold;">Pilih Barang</h3>
+                            <table id="dataGridBarangTutup" class="table table-bordered table-striped table-hover display nowrap" >
+                                <!-- class="table-hover"> -->
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Kode</th>
+                                    <th>Barang</th>
+                                    <th width="18px"></th>
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h3 style="font-weight:bold;">PO yang masih berjalan 
+                            <button type="button" onclick="before_tutup_po()"  class="btn btn-primary btn-flat" style="float:right;">Tutup PO</button>
+                            </h3>
+                            <table id="dataGridPOTutup" class="table table-bordered table-striped table-hover display nowrap" >
+                                <!-- class="table-hover"> -->
+                                <thead>
+                                <tr>
+                                    <th  width="18px"></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th width="100px">Kode PO</th>
+                                    <th width="100px">Tgl Trans</th>
+                                    <th width="50px">Sisa</th>
+                                    <th>Catatan</th>
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+					<!--MODAL BATAL-->
+					<div class="modal fade" id="modal-alasan-tutup">
+						<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-body">
+								<label id="KETERANGAN_TUTUP"></label>
+								<textarea class="form-control" id="ALASANTUTUP" name="ALASANTUTUP" placeholder="Alasan Tutup PO"></textarea> 
+								<br>
+								<button class="btn btn-danger pull-right" id="btn_tutup" onclick="tutup_po()">Tutup PO</button>
+								<br>
+								<br>
+							</div>
+						</div>
+						</div>
+					</div>
+                </div>
             <!-- /.tab-content -->
         </div>
         <!-- nav-tabs-custom -->
@@ -781,6 +834,80 @@ $(document).ready(function(){
 	});
 	
 	countdetail = 0;
+	
+	
+	//GRID BARANG
+	$('#dataGridBarangTutup').DataTable({
+       'pageLength'  : 25,
+        'paging'      : true,
+        'lengthChange': true,
+        'searching'   : true,
+        'ordering'    : true,
+        'info'        : true,
+        'autoWidth'   : false,
+    	"scrollX"	  : true,
+		ajax		  : {
+			url    : base_url+'Master/Data/Barang/getAll',
+			dataSrc: "rows",
+			type   : "POST",
+		},
+        columns:[
+            { data: 'IDBARANG',visible: false,},	
+            { data: 'KODEBARANG', className:"text-center"},	
+            { data: 'NAMABARANG'},
+            { data: '' },    
+        ],
+		columnDefs: [ 
+			{
+                "targets": -1,
+                "data": null,
+                "defaultContent": "<button id='btn_lihat' class='btn btn-warning'><i class='fa fa-arrow-right'></i></button>"	
+			},
+		]
+    });
+	
+	//DAPATKAN INDEX
+	var table = $('#dataGridBarangTutup').DataTable();
+	$('#dataGridBarangTutup tbody').on( 'click', 'button', function () {
+		var row = table.row( $(this).parents('tr') ).data();
+		var mode = $(this).attr("id");
+		
+		if(mode == "btn_lihat"){ lihat_po(row);}
+
+	});
+	
+	//GRID PO
+	$('#dataGridPOTutup').DataTable({
+       'pageLength'  : 25,
+        'paging'      : true,
+        'lengthChange': true,
+        'searching'   : true,
+        'ordering'    : true,
+        'info'        : true,
+        'autoWidth'   : false,
+    	"scrollX"	  : true,
+		ajax		  : {
+			url    : base_url+'Inventori/Transaksi/PesananPembelian/checkPOBelumTutup/0',
+			dataSrc: "rows",
+			type   : "POST",
+		},
+        columns:[
+            { data: '' },    
+            { data: 'IDPO',visible: false,},
+            { data: 'IDBARANG',visible: false,},	
+            { data: 'KODEPO', className:"text-center"},	
+            { data: 'TGLTRANS', className:"text-center"},
+            { data: 'SISA', className:"text-center"},
+            { data: 'CATATAN'},
+        ],
+		columnDefs: [ 
+			{
+                "targets": 0,
+                "data": null,
+                "defaultContent": "<input class='pilihPO' type='checkbox'>"	
+			},
+		]
+    });
 });
 
 
@@ -790,6 +917,7 @@ function hotkey(e){
 		$("#INPUTBARCODE").focus();
 	}
 }
+
 //MENAMPILKAN TRANSAKSI
 $("#cb_trans_status").change(function(event){
 
@@ -808,6 +936,82 @@ $("#cb_trans_status").change(function(event){
 	$("#dataGrid").DataTable().ajax.reload();
 	
 });
+
+function lihat_po(row){
+    var table = $('#dataGridPOTutup').DataTable();
+    table.ajax.url(base_url+'Inventori/Transaksi/PesananPembelian/checkPOBelumTutup/'+row.IDBARANG);
+    table.ajax.reload();
+}
+
+function before_tutup_po(){
+	$('#ALASANTUTUP').val("");
+	$("#modal-alasan-tutup").modal('show');
+	$("#KETERANGAN_TUTUP").html("Apa anda yakin akan menutup PO atas barang ini ?");
+}
+
+function tutup_po(){
+	$("#modal-alasan-tutup").modal('hide');
+	alasan = $('#ALASANTUTUP').val();
+	var dataTutupPO = [];
+    $("#dataGridPOTutup").DataTable().rows().every(function () {
+        var $rowNode = $(this.node());
+        var checkbox = $rowNode.find('.pilihPO');
+        if(checkbox.prop('checked')){
+            dataTutupPO.push(
+                {
+                    'IDPO' : this.data().IDPO,
+                    'IDBARANG' : this.data().IDBARANG,
+                    'ALASAN' : alasan
+                }
+            )
+        }
+    });
+	
+	if (dataTutupPO.length > 0  && alasan != "") {
+		$.ajax({
+			type    : 'POST',
+			dataType: 'json',
+			url     : base_url+"Inventori/Transaksi/PesananPembelian/tutupPO",
+			data    : "dataTutupPO="+JSON.stringify(dataTutupPO),
+			cache   : false,
+			success : function(msg){
+				if (msg.success) {
+					Swal.fire({
+						title            : 'PO Ditutup',
+						type             : 'success',
+						showConfirmButton: false,
+						timer            : 1500
+					});
+					$("#dataGridBarangTutup").DataTable().ajax.reload();
+					$("#dataGridPOTutup").DataTable().ajax.reload();
+					
+				} else {
+						Swal.fire({
+							title            : 'Error',
+							text             : msg.errorMsg,
+							type             : 'error',
+							showConfirmButton: false,
+							timer            : 1500
+						});
+				}
+			}
+		});
+	} else if(alasan == ""){
+		Swal.fire({
+			title            : 'Alasan Harus Diisi',
+			type             : 'error',
+			showConfirmButton: false,
+			timer            : 1500
+		});
+	}
+	else {
+	   	Swal.fire({
+			title            : 'Tidak ada data PO Harus yang dipilih',
+			showConfirmButton: false,
+			timer            : 1500
+		}); 
+	}
+}
 
 function getStatus(){
 	return $("#status").val();

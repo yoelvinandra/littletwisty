@@ -102,6 +102,14 @@ class Barang extends MY_Controller {
 		$response = $this->model_master_barang->getLastPerkiraan();
 		echo json_encode($response);
 	}
+	
+	public function getAll() {
+		$this->output->set_content_type('application/json');
+
+		$row['rows']   = $this->model_master_barang->getAll();
+		$row['count'] = count($row['rows']);
+		echo json_encode($row);
+	}
 
 	public function getStok() {
 		$this->output->set_content_type('application/json');

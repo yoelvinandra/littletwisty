@@ -4,7 +4,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Model_master_barang extends MY_Model{
 
 	public function getAll(){
-		$data = $this->db->query("select * from MBARANG and IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} ");
+		$data = $this->db->query("select * from MBARANG 
+		                      where IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} 	
+		                      order by SUBSTRING(URUTANTAMPIL, 1, 1) ASC ,
+    	                         CAST(SUBSTRING(URUTANTAMPIL, 2) AS UNSIGNED) ASC");
 		return $data->result();
 	}
 	

@@ -582,6 +582,7 @@ if ($tampil=='POSISISTOKLOKASI'){ // MENAMPILKAN DATA POSISI STOK
                       inner join tpodtlbrg on tpo.idpo = tpodtlbrg.idpo
                       where tpo.IDPERUSAHAAN = '{$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}'
                       and tpo.status in ('I','S','C') and tpo.idlokasi in ({$rLokasi->IDLOKASI})
+                      and tpodtlbrg.tutup = 0
                       group by tpodtlbrg.idbarang
                       ";
             $dataPO= $CI->db->query($sqlPO)->result();

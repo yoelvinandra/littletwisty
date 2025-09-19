@@ -508,5 +508,53 @@ class Model_inventori_pesananbeli extends MY_Model{
 		$query         = $this->db->query($sql)->result();
 		return $query;
 	}
+	
+	function checkPOBelumTutup($idbarang){
+		$sql = "select a.IDPO, a.IDBARANG, a.KODEPO, b.TGLTRANS, CAST(a.SISA AS SIGNED) as SISA,b.CATATAN
+				from TPODTLBRG a
+				inner join TPO b on a.IDPO = b.IDPO
+				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and a.IDBARANG = $idbarang and a.SISA != 0 and a.TUTUP = 0 and b.STATUS != 'D'
+				order by b.TGLTRANS DESC";
+		$query         = $this->db->query($sql)->result();
+		return $query;
+	}
+	
+	function tutupPO($data){
+		$this->db->trans_begin();
+		/*
+		//HAPUS KARTUSTOK//
+		$kodetrans = $this->db->select('KODEPO')
+						->where('IDPO',$idtrans)
+						->where('IDPERUSAHAAN',$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'])
+						->get('TPO')->row()->KODEPO;
+		$approve = 0;
+		$exe = hapus_kartu_stok($kodetrans,$approve);	
+		if($exe != ''){
+			$this->db->trans_rollback();
+			return $exe;
+		}
+		//HAPUS KARTUSTOK//
+		*/
+		//kembalikan status menjadi 'I'
+		foreach($data as $item)
+		{
+    		$data = array (
+    			'TUTUP'=>'1',
+    			'ALASANTUTUP' => $item->ALASAN
+    		);
+    		
+    		$this->db->where("IDPO",$item->IDPO)
+    				 ->where('IDPERUSAHAAN',$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'])
+    				 ->where('IDBARANG',$item->IDBARANG);
+    		$this->db->update('TPODTLBRG',$data);
+    		if ($this->db->trans_status() === FALSE) { 
+    			$this->db->trans_rollback();
+    			return 'Data Transaksi Tidak Dapat Ditutup'; 
+    		}
+		}
+		
+		$this->db->trans_commit();
+		return '';
+	}
 }
 ?>
