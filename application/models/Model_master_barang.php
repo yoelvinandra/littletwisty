@@ -540,6 +540,7 @@ class Model_master_barang extends MY_Model{
     				$whereKategori
     				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
     		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC";
+    		
     		$query = $this->db->query($sql);
     		
     		$data['rows'] = $query->result();

@@ -175,13 +175,13 @@ class Barang extends MY_Controller {
 	
 	public function getDataVarian($kategori=""){
 		$this->output->set_content_type('application/json');
-		$response = $this->model_master_barang->getDataVarian(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",$kategori))));
+		$response = $this->model_master_barang->getDataVarian(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",str_replace("%C2%A0","%",$kategori)))));
 		echo json_encode($response);
 	}
 	
 	public function getDataInduk($kategori=""){
 		$this->output->set_content_type('application/json');
-		$response = $this->model_master_barang->getDataInduk(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",$kategori))));
+		$response = $this->model_master_barang->getDataInduk(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",str_replace("%C2%A0","%",$kategori)))));
 		echo json_encode($response);
 	}
 	
