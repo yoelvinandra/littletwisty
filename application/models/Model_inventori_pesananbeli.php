@@ -5,11 +5,11 @@ class Model_inventori_pesananbeli extends MY_Model{
 	
 	//param yang berhubungan dengan transaksi
 	public $param = array(
-		"id"       => "IDPR",
-		"kode"     => "KODEPR",
+		"id"       => "IDPO",
+		"kode"     => "KODEPO",
 		"idbarang" => "IDBARANG",
-		"table"    => "TPR",
-		"tabledtl" => "TPRDTL",
+		"table"    => "TPO",
+		"tabledtl" => "TPODTL",
 	);
 	
 	public function getAll(){
@@ -225,7 +225,7 @@ class Model_inventori_pesananbeli extends MY_Model{
 				from TPODTL a
 				left join MBARANG b on a.IDBARANG = b.IDBARANG
 				left join TPODTLBRG c on a.IDBARANG = c.IDBARANG and a.IDPO = c.IDPO
-				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereTrans and b.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and c.SISA > 0
+				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereTrans and b.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and c.SISA > 0 and C.TUTUP = 0
 				order by a.URUTAN";
 		$query         = $this->db->query($sql)->result();
 		return $query;
@@ -509,6 +509,15 @@ class Model_inventori_pesananbeli extends MY_Model{
 		return $query;
 	}
 	
+	function checkTutupPO($idpo,$idbarang){
+		$sql = "select a.TUTUP, a.ALASANTUTUP
+				from tpodtlbrg a
+				where a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and a.IDPO = $idpo  and a.IDBARANG = $idbarang and TUTUP = 1
+        ";
+		$query         = $this->db->query($sql)->row();
+		return $query;
+	}
+	
 	function checkPOBelumTutup($idbarang){
 		$sql = "select a.IDPO, a.IDBARANG, a.KODEPO, b.TGLTRANS, CAST(a.SISA AS SIGNED) as SISA,b.CATATAN
 				from TPODTLBRG a
@@ -551,6 +560,35 @@ class Model_inventori_pesananbeli extends MY_Model{
     			$this->db->trans_rollback();
     			return 'Data Transaksi Tidak Dapat Ditutup'; 
     		}
+    		
+    		if($item->IDPO != null)
+            {
+        		//cek all barang tpo done
+        		$sql = "select SISA,TUTUP
+        			    from TPODTLBRG
+        			    where IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and IDPO = ".$item->IDPO;
+        		$dataSisa = $this->db->query($sql)->result();
+        		
+        		$done = true;
+        		foreach($dataSisa as $itemSisa){
+        		    if($itemSisa->SISA != 0 && $itemSisa->TUTUP == 0)
+        		    {
+        		         $done = false;
+        		    }
+        		}
+        		
+        		if($done)
+        		{
+        			tutup_all_trans($this->param,$item->IDPO,true);	
+        		}
+        		else
+        		{
+        		    $this->db->set('STATUS','C')
+        				->where('IDPO',$item->IDPO)
+        				->where('IDPERUSAHAAN',$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'])
+        				->update('TPO');
+        		}
+            }
 		}
 		
 		$this->db->trans_commit();

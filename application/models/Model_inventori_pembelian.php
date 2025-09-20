@@ -406,14 +406,14 @@ class Model_inventori_pembelian extends MY_Model{
     		// }	
     		
     		//cek all barang tpo done
-    		$sql = "select SISA
+    		$sql = "select SISA,TUTUP
     			    from TPODTLBRG
     			    where IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and IDPO = ".$query[0]->IDPO;
     		$dataSisa = $this->db->query($sql)->result();
     		
     		$done = true;
     		foreach($dataSisa as $itemSisa){
-    		    if($itemSisa->SISA != 0)
+    		    if($itemSisa->SISA != 0 && $itemSisa->TUTUP == 0)
     		    {
     		         $done = false;
     		    }

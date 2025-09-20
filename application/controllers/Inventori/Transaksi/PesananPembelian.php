@@ -119,6 +119,16 @@ class PesananPembelian extends MY_Controller {
 		echo json_encode($response);
 	}
 	
+	public function checkTutupPO(){
+		$this->output->set_content_type('application/json');
+		$idpo = $this->input->post('idpo');
+		$idbarang = $this->input->post('idbarang');
+		
+		$response = $this->model_inventori_pesananbeli->checkTutupPO($idpo,$idbarang);
+
+		echo json_encode($response);
+	}
+	
 	public function loadDetailSisa(){
 		$this->output->set_content_type('application/json');
 		$id = $this->input->post('id');

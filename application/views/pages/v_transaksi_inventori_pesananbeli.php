@@ -414,6 +414,9 @@
 												        <th style="color:red;">Sisa</th>
 												        <th style="color:red; text-align:center;" id="SISA">0</th>
 												    </tr>
+												    <tr>
+												        <th style="color:black;" colspan="2"  id="ALASAN"></th>
+												    </tr>
 												</tfoot>
 											</table>
 										</div>
@@ -867,9 +870,9 @@ $(document).ready(function(){
     });
 	
 	//DAPATKAN INDEX
-	var table = $('#dataGridBarangTutup').DataTable();
+	var tableTutup = $('#dataGridBarangTutup').DataTable();
 	$('#dataGridBarangTutup tbody').on( 'click', 'button', function () {
-		var row = table.row( $(this).parents('tr') ).data();
+		var row = tableTutup.row( $(this).parents('tr') ).data();
 		var mode = $(this).attr("id");
 		
 		if(mode == "btn_lihat"){ lihat_po(row);}
@@ -1044,6 +1047,21 @@ function cekSisa(index){
     		$("#TERPENUHI").html(terpenuhi);
     		$("#JMLPO").html(po);
     		$("#SISA").html(parseFloat(po) - parseFloat(terpenuhi));
+    		
+    		 $.ajax({
+        		type    : 'POST',
+        		url     : base_url+'Inventori/Transaksi/PesananPembelian/checkTutupPO',
+        		data    : {idpo:$("#IDTRANS").val(),idbarang:$("#ID"+index).html()},
+        		dataType: 'json',
+        		success : function(msg){
+        		    $("#ALASAN").html('');
+        		    if(msg.TUTUP == 1 )
+        		    {
+        		        $("#ALASAN").html("PO DITUTUP : "+msg.ALASANTUTUP);
+        		    }
+        		    
+        	    }
+        	});
 		    
 	    }
 	});
