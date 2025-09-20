@@ -583,10 +583,11 @@ class Model_inventori_pesananbeli extends MY_Model{
         		}
         		else
         		{
-        		    $this->db->set('STATUS','C')
-        				->where('IDPO',$item->IDPO)
-        				->where('IDPERUSAHAAN',$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'])
-        				->update('TPO');
+        		  //KHUSUS TUTUP PO, STATUSNYA BIARKAN SAJA
+        		  //  $this->db->set('STATUS','C')
+        				// ->where('IDPO',$item->IDPO)
+        				// ->where('IDPERUSAHAAN',$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'])
+        				// ->update('TPO');
         		}
             }
 		}

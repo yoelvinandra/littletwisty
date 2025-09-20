@@ -512,6 +512,8 @@ class Model_inventori_pembelian extends MY_Model{
                 //update terpenuhi karena pasti 1TO1
                 $this->db->set('TERPENUHI',$item->TERPENUHIPO - $item->JML)
                             ->set('SISA',$item->SISAPO + $item->JML)
+                            ->set('TUTUP',0)
+                            ->set('ALASANTUTUP','')
                             ->where('IDPO',$item->IDPO)
                             ->where('IDBARANG',$item->IDBARANG)
                             ->where('IDPERUSAHAAN',$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'])
