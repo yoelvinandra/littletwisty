@@ -112,6 +112,7 @@ if ($tampil=='POSISISTOK'){
 <body>
 <?php
 $totalBarang   = 0;
+$totalPOBarang   = 0;
 
 
 if ($tampil=='POSISISTOKLOKASI'){ // MENAMPILKAN DATA POSISI STOK
@@ -612,6 +613,7 @@ if ($tampil=='POSISISTOKLOKASI'){ // MENAMPILKAN DATA POSISI STOK
                         if($idbarang == $itemPO->IDBARANG && $itemPO->JMLPO != 0)
                         {
                             $jmlPO = "<span style='float:right;'><table><tr><td bgcolor='#90EE90' align='center'>+".number($itemPO->JMLPO,true,$_SESSION[NAMAPROGRAM]['DECIMALDIGITQTY'])."</td></tr></table></span>";
+                            $totalPOBarang += $itemPO->JMLPO;
                         }
                     }
                     
@@ -720,7 +722,7 @@ if ($tampil=='POSISISTOKLOKASI'){ // MENAMPILKAN DATA POSISI STOK
 ?>
 </div>
 <script>
-    document.getElementById("TOTALBARANG").innerHTML = "Total Barang : "+ '<?php echo $totalBarang ; ?>';
+    document.getElementById("TOTALBARANG").innerHTML = "Total Barang : "+ '<?php echo $totalBarang; ?>'+" <span style='background:#90EE90;'>+"+ '<?php echo $totalPOBarang; ?>'+"</span>";
 </script>
 <?php
 
