@@ -322,7 +322,7 @@
                                                                 <!--<button type="button" style="margin-bottom:-50px;" id="btn_tambah_varian" onclick="tambah()" class="btn btn-success btn-flat" data-toggle="modal" data-target="#modal-varian"data-id="7">Tambah Varian</button> &nbsp;&nbsp;&nbsp;&nbsp;-->
                                                                 <button type="button" style="margin-bottom:-50px; margin-top:10px;" id="btn_set_varian" onclick="tambahMassal()" class="btn btn-success btn-flat pull-left" data-toggle="modal" data-target="#modal-set-varian"data-id="7">Tambah Varian</button>
                                                                 <!--<div style="font-style:italic; margin-left:130px; margin-top:17px;">*Geser keatas atau kebawah, dan simpan untuk merubah urutan varian</div>-->
-                                                                <div style="margin-top:-57px;">
+                                                                <div style="margin-top:10px;padding-bottom:10px; width:100%; overflow-x:scroll;">
                                                                     <table id="dataGridVarian" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                                                         <!-- class="table-hover"> -->
                                                                         <thead>
@@ -1055,7 +1055,7 @@ $(document).ready(function() {
             'ordering'    : false,
             'info'        : true,
             'autoWidth'   : false,
-    		"scrollX"	  : true,
+    		"scrollX"	  : false,
     		ajax		  : {
     			url    : base_url+'Master/Data/Barang/getDataVarian',
     			dataSrc: "rows",

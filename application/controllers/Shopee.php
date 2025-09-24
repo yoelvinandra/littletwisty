@@ -252,6 +252,7 @@ class Shopee extends MY_Controller {
 		$statusParam = "";
 		$data["msg"] = "TIDAK ADA IDBARANGSHOPEE YANG DIUPDATE";
 		$data["total"] = 0;
+		$data['barang'] = [];
 		$offset = 0;
 		$pageSize = 100;
 		for($x = 0 ;$x < count($status); $x++)
@@ -345,6 +346,13 @@ class Shopee extends MY_Controller {
                             $CI->db->query($sql);
                             echo $sql." ;";
                             echo "\n";
+                        //   array_push($data['barang'],array(
+                        //       'ITEMID' => $idbarang[$x]['item_id'],
+                        //       'ITEM' =>  $idbarang[$x]['item_name'],
+                        //       'MODELID' => $dataModel[$m]['model_id'],
+                        //       'MODEL' => $dataModel[$m]['model_name'],
+                        //       'SKU' => $sku
+                        //     ));
                            $data["total"]++;
                            $data["msg"] = "IDBARANGSHOPEE BERHASIL DIUPDATE";
                         }
@@ -1691,7 +1699,7 @@ class Shopee extends MY_Controller {
 		$parameter = [];
 		$parameter['original_price']    = count($dataVarian) > 0 ?(int)$dataVarian[0]->HARGAJUAL:(int)$hargaInduk;
 		$parameter['description']       = $this->input->post("DESKRIPSI");
-		$parameter['weight']            = (float)$this->input->post("BERAT");
+		$parameter['weight']            = ((float)$this->input->post("BERAT")/1000);
 		$parameter['item_name']         = $this->input->post("NAMA");
 		$parameter['item_status']       = ($this->input->post("UNLISTED") == 1 ? "UNLIST" : "NORMAL");
 		$parameter['dimension'] = array(
@@ -1855,7 +1863,7 @@ class Shopee extends MY_Controller {
                                    'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
                                    // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
                                    'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                                   'weight'            => (float)$this->input->post("BERAT"),
+                                   'weight'            => ((float)$this->input->post("BERAT")/1000),
                                    'dimension'         => array(
                                        'package_height' => (int)$this->input->post("TINGGI"),
                                        'package_width'  => (int)$this->input->post("LEBAR"),
@@ -1893,7 +1901,7 @@ class Shopee extends MY_Controller {
                             'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
                             // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
                             'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                            'weight'            => (float)$this->input->post("BERAT"),
+                            'weight'            => ((float)$this->input->post("BERAT")/1000),
                             'dimension'         => array(
                                 'package_height' => (int)$this->input->post("TINGGI"),
                                 'package_width'  => (int)$this->input->post("LEBAR"),
