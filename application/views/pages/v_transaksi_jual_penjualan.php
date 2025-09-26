@@ -740,7 +740,7 @@ $(document).ready(function(){
 			{
                 "targets": 0,
                 "data": null,
-                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash'></i></button> <button id='btn_cetak' class='btn btn-warning'><i class='fa fa-print' ></i></button>"	
+                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash'></i></button> <button id='btn_cetak' class='btn btn-warning'><i class='fa fa-print' ></i></button>&nbsp;&nbsp;<button id='btn_cetak_pajak' class='btn' style='background:white; color:black'><i class='fa fa-print' ></i></button>"	
 			},
 		]
     });
@@ -753,7 +753,8 @@ $(document).ready(function(){
 		
 		if(mode == "btn_ubah"){ ubah(row);}
 		else if(mode == "btn_hapus"){ before_batal(row);}
-		else if(mode == "btn_cetak"){ cetak(row);}
+		else if(mode == "btn_cetak"){ cetak(row,'NON');}
+		else if(mode == "btn_cetak_pajak"){ cetak(row,'PAJAK');}
 
 	} );
 	
@@ -1603,7 +1604,7 @@ function batal(){
 	}
 }
 
-function cetak(row){
+function cetak(row,type){
 	get_akses_user('<?=$kodemenu?>', function(data){
 		if (data.CETAK==1) {
 			get_status_trans("Penjualan/Transaksi/Penjualan",row.IDPENJUALAN, function(data){
@@ -1617,7 +1618,14 @@ function cetak(row){
 						success : function(msg){
 							if (msg.success) {
 								$("#dataGrid").DataTable().ajax.reload();
-								window.open(base_url+"Penjualan/Transaksi/Penjualan/cetak/"+row.IDPENJUALAN, '_blank');
+								if(type='PAJAK')
+								{
+								    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakPajak/"+row.IDPENJUALAN, '_blank');
+								}
+								else
+								{
+								    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetak/"+row.IDPENJUALAN, '_blank');
+								}
 							} else {
 								Swal.fire({
 									title            : msg.errorMsg,
@@ -1630,7 +1638,14 @@ function cetak(row){
 					});
 				}
 				else if(data.status != 'D'){
-					window.open(base_url+"Penjualan/Transaksi/Penjualan/cetak/"+row.IDPENJUALAN, '_blank');
+					if(type='PAJAK')
+					{
+					    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakPajak/"+row.IDPENJUALAN, '_blank');
+					}
+					else
+					{
+					    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetak/"+row.IDPENJUALAN, '_blank');
+					}
 				}
 				else
 				{

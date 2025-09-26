@@ -348,6 +348,13 @@ class Penjualan extends MY_Controller {
 		//$data['namasubcustomer'] = $namaSubcustomer;
 		$this->load->view('reports/v_faktur_jual_penjualan.php', $data);
 	}
+	
+	function cetakPajak($idTrans){
+		$data['idtrans'] = $idTrans;
+		$data['cetakNPWP'] = "yes";
+		//$data['namasubcustomer'] = $namaSubcustomer;
+		$this->load->view('reports/v_faktur_jual_penjualan_pajak.php', $data);
+	}
 
 	function cetakNoNPWP($idTrans){
 		$data['idtrans'] = $idTrans;
