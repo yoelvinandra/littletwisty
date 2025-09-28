@@ -2005,7 +2005,7 @@ $("#cb_alasan_sengketa_shopee").change(function(){
                     if (file.size > maxSizeMB * 1024 * 1024) {
                         fileInput.value = '';
                       Swal.fire({
-                        title: 'Ukuran gambar melebihi 10MB',
+                        title: 'Ukuran gambar melebihi 10 MB',
                         icon: 'warning',
                         showConfirmButton: false,
                         timer: 2000

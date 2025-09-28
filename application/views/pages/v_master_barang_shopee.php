@@ -1141,11 +1141,11 @@ $(document).ready(function() {
                              return;
                            }
                        
-                           const maxSizeMB = 10;
+                           const maxSizeMB = 1;
                            if (file.size > maxSizeMB * 1024 * 1024) {
                                fileInput.value = '';
                              Swal.fire({
-                               title: 'Ukuran gambar melebihi 10MB',
+                               title: 'Ukuran gambar melebihi 1 MB',
                                icon: 'warning',
                                showConfirmButton: false,
                                timer: 2000
@@ -2225,11 +2225,11 @@ $("#KATEGORISHOPEE").change(function(){
                       return;
                     }
                 
-                    const maxSizeMB = 10;
+                    const maxSizeMB = 1;
                     if (file.size > maxSizeMB * 1024 * 1024) {
                         fileInput.value = '';
                       Swal.fire({
-                        title: 'Ukuran gambar melebihi 10MB',
+                        title: 'Ukuran gambar melebihi 1 MB',
                         icon: 'warning',
                         showConfirmButton: false,
                         timer: 2000
@@ -2782,11 +2782,11 @@ function setGambarProduk(){
               return;
             }
         
-            const maxSizeMB = 10;
+            const maxSizeMB = 1;
             if (file.size > maxSizeMB * 1024 * 1024) {
                 fileInput.value = '';
               Swal.fire({
-                title: 'Ukuran gambar melebihi 10MB',
+                title: 'Ukuran gambar melebihi 1 MB',
                 icon: 'warning',
                 showConfirmButton: false,
                 timer: 2000

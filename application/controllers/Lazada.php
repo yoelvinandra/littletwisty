@@ -1,67 +1,83 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-class Shopee extends MY_Controller {
+class Lazada extends MY_Controller {
 	public function index()
 	{
 	    echo "
-	         <b>Tutorial Cara Menggunakan Shopee API</b>
+	         <b>Tutorial Cara Menggunakan Lazada API</b>
 	         <br><br>
-	         1. Masuk ke Shopee Console, masukkan data-data ini ke database :<br>
-	         - Live Partner ID <br>
-	         - Live Partner Key (Detail App List)
+	         1. Masuk ke Lazada Console, masukkan data-data ini ke database :<br>
+	         - App Key <br>
+	         - App Secret
 	         <br><br>
 	         2. Buat link auth yang akan diinput, ketika klik Authorize (Console -> App List)<br>
-	            Caranya : akses ".$this->config->item('base_url')."/Shopee/getAuth?
+	            Caranya : akses ".$this->config->item('base_url')."/Lazada/getAuth?
 	         <br><br>
 	         3. Lanjutkan Proses hingga di url browser, muncul Code dan Shop ID masukkan data-data ini ke database
 	         <br><br>
 	         4. Dapatkan akses token untuk Akses API<br>
-	            Caranya : akses ".$this->config->item('base_url')."/Shopee/getToken?
+	            Caranya : akses ".$this->config->item('base_url')."/Lazada/getToken?
 	        <br><br> 
 	         5. Masukkan akses token kedalam database
 	         <br><br>
-	         6. ketika menggunakan API, gunakan controller Shopee/getAPI atau Shopee/postAPI, dan masukkan pathnya kesana.
+	         6. ketika menggunakan API, gunakan controller Lazada/getAPI atau Lazada/postAPI, dan masukkan pathnya kesana.
 	         ";
 	}
 	
 	public function getAuth()
 	{
-	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
+	    $appkey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+        $host = "https://auth.lazada.com";
+        $path = "/oauth/authorize";
+        $redirectUrl =  "https://".$_SERVER['SERVER_NAME'] .str_replace('getAuth?','setCode?',$_SERVER['REQUEST_URI']);
 
-        $host = "https://partner.shopeemobile.com";
-        $path = "/api/v2/shop/auth_partner";
-        $redirectUrl = "https://".$_SERVER['SERVER_NAME'] . str_replace('getAuth?','setCodeandShop?',$_SERVER['REQUEST_URI']);
-     
-        $timest = time();
-        $baseString = sprintf("%s%s%s", $partnerId, $path, $timest);
-        $sign = hash_hmac('sha256', $baseString, $partnerKey);
-        $url = sprintf("%s%s?partner_id=%s&time[SAMBUNG]stamp=%s&sign=%s&redirect=%s", $host, $path, $partnerId, $timest, $sign, $redirectUrl);
-        echo "Authorize Link : ".($url)."<br><br>Hapus [SAMBUNG]";
+        $url = sprintf("%s%s?response_type=code&force_auth=true&redirect_uri=%s&client_id=%s", $host, $path, urlencode($redirectUrl),$appkey);
+        echo "Authorize Link : ".$url."&country=id";
 	}
 	
-	public function setCodeandShop(){
-	    $this->model_master_config->setConfigMarketplace('SHOPEE','CODE',$this->input->get("code"));
-        $this->model_master_config->setConfigMarketplace('SHOPEE','SHOP_ID',$this->input->get("shop_id"));
-        echo "Code dan Shop ID berhasil disimpan didatabase<br><br>akses https://".$_SERVER['SERVER_NAME'] . str_replace("setCodeandShop?code=".$this->input->get("code")."&shop_id=".$this->input->get("shop_id"),"getToken?",$_SERVER['REQUEST_URI']);
+	public function setCode(){
+	    $this->model_master_config->setConfigMarketplace('LAZADA','CODE',$this->input->get("code"));
+        echo "Code berhasil disimpan didatabase<br><br>akses https://".$_SERVER['SERVER_NAME'] . str_replace("setCode?=&code=".$this->input->get("code"),"getToken?",$_SERVER['REQUEST_URI']);
 	}
 	
 	public function getToken()
 	{
-	    $code = $this->model_master_config->getConfigMarketplace('SHOPEE','CODE');
-	    $shopId = $this->model_master_config->getConfigMarketplace('SHOPEE','SHOP_ID');
-	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
+	    $code = $this->model_master_config->getConfigMarketplace('LAZADA','CODE');
+	    $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
+	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
         
-        $host = 'https://partner.shopeemobile.com';
-        $path = "/api/v2/auth/token/get";
+        $host = 'https://auth.lazada.com/rest';
+        $path = "/auth/token/create";
         
-        $timest = time();
-        $body = array("code" => $code,  "shop_id" => (int)$shopId, "partner_id" => (int)$partnerId);
-        $baseString = sprintf("%s%s%s", $partnerId, $path, $timest);
-        $sign = hash_hmac('sha256', $baseString, $partnerKey);
-        $url = sprintf("%s%s?partner_id=%s&timestamp=%s&sign=%s", $host, $path, $partnerId, $timest, $sign);
-    
+        //STEP 1
+        // Current UTC time
+        $datetime = new DateTime('now', new DateTimeZone('UTC'));
+        
+        // Get Unix timestamp in seconds
+        $timestampSeconds = $datetime->getTimestamp();
+        
+        // Convert to milliseconds
+        $timest = $timestampSeconds * 1000;
+
+        $signMethod = 'sha256';
+        $body = array("code" => $code,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); //"access_token" => $accessToken, "uuid" => ""
+        uksort($body, function($a, $b) {
+            return strcmp($a, $b);
+        });
+        
+        //STEP 2
+        $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+
+        //STEP 3
+        $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $path, $paramString)));
+        
+        //STEP 4 & 5
+        $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
+        
+        $body['sign'] = $sign;
+        
+        $url = $host.$path;
         $c = curl_init($url);
         curl_setopt($c, CURLOPT_POST, 1);
         curl_setopt($c, CURLOPT_POSTFIELDS, json_encode($body));
@@ -72,7 +88,7 @@ class Shopee extends MY_Controller {
 
         if($ret['error'] != "")
         {
-           echo $ret['error']." : ".$ret['message'];
+          echo $ret['error']." : ".$ret['message'];
         }
         else
         {
@@ -81,8 +97,8 @@ class Shopee extends MY_Controller {
             
             if($accessToken != null && $newRefreshToken != null )
             {
-                $this->model_master_config->setConfigMarketplace('SHOPEE','ACCESS_TOKEN',$accessToken);
-                $this->model_master_config->setConfigMarketplace('SHOPEE','REFRESH_TOKEN',$newRefreshToken);
+                $this->model_master_config->setConfigMarketplace('LAZADA','ACCESS_TOKEN',$accessToken);
+                $this->model_master_config->setConfigMarketplace('LAZADA','REFRESH_TOKEN',$newRefreshToken);
             }
             
             echo "Access Token : ".($accessToken)."<br>Refresh Token : ".($newRefreshToken)."<br><br>Berhasil disimpan di database";
@@ -92,36 +108,53 @@ class Shopee extends MY_Controller {
 	
 	public function getRefreshToken(){
 	    
-	    $refreshToken = $this->model_master_config->getConfigMarketplace('SHOPEE','REFRESH_TOKEN');
-	    $shopId = $this->model_master_config->getConfigMarketplace('SHOPEE','SHOP_ID');
-	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
+	    $refreshToken = $this->model_master_config->getConfigMarketplace('LAZADA','REFRESH_TOKEN');
+	    $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
+	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
         
-	    
-        $host = 'https://partner.shopeemobile.com';
-        $path = "/api/v2/auth/access_token/get";
+        $host = 'https://auth.lazada.com/rest';
+        $path = "/auth/token/refresh";
         
-        $timest = time();
-        $body = array("partner_id" => (int)$partnerId, "shop_id" => (int)$shopId, "refresh_token" => $refreshToken);
-        $baseString = sprintf("%s%s%s", $partnerId, $path, $timest);
-        $sign = hash_hmac('sha256', $baseString, $partnerKey);
-        $url = sprintf("%s%s?partner_id=%s&timestamp=%s&sign=%s", $host, $path, $partnerId, $timest, $sign);
-    
-    
+        //STEP 1
+        // Current UTC time
+        $datetime = new DateTime('now', new DateTimeZone('UTC'));
+        
+        // Get Unix timestamp in seconds
+        $timestampSeconds = $datetime->getTimestamp();
+        
+        // Convert to milliseconds
+        $timest = $timestampSeconds * 1000;
+
+        $signMethod = 'sha256';
+        $body = array("refresh_token" => $refreshToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); //"access_token" => $accessToken, "uuid" => ""
+        uksort($body, function($a, $b) {
+            return strcmp($a, $b);
+        });
+        
+        //STEP 2
+        $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+
+        //STEP 3
+        $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $path, $paramString)));
+        
+        //STEP 4 & 5
+        $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
+        
+        $body['sign'] = $sign;
+        
+        $url = $host.$path;
         $c = curl_init($url);
         curl_setopt($c, CURLOPT_POST, 1);
         curl_setopt($c, CURLOPT_POSTFIELDS, json_encode($body));
         curl_setopt($c, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-    
-        $result = curl_exec($c);
-    
-        $ret = json_decode($result, true);
-    
+        $resp = curl_exec($c);
+        $ret = json_decode($resp, true);
+
         if($ret['error'] != "")
         {
-        //   echo $ret['error']." : ".$ret['message'];
-           return 'false';
+          echo $ret['error']." : ".$ret['message'];
         }
         else
         {
@@ -130,15 +163,13 @@ class Shopee extends MY_Controller {
             
             if($accessToken != null && $newRefreshToken != null )
             {
-                $this->model_master_config->setConfigMarketplace('SHOPEE','ACCESS_TOKEN',$accessToken);
-                $this->model_master_config->setConfigMarketplace('SHOPEE','REFRESH_TOKEN',$newRefreshToken);
+                $this->model_master_config->setConfigMarketplace('LAZADA','ACCESS_TOKEN',$accessToken);
+                $this->model_master_config->setConfigMarketplace('LAZADA','REFRESH_TOKEN',$newRefreshToken);
             }
             
             // echo "Access Token : ".($accessToken)."<br>Refresh Token : ".($newRefreshToken)."<br><br>Berhasil disimpan di database";
             return 'true';
         }
-        
-
 	}
 	
 	public function getAPI()
@@ -150,22 +181,54 @@ class Shopee extends MY_Controller {
     	    $endpoint = $this->input->post("endpoint");
     	    $parameter = $this->input->post("parameter");
     	    
-    	    $code = $this->model_master_config->getConfigMarketplace('SHOPEE','CODE');
-    	    $shopId = $this->model_master_config->getConfigMarketplace('SHOPEE','SHOP_ID');
-    	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-    	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
-    	    $accessToken = $this->model_master_config->getConfigMarketplace('SHOPEE','ACCESS_TOKEN');
+    	    $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+    	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
+    	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
     	    
-            $path = "/api/v2/";
+    	    // Current UTC time
+            $datetime = new DateTime('now', new DateTimeZone('UTC'));
             
-            $timest = time();
-            $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest.$accessToken.$shopId,$partnerKey);
+            // Get Unix timestamp in seconds
+            $timestampSeconds = $datetime->getTimestamp();
             
-            $host = 'https://partner.shopeemobile.com'.$path.$endpoint;
+            // Convert to milliseconds
+            $timest = $timestampSeconds * 1000;
+            
+            $signMethod = 'sha256';
+            
+            $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
+
+            $param = explode("&",$parameter);
+            foreach($param as $item)
+            {
+                $params = explode("=",$item);
+                if($params[0] != "")
+                {
+                    $body[$params[0]] = $params[1];
+                }
+            }
+            
+            
+            uksort($body, function($a, $b) {
+                return strcmp($a, $b);
+            });
+            
+            //STEP 2
+            $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+    
+            //STEP 3
+            $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
+
+            //STEP 4 & 5
+            $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
+            
+            $body['sign'] = $sign;
+            
+            $host = 'https://api.lazada.co.id/rest'.$endpoint;
             
             $curl = curl_init();
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $host.'?access_token='.$accessToken.'&timestamp='.$timest.'&sign='.$sign.'&shop_id='.$shopId.'&partner_id='.$partnerId.$parameter,
+              CURLOPT_URL => $host.'?app_key='.$appKey.'&timestamp='.$timest.'&access_token='.$accessToken.'&sign_method='.$signMethod.'&sign='.$sign.$parameter,
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -180,7 +243,7 @@ class Shopee extends MY_Controller {
             
             $response = curl_exec($curl);
             curl_close($curl);
-            echo $response;
+            print_r($response);
 	    }
 	    else
 	    {
@@ -200,28 +263,63 @@ class Shopee extends MY_Controller {
     	    $endpoint = $this->input->post("endpoint");
     	    $parameter = $this->input->post("parameter");
     	    
-    	    $code = $this->model_master_config->getConfigMarketplace('SHOPEE','CODE');
-    	    $shopId = $this->model_master_config->getConfigMarketplace('SHOPEE','SHOP_ID');
-    	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-    	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
-    	    $accessToken = $this->model_master_config->getConfigMarketplace('SHOPEE','ACCESS_TOKEN');
-            $path = "/api/v2/";
+    	    $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+    	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
+    	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
+    	    
+    	    // Current UTC time
+            $datetime = new DateTime('now', new DateTimeZone('UTC'));
             
-            $timest = time();
-            $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest.$accessToken.$shopId,$partnerKey);
+            // Get Unix timestamp in seconds
+            $timestampSeconds = $datetime->getTimestamp();
             
-            $host = 'https://partner.shopeemobile.com'.$path.$endpoint;
+            // Convert to milliseconds
+            $timest = $timestampSeconds * 1000;
+            
+            $signMethod = 'sha256';
+            
+            $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
+            
+            $param = explode("&",$parameter);
+            foreach($param as $item)
+            {
+                $params = explode("=",$item);
+                if($params[0] != "")
+                {
+                    $body[$params[0]] = $params[1];
+                }
+            }
+            
+            uksort($body, function($a, $b) {
+                return strcmp($a, $b);
+            });
+            
+            //STEP 2
+            $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+    
+            //STEP 3
+            $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
+
+            //STEP 4 & 5
+            $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
+            
+            $body['sign'] = $sign;
+            
+            $host = 'https://api.lazada.co.id/rest'.$endpoint;
             $curl = curl_init();
             
+            echo $host."<br><br>";
+            echo json_encode($body);
+            
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $host.'?access_token='.$accessToken.'&timestamp='.$timest.'&sign='.$sign.'&shop_id='.$shopId.'&partner_id='.$partnerId,
+              CURLOPT_URL => $host,
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
               CURLOPT_TIMEOUT => 0,
               CURLOPT_FOLLOWLOCATION => true,
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_POSTFIELDS => ($parameter),
+              CURLOPT_POSTFIELDS => json_encode($body),
               CURLOPT_CUSTOMREQUEST => 'POST',
               CURLOPT_HTTPHEADER => array(
                 'Content-Type: application/json',
@@ -243,16 +341,26 @@ class Shopee extends MY_Controller {
         
 	}
 	
+	public function arrayToXml($data, &$xmlData) {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $subnode = $xmlData->addChild("$key");
+                $this->arrayToXml($value, $subnode);
+            } else {
+                $xmlData->addChild("$key", htmlspecialchars("$value"));
+            }
+        }
+    }
+	
 	public function connectBarang(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');;
-		$status = ["NORMAL","BANNED","UNLIST","REVIEWING","SELLER_DELETE","SHOPEE_DELETE"];
+		$status = ["NORMAL","BANNED","UNLIST","REVIEWING","SELLER_DELETE","LAZADA_DELETE"];
 		$statusok = true;
 		$statusParam = "";
-		$data["msg"] = "TIDAK ADA IDBARANGSHOPEE YANG DIUPDATE";
+		$data["msg"] = "TIDAK ADA IDBARANGLAZADA YANG DIUPDATE";
 		$data["total"] = 0;
-		$data['barang'] = [];
 		$offset = 0;
 		$pageSize = 100;
 		for($x = 0 ;$x < count($status); $x++)
@@ -269,7 +377,7 @@ class Shopee extends MY_Controller {
 		    $parameter = "&offset=".$offset."&page_size=".$pageSize.$statusParam;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -305,7 +413,7 @@ class Shopee extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -342,19 +450,12 @@ class Shopee extends MY_Controller {
                                  $sku = $dataModel[$m]['model_sku'];
                             }
                             
-                            $sql = "UPDATE MBARANG SET IDBARANGSHOPEE = ".$dataModel[$m]['model_id'].", IDINDUKBARANGSHOPEE = ".$idbarang[$x]['item_id']." WHERE SKUSHOPEE = '".strtoupper($sku)."'";
+                            $sql = "UPDATE MBARANG SET IDBARANGLAZADA = ".$dataModel[$m]['model_id'].", IDINDUKBARANGLAZADA = ".$idbarang[$x]['item_id']." WHERE SKULAZADA = '".strtoupper($sku)."'";
                             $CI->db->query($sql);
                             echo $sql." ;";
                             echo "\n";
-                        //   array_push($data['barang'],array(
-                        //       'ITEMID' => $idbarang[$x]['item_id'],
-                        //       'ITEM' =>  $idbarang[$x]['item_name'],
-                        //       'MODELID' => $dataModel[$m]['model_id'],
-                        //       'MODEL' => $dataModel[$m]['model_name'],
-                        //       'SKU' => $sku
-                        //     ));
                            $data["total"]++;
-                           $data["msg"] = "IDBARANGSHOPEE BERHASIL DIUPDATE";
+                           $data["msg"] = "IDBARANGLAZADA BERHASIL DIUPDATE";
                         }
                     }
                 }
@@ -370,10 +471,10 @@ class Shopee extends MY_Controller {
 		$data     = json_decode($this->input->post('data_detail'));
 		$allcustomer = $this->input->post('allcustomer')??"false";
 		$varian = $this->input->post('varian')??"false";
-		$dataHargaBarang = [];
+		$dataBarangHarga = [];
 		
 	
-    	$sql = "SELECT IDCUSTOMER,KONSINYASI FROM MCUSTOMER WHERE KODECUSTOMER = 'XSHOPEE' ";
+    	$sql = "SELECT IDCUSTOMER,KONSINYASI FROM MCUSTOMER WHERE KODECUSTOMER = 'XLAZADA' ";
     	$IDCUSTOMER = $CI->db->query($sql)->row()->IDCUSTOMER;
     	$KONSINYASI = $CI->db->query($sql)->row()->KONSINYASI??0;
 		
@@ -381,7 +482,7 @@ class Shopee extends MY_Controller {
 		if($varian == "true")
 		{
     		$sql = "SELECT a.IDBARANG,a.KATEGORI,
-    		        a.IDBARANGSHOPEE, a.IDINDUKBARANGSHOPEE
+    		        a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA
     		        FROM MBARANG a";
     		$dataBarang = $CI->db->query($sql)->result();  
 		}
@@ -397,20 +498,20 @@ class Shopee extends MY_Controller {
     		        foreach($dataBarang as $itemBarang){
     		            if($itemBarang->IDBARANG == $item->idbarang)
     		            {
-    		                if($itemBarang->IDBARANGSHOPEE != 0 && $itemBarang->IDINDUKBARANGSHOPEE != 0)
+    		                if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
     		                {
-    		                    if($idbarang != $itemBarang->IDINDUKBARANGSHOPEE)
+    		                    if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
     		                    {
-    		                        $idbarang = $itemBarang->IDINDUKBARANGSHOPEE;
-    		                        array_push($dataHargaBarang, array(
-        		                        'item_id' => $itemBarang->IDINDUKBARANGSHOPEE,
+    		                        $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
+    		                        array_push($dataBarangHarga, array(
+        		                        'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
         		                        'model' => []
     		                        ));
     		                    }
     		                    
-    		                    if($itemBarang->IDBARANGSHOPEE == $itemBarang->IDINDUKBARANGSHOPEE)
+    		                    if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
     		                    {
-    		                        array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+    		                        array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
         		                    array(
         		                         'model_id'         => 0,
         		                         'original_price'   => $item->hargajualnew,
@@ -419,9 +520,9 @@ class Shopee extends MY_Controller {
     		                    }
     		                    else
     		                    {
-        		                    array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+        		                    array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
         		                    array(
-        		                         'model_id'         => $itemBarang->IDBARANGSHOPEE,
+        		                         'model_id'         => $itemBarang->IDBARANGLAZADA,
         		                         'original_price'   => $item->hargajualnew,
         		                         'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
         		                    ));
@@ -440,20 +541,20 @@ class Shopee extends MY_Controller {
     		   foreach($dataBarang as $itemBarang){
     		       if($itemBarang->IDBARANG == $item->idbarang)
     		       {
-    		           if($itemBarang->IDBARANGSHOPEE != 0 && $itemBarang->IDINDUKBARANGSHOPEE != 0)
+    		           if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
     		           {
-    		               if($idbarang != $itemBarang->IDINDUKBARANGSHOPEE)
+    		               if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
     		               {
-    		                   $idbarang = $itemBarang->IDINDUKBARANGSHOPEE;
-    		                   array_push($dataHargaBarang, array(
-        	                    'item_id' => $itemBarang->IDINDUKBARANGSHOPEE,
+    		                   $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
+    		                   array_push($dataBarangHarga, array(
+        	                    'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
         	                    'model' => []
     		                   ));
     		               }
     		               
-    		               if($itemBarang->IDBARANGSHOPEE == $itemBarang->IDINDUKBARANGSHOPEE)
+    		               if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
     		               {
-    		                array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+    		                array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
         	                array(
         	                     'model_id'         => 0,
         	                     'original_price'   => $item->hargajualnew,
@@ -462,9 +563,9 @@ class Shopee extends MY_Controller {
     		               }
     		               else
     		               {
-        	                array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+        	                array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
         	                array(
-        	                     'model_id'         => $itemBarang->IDBARANGSHOPEE,
+        	                     'model_id'         => $itemBarang->IDBARANGLAZADA,
         	                     'original_price'   => $item->hargajualnew,
         		                 'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
         	                ));
@@ -479,26 +580,26 @@ class Shopee extends MY_Controller {
             $idbarang = 0;
     		foreach($data as $item)
     		{	
-        	   $sql = "SELECT a.IDBARANG, a.IDBARANGSHOPEE, a.IDINDUKBARANGSHOPEE FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
+        	   $sql = "SELECT a.IDBARANG, a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
         	   
         	   $allBarang = $CI->db->query($sql)->result();
         	   
         	   foreach($allBarang as $itemBarang)
         	   {
-                   if($itemBarang->IDBARANGSHOPEE != 0 && $itemBarang->IDINDUKBARANGSHOPEE != 0)
+                   if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
         	       {
-        	           if($idbarang != $itemBarang->IDINDUKBARANGSHOPEE)
+        	           if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
         	           {
-        	               $idbarang = $itemBarang->IDINDUKBARANGSHOPEE;
-        	               array_push($dataHargaBarang, array(
-                            'item_id' => $itemBarang->IDINDUKBARANGSHOPEE,
+        	               $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
+        	               array_push($dataBarangHarga, array(
+                            'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
                             'model' => []
         	               ));
         	           }
         	           
-        	           if($itemBarang->IDBARANGSHOPEE == $itemBarang->IDINDUKBARANGSHOPEE)
+        	           if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
         	           {
-        	            array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+        	            array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
                         array(
                              'model_id'         => 0,
                              'original_price'   => $item->hargajualnew,
@@ -507,9 +608,9 @@ class Shopee extends MY_Controller {
         	           }
         	           else
         	           {
-                        array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+                        array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
                         array(
-                             'model_id'         => $itemBarang->IDBARANGSHOPEE,
+                             'model_id'         => $itemBarang->IDBARANGLAZADA,
                              'original_price'   => $item->hargajualnew,
         		             'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
                         ));
@@ -525,26 +626,26 @@ class Shopee extends MY_Controller {
 		    
 		        if($IDCUSTOMER == $item->idcustomer)
     		    {
-        		    $sql = "SELECT a.IDBARANG, a.IDBARANGSHOPEE, a.IDINDUKBARANGSHOPEE FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
+        		    $sql = "SELECT a.IDBARANG, a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
         		    
         		    $allBarang = $CI->db->query($sql)->result();
         		    
         		    foreach($allBarang as $itemBarang)
         		    {
-            		    if($itemBarang->IDBARANGSHOPEE != 0 && $itemBarang->IDINDUKBARANGSHOPEE != 0)
+            		    if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
         		        {
-        		            if($idbarang != $itemBarang->IDINDUKBARANGSHOPEE)
+        		            if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
         		            {
-        		                $idbarang = $itemBarang->IDINDUKBARANGSHOPEE;
-        		                array_push($dataHargaBarang, array(
-            	                 'item_id' => $itemBarang->IDINDUKBARANGSHOPEE,
+        		                $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
+        		                array_push($dataBarangHarga, array(
+            	                 'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
             	                 'model' => []
         		                ));
         		            }
         		            
-        		            if($itemBarang->IDBARANGSHOPEE == $itemBarang->IDINDUKBARANGSHOPEE)
+        		            if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
         		            {
-        		             array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+        		             array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
             	             array(
             	                  'model_id'         => 0,
             	                  'original_price'   => $item->hargajualnew,
@@ -553,9 +654,9 @@ class Shopee extends MY_Controller {
         		            }
         		            else
         		            {
-            	             array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+            	             array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
             	             array(
-            	                  'model_id'         => $itemBarang->IDBARANGSHOPEE,
+            	                  'model_id'         => $itemBarang->IDBARANGLAZADA,
             	                  'original_price'   => $item->hargajualnew,
         		                  'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
             	             ));
@@ -567,23 +668,23 @@ class Shopee extends MY_Controller {
     		
         }
         
-		for($x = 0 ; $x < count($dataHargaBarang); $x++)
+		for($x = 0 ; $x < count($dataBarangHarga); $x++)
 		{
         	$parameter = [];
-            $parameter['item_id'] = (int)$dataHargaBarang[$x]['item_id'];
+            $parameter['item_id'] = (int)$dataBarangHarga[$x]['item_id'];
             $parameter['price_list'] = [];
-            for($h = 0 ; $h < count($dataHargaBarang[$x]['model']); $h++)
+            for($h = 0 ; $h < count($dataBarangHarga[$x]['model']); $h++)
             {
                  array_push($parameter['price_list'],array(
-                     'model_id'       =>  (int)$dataHargaBarang[$x]['model'][$h]['model_id'],
-                     'original_price' =>  (float)$dataHargaBarang[$x]['model'][$h]['original_price'],
+                     'model_id'       =>  (int)$dataBarangHarga[$x]['model'][$h]['model_id'],
+                     'original_price' =>  (float)$dataBarangHarga[$x]['model'][$h]['original_price'],
                   ));
             }
             
             $curl = curl_init();
                   
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -606,358 +707,14 @@ class Shopee extends MY_Controller {
             if($ret['error'] != "")
             {
                 $data['success'] = false;
-                $data['msg'] =  $ret['error']." UBAH HARGA SHOPEE : ".$ret['message'];
+                $data['msg'] =  $ret['error']." UBAH HARGA LAZADA : ".$ret['message'];
                 die(json_encode($data));
             }
 		}
-		
-		
-		//HARGA PROMO SAAT INI
-		$status = ['ongoing','upcoming'];
-		
-		$arrIDPromo = [];
-		
-		//PROMO
-		for($x = 0 ; $x < count($status); $x++)
-		{
-		    
-    		$statusok = true;
-    		$pageno = 1;
-    		$pageSize = 100;
-		    
-    		while($statusok)
-            {
-                
-		        $curl = curl_init();
-    		    $parameter = "&discount_status=".$status[$x]."&page_no=".$pageno."&page_size=".$pageSize;
-
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount_list','parameter' => $parameter),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['error'] != "")
-                {
-                    echo $ret['error']." : ".$ret['message'];
-                }
-                else
-                {
-                    $response = $ret['response'];
-                    $statusok = $response['more'];
-                    if($statusok){
-                        $pageno++;
-                    }
-                    
-                    for($p = 0 ; $p < count($response['discount_list']);$p++)
-                    {
-                        $dataPromo = $response['discount_list'][$p];
-                        array_push($arrIDPromo,
-                            array(
-                                'IDPROMO' => $dataPromo['discount_id'],
-                                'STATUS' => $status[$x]
-                            )
-                        );
-                    }
-                }
-            }
-		}
-        //JIKA ADA PROMO, TINGGAL TAMBAHKAN BARANGNYA 
-        for($x = 0 ;$x < count($arrIDPromo) ; $x++)
-        {
-            $idPromosi = $arrIDPromo[$x]['IDPROMO'];
-    		
-    		$statusok = true;
-    		$pageno = 1;
-    		$pageSize = 100;
-    		$data['rows'] = [];
-    		
-    		//LOGISTIC
-    		$curl = curl_init();
-    		
-    		while($statusok)
-            {
-                
-    		    $parameter = "&discount_id=".$idPromosi."&page_no=".$pageno."&page_size=".$pageSize;
-    		    
-    		  //  echo $parameter;
-    		    
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount','parameter' => $parameter),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['error'] != "")
-                {
-                    echo $ret['error']." : ".$ret['message'];
-                }
-                else
-                {
-                    $response = $ret['response'];
-                    $statusok = $response['more'];
-                    if($statusok){
-                        $pageno++;
-                    }
-                    
-                    $parameterTambah = [];
-                	$parameterTambah['discount_id']   = (int)$idPromosi;
-                	$parameterTambah['item_list']  = array();
-    		
-            		$parameterUbah = [];
-                	$parameterUbah['discount_id']   = (int)$idPromosi;
-                	$parameterUbah['item_list']  = array();
-                    
-                    
-                    for($p = 0 ; $p < count($response['item_list']);$p++)
-                    {
-                        $dataItem = $response['item_list'][$p];
-                        //INDUK
-                        if(count($dataItem['model_list']) == 0)
-                        {
-                            foreach($dataHargaBarang as $key  => $itemHargaBarang)
-                            {
-                                if($itemHargaBarang['item_id'] == $dataItem['item_id'])
-                                {
-                                    array_push($parameterUbah['item_list'], array(
-                            	       'item_id'                => (int)$itemHargaBarang['item_id'],
-                            	       'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
-                            	       'purchase_limit'         => (int)0,
-                            	       'model_list' => []
-                            	   ));
-                            	   
-                            	   unset($dataHargaBarang[$key]);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            foreach ($dataHargaBarang as $key => &$itemHargaBarang) {
-                                if ($itemHargaBarang['item_id'] == $dataItem['item_id']) {
-                            
-                                    $parameterUbah['item_list'][] = [
-                                        'item_id'              => (int)$itemHargaBarang['item_id'],
-                                        'item_promotion_price' => (float)$itemHargaBarang['model'][0]['cross_price'],
-                                        'purchase_limit'       => 0,
-                                        'model_list'           => []
-                                    ];
-                            
-                                    $lastIndex = count($parameterUbah['item_list']) - 1;
-                            
-                                    foreach ($dataItem['model_list'] as $itemModel) {
-                                        foreach ($itemHargaBarang['model'] as $modelKey => $itemHargaBarangModel) {
-                            
-                                            if ($itemHargaBarangModel['model_id'] == $itemModel['model_id']) {
-                                                $parameterUbah['item_list'][$lastIndex]['model_list'][] = [
-                                                    'model_id'              => (int)$itemHargaBarangModel['model_id'],
-                                                    'model_promotion_price' => (float)$itemHargaBarangModel['cross_price'],
-                                                ];
-                            
-                                                // remove model from the reference array
-                                                unset($itemHargaBarang['model'][$modelKey]);
-                                            }
-                                        }
-                                    }
-                            
-                                    // remove the item if no models left
-                                    if (empty($itemHargaBarang['model'])) {
-                                        unset($dataHargaBarang[$key]);
-                                    }
-                                }
-                            }
-                            unset($itemHargaBarang); // cleanup reference
-                            
-                            // optional: reindex
-                            $dataHargaBarang = array_values($dataHargaBarang);
-                        }
-                    }
-                    
-                    if(count($parameterUbah['item_list']) > 0)
-    	            {
-                        
-                        $curl = curl_init();
-                
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'discount/update_discount_item',
-                          'parameter' => json_encode($parameterUbah)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                          
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-                     
-                        if($ret['error'] != "")
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  $ret['error']."PROMO BARANG UBAH : ".$ret['message'];
-                            die(json_encode($data));
-                        }
-    	            }
-                }
-            }
-        }
-        
-        
-        //SISA BELUM ADA
-        if(count($dataHargaBarang) > 0)
-        {
-    		$nama       = "DISKON SYSTEM";
-    		$startdate        = new DateTime();  
-            $startdate->modify('+1 hour 1 minutes');  
-            
-            $enddate        = new DateTime();  
-            $enddate->modify('+180 days');  
-            
-    		$tglMulai   = $startdate->format('Y-m-d H:i:s');
-    		$tglAkhir   = $enddate->format('Y-m-d H:i:s');
-    		$parameter = [];
-    		$parameter['discount_name'] = $nama." ".date('Y-m-d H:i:s');
-    		$parameter['start_time']    = strtotime($tglMulai);
-    		$parameter['end_time']      = strtotime($tglAkhir);
-		
-		    $endpoint = 'discount/add_discount';
-    		
-    		
-    	    $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => $endpoint,
-              'parameter' => json_encode($parameter)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-         
-            if($ret['error'] != "")
-            {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." BUAT PROMO : ".$ret['message'];
-                die(json_encode($data));
-            }
-            else
-            {
-                $id = $ret['response']['discount_id'];
-                
-                $parameterTambah = [];
-        	    $parameterTambah['discount_id']   = (int)$id;
-        	    $parameterTambah['item_list']  = array();
-		
-		        foreach($dataHargaBarang as $itemHargaBarang)
-                {
-                    if($itemHargaBarang['model'][0]['model_id'] == 0)
-                    {
-                       array_push($parameterTambah['item_list'], array(
-        	               'item_id'                => (int)$itemHargaBarang['item_id'],
-                           'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
-                           'purchase_limit'         => (int)0,
-        	               'model_list' => []
-        	           ));
-                    }
-                    else
-                    {
-                       array_push($parameterTambah['item_list'], array(
-        	               'item_id'                => (int)$itemHargaBarang['item_id'],
-                           'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
-                           'purchase_limit'         => (int)0,
-        	               'model_list' => []
-        	           ));
-                       foreach($itemHargaBarang['model'] as $itemHargaBarangModel)
-                       { 
-                           array_push($parameterTambah['item_list'][count($parameterTambah['item_list'])-1]['model_list'],
-            	           array(
-            	                'model_id'               => (int)$itemHargaBarangModel['model_id'],
-            	                'model_promotion_price'   => (float)$itemHargaBarangModel['cross_price'],
-            	           ));  
-                       }
-                    }
-                }
-                
-                $curl = curl_init();
-                
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'discount/add_discount_item',
-                  'parameter' => json_encode($parameterTambah)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                  
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                
-                if($ret['error'] != "")
-                {
-                    $data['success'] = false;
-                    $data['msg'] =  $ret['error']."PROMO BARANG TAMBAH : ".$ret['message'];
-                    die(json_encode($data));
-                }
-            }
-            
-            
-        }
 		
 		
         $data['success'] = true;
-        $data['msg'] =  'Update Harga Shopee Berhasil';
+        $data['msg'] =  'Update Harga LAZADA Berhasil';
         echo(json_encode($data));
 	}
 	
@@ -1013,7 +770,7 @@ class Shopee extends MY_Controller {
         $parameter = "";
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1041,7 +798,7 @@ class Shopee extends MY_Controller {
             $dataAddress = $ret['response']['address_list'];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                 {
@@ -1078,10 +835,10 @@ class Shopee extends MY_Controller {
                 
                 $whereBarang .= ")";	
                 
-                $sql = "select IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
+                $sql = "select IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG
             				from MBARANG
             				where (1=1) $whereBarang
-            				order by IDINDUKBARANGSHOPEE
+            				order by IDINDUKBARANGLAZADA
             				";	
             		
             	$dataHeader = $this->db->query($sql)->result();
@@ -1090,14 +847,14 @@ class Shopee extends MY_Controller {
                  $parameter = [];
             	 foreach($dataHeader as $itemHeader)
             	 {
-            	     if($itemHeader->IDINDUKBARANGSHOPEE != $idHeader)
+            	     if($itemHeader->IDINDUKBARANGLAZADA != $idHeader)
             	     {
             	         if(count($parameter) > 0)
             	         {
             	        
             	            $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -1125,11 +882,11 @@ class Shopee extends MY_Controller {
                                 print_r($ret);
                             }
             	         }
-            	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
+            	         $idHeader = $itemHeader->IDINDUKBARANGLAZADA;
             	         
-            	         //UPDATE KE SHOPEENYA
+            	         //UPDATE KE LAZADANYA
                         $parameter = [];
-                     	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGSHOPEE;
+                     	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGLAZADA;
                      	$parameter['stock_list'] = [];
             	     }
             	     
@@ -1138,9 +895,9 @@ class Shopee extends MY_Controller {
                     
                     $modelId = 0;
                     
-                    if($itemHeader->IDBARANGSHOPEE != $itemHeader->IDINDUKBARANGSHOPEE)
+                    if($itemHeader->IDBARANGLAZADA != $itemHeader->IDINDUKBARANGLAZADA)
                     {
-                        $modelId = $itemHeader->IDBARANGSHOPEE;
+                        $modelId = $itemHeader->IDBARANGLAZADA;
                     }
                     
                      array_push($parameter['stock_list'],array(
@@ -1153,7 +910,7 @@ class Shopee extends MY_Controller {
             	
             	$curl = curl_init();
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -1185,7 +942,7 @@ class Shopee extends MY_Controller {
         if($lokasi == $idlokasiset)
         {
             $data['success'] = true;
-            $data['msg'] = "Stok Shopee Berhasil Diupdate";
+            $data['msg'] = "Stok LAZADA Berhasil Diupdate";
             echo(json_encode($data));
         }
         else
@@ -1201,13 +958,13 @@ class Shopee extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		
+		$ada = false;
         $curl = curl_init();
         
-        $parameter = "&language=ID";
+        $parameter = "&language_code=id_ID";
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1215,7 +972,7 @@ class Shopee extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_category','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/category/tree/get','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -1224,94 +981,92 @@ class Shopee extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['message'] != "")
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
-            $dataKategori = $ret['response']['category_list'];
+            $dataKategori = $ret['data'];
             $responseKategori = [];
             
             foreach($dataKategori as $itemKategori)
             {
-                if($itemKategori['parent_category_id'] == 0)
+                if(!isset($itemKategori['children']))
                 {
+                    array_push($responseKategori,array(
+                        'VALUE' =>  $itemKategori['category_id'],
+                        'TEXT' => $itemKategori['name']
+                    ));
+                }
+                else
+                {
+                    foreach($itemKategori['children'] as $itemSubKategori)
+                    {
                     
-                    if(!$itemKategori['has_children'])
-                    {
-                        array_push($responseKategori,array(
-                            'VALUE' =>  $itemKategori['category_id'],
-                            'TEXT' => $itemKategori['display_category_name']
-                        ));
-                    }
-                    else
-                    {
-                        foreach($dataKategori as $itemSubKategori)
-                        {
-                        
-                           if($itemKategori['category_id'] == $itemSubKategori['parent_category_id'])
+                           if(!isset($itemSubKategori['children']))
                            {
-                                 
-                               if(!$itemSubKategori['has_children'])
+                               array_push($responseKategori,array(
+                                   'VALUE' =>  $itemSubKategori['category_id'],
+                                   'TEXT' => $itemKategori['name']." / ".$itemSubKategori['name']
+                               ));
+                           }
+                           else
+                           {
+                               foreach($itemSubKategori['children'] as $itemSubKategori2)
                                {
-                                   array_push($responseKategori,array(
-                                       'VALUE' =>  $itemSubKategori['category_id'],
-                                       'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']
-                                   ));
-                               }
-                               else
-                               {
-                                   foreach($dataKategori as $itemSubKategori2)
-                                   {
-                                       if($itemSubKategori['category_id'] == $itemSubKategori2['parent_category_id'])
-                                       {
-                                           if(!$itemSubKategori2['has_children'])
-                                           {
-                                               array_push($responseKategori,array(
-                                                   'VALUE' =>  $itemSubKategori2['category_id'],
-                                                   'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']." / ".$itemSubKategori2['display_category_name']
-                                               ));
-                                           }
-                                           else
-                                           {
-                                               foreach($dataKategori as $itemSubKategori3)
-                                               {
-                                                   if($itemSubKategori2['category_id'] == $itemSubKategori3['parent_category_id'])
-                                                   {
-                                                       if(!$itemSubKategori3['has_children'])
-                                                       {
+                                   if(!isset($itemSubKategori2['children']))
+                                    {
+                                        array_push($responseKategori,array(
+                                            'VALUE' =>  $itemSubKategori2['category_id'],
+                                            'TEXT' => $itemKategori['name']." / ".$itemSubKategori['name']." / ".$itemSubKategori2['name']
+                                        ));
+                                    }
+                                    else
+                                    {
+                                        foreach($itemSubKategori2['children'] as $itemSubKategori3)
+                                        {
+                                            
+                                            if(!isset($itemSubKategori3['children']))
+                                            {
+                                                array_push($responseKategori,array(
+                                                    'VALUE' =>  $itemSubKategori3['category_id'],
+                                                    'TEXT' => $itemKategori['name']." / ".$itemSubKategori['name']." / ".$itemSubKategori2['name']." / ".$itemSubKategori3['name']
+                                                ));
+                                                
+                                            }
+                                            else
+                                            {
+                                                foreach($itemSubKategori3['children']  as $itemSubKategori4)
+                                                {
+                                                    
+                                                    if(!isset($itemSubKategori4['children']))
+                                                    {
+                                                        
+                                                    
+                                                       array_push($responseKategori,array(
+                                                            'VALUE' =>  $itemSubKategori4['category_id'],
+                                                            'TEXT' => $itemKategori['name']." / ".$itemSubKategori['name']." / ".$itemSubKategori2['name']." / ".$itemSubKategori3['name']." / ".$itemSubKategori4['name']
+                                                        ));
+                                                        
+                                                    }
+                                                    else
+                                                    {
+                                                        foreach($itemSubKategori4['children']  as $itemSubKategori5)
+                                                        {
+                                                            
                                                            array_push($responseKategori,array(
-                                                               'VALUE' =>  $itemSubKategori3['category_id'],
-                                                               'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']." / ".$itemSubKategori2['display_category_name']." / ".$itemSubKategori3['display_category_name']
-                                                           ));
-                                                           
-                                                       }
-                                                       else
-                                                       {
-                                                           foreach($dataKategori as $itemSubKategori4)
-                                                           {
-                                                               if($itemSubKategori3['category_id'] == $itemSubKategori4['parent_category_id'])
-                                                               {
-                                                                   if(!$itemSubKategori4['has_children'])
-                                                                   {
-                                                                       array_push($responseKategori,array(
-                                                                           'VALUE' =>  $itemSubKategori4['category_id'],
-                                                                           'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']." / ".$itemSubKategori2['display_category_name']." / ".$itemSubKategori3['display_category_name']." / ".$itemSubKategori4['display_category_name']
-                                                                       ));
-                                                                   }
-                                                               }
-                                                           }
-                                                       }
-                                                   }
-                                               }
-                                           }
-                                           
-                                       }
-                                   }
-                                }
+                                                                'VALUE' =>  $itemSubKategori5['category_id'],
+                                                                'TEXT' => $itemKategori['name']." / ".$itemSubKategori['name']." / ".$itemSubKategori2['name']." / ".$itemSubKategori3['name']." / ".$itemSubKategori4['name']." / ".$itemSubKategori5['name']
+                                                            ));
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                               }
                             }
-                        }
                     }
                 }
             }
@@ -1321,6 +1076,7 @@ class Shopee extends MY_Controller {
                 return strcmp($a['TEXT'], $b['TEXT']);
             });
             
+            echo $ada;
             echo(json_encode($responseKategori));
         }
 	}
@@ -1336,7 +1092,7 @@ class Shopee extends MY_Controller {
         $parameter = "&language=ID";
         $data['rows'] = [];
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1412,7 +1168,7 @@ class Shopee extends MY_Controller {
             $parameter = "&category_id_list=$idkategori&language=ID";
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -1512,7 +1268,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1545,7 +1301,7 @@ class Shopee extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -1575,7 +1331,7 @@ class Shopee extends MY_Controller {
                         $curl = curl_init();
                         $parameter = "&size_chart_id=".$dataSizeChart[$x]['size_chart_id'];
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -1639,7 +1395,7 @@ class Shopee extends MY_Controller {
 		  //  echo $parameter;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -1678,7 +1434,7 @@ class Shopee extends MY_Controller {
                         $curl = curl_init();
                     
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -1704,7 +1460,7 @@ class Shopee extends MY_Controller {
                         {
                             $dataBarang = $ret['response']['item_list'];
                             
-                            $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGSHOPEE from MBARANG where IDINDUKBARANGSHOPEE != 0 and IDINDUKBARANGSHOPEE != '' and IDINDUKBARANGSHOPEE is not null";
+                            $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGLAZADA from MBARANG where IDINDUKBARANGLAZADA != 0 and IDINDUKBARANGLAZADA != '' and IDINDUKBARANGLAZADA is not null";
                             $dataBarangMaster = $CI->db->query($sqlBarangMaster)->result();
                             
                             foreach($dataBarang as $itemBarang)
@@ -1717,7 +1473,7 @@ class Shopee extends MY_Controller {
                                 //     $curl = curl_init();
                                 
                                 //     curl_setopt_array($curl, array(
-                                //       CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                                //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                                 //       CURLOPT_RETURNTRANSFER => true,
                                 //       CURLOPT_ENCODING => '',
                                 //       CURLOPT_MAXREDIRS => 10,
@@ -1750,7 +1506,7 @@ class Shopee extends MY_Controller {
                               $itemBarang['KATEGORIMASTERBARANG'] = '';
                               foreach($dataBarangMaster as $itemBarangMaster)
                               {
-                                  if($itemBarangMaster->IDINDUKBARANGSHOPEE == $itemBarang['item_id'])
+                                  if($itemBarangMaster->IDINDUKBARANGLAZADA == $itemBarang['item_id'])
                                   {
                                      $itemBarang['MASTERCONNECTED'] ="YA";  
                                      $itemBarang['IDMASTERBARANG'] = $itemBarangMaster->IDBARANG;
@@ -1790,7 +1546,7 @@ class Shopee extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$itemid = $this->input->post('idindukbarangshopee');
+		$itemid = $this->input->post('idindukbarangLAZADA');
 		
 		$data = [];
         $data['dataVarian'] = [];
@@ -1801,7 +1557,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1834,7 +1590,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1896,14 +1652,14 @@ class Shopee extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$itemid = $this->input->post('idindukbarangshopee');
+		$itemid = $this->input->post('idindukbarangLAZADA');
 	    $parameter = '';
         //GET MODEL
         $parameter = "&item_id=".(int)$itemid;
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1990,7 +1746,7 @@ class Shopee extends MY_Controller {
         $parameter = "";
         $idlokasiset = "";
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2018,7 +1774,7 @@ class Shopee extends MY_Controller {
             $dataAddress = $ret['response']['address_list'];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                 {
@@ -2043,7 +1799,7 @@ class Shopee extends MY_Controller {
 		$parameter = [];
 		$parameter['original_price']    = count($dataVarian) > 0 ?(int)$dataVarian[0]->HARGAJUAL:(int)$hargaInduk;
 		$parameter['description']       = $this->input->post("DESKRIPSI");
-		$parameter['weight']            = ((float)$this->input->post("BERAT")/1000);
+		$parameter['weight']            = (float)$this->input->post("BERAT");
 		$parameter['item_name']         = $this->input->post("NAMA");
 		$parameter['item_status']       = ($this->input->post("UNLISTED") == 1 ? "UNLIST" : "NORMAL");
 		$parameter['dimension'] = array(
@@ -2066,7 +1822,7 @@ class Shopee extends MY_Controller {
 		$parameter['image'] = array(
 		    'image_id_list' => $dataGambarProduk
 		);
-		$parameter['item_sku'] =  count($dataVarian) > 0 ?$dataVarian[0]->SKUSHOPEE:$skuInduk;
+		$parameter['item_sku'] =  count($dataVarian) > 0 ?$dataVarian[0]->SKULAZADA:$skuInduk;
 		$parameter['condition'] = "NEW";
 		
 		$parameter['brand'] = array(
@@ -2104,7 +1860,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2133,447 +1889,449 @@ class Shopee extends MY_Controller {
         else
         {
             
-            $itemid = $ret['response']['item_id']??0;
-            if(count($dataVarian) > 0)
-            {
-              	//TAMBAH VARIAN
-                $parameter = [];
-                $parameter['item_id'] = $itemid;
+            // $itemid = $ret['response']['item_id']??0;
+            // if(count($dataVarian) > 0)
+            // {
+            //   	//TAMBAH VARIAN
+            //     $parameter = [];
+            //     $parameter['item_id'] = $itemid;
                 
-                $optionWarna = [];
-                for($x = 0; $x < count($dataWarna) ; $x++)
-                {
-                    array_push($optionWarna,array(
-                        'option' => $dataWarna[$x] ,
-                        'image' => array(
-                            'image_id' =>  $dataGambarVarian[$x],   
-                        )
-                    ));
-                }
+            //     $optionWarna = [];
+            //     for($x = 0; $x < count($dataWarna) ; $x++)
+            //     {
+            //         array_push($optionWarna,array(
+            //             'option' => $dataWarna[$x] ,
+            //             'image' => array(
+            //                 'image_id' =>  $dataGambarVarian[$x],   
+            //             )
+            //         ));
+            //     }
                 
-                $optionUkuran = [];
-                for($x = 0; $x < count($dataUkuran) ; $x++)
-                {
-                    array_push($optionUkuran,array(
-                        'option' => $dataUkuran[$x] ,
-                    ));
-                }
+            //     $optionUkuran = [];
+            //     for($x = 0; $x < count($dataUkuran) ; $x++)
+            //     {
+            //         array_push($optionUkuran,array(
+            //             'option' => $dataUkuran[$x] ,
+            //         ));
+            //     }
                 
-                $parameter['tier_variation'] = array(
-                  array(
-                    'name' => 'Warna',
-                    'option_list' => $optionWarna
-                  ),
-                  array(
-                    'name' => 'Ukuran',
-                    'option_list' => $optionUkuran
-                  )
-                );
+            //     $parameter['tier_variation'] = array(
+            //       array(
+            //         'name' => 'Warna',
+            //         'option_list' => $optionWarna
+            //       ),
+            //       array(
+            //         'name' => 'Ukuran',
+            //         'option_list' => $optionUkuran
+            //       )
+            //     );
                 
-                $dataModel = [];
-                $dataModelBaru = [];
-                $dataModelUbahHarga = [];
-                $dataModelUbahSKU = [];
-                $dataModelHapus = [];
+            //     $dataModel = [];
+            //     $dataModelBaru = [];
+            //     $dataModelUbahHarga = [];
+            //     $dataModelUbahSKU = [];
+            //     $dataModelHapus = [];
                 
-                for($x = 0 ; $x < count($dataVarian); $x++)
-                {
-                    $barangAda = false;
-                    for($w = 0 ; $w < count($optionWarna); $w++)
-                    {
-                        for($u = 0 ; $u < count($optionUkuran); $u++)
-                        {
+            //     for($x = 0 ; $x < count($dataVarian); $x++)
+            //     {
+            //         $barangAda = false;
+            //         for($w = 0 ; $w < count($optionWarna); $w++)
+            //         {
+            //             for($u = 0 ; $u < count($optionUkuran); $u++)
+            //             {
                            
-                           if(strtoupper($dataVarian[$x]->WARNA) == strtoupper($optionWarna[$w]['option']) && $dataVarian[$x]->SIZE == $optionUkuran[$u]['option'])
-                           {
-                               $barangAda = true;
-                               if($dataVarian[$x]->MODE != "HAPUS")
-                               {
-                                   $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGSHOPEE = ".$dataVarian[$x]->IDBARANG. " or IDBARANG = ".$dataVarian[$x]->IDBARANG ;
+            //               if(strtoupper($dataVarian[$x]->WARNA) == strtoupper($optionWarna[$w]['option']) && $dataVarian[$x]->SIZE == $optionUkuran[$u]['option'])
+            //               {
+            //                   $barangAda = true;
+            //                   if($dataVarian[$x]->MODE != "HAPUS")
+            //                   {
+            //                       $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGLAZADA = ".$dataVarian[$x]->IDBARANG. " or IDBARANG = ".$dataVarian[$x]->IDBARANG ;
         
-                                   $itemHeader = $CI->db->query($sql)->row();
-                                   $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
-                                   $saldoQty = $result->QTY??0;
-                               }
-                               else
-                               {
-                                   $saldoQty = 0;
-                               }
+            //                       $itemHeader = $CI->db->query($sql)->row();
+            //                       $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+            //                       $saldoQty = $result->QTY??0;
+            //                   }
+            //                   else
+            //                   {
+            //                       $saldoQty = 0;
+            //                   }
                                             
-                               array_push($dataModel,array(
-                                   'model_id'          => $dataVarian[$x]->IDBARANG,
-                                   'tier_index'        => array((int)$w,(int)$u),
-                                   'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
-                                   'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
-                                   // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
-                                   'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                                   'weight'            => ((float)$this->input->post("BERAT")/1000),
-                                   'dimension'         => array(
-                                       'package_height' => (int)$this->input->post("TINGGI"),
-                                       'package_width'  => (int)$this->input->post("LEBAR"),
-                                       'package_length' => (int)$this->input->post("PANJANG"),
-                                   ),
-                               ));
+            //                   array_push($dataModel,array(
+            //                       'model_id'          => $dataVarian[$x]->IDBARANG,
+            //                       'tier_index'        => array((int)$w,(int)$u),
+            //                       'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
+            //                       'model_sku'         => $dataVarian[$x]->SKULAZADA,
+            //                       // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
+            //                       'seller_stock'      => array(array('stock' => (int)$saldoQty )),
+            //                       'weight'            => (float)$this->input->post("BERAT"),
+            //                       'dimension'         => array(
+            //                           'package_height' => (int)$this->input->post("TINGGI"),
+            //                           'package_width'  => (int)$this->input->post("LEBAR"),
+            //                           'package_length' => (int)$this->input->post("PANJANG"),
+            //                       ),
+            //                   ));
                                
-                               if(strpos($dataVarian[$x]->MODE, 'BARU') !== false)
-                               {
-                                   array_push($dataModelBaru,$dataModel[count($dataModel)-1]);
-                               }
-                               if(strpos($dataVarian[$x]->MODE, 'UBAH HARGA') !== false)
-                               {
-                                   array_push($dataModelUbahHarga,$dataModel[count($dataModel)-1]);
-                               }
-                               if(strpos($dataVarian[$x]->MODE, 'UBAH SKU') !== false)
-                               { 
-                                   array_push($dataModelUbahSKU,$dataModel[count($dataModel)-1]);
-                               }
-                               if(strpos($dataVarian[$x]->MODE, 'HAPUS') !== false)
-                               {
-                                   array_push($dataModelHapus,$dataModel[count($dataModel)-1]);
-                               }
-                           }
-                        }
-                    }
+            //                   if(strpos($dataVarian[$x]->MODE, 'BARU') !== false)
+            //                   {
+            //                       array_push($dataModelBaru,$dataModel[count($dataModel)-1]);
+            //                   }
+            //                   if(strpos($dataVarian[$x]->MODE, 'UBAH HARGA') !== false)
+            //                   {
+            //                       array_push($dataModelUbahHarga,$dataModel[count($dataModel)-1]);
+            //                   }
+            //                   if(strpos($dataVarian[$x]->MODE, 'UBAH SKU') !== false)
+            //                   { 
+            //                       array_push($dataModelUbahSKU,$dataModel[count($dataModel)-1]);
+            //                   }
+            //                   if(strpos($dataVarian[$x]->MODE, 'HAPUS') !== false)
+            //                   {
+            //                       array_push($dataModelHapus,$dataModel[count($dataModel)-1]);
+            //                   }
+            //               }
+            //             }
+            //         }
                 
                     
-                    if(!$barangAda && $dataVarian[$x]->MODE == "HAPUS")
-                    {
-                        $dataHapus = array(
-                            'model_id'          => $dataVarian[$x]->IDBARANG,
-                            'tier_index'        => array((int)$w,(int)$u),
-                            'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
-                            'model_sku'         => $dataVarian[$x]->SKUSHOPEE,
-                            // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
-                            'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-                            'weight'            => ((float)$this->input->post("BERAT")/1000),
-                            'dimension'         => array(
-                                'package_height' => (int)$this->input->post("TINGGI"),
-                                'package_width'  => (int)$this->input->post("LEBAR"),
-                                'package_length' => (int)$this->input->post("PANJANG"),
-                            ),
-                        );
+            //         if(!$barangAda && $dataVarian[$x]->MODE == "HAPUS")
+            //         {
+            //             $dataHapus = array(
+            //                 'model_id'          => $dataVarian[$x]->IDBARANG,
+            //                 'tier_index'        => array((int)$w,(int)$u),
+            //                 'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
+            //                 'model_sku'         => $dataVarian[$x]->SKULAZADA,
+            //                 // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
+            //                 'seller_stock'      => array(array('stock' => (int)$saldoQty )),
+            //                 'weight'            => (float)$this->input->post("BERAT"),
+            //                 'dimension'         => array(
+            //                     'package_height' => (int)$this->input->post("TINGGI"),
+            //                     'package_width'  => (int)$this->input->post("LEBAR"),
+            //                     'package_length' => (int)$this->input->post("PANJANG"),
+            //                 ),
+            //             );
                         
-                        array_push($dataModelHapus,$dataHapus);
-                    }
-                } 
+            //             array_push($dataModelHapus,$dataHapus);
+            //         }
+            //     } 
                 
-                //CEK JIKA ADA VARIAN DIHAPUS, DELETE MODEL
-                if(count($dataModelHapus) > 0)
-                {
-                   for($h = 0 ; $h < count($dataModelHapus); $h++)
-                   {
-                        $parameterHapus = [];
-                        $parameterHapus['item_id'] = $itemid;
-                        $parameterHapus['model_id'] = $dataModelHapus[$h]['model_id'];
+            //     //CEK JIKA ADA VARIAN DIHAPUS, DELETE MODEL
+            //     if(count($dataModelHapus) > 0)
+            //     {
+            //       for($h = 0 ; $h < count($dataModelHapus); $h++)
+            //       {
+            //             $parameterHapus = [];
+            //             $parameterHapus['item_id'] = $itemid;
+            //             $parameterHapus['model_id'] = $dataModelHapus[$h]['model_id'];
                  
-                         $curl = curl_init();
+            //              $curl = curl_init();
                          
-                         curl_setopt_array($curl, array(
-                           CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                           CURLOPT_RETURNTRANSFER => true,
-                           CURLOPT_ENCODING => '',
-                           CURLOPT_MAXREDIRS => 10,
-                           CURLOPT_TIMEOUT => 30,
-                           CURLOPT_FOLLOWLOCATION => true,
-                           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                           CURLOPT_CUSTOMREQUEST => 'POST',
-                           CURLOPT_POSTFIELDS =>  array(
-                           'endpoint' => 'product/delete_model',
-                           'parameter' => json_encode($parameterHapus)),
-                           CURLOPT_HTTPHEADER => array(
-                             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                           ),
-                         ));
+            //              curl_setopt_array($curl, array(
+            //               CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+            //               CURLOPT_RETURNTRANSFER => true,
+            //               CURLOPT_ENCODING => '',
+            //               CURLOPT_MAXREDIRS => 10,
+            //               CURLOPT_TIMEOUT => 30,
+            //               CURLOPT_FOLLOWLOCATION => true,
+            //               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //               CURLOPT_CUSTOMREQUEST => 'POST',
+            //               CURLOPT_POSTFIELDS =>  array(
+            //               'endpoint' => 'product/delete_model',
+            //               'parameter' => json_encode($parameterHapus)),
+            //               CURLOPT_HTTPHEADER => array(
+            //                  'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //               ),
+            //              ));
                            
-                         $response = curl_exec($curl);
-                         curl_close($curl);
-                         $ret =  json_decode($response,true);
+            //              $response = curl_exec($curl);
+            //              curl_close($curl);
+            //              $ret =  json_decode($response,true);
                       
-                         if($ret['error'] != "")
-                         {
-                             $data['success'] = false;
-                             $data['msg'] =  $ret['error']." MODEL HAPUS : ".$ret['message'];
-                             die(json_encode($data));
-                         }
-                   }
-                }
+            //              if($ret['error'] != "")
+            //              {
+            //                  $data['success'] = false;
+            //                  $data['msg'] =  $ret['error']." MODEL HAPUS : ".$ret['message'];
+            //                  die(json_encode($data));
+            //              }
+            //       }
+            //     }
                 
                 
-                $parameter['model'] = $dataModel;
-                $curl = curl_init();
+            //     $parameter['model'] = $dataModel;
+            //     $curl = curl_init();
                 
-                $endpointModel = "product/init_tier_variation";
-                if($idBarang != 0)
-            	{
-            	    $endpointModel = "product/update_tier_variation";
-            	}
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => $endpointModel,
-                  'parameter' => json_encode($parameter)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
+            //     $endpointModel = "product/init_tier_variation";
+            //     if($idBarang != 0)
+            // 	{
+            // 	    $endpointModel = "product/update_tier_variation";
+            // 	}
+            //     curl_setopt_array($curl, array(
+            //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+            //       CURLOPT_RETURNTRANSFER => true,
+            //       CURLOPT_ENCODING => '',
+            //       CURLOPT_MAXREDIRS => 10,
+            //       CURLOPT_TIMEOUT => 30,
+            //       CURLOPT_FOLLOWLOCATION => true,
+            //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //       CURLOPT_CUSTOMREQUEST => 'POST',
+            //       CURLOPT_POSTFIELDS =>  array(
+            //       'endpoint' => $endpointModel,
+            //       'parameter' => json_encode($parameter)),
+            //       CURLOPT_HTTPHEADER => array(
+            //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //       ),
+            //     ));
                   
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
+            //     $response = curl_exec($curl);
+            //     curl_close($curl);
+            //     $ret =  json_decode($response,true);
                 
-                if($ret['error'] != "")
-                {
-                    $data['success'] = false;
-                    $data['msg'] =  $ret['error']." MODEL : ".$ret['message'];
-                    die(json_encode($data));
-                }
-                else
-                {
+            //     if($ret['error'] != "")
+            //     {
+            //         $data['success'] = false;
+            //         $data['msg'] =  $ret['error']." MODEL : ".$ret['message'];
+            //         die(json_encode($data));
+            //     }
+            //     else
+            //     {
                   
-                  sleep(3);
+            //       sleep(3);
                     
-                  //CEK JIKA ADA VARIAN BARU, ADD MODEL
-                  if(count($dataModelBaru) > 0)
-                  {  
-                       $parameter = [];
-                       $parameter['item_id'] = $itemid;
-                       $parameter['model_list'] = $dataModelBaru;
+            //       //CEK JIKA ADA VARIAN BARU, ADD MODEL
+            //       if(count($dataModelBaru) > 0)
+            //       {  
+            //           $parameter = [];
+            //           $parameter['item_id'] = $itemid;
+            //           $parameter['model_list'] = $dataModelBaru;
                 
-                        $curl = curl_init();
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'product/add_model',
-                          'parameter' => json_encode($parameter)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
+            //             $curl = curl_init();
+            //             curl_setopt_array($curl, array(
+            //               CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+            //               CURLOPT_RETURNTRANSFER => true,
+            //               CURLOPT_ENCODING => '',
+            //               CURLOPT_MAXREDIRS => 10,
+            //               CURLOPT_TIMEOUT => 30,
+            //               CURLOPT_FOLLOWLOCATION => true,
+            //               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //               CURLOPT_CUSTOMREQUEST => 'POST',
+            //               CURLOPT_POSTFIELDS =>  array(
+            //               'endpoint' => 'product/add_model',
+            //               'parameter' => json_encode($parameter)),
+            //               CURLOPT_HTTPHEADER => array(
+            //                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //               ),
+            //             ));
                           
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
+            //             $response = curl_exec($curl);
+            //             curl_close($curl);
+            //             $ret =  json_decode($response,true);
                      
-                        if($ret['error'] != "")
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  $ret['error']." MODEL BARU : ".$ret['message'];
-                            die(json_encode($data));
+            //             if($ret['error'] != "")
+            //             {
+            //                 $data['success'] = false;
+            //                 $data['msg'] =  $ret['error']." MODEL BARU : ".$ret['message'];
+            //                 die(json_encode($data));
                           
-                        }
-                  }
+            //             }
+            //       }
                   
-                  //CEK JIKA ADA VARIAN UBAH HARGA, UPDATE MODEL
-                  if(count($dataModelUbahHarga) > 0)
-                  {
-                      $parameter = [];
-                      $parameter['item_id'] = $itemid;
-                      $parameter['price_list'] = [];
-                      for($h = 0 ; $h < count($dataModelUbahHarga); $h++)
-                      {
-                           array_push($parameter['price_list'],array(
-                               'model_id'       =>  (int)$dataModelUbahHarga[$h]['model_id'],
-                               'original_price' =>  $dataModelUbahHarga[$h]['original_price'],
-                            ));
-                      }
+            //       //CEK JIKA ADA VARIAN UBAH HARGA, UPDATE MODEL
+            //       if(count($dataModelUbahHarga) > 0)
+            //       {
+            //           $parameter = [];
+            //           $parameter['item_id'] = $itemid;
+            //           $parameter['price_list'] = [];
+            //           for($h = 0 ; $h < count($dataModelUbahHarga); $h++)
+            //           {
+            //               array_push($parameter['price_list'],array(
+            //                   'model_id'       =>  (int)$dataModelUbahHarga[$h]['model_id'],
+            //                   'original_price' =>  $dataModelUbahHarga[$h]['original_price'],
+            //                 ));
+            //           }
                       
-                      $curl = curl_init();
+            //           $curl = curl_init();
                             
-                      curl_setopt_array($curl, array(
-                        CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_ENCODING => '',
-                        CURLOPT_MAXREDIRS => 10,
-                        CURLOPT_TIMEOUT => 30,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                        CURLOPT_CUSTOMREQUEST => 'POST',
-                        CURLOPT_POSTFIELDS =>  array(
-                        'endpoint' => 'product/update_price',
-                        'parameter' => json_encode($parameter)),
-                        CURLOPT_HTTPHEADER => array(
-                          'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                        ),
-                      ));
+            //           curl_setopt_array($curl, array(
+            //             CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+            //             CURLOPT_RETURNTRANSFER => true,
+            //             CURLOPT_ENCODING => '',
+            //             CURLOPT_MAXREDIRS => 10,
+            //             CURLOPT_TIMEOUT => 30,
+            //             CURLOPT_FOLLOWLOCATION => true,
+            //             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //             CURLOPT_CUSTOMREQUEST => 'POST',
+            //             CURLOPT_POSTFIELDS =>  array(
+            //             'endpoint' => 'product/update_price',
+            //             'parameter' => json_encode($parameter)),
+            //             CURLOPT_HTTPHEADER => array(
+            //               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //             ),
+            //           ));
                         
-                      $response = curl_exec($curl);
-                      curl_close($curl);
-                      $ret =  json_decode($response,true);
+            //           $response = curl_exec($curl);
+            //           curl_close($curl);
+            //           $ret =  json_decode($response,true);
                       
-                      if($ret['error'] != "")
-                      {
-                          $data['success'] = false;
-                          $data['msg'] =  $ret['error']." MODEL UBAH HARGA : ".$ret['message'];
-                          die(json_encode($data));
-                      }
-                  }
+            //           if($ret['error'] != "")
+            //           {
+            //               $data['success'] = false;
+            //               $data['msg'] =  $ret['error']." MODEL UBAH HARGA : ".$ret['message'];
+            //               die(json_encode($data));
+            //           }
+            //       }
                   
-                  sleep(3);
+            //       sleep(3);
                   
-                  //CEK JIKA ADA VARIAN UBAH SKU, UPDATE MODEL
-                  if(count($dataModelUbahSKU) > 0)
-                  {
-                      $parameter = [];
-                      $parameter['item_id'] = $itemid;
-                      $parameter['model'] = [];
-                      for($h = 0 ; $h < count($dataModelUbahSKU); $h++)
-                      {
-                           array_push($parameter['model'],$dataModelUbahSKU[$h]);
-                      }
+            //       //CEK JIKA ADA VARIAN UBAH SKU, UPDATE MODEL
+            //       if(count($dataModelUbahSKU) > 0)
+            //       {
+            //           $parameter = [];
+            //           $parameter['item_id'] = $itemid;
+            //           $parameter['model'] = [];
+            //           for($h = 0 ; $h < count($dataModelUbahSKU); $h++)
+            //           {
+            //               array_push($parameter['model'],$dataModelUbahSKU[$h]);
+            //           }
                       
-                      $curl = curl_init();
-                      curl_setopt_array($curl, array(
-                        CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_ENCODING => '',
-                        CURLOPT_MAXREDIRS => 10,
-                        CURLOPT_TIMEOUT => 30,
-                        CURLOPT_FOLLOWLOCATION => true,
-                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                        CURLOPT_CUSTOMREQUEST => 'POST',
-                        CURLOPT_POSTFIELDS =>  array(
-                        'endpoint' => 'product/update_model',
-                        'parameter' => json_encode($parameter)),
-                        CURLOPT_HTTPHEADER => array(
-                          'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                        ),
-                      ));
+            //           $curl = curl_init();
+            //           curl_setopt_array($curl, array(
+            //             CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+            //             CURLOPT_RETURNTRANSFER => true,
+            //             CURLOPT_ENCODING => '',
+            //             CURLOPT_MAXREDIRS => 10,
+            //             CURLOPT_TIMEOUT => 30,
+            //             CURLOPT_FOLLOWLOCATION => true,
+            //             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //             CURLOPT_CUSTOMREQUEST => 'POST',
+            //             CURLOPT_POSTFIELDS =>  array(
+            //             'endpoint' => 'product/update_model',
+            //             'parameter' => json_encode($parameter)),
+            //             CURLOPT_HTTPHEADER => array(
+            //               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //             ),
+            //           ));
                         
-                      $response = curl_exec($curl);
-                      curl_close($curl);
-                      $ret =  json_decode($response,true);
+            //           $response = curl_exec($curl);
+            //           curl_close($curl);
+            //           $ret =  json_decode($response,true);
                       
-                      if($ret['error'] != "")
-                      {
-                          $data['success'] = false;
-                          $data['msg'] =  $ret['error']." MODEL UBAH SKU : ".$ret['message'];
-                          die(json_encode($data));
-                      }
-                  }
+            //           if($ret['error'] != "")
+            //           {
+            //               $data['success'] = false;
+            //               $data['msg'] =  $ret['error']." MODEL UBAH SKU : ".$ret['message'];
+            //               die(json_encode($data));
+            //           }
+            //       }
                   
-                  sleep(3);
+            //       sleep(3);
                   
-                  $parameter = '';
-                  //GET MODEL
-                  $parameter = "&item_id=".(int)$itemid;
-                  $curl = curl_init();
+            //       $parameter = '';
+            //       //GET MODEL
+            //       $parameter = "&item_id=".(int)$itemid;
+            //       $curl = curl_init();
                   
-                  curl_setopt_array($curl, array(
-                    CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_ENCODING => '',
-                    CURLOPT_MAXREDIRS => 10,
-                    CURLOPT_TIMEOUT => 30,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                    CURLOPT_CUSTOMREQUEST => 'POST',
-                    CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
-                    CURLOPT_HTTPHEADER => array(
-                      'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                    ),
-                  ));
+            //       curl_setopt_array($curl, array(
+            //         CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+            //         CURLOPT_RETURNTRANSFER => true,
+            //         CURLOPT_ENCODING => '',
+            //         CURLOPT_MAXREDIRS => 10,
+            //         CURLOPT_TIMEOUT => 30,
+            //         CURLOPT_FOLLOWLOCATION => true,
+            //         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //         CURLOPT_CUSTOMREQUEST => 'POST',
+            //         CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
+            //         CURLOPT_HTTPHEADER => array(
+            //           'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //         ),
+            //       ));
                   
-                  $response = curl_exec($curl);
-                  curl_close($curl);
-                  $ret =  json_decode($response,true);
-                  if($ret['error'] != "")
-                  {
-                      echo $ret['error']." : ".$ret['message'];
-                      $statusok = false;
-                  }
-                  else
-                  {
-                      $dataModelResponse = $ret['response']['model'];
-                      for($m = 0 ; $m < count($dataModelResponse);$m++)
-                      {
-                          $sku = "";
-                          if($dataModelResponse[$m]['model_sku'] == "")
-                          {
-                               $sku = $dataModelResponse[$m]['item_sku'];
-                          }
-                          else
-                          {
-                               $sku = $dataModelResponse[$m]['model_sku'];
-                          }
+            //       $response = curl_exec($curl);
+            //       curl_close($curl);
+            //       $ret =  json_decode($response,true);
+            //       if($ret['error'] != "")
+            //       {
+            //           echo $ret['error']." : ".$ret['message'];
+            //           $statusok = false;
+            //       }
+            //       else
+            //       {
+            //           $dataModelResponse = $ret['response']['model'];
+            //           for($m = 0 ; $m < count($dataModelResponse);$m++)
+            //           {
+            //               $sku = "";
+            //               if($dataModelResponse[$m]['model_sku'] == "")
+            //               {
+            //                   $sku = $dataModelResponse[$m]['item_sku'];
+            //               }
+            //               else
+            //               {
+            //                   $sku = $dataModelResponse[$m]['model_sku'];
+            //               }
                           
-                          $sql = "UPDATE MBARANG SET 
-                                    IDBARANGSHOPEE = ".$dataModelResponse[$m]['model_id'].", 
-                                    IDINDUKBARANGSHOPEE = ".$itemid." 
-                                    WHERE SKUSHOPEE = '".strtoupper($sku)."'";
-                          $CI->db->queryRaw($sql);
-                      }
+            //               $sql = "UPDATE MBARANG SET 
+            //                         IDBARANGLAZADA = ".$dataModelResponse[$m]['model_id'].", 
+            //                         IDINDUKBARANGLAZADA = ".$itemid." 
+            //                         WHERE SKULAZADA = '".strtoupper($sku)."'";
+            //               $CI->db->queryRaw($sql);
+            //           }
                       
-                      $data['success'] = true;
-                      $data['msg'] = "Barang berhasil tersimpan di Shopee";
-                      echo(json_encode($data));
+            //           $data['success'] = true;
+            //           $data['msg'] = "Barang berhasil tersimpan di LAZADA";
+            //           echo(json_encode($data));
                       
-                  }
-                }
-            }
-            else
-            {
-                //UPDATEPRICE
-                $parameter = [];
-                $parameter['item_id'] = $itemid;
-                $parameter['price_list'] = [];
-                array_push($parameter['price_list'],array(
-                   'model_id'       =>  0,
-                   'original_price' =>  (float)$hargaInduk,
-                ));
-                $curl = curl_init();
+            //       }
+            //     }
+            // }
+            // else
+            // {
+            //     //UPDATEPRICE
+            //     $parameter = [];
+            //     $parameter['item_id'] = $itemid;
+            //     $parameter['price_list'] = [];
+            //     array_push($parameter['price_list'],array(
+            //       'model_id'       =>  0,
+            //       'original_price' =>  (float)$hargaInduk,
+            //     ));
+            //     $curl = curl_init();
                       
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'product/update_price',
-                  'parameter' => json_encode($parameter)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
+            //     curl_setopt_array($curl, array(
+            //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+            //       CURLOPT_RETURNTRANSFER => true,
+            //       CURLOPT_ENCODING => '',
+            //       CURLOPT_MAXREDIRS => 10,
+            //       CURLOPT_TIMEOUT => 30,
+            //       CURLOPT_FOLLOWLOCATION => true,
+            //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //       CURLOPT_CUSTOMREQUEST => 'POST',
+            //       CURLOPT_POSTFIELDS =>  array(
+            //       'endpoint' => 'product/update_price',
+            //       'parameter' => json_encode($parameter)),
+            //       CURLOPT_HTTPHEADER => array(
+            //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //       ),
+            //     ));
                   
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
+            //     $response = curl_exec($curl);
+            //     curl_close($curl);
+            //     $ret =  json_decode($response,true);
                 
-                if($ret['error'] != "")
-                {
-                    $data['success'] = false;
-                    $data['msg'] =  $ret['error']." PRODUK UBAH HARGA : ".$ret['message'];
-                    die(json_encode($data));
-                }
+            //     if($ret['error'] != "")
+            //     {
+            //         $data['success'] = false;
+            //         $data['msg'] =  $ret['error']." PRODUK UBAH HARGA : ".$ret['message'];
+            //         die(json_encode($data));
+            //     }
                       
-                $sql = "UPDATE MBARANG SET 
-                                        IDBARANGSHOPEE = ".$itemid.", 
-                                        IDINDUKBARANGSHOPEE = ".$itemid." 
-                                        WHERE SKUSHOPEE = '".strtoupper($skuInduk)."'";
-                              $CI->db->queryRaw($sql);
+            //     $sql = "UPDATE MBARANG SET 
+            //                             IDBARANGLAZADA = ".$itemid.", 
+            //                             IDINDUKBARANGLAZADA = ".$itemid." 
+            //                             WHERE SKULAZADA = '".strtoupper($skuInduk)."'";
+            //                   $CI->db->queryRaw($sql);
+           
+            // }
             
-                $data['success'] = true;
-                $data['msg'] = "Barang berhasil tersimpan di Shopee";
-                echo(json_encode($data));
-            }
+             
+            $data['success'] = true;
+            $data['msg'] = "Barang berhasil tersimpan di Lazada";
+            echo(json_encode($data));
         }
 	   
 	}
@@ -2583,13 +2341,13 @@ class Shopee extends MY_Controller {
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		
-		$idBarang = $this->input->post("idindukbarangshopee",0);
+		$idBarang = $this->input->post("idindukbarangLAZADA",0);
 		$parameter['item_id'] = (int)$idBarang;
 		
 	    $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2617,11 +2375,11 @@ class Shopee extends MY_Controller {
         }
         else
         {
-            $sql = "UPDATE MBARANG SET IDBARANGSHOPEE = '0' , IDINDUKBARANGSHOPEE = '0' WHERE IDINDUKBARANGSHOPEE = '".$idBarang."'";
+            $sql = "UPDATE MBARANG SET IDBARANGLAZADA = '0' , IDINDUKBARANGLAZADA = '0' WHERE IDINDUKBARANGLAZADA = '".$idBarang."'";
             $CI->db->query($sql);
             
             $data['success'] = true;
-            $data['msg'] = "Barang Berhasil Dihapus dari Shopee";
+            $data['msg'] = "Barang Berhasil Dihapus dari LAZADA";
             echo(json_encode($data));
         }
 	}
@@ -2675,7 +2433,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2702,9 +2460,9 @@ class Shopee extends MY_Controller {
             $data['rows'] = [];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                 
-                $label = "<br>&nbsp;&nbsp;<i class='fa fa-edit' style='margin-top:5px; cursor:pointer;' onclick='changeLabelShopee(".$x.")'></i>&nbsp;&nbsp;&nbsp;&nbsp;";
+                $label = "<br>&nbsp;&nbsp;<i class='fa fa-edit' style='margin-top:5px; cursor:pointer;' onclick='changeLabelLAZADA(".$x.")'></i>&nbsp;&nbsp;&nbsp;&nbsp;";
                 $default = 0;
                 $pickup = 0;
                 $return = 0;
@@ -2764,12 +2522,12 @@ class Shopee extends MY_Controller {
         $idAPI = $this->input->post('idAPI')??"0";
         
         //RESET SEMUA
-        $CI->db->where("IDLOKASISHOPEE",$idAPI)
-                    ->set("IDLOKASISHOPEE",0)
+        $CI->db->where("IDLOKASILAZADA",$idAPI)
+                    ->set("IDLOKASILAZADA",0)
                     ->updateRaw("MLOKASI");    
         //UPDATE TERBARU     
         $CI->db->where("IDLOKASI",$id)
-                    ->set("IDLOKASISHOPEE",$idAPI)
+                    ->set("IDLOKASILAZADA",$idAPI)
                     ->updateRaw("MLOKASI");
                     
         $data['success'] = true;            
@@ -2808,7 +2566,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2850,7 +2608,7 @@ class Shopee extends MY_Controller {
 		$curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2876,7 +2634,7 @@ class Shopee extends MY_Controller {
             $dataAddress = $ret['response']['address_list'];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ". $dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ". $dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                 $idlokasiSet = $CI->db->query($sql)->row()->IDLOKASI??0;
                 
                 if($idlokasiSet == 0)
@@ -2905,10 +2663,10 @@ class Shopee extends MY_Controller {
 		$pageno = 1;
 		$pageSize = 100;
 		
-		//PROMO
+		//LOGISTIC
 		$curl = curl_init();
 		
-		while($statusok)
+		while(!$bigger && $statusok)
         {
             
 		    $parameter = "&discount_status=".$status."&page_no=".$pageno."&page_size=".$pageSize.$statusParam;
@@ -2916,7 +2674,7 @@ class Shopee extends MY_Controller {
 		  //  echo $parameter;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -2976,7 +2734,7 @@ class Shopee extends MY_Controller {
 		$tglAw = strtotime($this->input->post('tglmulai'));
 		$tglAk = strtotime($this->input->post('tglakhir'));
          
-        $sql = "SELECT IDBARANG,IDBARANGSHOPEE FROM MBARANG";
+        $sql = "SELECT IDBARANG,IDBARANGLAZADA FROM MBARANG";
         $dataBarangMaster = $CI->db->query($sql)->result();
         $data['rows'] = [];
         $item_id_list = "";
@@ -2990,7 +2748,7 @@ class Shopee extends MY_Controller {
                 
                 $curl = curl_init();
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -3024,7 +2782,7 @@ class Shopee extends MY_Controller {
                             $ID = "";
                             foreach($dataBarangMaster as $itemBarangMaster)
                             {
-                                if((int)$itemBarangMaster->IDBARANGSHOPEE == (int)($dataPromo[$p]['promotion'][$pm]['model_id']??$dataPromo[$p]['item_id']))
+                                if((int)$itemBarangMaster->IDBARANGLAZADA == (int)($dataPromo[$p]['promotion'][$pm]['model_id']??$dataPromo[$p]['item_id']))
                                 {
                                     $ID = $itemBarangMaster->IDBARANG;
                                 }
@@ -3033,7 +2791,7 @@ class Shopee extends MY_Controller {
                             array_push($data['rows'], array(
                                 'ID'                => $ID,
                                 'IDINDUKBARANGSHOPE'=> $dataPromo[$p]['item_id'],
-                                'IDBARANGSHOPEE'    => $dataPromo[$p]['promotion'][$pm]['model_id']??$dataPromo[$p]['item_id'],
+                                'IDBARANGLAZADA'    => $dataPromo[$p]['promotion'][$pm]['model_id']??$dataPromo[$p]['item_id'],
                                 'STARTDATE'         => $dataPromo[$p]['promotion'][$pm]['start_time'],
                                 'ENDDATE'           => $dataPromo[$p]['promotion'][$pm]['end_time'],
                                 'STARTDATELASTPROMO'=> $tglAw,
@@ -3073,7 +2831,7 @@ class Shopee extends MY_Controller {
 		//LOGISTIC
 		$curl = curl_init();
 		
-		while($statusok)
+		while(!$bigger && $statusok)
         {
             
 		    $parameter = "&discount_id=".$idPromosi."&page_no=".$pageno."&page_size=".$pageSize;
@@ -3081,7 +2839,7 @@ class Shopee extends MY_Controller {
 		  //  echo $parameter;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3124,7 +2882,7 @@ class Shopee extends MY_Controller {
                         $id = "";
                         foreach($dataBarang as $itemBarang)
                         {
-                            if($itemBarang->IDINDUKBARANGSHOPEE == $dataItem['item_id'] && $itemBarang->IDBARANGSHOPEE == $dataModel['model_id'])
+                            if($itemBarang->IDINDUKBARANGLAZADA == $dataItem['item_id'] && $itemBarang->IDBARANGLAZADA == $dataModel['model_id'])
                             {
                                 $namamodel = $itemBarang->NAMABARANG;
                                 $id        = $itemBarang->IDBARANG;
@@ -3133,8 +2891,8 @@ class Shopee extends MY_Controller {
                         
                         array_push($data['rows'],array(
                             'ID'                 => $id,
-                            'IDINDUKBARANGSHOPEE'=> $dataItem['item_id'],
-                            'IDBARANGSHOPEE'     => $dataModel['model_id'],
+                            'IDINDUKBARANGLAZADA'=> $dataItem['item_id'],
+                            'IDBARANGLAZADA'     => $dataModel['model_id'],
                             'NAMABARANG'         => $namamodel,
                             'HARGAJUALTAMPIL'    => $dataModel['model_original_price'],
                             'HARGACORET'         => $dataModel['model_promotion_price'],
@@ -3149,7 +2907,7 @@ class Shopee extends MY_Controller {
                         $id = "";
                         foreach($dataBarang as $itemBarang)
                         {
-                            if($itemBarang->IDINDUKBARANGSHOPEE == $dataItem['item_id'] && $itemBarang->IDINDUKBARANGSHOPEE == $itemBarang->IDBARANGSHOPEE)
+                            if($itemBarang->IDINDUKBARANGLAZADA == $dataItem['item_id'] && $itemBarang->IDINDUKBARANGLAZADA == $itemBarang->IDBARANGLAZADA)
                             {
                                 $namainduk = $itemBarang->NAMABARANG;
                                 $id        = $itemBarang->IDBARANG;
@@ -3158,8 +2916,8 @@ class Shopee extends MY_Controller {
                         
                         array_push($data['rows'],array(
                             'ID'                 => $id,
-                            'IDINDUKBARANGSHOPEE'=> $dataItem['item_id'],
-                            'IDBARANGSHOPEE'     => $dataItem['item_id'],
+                            'IDINDUKBARANGLAZADA'=> $dataItem['item_id'],
+                            'IDBARANGLAZADA'     => $dataItem['item_id'],
                             'NAMABARANG'         => $namainduk,
                             'HARGAJUALTAMPIL'    => $dataItem['item_original_price'],
                             'HARGACORET'         => $dataItem['item_promotion_price'],
@@ -3212,7 +2970,7 @@ class Shopee extends MY_Controller {
     	    $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3262,70 +3020,70 @@ class Shopee extends MY_Controller {
     	$idbarangHapus = "";
     	
     	foreach($dataBarang as $itemBarang){
-    	   if($itemBarang['IDBARANGSHOPEE'] != 0 && $itemBarang['IDINDUKBARANGSHOPEE'] != 0)
+    	   if($itemBarang['IDBARANGLAZADA'] != 0 && $itemBarang['IDINDUKBARANGLAZADA'] != 0)
     	   {
     	       if($itemBarang['MODE'] == "TAMBAH")
     	       {
-        	       if($idbarangTambah != $itemBarang['IDINDUKBARANGSHOPEE'])
+        	       if($idbarangTambah != $itemBarang['IDINDUKBARANGLAZADA'])
         	       {
-        	           $idbarangTambah = $itemBarang['IDINDUKBARANGSHOPEE'];
+        	           $idbarangTambah = $itemBarang['IDINDUKBARANGLAZADA'];
         	           array_push($parameterTambah['item_list'], array(
-        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGSHOPEE'],
+        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGLAZADA'],
         	               'item_promotion_price'   => (float)$itemBarang['HARGACORET'],
         	               'purchase_limit'         => (int)$itemBarang['BATASPEMBELIAN']??0,
         	               'model_list' => []
         	           ));
         	       }
         	       
-        	       if($itemBarang['IDBARANGSHOPEE'] != $itemBarang['IDINDUKBARANGSHOPEE'])
+        	       if($itemBarang['IDBARANGLAZADA'] != $itemBarang['IDINDUKBARANGLAZADA'])
         	       {
         	           array_push($parameterTambah['item_list'][count($parameterTambah['item_list'])-1]['model_list'],
         	           array(
-        	                'model_id'               => (int)$itemBarang['IDBARANGSHOPEE'],
+        	                'model_id'               => (int)$itemBarang['IDBARANGLAZADA'],
         	                'model_promotion_price'   => (float)$itemBarang['HARGACORET'],
         	           ));
         	       }
     	       }
     	       else if($itemBarang['MODE'] == "UBAH")
     	       {
-        	       if($idbarangUbah != $itemBarang['IDINDUKBARANGSHOPEE'])
+        	       if($idbarangUbah != $itemBarang['IDINDUKBARANGLAZADA'])
         	       {
-        	           $idbarangUbah = $itemBarang['IDINDUKBARANGSHOPEE'];
+        	           $idbarangUbah = $itemBarang['IDINDUKBARANGLAZADA'];
         	           array_push($parameterUbah['item_list'], array(
-        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGSHOPEE'],
+        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGLAZADA'],
         	               'item_promotion_price'   => (float)$itemBarang['HARGACORET'],
         	               'purchase_limit'         => (int)$itemBarang['BATASPEMBELIAN']??0,
         	               'model_list' => []
         	           ));
         	       }
         	       
-        	       if($itemBarang['IDBARANGSHOPEE'] != $itemBarang['IDINDUKBARANGSHOPEE'])
+        	       if($itemBarang['IDBARANGLAZADA'] != $itemBarang['IDINDUKBARANGLAZADA'])
         	       {
         	           array_push($parameterUbah['item_list'][count($parameterUbah['item_list'])-1]['model_list'],
         	           array(
-        	                'model_id'               => (int)$itemBarang['IDBARANGSHOPEE'],
+        	                'model_id'               => (int)$itemBarang['IDBARANGLAZADA'],
         	                'model_promotion_price'   => (float)$itemBarang['HARGACORET'],
         	           ));
         	       }
     	       }
     	       else if($itemBarang['MODE'] == "HAPUS")
     	       {
-        	       if($idbarangHapus != $itemBarang['IDINDUKBARANGSHOPEE'])
+        	       if($idbarangHapus != $itemBarang['IDINDUKBARANGLAZADA'])
         	       {
-        	           $idbarangHapus = $itemBarang['IDINDUKBARANGSHOPEE'];
+        	           $idbarangHapus = $itemBarang['IDINDUKBARANGLAZADA'];
         	           array_push($parameterHapus['item_list'], array(
-        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGSHOPEE'],
+        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGLAZADA'],
         	               'item_promotion_price'   => (float)$itemBarang['HARGACORET'],
         	               'purchase_limit'         => (int)$itemBarang['BATASPEMBELIAN']??0,
         	               'model_list' => []
         	           ));
         	       }
         	       
-        	       if($itemBarang['IDBARANGSHOPEE'] != $itemBarang['IDINDUKBARANGSHOPEE'])
+        	       if($itemBarang['IDBARANGLAZADA'] != $itemBarang['IDINDUKBARANGLAZADA'])
         	       {
         	           array_push($parameterHapus['item_list'][count($parameterHapus['item_list'])-1]['model_list'],
         	           array(
-        	                'model_id'               => (int)$itemBarang['IDBARANGSHOPEE'],
+        	                'model_id'               => (int)$itemBarang['IDBARANGLAZADA'],
         	                'model_promotion_price'   => (float)$itemBarang['HARGACORET'],
         	           ));
         	       }
@@ -3338,7 +3096,7 @@ class Shopee extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3371,7 +3129,7 @@ class Shopee extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3411,7 +3169,7 @@ class Shopee extends MY_Controller {
             	    $parameter['item_id']       = (int)$parameterHapus['item_list'][$h]['item_id'];
 
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -3450,7 +3208,7 @@ class Shopee extends MY_Controller {
                 	    $parameter['model_id']      = (int)$parameterHapus['item_list'][$h]['model_list'][$v]['model_id'];
 
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -3482,7 +3240,7 @@ class Shopee extends MY_Controller {
     	}
         
         $data['success'] = true;
-        $data['msg'] = "Promo Produk pada Shopee Berhasil Disimpan";
+        $data['msg'] = "Promo Produk pada LAZADA Berhasil Disimpan";
         
         echo(json_encode($data));
     
@@ -3507,7 +3265,7 @@ class Shopee extends MY_Controller {
 	    $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -3536,7 +3294,7 @@ class Shopee extends MY_Controller {
         else
         {
             $data['success'] = true;
-            $data['msg'] = "Promo Produk pada Shopee Berhasil Dihapus";
+            $data['msg'] = "Promo Produk pada LAZADA Berhasil Dihapus";
             echo(json_encode($data));
         }
 	}
@@ -3548,93 +3306,94 @@ class Shopee extends MY_Controller {
 		$dataBarangPermanent = json_decode($this->input->post("databarangpermanent"),true);
 		$dataBarangAll = json_decode($this->input->post("databarangall"),true);
 		
-		$CI->db->set('BOOSTSHOPEE',0)
+		$CI->db->set('BOOSTLAZADA',0)
     	     ->update('MBARANG');
     	     
         foreach($dataBarangAll as $itemBarangAll)
 		{
-             $CI->db->where("IDINDUKBARANGSHOPEE",$itemBarangAll)
-    	     ->set('BOOSTSHOPEE',1)
+             $CI->db->where("IDINDUKBARANGLAZADA",$itemBarangAll)
+    	     ->set('BOOSTLAZADA',1)
     	     ->update('MBARANG');
 		}
 		
 		foreach($dataBarangPermanent as $itemBarangPermanent)
 		{
-             $CI->db->where("IDINDUKBARANGSHOPEE",$itemBarangPermanent)
-    	     ->set('BOOSTSHOPEE',2)
+             $CI->db->where("IDINDUKBARANGLAZADA",$itemBarangPermanent)
+    	     ->set('BOOSTLAZADA',2)
     	     ->update('MBARANG');
 		}
 	     
         $data['success'] = true;
-        $data['msg'] = "Jadwal Naikkan Produk pada Shopee Berhasil Disimpan";
+        $data['msg'] = "Jadwal Naikkan Produk pada LAZADA Berhasil Disimpan";
         echo(json_encode($data));
 	}
 	
 	function getBoost(){
-	   $CI =& get_instance();	
-       $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-	   $this->output->set_content_type('application/json');
+	   //$CI =& get_instance();	
+    //   $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+	   //$this->output->set_content_type('application/json');
 	   
-	   $data['rows'] = [];
+	   //$data['rows'] = [];
 	   
-	   $curl = curl_init();
+	   //$curl = curl_init();
 	    
-	   curl_setopt_array($curl, array(
-         CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
-         CURLOPT_RETURNTRANSFER => true,
-         CURLOPT_ENCODING => '',
-         CURLOPT_MAXREDIRS => 10,
-         CURLOPT_TIMEOUT => 30,
-         CURLOPT_FOLLOWLOCATION => true,
-         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-         CURLOPT_CUSTOMREQUEST => 'POST',
-         CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_boosted_list','parameter' => $parameter),
-         CURLOPT_HTTPHEADER => array(
-           'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-         ),
-       ));
+	   //curl_setopt_array($curl, array(
+    //      CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+    //      CURLOPT_RETURNTRANSFER => true,
+    //      CURLOPT_ENCODING => '',
+    //      CURLOPT_MAXREDIRS => 10,
+    //      CURLOPT_TIMEOUT => 30,
+    //      CURLOPT_FOLLOWLOCATION => true,
+    //      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //      CURLOPT_CUSTOMREQUEST => 'POST',
+    //      CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_boosted_list','parameter' => $parameter),
+    //      CURLOPT_HTTPHEADER => array(
+    //       'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+    //      ),
+    //   ));
        
-       $response = curl_exec($curl);
-       curl_close($curl);
-       $ret =  json_decode($response,true);
-       if($ret['error'] != "")
-       {
-           echo $ret['error']." : ".$ret['message'];
-       }
-       else
-       {
-           $itemList = $ret['response']['item_list'];
-           $sql = "SELECT * FROM MBARANG WHERE BOOSTSHOPEE != 0 group by KATEGORI";
-           $dataBarang = $CI->db->query($sql)->result();
+    //   $response = curl_exec($curl);
+    //   curl_close($curl);
+    //   $ret =  json_decode($response,true);
+    //   if($ret['error'] != "")
+    //   {
+    //       echo $ret['error']." : ".$ret['message'];
+    //   }
+    //   else
+    //   {
+    //       $itemList = $ret['response']['item_list'];
+    //       $sql = "SELECT * FROM MBARANG WHERE BOOSTLAZADA != 0 group by KATEGORI";
+    //       $dataBarang = $CI->db->query($sql)->result();
            
-            foreach($dataBarang as $itemBarang)
-            {
-               if($itemBarang->IDINDUKBARANGSHOPEE != 0)
-               {
-                   $waktu = "-";
-                   for($i = 0 ; $i < count($itemList) ; $i++)
-                   {
-                       if($itemBarang->IDINDUKBARANGSHOPEE == $itemList[$i]['item_id'])
-                       {
-                           $waktu = $itemList[$i]['cool_down_second'];
-                       }
-                   }
+    //         foreach($dataBarang as $itemBarang)
+    //         {
+    //           if($itemBarang->IDINDUKBARANGLAZADA != 0)
+    //           {
+    //               $waktu = "-";
+    //               for($i = 0 ; $i < count($itemList) ; $i++)
+    //               {
+    //                   if($itemBarang->IDINDUKBARANGLAZADA == $itemList[$i]['item_id'])
+    //                   {
+    //                       $waktu = $itemList[$i]['cool_down_second'];
+    //                   }
+    //               }
                        
-                    array_push($data['rows'],array(
-                        'PERMANENT' => $itemBarang->BOOSTSHOPEE == 2 ? true : false,
-                        'ID'        => $itemBarang->IDINDUKBARANGSHOPEE,
-                        'NAMA'      => $itemBarang->KATEGORI,
-                        'WAKTU'     => $waktu
-                    ));
-               }
-            }
-       }
+    //                 array_push($data['rows'],array(
+    //                     'PERMANENT' => $itemBarang->BOOSTLAZADA == 2 ? true : false,
+    //                     'ID'        => $itemBarang->IDINDUKBARANGLAZADA,
+    //                     'NAMA'      => $itemBarang->KATEGORI,
+    //                     'WAKTU'     => $waktu
+    //                 ));
+    //           }
+    //         }
+    //   }
        
-       usort($data['rows'], function($a, $b) {
-           return strcmp($a['NAMA'], $b['NAMA']);
-       });
+    //   usort($data['rows'], function($a, $b) {
+    //       return strcmp($a['NAMA'], $b['NAMA']);
+    //   });
        
-       	echo json_encode($data); 
+    //   	echo json_encode($data); 
+    echo json_encode([]);
 	}
 	
 	//TRANSACTION
@@ -3693,7 +3452,7 @@ class Shopee extends MY_Controller {
                         METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
                         KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
                         TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI
-                        FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
+                        FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
                         order by TGLTRANS DESC";
         $result = $CI->db->query($sql)->result();
         
@@ -3707,12 +3466,12 @@ class Shopee extends MY_Controller {
             
             //GET NAMA BARANG
             $sql = "SELECT NAMABARANG, WARNA, SIZE
-                        FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produk[0])[1]."'";
+                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produk[0])[1]."'";
             $dataBarang = $CI->db->query($sql)->row();
             $item->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
             
             $sqlOld = "SELECT WARNA, SIZE
-                        FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkOld[0])[1]."'";
+                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkOld[0])[1]."'";
             $dataBarangOld = $CI->db->query($sqlOld)->row();
             
             if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -3750,13 +3509,13 @@ class Shopee extends MY_Controller {
                 
                 //GET NAMA BARANG
                 $sql = "SELECT NAMABARANG, WARNA, SIZE
-                            FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produk[$indexPengganti])[1]."'";
+                            FROM MBARANG WHERE SKULAZADA = '".explode("*",$produk[$indexPengganti])[1]."'";
                 $dataBarang = $CI->db->query($sql)->row();
              
                 $item->BARANGPENGEMBALIAN  = explode(" | ",$dataBarang->NAMABARANG)[0];
                 
                 $sqlOld = "SELECT WARNA, SIZE
-                        FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkOld[$indexPengganti])[1]."'";
+                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkOld[$indexPengganti])[1]."'";
                 $dataBarangOld = $CI->db->query($sqlOld)->row();
         
                 if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -3799,7 +3558,7 @@ class Shopee extends MY_Controller {
                                                 white-space: -o-pre-wrap;   /* Opera 7 */    
                                                 word-wrap: break-word;      /* IE */'>".$item->CATATANBELI??''."</div>";
             $item->CATATANJUALRAW = $item->CATATANJUAL;                                    
-            $item->CATATANJUAL = "<i class='fa fa-edit' id='editNoteShopee' style='cursor:pointer;'></i>
+            $item->CATATANJUAL = "<i class='fa fa-edit' id='editNoteLAZADA' style='cursor:pointer;'></i>
                                   <div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
                                                 white-space: -moz-pre-wrap; /* Firefox */    
                                                 white-space: -pre-wrap;     /* Opera <7 */   
@@ -3825,7 +3584,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -3851,7 +3610,7 @@ class Shopee extends MY_Controller {
             $result;
 		    $result['BIAYALAINBELI']        = $ret['response']['buyer_payment_info']['buyer_service_fee']; 
 		    $result['PEMBAYARANBELI']       = $ret['response']['buyer_payment_info']['buyer_total_amount']; 
-		    $result['DISKONBELI']           = ($ret['response']['buyer_payment_info']['shopee_voucher']+$ret['response']['buyer_payment_info']['seller_voucher']+$ret['response']['buyer_payment_info']['shopee_coins_redeemed']); 
+		    $result['DISKONBELI']           = ($ret['response']['buyer_payment_info']['LAZADA_voucher']+$ret['response']['buyer_payment_info']['seller_voucher']+$ret['response']['buyer_payment_info']['LAZADA_coins_redeemed']); 
 		    $result['SUBTOTALBELI']         = $ret['response']['buyer_payment_info']['merchant_subtotal']; 
 		    $result['BIAYAKIRIMBELI']       = $ret['response']['buyer_payment_info']['shipping_fee']; 
 		    
@@ -3866,7 +3625,7 @@ class Shopee extends MY_Controller {
 		    
 		    $sql = "SELECT SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD, SKUPRODUKPENGEMBALIAN
                         FROM TPENJUALANMARKETPLACE 
-                        WHERE MARKETPLACE = 'SHOPEE' and KODEPENJUALANMARKETPLACE = '$nopesanan' ";
+                        WHERE MARKETPLACE = 'LAZADA' and KODEPENJUALANMARKETPLACE = '$nopesanan' ";
                         
             $resultPesanan = $CI->db->query($sql)->row();
             
@@ -3878,8 +3637,8 @@ class Shopee extends MY_Controller {
             foreach($produkData as $item)
             {
                 //GET NAMA BARANG
-                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUSHOPEE as SKU
-                            FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$item)[1]."'";
+                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
+                            FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                 $dataBarang = $CI->db->query($sql)->row();
                 $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
                 if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -3909,8 +3668,8 @@ class Shopee extends MY_Controller {
                 foreach($produkDataOld as $item)
                 {
                     //GET NAMA BARANG
-                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUSHOPEE as SKU
-                                FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$item)[1]."'";
+                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
+                                FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                     $dataBarang = $CI->db->query($sql)->row();
                     $dataProduk[$indexProduk]->BARANGOLD  = explode(" | ",$dataBarang->NAMABARANG)[0];
                     if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -3944,8 +3703,8 @@ class Shopee extends MY_Controller {
                         {
                            
                              //JIKA ADA YANG BEDA UPDATE LAGI
-                            $sql = "SELECT NAMABARANG, WARNA, SIZE,SKUSHOPEE as SKU
-                                        FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkDataKembali[$t])[1]."'";
+                            $sql = "SELECT NAMABARANG, WARNA, SIZE,SKULAZADA as SKU
+                                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkDataKembali[$t])[1]."'";
                             $dataBarangKembali = $CI->db->query($sql)->row();
                         
                             if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
@@ -4014,7 +3773,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4057,7 +3816,7 @@ class Shopee extends MY_Controller {
 		    
 		    $sql = "SELECT SKUPRODUKPENGEMBALIAN, SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD
                         FROM TPENJUALANMARKETPLACE 
-                        WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE = '$nopengembalian' ";
+                        WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE = '$nopengembalian' ";
                         
             $resultPesanan = $CI->db->query($sql)->row();
             $produkDataPengembalian = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
@@ -4068,8 +3827,8 @@ class Shopee extends MY_Controller {
             foreach($produkData as $item)
             {
                 //GET NAMA BARANG
-                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUSHOPEE as SKU
-                            FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$item)[1]."'";
+                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
+                            FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                 $dataBarang = $CI->db->query($sql)->row();
                 $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
                 if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -4095,8 +3854,8 @@ class Shopee extends MY_Controller {
                 foreach($produkDataOld as $item)
                 {
                     //GET NAMA BARANG
-                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUSHOPEE as SKU
-                                FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$item)[1]."'";
+                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
+                                FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                     $dataBarang = $CI->db->query($sql)->row();
                     $dataProduk[$indexProduk]->BARANGOLD  = explode(" | ",$dataBarang->NAMABARANG)[0];
                     if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -4125,12 +3884,12 @@ class Shopee extends MY_Controller {
                            $indexPengganti = $s;
                            
                              //GET NAMA BARANG
-                            $sql = "SELECT NAMABARANG, WARNA, SIZE, SKUSHOPEE as SKU
-                                        FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkData[$indexPengganti])[1]."'";
+                            $sql = "SELECT NAMABARANG, WARNA, SIZE, SKULAZADA as SKU
+                                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkData[$indexPengganti])[1]."'";
                             $dataBarang = $CI->db->query($sql)->row();
                             
                             $sqlOld = "SELECT WARNA, SIZE
-                                    FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkDataOld[$indexPengganti])[1]."'";
+                                    FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkDataOld[$indexPengganti])[1]."'";
                             $dataBarangOld = $CI->db->query($sqlOld)->row();
                         
                             if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -4256,7 +4015,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4292,7 +4051,7 @@ class Shopee extends MY_Controller {
           $curl = curl_init();
            
           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4332,7 +4091,7 @@ class Shopee extends MY_Controller {
                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
                   $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                  ->where('MARKETPLACE',"SHOPEE")
+                  ->where('MARKETPLACE',"LAZADA")
                     ->updateRaw("TPENJUALANMARKETPLACE", array(
                       'NAME'                       => $data['NAME'],  
                       'TELP'                       => $data['TELP'],  
@@ -4353,7 +4112,7 @@ class Shopee extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4377,7 +4136,7 @@ class Shopee extends MY_Controller {
             else
             {
     		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','SHOPEE')
+    		   ->where('MARKETPLACE','LAZADA')
     		   ->updateRaw("TPENJUALANMARKETPLACE", array(
     		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
     		    ));
@@ -4389,7 +4148,7 @@ class Shopee extends MY_Controller {
            $curl = curl_init();
            $logisticStatus = "";
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4415,7 +4174,7 @@ class Shopee extends MY_Controller {
                $logisticStatus = $ret['response']['logistics_status'];
                
                 $CI->db->where("KODEPENGEMBALIANMARKETPLACE",$nopengembalian)
-		          ->where('MARKETPLACE','SHOPEE')
+		          ->where('MARKETPLACE','LAZADA')
 		          ->updateRaw("TPENJUALANMARKETPLACE", array(
 		              'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0)
 		            ));
@@ -4428,7 +4187,7 @@ class Shopee extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -4455,7 +4214,7 @@ class Shopee extends MY_Controller {
                         $data['rows'] = [];
                         for($x = 0 ; $x < count($dataAddress);$x++)
                         {
-                            $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                            $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                             
                             for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                             {
@@ -4467,7 +4226,7 @@ class Shopee extends MY_Controller {
                         }
                     }
                     
-            	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
+            	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
             	    
             	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
                     for($f = 0 ; $f < count($finalData) ; $f++)
@@ -4481,7 +4240,7 @@ class Shopee extends MY_Controller {
                     }
                     $wherePesanan .= ")";
                     
-                    $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
+                    $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
                     $dataRetur = $CI->db->query($sqlRetur)->result();
             
                     foreach($dataRetur as $itemRetur)
@@ -4517,7 +4276,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4566,7 +4325,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4602,7 +4361,7 @@ class Shopee extends MY_Controller {
            $curl = curl_init();
            
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4642,7 +4401,7 @@ class Shopee extends MY_Controller {
                    $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
                    $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"SHOPEE")
+                   ->where('MARKETPLACE',"LAZADA")
                     ->updateRaw("TPENJUALANMARKETPLACE", array(
                        'NAME'                       => $data['NAME'],  
                        'TELP'                       => $data['TELP'],  
@@ -4664,7 +4423,7 @@ class Shopee extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4688,7 +4447,7 @@ class Shopee extends MY_Controller {
             else
             {
     		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','SHOPEE')
+    		   ->where('MARKETPLACE','LAZADA')
     		   ->updateRaw("TPENJUALANMARKETPLACE", array(
     		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
     		    ));
@@ -4735,7 +4494,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4771,7 +4530,7 @@ class Shopee extends MY_Controller {
            $curl = curl_init();
            
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4811,7 +4570,7 @@ class Shopee extends MY_Controller {
                    $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
                    $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"SHOPEE")
+                   ->where('MARKETPLACE',"LAZADA")
                     ->updateRaw("TPENJUALANMARKETPLACE", array(
                        'NAME'                       => $data['NAME'],  
                        'TELP'                       => $data['TELP'],  
@@ -4833,7 +4592,7 @@ class Shopee extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4857,7 +4616,7 @@ class Shopee extends MY_Controller {
             else
             {
     		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','SHOPEE')
+    		   ->where('MARKETPLACE','LAZADA')
     		   ->updateRaw("TPENJUALANMARKETPLACE", array(
     		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
     		    ));
@@ -4865,7 +4624,7 @@ class Shopee extends MY_Controller {
             
             //UPDATE BARANG SAMPAI
             $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','SHOPEE')
+    		   ->where('MARKETPLACE','LAZADA')
     		   ->updateRaw("TPENJUALANMARKETPLACE", array(
     		      'BARANGSAMPAI'   =>  1,
     		 ));
@@ -4876,7 +4635,7 @@ class Shopee extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4903,7 +4662,7 @@ class Shopee extends MY_Controller {
                 $data['rows'] = [];
                 for($x = 0 ; $x < count($dataAddress);$x++)
                 {
-                    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                     
                     for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                     {
@@ -4915,9 +4674,9 @@ class Shopee extends MY_Controller {
                 }
             }
             
-    	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
+    	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
             
-            $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE = '".$nopengembalian."'";
+            $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE = '".$nopengembalian."'";
             $dataRetur = $CI->db->query($sqlRetur)->result();
             
             foreach($dataRetur as $itemRetur)
@@ -4945,7 +4704,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4996,7 +4755,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5063,17 +4822,17 @@ class Shopee extends MY_Controller {
         	    {
         	        $endpoint = "returns/convert_image";
             	    
-            	    $code = $this->model_master_config->getConfigMarketplace('SHOPEE','CODE');
-            	    $shopId = $this->model_master_config->getConfigMarketplace('SHOPEE','SHOP_ID');
-            	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-            	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
-            	    $accessToken = $this->model_master_config->getConfigMarketplace('SHOPEE','ACCESS_TOKEN');
+            	    $code = $this->model_master_config->getConfigMarketplace('LAZADA','CODE');
+            	    $shopId = $this->model_master_config->getConfigMarketplace('LAZADA','SHOP_ID');
+            	    $partnerId = $this->model_master_config->getConfigMarketplace('LAZADA','PARTNER_ID');
+            	    $partnerKey = $this->model_master_config->getConfigMarketplace('LAZADA','PARTNER_KEY');
+            	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
                     $path = "/api/v2/";
                     
                     $timest = time();
                     $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest.$accessToken.$shopId,$partnerKey);
                     
-                    $host = 'https://partner.shopeemobile.com'.$path.$endpoint;
+                    $host = 'https://partner.LAZADAmobile.com'.$path.$endpoint;
                     // Path to the local file
                     $filePath = $destination;
                     
@@ -5152,6 +4911,105 @@ class Shopee extends MY_Controller {
 	    
 	}
 	
+	public function uploadUrlCoba(){
+	    $url = $this->input->post('url')??"";
+        $response =  $this->getRefreshToken();
+        if($response)
+        {
+               $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+               $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
+               $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
+               $endpoint = "/image/migrate";
+               
+               // Current UTC time
+               $datetime = new DateTime('now', new DateTimeZone('UTC'));
+               
+               // Get Unix timestamp in seconds
+               $timestampSeconds = $datetime->getTimestamp();
+               
+               // Convert to milliseconds
+               $timest = $timestampSeconds * 1000;
+               
+               $signMethod = 'sha256';
+               
+               $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
+               
+               uksort($body, function($a, $b) {
+                   return strcmp($a, $b);
+               });
+               
+               //STEP 2
+               $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+           
+               //STEP 3
+               $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
+               echo $baseString;
+               //STEP 4 & 5
+               $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
+               
+               $body['sign'] = $sign;
+               
+               // Prepare POST data
+               $array = [
+               'Request' => [
+                       'Image' => [
+                           'Url' => $url
+                       ]
+                   ]
+               ];
+              
+               $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
+               $this->arrayToXml($array, $xml);
+               
+               $body['payload'] = $xml->Request->asXML();
+               
+               $postData = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+               
+               echo $postData;
+               
+               $host = 'https://api.lazada.co.id/rest'.$endpoint;
+
+               // Initialize cURL
+               $ch = curl_init();
+               // Set cURL options
+               curl_setopt($ch, CURLOPT_URL,  $host); // destination URL
+               curl_setopt($ch, CURLOPT_POST, true);
+               curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+               curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+               curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                   "Content-Type: application/x-www-form-urlencoded"
+               ]);
+               
+               // Execute the request
+               $response = curl_exec($ch);
+               curl_close($ch);
+               $ret =  json_decode($response,true);
+               
+               if($ret['message'] != "")
+               {
+                   $data['success'] = false;
+                   print_r($ret);
+                   echo $ret['code']." : ".$ret['message'];
+               }
+               else
+               {
+                 $data['success'] = true;
+                 $data['id'] = $ret['data']['image']['hash_code'];
+                 $data['url'] = $ret['data']['image']['url'];
+           	     echo(json_encode($data));
+               }
+    
+        }
+           else
+        {
+           // echo "Token gagal diperbaharui";
+            echo json_encode(array(
+                "success" => false,
+                "error" => "failed refresh token"
+            ));
+        }
+	}
+	
 	public function uploadLocalUrl(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
@@ -5174,6 +5032,7 @@ class Shopee extends MY_Controller {
         // Create filename and move the file
         $type = ".".explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
         $destination = $uploadDir . $kode . "_" . $index.$type;
+        $host = "https://api.lazada.co.id/rest";
 
         if (move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
             
@@ -5182,20 +5041,20 @@ class Shopee extends MY_Controller {
                 $response =  $this->getRefreshToken();
         	    if($response)
         	    {
-                
-            	    $endpoint = "media_space/upload_image";
+            	    $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+            	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
+            	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
+            	    $endpoint = "/image/migrate";
             	    
-            	    $code = $this->model_master_config->getConfigMarketplace('SHOPEE','CODE');
-            	    $shopId = $this->model_master_config->getConfigMarketplace('SHOPEE','SHOP_ID');
-            	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-            	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
-            	    $accessToken = $this->model_master_config->getConfigMarketplace('SHOPEE','ACCESS_TOKEN');
-                    $path = "/api/v2/";
+            	    // Current UTC time
+                    $datetime = new DateTime('now', new DateTimeZone('UTC'));
                     
-                    $timest = time();
-                    $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest,$partnerKey);
+                    // Get Unix timestamp in seconds
+                    $timestampSeconds = $datetime->getTimestamp();
                     
-                    $host = 'https://partner.shopeemobile.com'.$path.$endpoint;
+                    // Convert to milliseconds
+                    $timest = $timestampSeconds * 1000;
+
                     // Path to the local file
                     $filePath = $destination;
                     
@@ -5204,23 +5063,53 @@ class Shopee extends MY_Controller {
                     die('File not found.');
                     }
                     
-                    // Prepare the CURLFile object
-                    $cfile = new CURLFile($filePath, mime_content_type($filePath), basename($filePath));
+                    $signMethod = 'sha256';
+                    
+                    $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
+                    
+                    uksort($body, function($a, $b) {
+                        return strcmp($a, $b);
+                    });
+                    
+                    //STEP 2
+                    $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+            
+                    //STEP 3
+                    $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
+                    echo $baseString;
+                    //STEP 4 & 5
+                    $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
+                    
+                    $body['sign'] = $sign;
                     
                     // Prepare POST data
-                    $postData = [
-                    'image' => $cfile
+                    $array = [
+                    'Request' => [
+                            'Image' => [
+                                'Url' => 'https://cf.shopee.co.id/file/sg-11134201-824h2-me9bkgo0rke826'
+                            ]
+                        ]
                     ];
                     
+                    $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
+                    $this->arrayToXml($array, $xml);
+                    
+                    $body['payload'] = $xml->asXML();
+                    print_r($body);
+                    $postData = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+                    
+                    
+                    $host = 'https://api.lazada.co.id/rest'.$endpoint;
+                   
                     // Initialize cURL
                     $ch = curl_init();
                     // Set cURL options
-                    curl_setopt($ch, CURLOPT_URL,  $host.'?timestamp='.$timest.'&sign='.$sign.'&partner_id='.$partnerId); // destination URL
+                    curl_setopt($ch, CURLOPT_URL,  $host); // destination URL
                     curl_setopt($ch, CURLOPT_POST, true);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        'Content-Type: multipart/form-data'
+                        "Content-Type: application/x-www-form-urlencoded"
                     ]);
                     
                     // Execute the request
@@ -5228,24 +5117,17 @@ class Shopee extends MY_Controller {
                     curl_close($ch);
                     $ret =  json_decode($response,true);
                     
-                    if($ret['error'] != "")
+                    if($ret['message'] != "")
                     {
                         $data['success'] = false;
-                        echo $ret['error']." : ".$ret['message'];
+                        print_r($ret);
+                        echo $ret['code']." : ".$ret['message'];
                     }
                     else
                     {
                       $data['success'] = true;
-                      $dataUrl = $ret['response']['image_info']['image_url_list'];
-                      //GET URL
-                      for($u = 0 ; $u < count($dataUrl);$u++)
-                      {
-                          if($dataUrl[$u]['image_url_region'] == "ID")
-                          {
-                             $data['url'] = $dataUrl[$u]['image_url'];
-                          }
-                      }
-                      $data['id'] = $ret['response']['image_info']['image_id'];
+                      $data['id'] = $ret['data']['image']['hash_code'];
+                      $data['url'] = $ret['data']['image']['url'];
                        
                       //HAPUS DLU
                       $folder = FCPATH . '/assets/'.$this->input->post('reason').'/'; // Use FCPATH . 'assets/proof/' in CodeIgniter
@@ -5317,7 +5199,7 @@ class Shopee extends MY_Controller {
               // Initialize cURL
               $curl = curl_init();
               curl_setopt_array($curl, array(
-                 CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                 CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                  CURLOPT_RETURNTRANSFER => true,
                  CURLOPT_ENCODING => '',
                  CURLOPT_MAXREDIRS => 10,
@@ -5354,17 +5236,17 @@ class Shopee extends MY_Controller {
             	    {
                 	    $endpoint = "media_space/upload_video_part";
                 	    
-                	    $code = $this->model_master_config->getConfigMarketplace('SHOPEE','CODE');
-                	    $shopId = $this->model_master_config->getConfigMarketplace('SHOPEE','SHOP_ID');
-                	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
-                	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
-                	    $accessToken = $this->model_master_config->getConfigMarketplace('SHOPEE','ACCESS_TOKEN');
+                	    $code = $this->model_master_config->getConfigMarketplace('LAZADA','CODE');
+                	    $shopId = $this->model_master_config->getConfigMarketplace('LAZADA','SHOP_ID');
+                	    $partnerId = $this->model_master_config->getConfigMarketplace('LAZADA','PARTNER_ID');
+                	    $partnerKey = $this->model_master_config->getConfigMarketplace('LAZADA','PARTNER_KEY');
+                	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
                         $path = "/api/v2/";
                         
                         $timest = time();
                         $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest,$partnerKey);
                         
-                        $host = 'https://partner.shopeemobile.com'.$path.$endpoint;
+                        $host = 'https://partner.LAZADAmobile.com'.$path.$endpoint;
                         // Path to the local file
                         $filePath = $destination;
                         
@@ -5428,7 +5310,7 @@ class Shopee extends MY_Controller {
                           // Initialize cURL
                           $curl = curl_init();
                           curl_setopt_array($curl, array(
-                             CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                             CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                              CURLOPT_RETURNTRANSFER => true,
                              CURLOPT_ENCODING => '',
                              CURLOPT_MAXREDIRS => 10,
@@ -5465,7 +5347,7 @@ class Shopee extends MY_Controller {
                                     $curl = curl_init();
                                     
                                     curl_setopt_array($curl, array(
-                                      CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                                       CURLOPT_RETURNTRANSFER => true,
                                       CURLOPT_ENCODING => '',
                                       CURLOPT_MAXREDIRS => 10,
@@ -5565,7 +5447,7 @@ class Shopee extends MY_Controller {
         print_r($parameter);
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5612,7 +5494,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5650,7 +5532,7 @@ class Shopee extends MY_Controller {
 		
 		
 	    $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-		        ->where('MARKETPLACE','SHOPEE')
+		        ->where('MARKETPLACE','LAZADA')
 		            ->set("SELLERMENUNGGUBARANGDATANG", 1)
 		            ->updateRaw("TPENJUALANMARKETPLACE");
 
@@ -5682,12 +5564,12 @@ class Shopee extends MY_Controller {
             $skuold = $item['SKUOLD'];
             $allskuold .= ($jml."*".$skuold."|");
             
-            $sqlBarang = "select idbarang from mbarang where SKUSHOPEE = '$sku'";
+            $sqlBarang = "select idbarang from mbarang where SKULAZADA = '$sku'";
             $queryBarang = $CI->db->query($sqlBarang)->row();
                                
             //UPDATE DETAIL BARANG
             $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-		            ->where('MARKETPLACE','SHOPEE')
+		            ->where('MARKETPLACE','LAZADA')
 		            ->where('URUTAN',$urutan)
 		            ->set("SKU", $sku)
 		            ->set("IDBARANG", $queryBarang->IDBARANG)
@@ -5698,12 +5580,12 @@ class Shopee extends MY_Controller {
 		 
 		
 		 $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-		        ->where('MARKETPLACE','SHOPEE')
+		        ->where('MARKETPLACE','LAZADA')
 		            ->set("SKUPRODUKOLD", $allskuold)
 		            ->updateRaw("TPENJUALANMARKETPLACE");
 		            
 		 $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-		        ->where('MARKETPLACE','SHOPEE')
+		        ->where('MARKETPLACE','LAZADA')
 		            ->set("SKUPRODUK", $allsku)
 		            ->updateRaw("TPENJUALANMARKETPLACE");
 		
@@ -5728,7 +5610,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5756,7 +5638,7 @@ class Shopee extends MY_Controller {
         else
         {
             $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-                    ->where("MARKETPLACE","SHOPEE")
+                    ->where("MARKETPLACE","LAZADA")
 		            ->set("CATATANPENJUAL", $note)
 		            ->updateRaw("TPENJUALANMARKETPLACE");
 		            
@@ -5785,7 +5667,7 @@ class Shopee extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -5816,7 +5698,7 @@ class Shopee extends MY_Controller {
                     for($x = 0 ; $x < count($data['pickup']) ; $x++)
                     {
                         
-                        $sql = "SELECT IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ". $data['pickup'][$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                        $sql = "SELECT IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ". $data['pickup'][$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                         $namalokasiset = $CI->db->query($sql)->row()->NAMALOKASI??'';
                         
                         if($namalokasiset != "")
@@ -5915,7 +5797,7 @@ class Shopee extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -5953,7 +5835,7 @@ class Shopee extends MY_Controller {
                             $parameter['package_list'] =  $packaging;
                             $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -5986,7 +5868,7 @@ class Shopee extends MY_Controller {
                                     $dataPesanan[$indexPackaging2]['KODEPENGAMBILAN'] = $ret['response']['success_list'][$x]['pickup_code'];
                                     
                                     $CI->db->where("KODEPENJUALANMARKETPLACE",$dataPesanan[$indexPackaging2]['KODEPESANAN'])
-                                        ->where('MARKETPLACE',"SHOPEE")
+                                        ->where('MARKETPLACE',"LAZADA")
                     		            ->updateRaw("TPENJUALANMARKETPLACE", array(
                                             'RESI'                       => $dataPesanan[$indexPackaging2]['RESI'],
                                             'KODEPENGAMBILAN'            => $dataPesanan[$indexPackaging2]['KODEPENGAMBILAN'],
@@ -6027,7 +5909,7 @@ class Shopee extends MY_Controller {
                 
                 $curl = curl_init();
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -6056,7 +5938,7 @@ class Shopee extends MY_Controller {
                         $dataDetail = $ret['response']['order_list'][$y];
 
                         $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                        ->where('MARKETPLACE',"SHOPEE")
+                        ->where('MARKETPLACE',"LAZADA")
                          ->updateRaw("TPENJUALANMARKETPLACE", array(
                             'STATUSMARKETPLACE'          => $dataDetail['order_status'],
                             'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
@@ -6066,7 +5948,7 @@ class Shopee extends MY_Controller {
                         if($dataDetail['order_status'] == "READY_TO_SHIP")
                         {
                            $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                            ->where('MARKETPLACE',"SHOPEE")
+                            ->where('MARKETPLACE',"LAZADA")
                              ->updateRaw("TPENJUALANMARKETPLACE", array(
                                 'STATUSMARKETPLACE'          => 'PROCESSED',
                                 'STATUS'                     => $this->getStatus('PROCESSED')['state'],
@@ -6075,7 +5957,7 @@ class Shopee extends MY_Controller {
                         else
                         {
                             $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                            ->where('MARKETPLACE',"SHOPEE")
+                            ->where('MARKETPLACE',"LAZADA")
                              ->updateRaw("TPENJUALANMARKETPLACE", array(
                                 'STATUSMARKETPLACE'          => $dataDetail['order_status'],
                                 'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
@@ -6098,7 +5980,7 @@ class Shopee extends MY_Controller {
     //     $curl = curl_init();
         
     //     curl_setopt_array($curl, array(
-    //       CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+    //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
     //       CURLOPT_RETURNTRANSFER => true,
     //       CURLOPT_ENCODING => '',
     //       CURLOPT_MAXREDIRS => 10,
@@ -6124,7 +6006,7 @@ class Shopee extends MY_Controller {
     //         $dataAddress = $ret['response']['address_list'];
     //     }
         
-	   // $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
+	   // $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
 	    
     //     for($f = 0 ; $f < count($dataAll) ; $f++)
     //     {
@@ -6134,7 +6016,7 @@ class Shopee extends MY_Controller {
     //             for($x = 0 ; $x < count($dataAddress);$x++)
     //             {
                     
-    //                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+    //                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
     //                 $pickup = false;
     //                 // $default = false;
                     
@@ -6161,7 +6043,7 @@ class Shopee extends MY_Controller {
     //         //PICKUP
     //         else
     //         {
-    //              $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAll[$f]['ADDRESS']." AND GROUPLOKASI like '%MARKETPLACE%'";
+    //              $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAll[$f]['ADDRESS']." AND GROUPLOKASI like '%MARKETPLACE%'";
     //              $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
     //         }
             
@@ -6189,7 +6071,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -6345,7 +6227,7 @@ class Shopee extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -6394,7 +6276,7 @@ class Shopee extends MY_Controller {
                         $curl = curl_init();
                         
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -6426,7 +6308,7 @@ class Shopee extends MY_Controller {
                             //DAPATKAN HASIL LABEL PESANAN
                             $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -6468,7 +6350,7 @@ class Shopee extends MY_Controller {
                                 	//DAPATKAN HASIL LABEL PESANAN
                                 $curl = curl_init();
                                 curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                                   CURLOPT_RETURNTRANSFER => true,
                                   CURLOPT_ENCODING => '',
                                   CURLOPT_MAXREDIRS => 10,
@@ -6598,7 +6480,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -6633,7 +6515,7 @@ class Shopee extends MY_Controller {
            $curl = curl_init();
            
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -6673,7 +6555,7 @@ class Shopee extends MY_Controller {
                    $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
                    $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"SHOPEE")
+                   ->where('MARKETPLACE',"LAZADA")
                     ->updateRaw("TPENJUALANMARKETPLACE", array(
                        'NAME'                       => $data['NAME'],  
                        'TELP'                       => $data['TELP'],  
@@ -6994,7 +6876,7 @@ class Shopee extends MY_Controller {
         $ada = $CI->db->query($sqlStok)->row()->ADA;
         if($ada == 0)
         {
-            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENJUALANMARKETPLACE = '".$kodetrans."'";
+            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENJUALANMARKETPLACE = '".$kodetrans."'";
             $resultPesanan = $CI->db->query($sqlPesanan)->row();
             
             $produkData = explode("|",$resultPesanan->SKUPRODUK);
@@ -7005,7 +6887,7 @@ class Shopee extends MY_Controller {
                             FROM MBARANG 
                             INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
                             INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                            WHERE MBARANG.SKUSHOPEE = '".explode("*",$item)[1]."' and MCUSTOMER.NAMACUSTOMER = 'SHOPEE'";
+                            WHERE MBARANG.SKULAZADA = '".explode("*",$item)[1]."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
                 $dataBarang = $CI->db->query($sql)->row();
                 
                 
@@ -7019,8 +6901,8 @@ class Shopee extends MY_Controller {
                 	"KONVERSI1"     => 1,
                 	"KONVERSI2"     => 1,
                 	"TGLTRANS"      => $resultPesanan->TGLTRANS,
-                	"JENISTRANS"    => 'JUAL SHOPEE',
-                	"KETERANGAN"    => 'PENJUALAN SHOPEE KE '.$resultPesanan->USERNAME,
+                	"JENISTRANS"    => 'JUAL LAZADA',
+                	"KETERANGAN"    => 'PENJUALAN LAZADA KE '.$resultPesanan->USERNAME,
                 	"MK"            => 'K',
                 	"JML"           => explode("*",$item)[0],
                 	"TOTALHARGA"    => (explode("*",$item)[0] * ($dataBarang->HARGA??"0")),
@@ -7051,7 +6933,7 @@ class Shopee extends MY_Controller {
         $ada = $CI->db->query($sqlStok)->row()->ADA;
         if($ada == 0)
         {
-            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE = '".$kodetrans."'";
+            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE = '".$kodetrans."'";
             $resultPesanan = $CI->db->query($sqlPesanan)->row();
             
             $produkDataPengembalian = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
@@ -7062,8 +6944,8 @@ class Shopee extends MY_Controller {
             foreach($produkData as $item)
             {
                 //GET NAMA BARANG
-                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUSHOPEE as SKU
-                            FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$item)[1]."'";
+                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
+                            FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                 $dataBarang = $CI->db->query($sql)->row();
                 $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
                 if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -7089,8 +6971,8 @@ class Shopee extends MY_Controller {
                 foreach($produkDataOld as $item)
                 {
                     //GET NAMA BARANG
-                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUSHOPEE as SKU
-                                FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$item)[1]."'";
+                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
+                                FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                     $dataBarang = $CI->db->query($sql)->row();
                     $dataProduk[$indexProduk]->BARANGOLD  = explode(" | ",$dataBarang->NAMABARANG)[0];
                     if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
@@ -7119,12 +7001,12 @@ class Shopee extends MY_Controller {
                            $indexPengganti = $s;
                            
                              //GET NAMA BARANG
-                            $sql = "SELECT NAMABARANG, WARNA, SIZE, SKUSHOPEE as SKU
-                                        FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkData[$indexPengganti])[1]."'";
+                            $sql = "SELECT NAMABARANG, WARNA, SIZE, SKULAZADA as SKU
+                                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkData[$indexPengganti])[1]."'";
                             $dataBarang = $CI->db->query($sql)->row();
                             
-                            $sqlOld = "SELECT NAMABARANG, WARNA, SIZE, SKUSHOPEE as SKU
-                                    FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkDataOld[$indexPengganti])[1]."'";
+                            $sqlOld = "SELECT NAMABARANG, WARNA, SIZE, SKULAZADA as SKU
+                                    FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkDataOld[$indexPengganti])[1]."'";
                             $dataBarangOld = $CI->db->query($sqlOld)->row();
                             
                             $idBarang = "0";
@@ -7139,7 +7021,7 @@ class Shopee extends MY_Controller {
                                                 FROM MBARANG 
                                                 INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
                                                 INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                                WHERE MBARANG.SKUSHOPEE = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'SHOPEE'";
+                                                WHERE MBARANG.SKULAZADA = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
                 
                                     $dataBarangKembali = $CI->db->query($sql)->row();
                                     
@@ -7154,8 +7036,8 @@ class Shopee extends MY_Controller {
                                     	"KONVERSI1"     => 1,
                                     	"KONVERSI2"     => 1,
                                     	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
-                                    	"JENISTRANS"    => 'RETUR JUAL SHOPEE',
-                                    	"KETERANGAN"    => 'RETUR SHOPEE KE '.$resultPesanan->USERNAME,
+                                    	"JENISTRANS"    => 'RETUR JUAL LAZADA',
+                                    	"KETERANGAN"    => 'RETUR LAZADA KE '.$resultPesanan->USERNAME,
                                     	"MK"            => 'M',
                                     	"JML"           => explode("*",$produkDataKembali[$t])[0],
                                     	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
@@ -7171,7 +7053,7 @@ class Shopee extends MY_Controller {
                                                 FROM MBARANG 
                                                 INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
                                                 INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                                WHERE MBARANG.SKUSHOPEE = '".$dataBarangOld->SKU."' and MCUSTOMER.NAMACUSTOMER = 'SHOPEE'";
+                                                WHERE MBARANG.SKULAZADA = '".$dataBarangOld->SKU."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
                 
                                     $dataBarangKembali = $CI->db->query($sql)->row();
                                     
@@ -7186,8 +7068,8 @@ class Shopee extends MY_Controller {
                                     	"KONVERSI1"     => 1,
                                     	"KONVERSI2"     => 1,
                                     	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
-                                    	"JENISTRANS"    => 'RETUR JUAL SHOPEE',
-                                    	"KETERANGAN"    => 'RETUR SHOPEE KE '.$resultPesanan->USERNAME,
+                                    	"JENISTRANS"    => 'RETUR JUAL LAZADA',
+                                    	"KETERANGAN"    => 'RETUR LAZADA KE '.$resultPesanan->USERNAME,
                                     	"MK"            => 'M',
                                     	"JML"           => explode("*",$produkDataKembali[$t])[0],
                                     	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * $dataBarangKembali->HARGA),
@@ -7207,7 +7089,7 @@ class Shopee extends MY_Controller {
                                 $parameter = "";
                                 
                                 curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                                   CURLOPT_RETURNTRANSFER => true,
                                   CURLOPT_ENCODING => '',
                                   CURLOPT_MAXREDIRS => 10,
@@ -7235,7 +7117,7 @@ class Shopee extends MY_Controller {
                                     $dataAddress = $ret['response']['address_list'];
                                     for($x = 0 ; $x < count($dataAddress);$x++)
                                     {
-                                        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                                        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                                         $pickup = false;
                                         for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                                         {
@@ -7272,10 +7154,10 @@ class Shopee extends MY_Controller {
                                         
                                         $whereBarang .= ")";	
                                         
-                                        $sql = "select IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
+                                        $sql = "select IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG
                                     				from MBARANG
                                     				where (1=1) $whereBarang
-                                    				order by IDINDUKBARANGSHOPEE
+                                    				order by IDINDUKBARANGLAZADA
                                     				";	
                                     		
                                     	$dataHeader = $this->db->query($sql)->result();
@@ -7284,13 +7166,13 @@ class Shopee extends MY_Controller {
                                          $parameter = [];
                                     	 foreach($dataHeader as $itemHeader)
                                     	 {
-                                    	     if($itemHeader->IDINDUKBARANGSHOPEE != $idHeader)
+                                    	     if($itemHeader->IDINDUKBARANGLAZADA != $idHeader)
                                     	     {
                                     	         if(count($parameter) > 0)
                                     	         {
                                     	            $curl = curl_init();
                                                     curl_setopt_array($curl, array(
-                                                      CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                                                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                                                       CURLOPT_RETURNTRANSFER => true,
                                                       CURLOPT_ENCODING => '',
                                                       CURLOPT_MAXREDIRS => 10,
@@ -7318,11 +7200,11 @@ class Shopee extends MY_Controller {
                                                         print_r($ret);
                                                     }
                                     	         }
-                                    	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
+                                    	         $idHeader = $itemHeader->IDINDUKBARANGLAZADA;
                                     	         
-                                    	         //UPDATE KE SHOPEENYA
+                                    	         //UPDATE KE LAZADANYA
                                                 $parameter = [];
-                                             	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGSHOPEE;
+                                             	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGLAZADA;
                                              	$parameter['stock_list'] = [];
                                     	     }
                                     	     
@@ -7331,9 +7213,9 @@ class Shopee extends MY_Controller {
                                             
                                             $modelId = 0;
                                             
-                                            if($itemHeader->IDBARANGSHOPEE != $itemHeader->IDINDUKBARANGSHOPEE)
+                                            if($itemHeader->IDBARANGLAZADA != $itemHeader->IDINDUKBARANGLAZADA)
                                             {
-                                                $modelId = $itemHeader->IDBARANGSHOPEE;
+                                                $modelId = $itemHeader->IDBARANGLAZADA;
                                             }
                                             
                                              array_push($parameter['stock_list'],array(
@@ -7347,7 +7229,7 @@ class Shopee extends MY_Controller {
                                     	  
                                     	$curl = curl_init();
                                         curl_setopt_array($curl, array(
-                                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                                           CURLOPT_RETURNTRANSFER => true,
                                           CURLOPT_ENCODING => '',
                                           CURLOPT_MAXREDIRS => 10,
@@ -7445,7 +7327,7 @@ class Shopee extends MY_Controller {
                  $curl = curl_init();
                 //GET ORDER LIST
                  curl_setopt_array($curl, array(
-                   CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                   CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                    CURLOPT_RETURNTRANSFER => true,
                    CURLOPT_ENCODING => '',
                    CURLOPT_MAXREDIRS => 10,
@@ -7510,7 +7392,7 @@ class Shopee extends MY_Controller {
                 $curl = curl_init();
             
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -7585,7 +7467,7 @@ class Shopee extends MY_Controller {
                         //DAPATKAN RESI
                         $data['ALLBARANG']                      = $dataDetail['item_list'];
                         $data['IDPENJUALAN']                    = 0;
-                        $data['MARKETPLACE']                    = "SHOPEE";
+                        $data['MARKETPLACE']                    = "LAZADA";
                         $data['KODEPENJUALANMARKETPLACE']       = $dataDetail['order_sn'];
                         $data['TGLTRANS']                       = date("Y-m-d H:i:s", $dataDetail['create_time']);
                         $data['USERNAME']                       = $dataDetail['buyer_username']??"-";
@@ -7633,7 +7515,7 @@ class Shopee extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -7662,7 +7544,7 @@ class Shopee extends MY_Controller {
                     for($x = 0 ;$x < count($ret['response']['success_list']); $x++)
                     {
                        $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACE 
-                                    WHERE MARKETPLACE = 'SHOPEE' 
+                                    WHERE MARKETPLACE = 'LAZADA' 
                                     and KODEPENJUALANMARKETPLACE = '".$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE']."'";
                                 
                         $dataPesananDB = $CI->db->query($sql)->row();
@@ -7676,7 +7558,7 @@ class Shopee extends MY_Controller {
                         if($ada)
                         {
                             $CI->db->where("KODEPENJUALANMARKETPLACE",$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'])
-                            ->where('MARKETPLACE',"SHOPEE")
+                            ->where('MARKETPLACE',"LAZADA")
         		            ->updateRaw("TPENJUALANMARKETPLACE", array(
                                 'USERNAME'                   => $finalData[$indexPackaging]['USERNAME']??"-",
                                 'NAME'                       => $finalData[$indexPackaging]['NAME'],
@@ -7729,7 +7611,7 @@ class Shopee extends MY_Controller {
                                     $sku = "CARD-BOX-OTHER";
                                 }
                             
-                                $sqlBarang = "select idbarang from mbarang where SKUSHOPEE = '$sku'";
+                                $sqlBarang = "select idbarang from mbarang where SKULAZADA = '$sku'";
                                 $queryBarang = $CI->db->query($sqlBarang)->row();
                                 
                                 $CI->db->insertRaw("TPENJUALANMARKETPLACEDTL",
@@ -7737,7 +7619,7 @@ class Shopee extends MY_Controller {
                                     'IDPENJUALANMARKETPLACE'    => $idtrans,
                                     'KODEPENJUALANMARKETPLACE'  => $finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'],
                                     'IDBARANG'                  => $queryBarang->IDBARANG??0,
-                                    'MARKETPLACE'               => 'SHOPEE',
+                                    'MARKETPLACE'               => 'LAZADA',
                                     'SKU'                       => $sku,
                                     'URUTAN'                    => $urutan,
                                     'JML'                       => $itemBarang['model_quantity_purchased'],
@@ -7761,7 +7643,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -7788,7 +7670,7 @@ class Shopee extends MY_Controller {
             $data['rows'] = [];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                 {
@@ -7809,7 +7691,7 @@ class Shopee extends MY_Controller {
             }
         }
         
-	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
+	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
 	    
         for($f = 0 ; $f < count($finalData) ; $f++)
         {
@@ -7893,7 +7775,7 @@ class Shopee extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -7943,7 +7825,7 @@ class Shopee extends MY_Controller {
                         $curl = curl_init();
                         
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -7975,7 +7857,7 @@ class Shopee extends MY_Controller {
                             // DAPATKAN HASIL LABEL PESANAN
                             $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -8018,7 +7900,7 @@ class Shopee extends MY_Controller {
                                     	//DAPATKAN HASIL LABEL PESANAN
                                     $curl = curl_init();
                                     curl_setopt_array($curl, array(
-                                      CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                                       CURLOPT_RETURNTRANSFER => true,
                                       CURLOPT_ENCODING => '',
                                       CURLOPT_MAXREDIRS => 10,
@@ -8096,7 +7978,7 @@ class Shopee extends MY_Controller {
                   $curl = curl_init();
                   
                   curl_setopt_array($curl, array(
-                    CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                    CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_ENCODING => '',
                     CURLOPT_MAXREDIRS => 10,
@@ -8131,7 +8013,7 @@ class Shopee extends MY_Controller {
                       foreach($dataPendapatan as $itemPendapatan)
                       {
                           $CI->db->where("KODEPENJUALANMARKETPLACE",$itemPendapatan['escrow_detail']['order_sn'])
-    		              ->where('MARKETPLACE','SHOPEE')
+    		              ->where('MARKETPLACE','LAZADA')
     		              ->updateRaw("TPENJUALANMARKETPLACE", array(
     		                  'TOTALHARGA'               =>  $itemPendapatan['escrow_detail']['buyer_payment_info']['merchant_subtotal'], 
     		                  'TOTALPENDAPATANPENJUAL'   =>  $itemPendapatan['escrow_detail']['order_income']['escrow_amount'],
@@ -8186,7 +8068,7 @@ class Shopee extends MY_Controller {
                  $curl = curl_init();
                 //GET ORDER LIST
                  curl_setopt_array($curl, array(
-                   CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                   CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                    CURLOPT_RETURNTRANSFER => true,
                    CURLOPT_ENCODING => '',
                    CURLOPT_MAXREDIRS => 10,
@@ -8219,7 +8101,7 @@ class Shopee extends MY_Controller {
                         $curl = curl_init();
                         $logisticStatus = "";
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -8272,7 +8154,7 @@ class Shopee extends MY_Controller {
                         $allsku = substr($allsku, 0, -1);
                         
                          $CI->db->where("KODEPENJUALANMARKETPLACE",$return[$x]['order_sn'])
-		                    ->where('MARKETPLACE','SHOPEE')
+		                    ->where('MARKETPLACE','LAZADA')
 		                    ->updateRaw("TPENJUALANMARKETPLACE", array(
 		                        'KODEPENGEMBALIANMARKETPLACE'   =>  $return[$x]['return_sn'],
 		                        'SKUPRODUKPENGEMBALIAN'         =>  $allsku,
@@ -8308,7 +8190,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -8335,7 +8217,7 @@ class Shopee extends MY_Controller {
             $data['rows'] = [];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                 
                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                 {
@@ -8347,7 +8229,7 @@ class Shopee extends MY_Controller {
             }
         }
         
-	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
+	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
 	    
 	    if(count($finalData) > 0)
 	    {
@@ -8364,7 +8246,7 @@ class Shopee extends MY_Controller {
             $wherePesanan .= ")";
 	    }
         
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
         $dataRetur = $CI->db->query($sqlRetur)->result();
 
         foreach($dataRetur as $itemRetur)
@@ -8381,7 +8263,7 @@ class Shopee extends MY_Controller {
         $curl = curl_init();
 	    
 	    curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -8417,27 +8299,27 @@ class Shopee extends MY_Controller {
     		$parameter = [];
     		$parameter['item_id_list'] = [];
     		
-            $sql = "SELECT IDINDUKBARANGSHOPEE FROM MBARANG WHERE BOOSTSHOPEE = 2 GROUP BY KATEGORI LIMIT 5";
+            $sql = "SELECT IDINDUKBARANGLAZADA FROM MBARANG WHERE BOOSTLAZADA = 2 GROUP BY KATEGORI LIMIT 5";
             $dataBarangPermanent = $CI->db->query($sql)->result();
             
             foreach($dataBarangPermanent as $itemBarangPermanent)
     		{
-    		    array_push($parameter['item_id_list'],(int)$itemBarangPermanent->IDINDUKBARANGSHOPEE);
+    		    array_push($parameter['item_id_list'],(int)$itemBarangPermanent->IDINDUKBARANGLAZADA);
     		}
             
-            $sql = "SELECT IDINDUKBARANGSHOPEE FROM MBARANG WHERE BOOSTSHOPEE = 1 GROUP BY KATEGORI ORDER BY RAND() LIMIT ".(5-count($dataBarangPermanent));
+            $sql = "SELECT IDINDUKBARANGLAZADA FROM MBARANG WHERE BOOSTLAZADA = 1 GROUP BY KATEGORI ORDER BY RAND() LIMIT ".(5-count($dataBarangPermanent));
             $dataBarang = $CI->db->query($sql)->result();
     		
     		foreach($dataBarang as $itemBarang)
     		{
-    		    array_push($parameter['item_id_list'],(int)$itemBarang->IDINDUKBARANGSHOPEE);
+    		    array_push($parameter['item_id_list'],(int)$itemBarang->IDINDUKBARANGLAZADA);
     		}
     		
     		print_r($parameter);
     	    $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -8473,7 +8355,7 @@ class Shopee extends MY_Controller {
         $parameter = "";
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -8501,7 +8383,7 @@ class Shopee extends MY_Controller {
             $dataAddress = $ret['response']['address_list'];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
                 {
@@ -8521,12 +8403,12 @@ class Shopee extends MY_Controller {
                 }
             }
                 
-            $sql = "select IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
+            $sql = "select IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG
             				from MBARANG
-            				WHERE IDINDUKBARANGSHOPEE is not null AND
-            				IDINDUKBARANGSHOPEE <> '' AND
-            				IDINDUKBARANGSHOPEE <> 0
-            				order by IDINDUKBARANGSHOPEE
+            				WHERE IDINDUKBARANGLAZADA is not null AND
+            				IDINDUKBARANGLAZADA <> '' AND
+            				IDINDUKBARANGLAZADA <> 0
+            				order by IDINDUKBARANGLAZADA
             				";	
             		
             	$dataHeader = $this->db->query($sql)->result();
@@ -8535,13 +8417,13 @@ class Shopee extends MY_Controller {
              $parameter = [];
             	 foreach($dataHeader as $itemHeader)
             	 {
-            	     if($itemHeader->IDINDUKBARANGSHOPEE != $idHeader)
+            	     if($itemHeader->IDINDUKBARANGLAZADA != $idHeader)
             	     {
             	         if(count($parameter) > 0)
             	         {
             	            $curl = curl_init();
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -8569,11 +8451,11 @@ class Shopee extends MY_Controller {
                             print_r($ret);
                         }
             	         }
-            	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
+            	         $idHeader = $itemHeader->IDINDUKBARANGLAZADA;
             	         
-            	         //UPDATE KE SHOPEENYA
+            	         //UPDATE KE LAZADANYA
                     $parameter = [];
-                 	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGSHOPEE;
+                 	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGLAZADA;
                  	$parameter['stock_list'] = [];
             	     }
             	     
@@ -8582,9 +8464,9 @@ class Shopee extends MY_Controller {
                 
                 $modelId = 0;
                 
-                if($itemHeader->IDBARANGSHOPEE != $itemHeader->IDINDUKBARANGSHOPEE)
+                if($itemHeader->IDBARANGLAZADA != $itemHeader->IDINDUKBARANGLAZADA)
                 {
-                    $modelId = $itemHeader->IDBARANGSHOPEE;
+                    $modelId = $itemHeader->IDBARANGLAZADA;
                 }
                 
                  array_push($parameter['stock_list'],array(
@@ -8597,7 +8479,7 @@ class Shopee extends MY_Controller {
             	
             	$curl = curl_init();
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
