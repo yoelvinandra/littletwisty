@@ -3,6 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Lazada extends MY_Controller {
 	public function index()
 	{
+        
 	    echo "
 	         <b>Tutorial Cara Menggunakan Lazada API</b>
 	         <br><br>
@@ -181,69 +182,25 @@ class Lazada extends MY_Controller {
     	    $endpoint = $this->input->post("endpoint");
     	    $parameter = $this->input->post("parameter");
     	    
-    	    $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
-    	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
-    	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
-    	    
-    	    // Current UTC time
-            $datetime = new DateTime('now', new DateTimeZone('UTC'));
-            
-            // Get Unix timestamp in seconds
-            $timestampSeconds = $datetime->getTimestamp();
-            
-            // Convert to milliseconds
-            $timest = $timestampSeconds * 1000;
-            
-            $signMethod = 'sha256';
-            
-            $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
-
-            $param = explode("&",$parameter);
-            foreach($param as $item)
-            {
-                $params = explode("=",$item);
-                if($params[0] != "")
-                {
-                    $body[$params[0]] = $params[1];
-                }
-            }
-            
-            
-            uksort($body, function($a, $b) {
-                return strcmp($a, $b);
-            });
-            
-            //STEP 2
-            $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+    	    $this->load->library('Lazop', [
+                'appKey'    => $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY'),
+                'appSecret' => $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET')
+            ]);
     
-            //STEP 3
-            $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
+            $client = $this->lazop->getClient();
+            // Example request: get user info
+            $request = new LazopRequest($endpoint, 'GET');
+            // Parse into array
+            parse_str($parameter, $queryArray);
+            
+            // Loop and add to LazopRequest
+            foreach ($queryArray as $key => $value) {
+                $request->addApiParam($key, $value);
+            }
 
-            //STEP 4 & 5
-            $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
-            
-            $body['sign'] = $sign;
-            
-            $host = 'https://api.lazada.co.id/rest'.$endpoint;
-            
-            $curl = curl_init();
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $host.'?app_key='.$appKey.'&timestamp='.$timest.'&access_token='.$accessToken.'&sign_method='.$signMethod.'&sign='.$sign.$parameter,
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'GET',
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: SPC_SEC_SI=v1-UHAwR1pMemVVcnVNWk0yOAmAUDORs28JVn6OsCvGiwjQgIgi70oQOziTBqSXWyDZViEAeIWx3hwddNsCKaZ6iPdS4KmbbymAcw3YAhkMr6I=; SPC_SI=P7sdaAAAAABzUmtoeEtWN8sBwggAAAAATEVRUWR2b0Y='
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            print_r($response);
+            $response = $client->execute($request, $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN'));
+    
+            echo $response; 
 	    }
 	    else
 	    {
@@ -262,74 +219,35 @@ class Lazada extends MY_Controller {
 	    {
     	    $endpoint = $this->input->post("endpoint");
     	    $parameter = $this->input->post("parameter");
+    	    $xml = $this->input->post("xml")??"";
     	    
-    	    $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
-    	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
-    	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
-    	    
-    	    // Current UTC time
-            $datetime = new DateTime('now', new DateTimeZone('UTC'));
+    	    $this->load->library('Lazop', [
+                'appKey'    => $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY'),
+                'appSecret' => $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET')
+            ]);
+    
+            $client = $this->lazop->getClient();
+            // Example request: get user info
+            $request = new LazopRequest($endpoint);
             
-            // Get Unix timestamp in seconds
-            $timestampSeconds = $datetime->getTimestamp();
+            // Parse into array
+            parse_str($parameter, $queryArray);
             
-            // Convert to milliseconds
-            $timest = $timestampSeconds * 1000;
-            
-            $signMethod = 'sha256';
-            
-            $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
-            
-            $param = explode("&",$parameter);
-            foreach($param as $item)
-            {
-                $params = explode("=",$item);
-                if($params[0] != "")
+            // Loop and add to LazopRequest
+            foreach ($queryArray as $key => $value) {
+                if($xml)
                 {
-                    $body[$params[0]] = $params[1];
+                    $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
+                    $this->arrayToXml($value, $xml);
+                   
+                    $value = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
                 }
+                $request->addApiParam($key, $value);
             }
             
-            uksort($body, function($a, $b) {
-                return strcmp($a, $b);
-            });
-            
-            //STEP 2
-            $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+            $response = $client->execute($request, $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN'));
     
-            //STEP 3
-            $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
-
-            //STEP 4 & 5
-            $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
-            
-            $body['sign'] = $sign;
-            
-            $host = 'https://api.lazada.co.id/rest'.$endpoint;
-            $curl = curl_init();
-            
-            echo $host."<br><br>";
-            echo json_encode($body);
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $host,
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 0,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_POSTFIELDS => json_encode($body),
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Cookie: SPC_SEC_SI=v1-UHAwR1pMemVVcnVNWk0yOAmAUDORs28JVn6OsCvGiwjQgIgi70oQOziTBqSXWyDZViEAeIWx3hwddNsCKaZ6iPdS4KmbbymAcw3YAhkMr6I=; SPC_SI=P7sdaAAAAABzUmtoeEtWN8sBwggAAAAATEVRUWR2b0Y='
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            echo $response;
+            echo $response; 
 	    }
         else
 	    {
@@ -341,16 +259,27 @@ class Lazada extends MY_Controller {
         
 	}
 	
-	public function arrayToXml($data, &$xmlData) {
+	public function arrayToXml($data, &$xmlData, $parentKey = null) {
         foreach ($data as $key => $value) {
             if (is_array($value)) {
-                $subnode = $xmlData->addChild("$key");
-                $this->arrayToXml($value, $subnode);
+                if (is_numeric($key)) {
+                    // kalau array numeric, pakai parentKey (misalnya URL)
+                    $this->arrayToXml($value, $xmlData, $parentKey);
+                } else {
+                    $subnode = $xmlData->addChild($key);
+                    $this->arrayToXml($value, $subnode, $key);
+                }
             } else {
-                $xmlData->addChild("$key", htmlspecialchars("$value"));
+                if (is_numeric($key) && $parentKey) {
+                    // numeric key tapi value string → pakai parentKey
+                    $xmlData->addChild($parentKey, htmlspecialchars($value));
+                } else {
+                    $xmlData->addChild("$key", htmlspecialchars($value));
+                }
             }
         }
     }
+
 	
 	public function connectBarang(){
 	    $CI =& get_instance();	
@@ -1076,7 +1005,6 @@ class Lazada extends MY_Controller {
                 return strcmp($a['TEXT'], $b['TEXT']);
             });
             
-            echo $ada;
             echo(json_encode($responseKategori));
         }
 	}
@@ -1371,30 +1299,16 @@ class Lazada extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$status = explode(",",$this->input->post('status'));
+		$status = $this->input->post('status');
 		
-		$statusok = true;
-		$statusParam = "";
 		$data['rows'] = [];
 		$data["total"] = 0;
-		$offset = 0;
-		$pageSize = 100;
-		for($x = 0 ;$x < count($status); $x++)
-		{
-		    $statusParam .= "&item_status=".$status[$x];
-		}
 		
-		//LOGISTIC
+		$parameter = "&filter = $status";
+        
 		$curl = curl_init();
 		
-		while(!$bigger && $statusok)
-        {
-            
-		    $parameter = "&offset=".$offset."&page_size=".$pageSize.$statusParam;
-		    
-		  //  echo $parameter;
-		    
-            curl_setopt_array($curl, array(
+		 curl_setopt_array($curl, array(
               CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
@@ -1403,7 +1317,7 @@ class Lazada extends MY_Controller {
               CURLOPT_FOLLOWLOCATION => true,
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_list','parameter' => $parameter),
+              CURLOPT_POSTFIELDS => array('endpoint' => '/products/get','parameter' => $parameter),
               CURLOPT_HTTPHEADER => array(
                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
               ),
@@ -1412,126 +1326,42 @@ class Lazada extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+           if($ret['message'] != "")
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
-                $response = $ret['response'];
-                $statusok = $response['has_next_page'];
-                $offset = $response['next_offset'];
-                $idbarang = $response['item'];
-                $paramId = "";
-                for($x = 0 ; $x < count($idbarang);$x++)
-                {
-                    $paramId.= (int)$idbarang[$x]['item_id'];
-                    
-                    if(($x % 49 == 0 && $x != 0) || $x == count($idbarang)-1)
-                    {
-                        //GET ORDER DETAIL
-                        $parameter = "&item_id_list=".$paramId;
-                        $curl = curl_init();
-                    
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_base_info','parameter' => $parameter),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                        
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-                        if($ret['error'] != "")
-                        {
-                            echo $ret['error']." : ".$ret['message'];
-                            $statusok = false;
-                        }
-                        else
-                        {
-                            $dataBarang = $ret['response']['item_list'];
-                            
-                            $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGLAZADA from MBARANG where IDINDUKBARANGLAZADA != 0 and IDINDUKBARANGLAZADA != '' and IDINDUKBARANGLAZADA is not null";
-                            $dataBarangMaster = $CI->db->query($sqlBarangMaster)->result();
-                            
-                            foreach($dataBarang as $itemBarang)
-                            {
-                                // $dataModel = [];
-                                // if($itemBarang['has_model'] == 1)
-                                // {
-                                //     //GET MODEL
-                                //     $parameter = "&item_id=".$itemBarang['item_id'];
-                                //     $curl = curl_init();
-                                
-                                //     curl_setopt_array($curl, array(
-                                //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                                //       CURLOPT_RETURNTRANSFER => true,
-                                //       CURLOPT_ENCODING => '',
-                                //       CURLOPT_MAXREDIRS => 10,
-                                //       CURLOPT_TIMEOUT => 30,
-                                //       CURLOPT_FOLLOWLOCATION => true,
-                                //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                //       CURLOPT_CUSTOMREQUEST => 'POST',
-                                //       CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
-                                //       CURLOPT_HTTPHEADER => array(
-                                //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                //       ),
-                                //     ));
-                                    
-                                //     $response = curl_exec($curl);
-                                //     curl_close($curl);
-                                //     $ret =  json_decode($response,true);
-                                //     if($ret['error'] != "")
-                                //     {
-                                //         echo $ret['error']." : ".$ret['message'];
-                                //         $statusok = false;
-                                //     }
-                                //     else
-                                //     {
-                                //         $dataModel = $ret['response']['tier_variation'];
-                                        
-                                //     }
-                                // }
-                              $itemBarang['MASTERCONNECTED'] = "TIDAK";
-                              $itemBarang['IDMASTERBARANG'] = 0;
-                              $itemBarang['KATEGORIMASTERBARANG'] = '';
-                              foreach($dataBarangMaster as $itemBarangMaster)
-                              {
-                                  if($itemBarangMaster->IDINDUKBARANGLAZADA == $itemBarang['item_id'])
-                                  {
-                                     $itemBarang['MASTERCONNECTED'] ="YA";  
-                                     $itemBarang['IDMASTERBARANG'] = $itemBarangMaster->IDBARANG;
-                                     $itemBarang['KATEGORIMASTERBARANG'] = $itemBarangMaster->KATEGORI;
-                                  }
-                              }
-                              
-                              $itemBarang['NAMABARANG'] = $itemBarang['item_name'];    
-                              $itemBarang['VARIAN'] = $itemBarang['has_model'] == 1 ? "YA" : "TIDAK";     
-                              $itemBarang['TGLENTRY'] = date("Y-m-d H:i:s", $itemBarang['update_time']??$itemBarang['create_time']);    
-                              $itemBarang['STATUS'] = $itemBarang['item_status'];    
-                              
-                              array_push($data['rows'],$itemBarang);
-                          }
-                      }
-                        
-                        $paramId = "";
-                    }
-                    else
-                    {
-                        $paramId .= ",";
-                    }
+                 $dataBarang = $ret['data']['products'];
+                 
+                 $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGSHOPEE from MBARANG where IDINDUKBARANGSHOPEE != 0 and IDINDUKBARANGSHOPEE != '' and IDINDUKBARANGSHOPEE is not null";
+                 $dataBarangMaster = $CI->db->query($sqlBarangMaster)->result();
+                 
+                 foreach($dataBarang as $itemBarang)
+                 {
+                   
+                   $itemBarang['MASTERCONNECTED'] = "TIDAK";
+                   $itemBarang['IDMASTERBARANG'] = 0;
+                   $itemBarang['KATEGORIMASTERBARANG'] = '';
+                   foreach($dataBarangMaster as $itemBarangMaster)
+                   {
+                       if($itemBarangMaster->IDINDUKBARANGSHOPEE == $itemBarang['item_id'])
+                       {
+                          $itemBarang['MASTERCONNECTED'] ="YA";  
+                          $itemBarang['IDMASTERBARANG'] = $itemBarangMaster->IDBARANG;
+                          $itemBarang['KATEGORIMASTERBARANG'] = $itemBarangMaster->KATEGORI;
+                       }
+                   }
+                   
+                   $itemBarang['NAMABARANG'] = $itemBarang['attributes']['name'];    
+                   $itemBarang['VARIAN'] = count($itemBarang['skus']) != 0 ? "YA" : "TIDAK";     
+                   $itemBarang['TGLENTRY'] = date("Y-m-d H:i:s", $itemBarang['updated_time']??$itemBarang['created_time']);    
+                   $itemBarang['STATUS'] = $itemBarang['status'];    
+                   
+                   array_push($data['rows'],$itemBarang);
                 }
             }
-        }
+	
         
         //URUTKAN BERDASARKAN NAMA BARANG
         usort($data['rows'], function($a, $b) {
@@ -1730,10 +1560,8 @@ class Lazada extends MY_Controller {
 		$dataVarian         = json_decode($this->input->post("VARIAN"));
 		$dataWarna          = json_decode($this->input->post("WARNA"));
 		$dataUkuran         = json_decode($this->input->post("UKURAN"));
-		$dataAttribut       = json_decode($this->input->post("ATTRIBUT"));
 		$dataGambarProduk   = json_decode($this->input->post("GAMBARPRODUK"));
 		$dataGambarVarian   = json_decode($this->input->post("GAMBARVARIAN"));
-		$dataLogistik       = json_decode($this->input->post("LOGISTICS"));  
 	    $sizeChart          = $this->input->post("SIZECHART");
 		$sizeChartID        = $this->input->post("SIZECHARTID");
 		$sizeChartTipe      = $this->input->post("SIZECHARTTIPE");
@@ -1741,115 +1569,176 @@ class Lazada extends MY_Controller {
 		$hargaInduk         = $this->input->post("HARGA");
 		$skuInduk           = $this->input->post("SKU");
 		
-		//FIND PICKUP LOCATION
-		$curl = curl_init();
-        $parameter = "";
-        $idlokasiset = "";
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
+// 		//FIND PICKUP LOCATION
+// 		$curl = curl_init();
+//         $parameter = "";
+//         $idlokasiset = "";
+//         curl_setopt_array($curl, array(
+//           CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+//           CURLOPT_RETURNTRANSFER => true,
+//           CURLOPT_ENCODING => '',
+//           CURLOPT_MAXREDIRS => 10,
+//           CURLOPT_TIMEOUT => 30,
+//           CURLOPT_FOLLOWLOCATION => true,
+//           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//           CURLOPT_CUSTOMREQUEST => 'POST',
+//           CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
+//           CURLOPT_HTTPHEADER => array(
+//             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+//           ),
+//         ));
         
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        $lokasi = 0;
-        $countSuccess = 0 ;
-        if($ret['error'] != "")
-        {
-            echo $ret['error']." LOKASI : ".$ret['message'];
-        }
-        else
-        {
-            $dataAddress = $ret['response']['address_list'];
-            for($x = 0 ; $x < count($dataAddress);$x++)
-            {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                $pickup = false;
-                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                {
-                    if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                    {
-                        $pickup = true;
-                    }
-                    // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                    // {
-                    //     $default = true;
-                    // }
-                }
+//         $response = curl_exec($curl);
+//         curl_close($curl);
+//         $ret =  json_decode($response,true);
+//         $lokasi = 0;
+//         $countSuccess = 0 ;
+//         if($ret['error'] != "")
+//         {
+//             echo $ret['error']." LOKASI : ".$ret['message'];
+//         }
+//         else
+//         {
+//             $dataAddress = $ret['response']['address_list'];
+//             for($x = 0 ; $x < count($dataAddress);$x++)
+//             {
+//                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+//                 $pickup = false;
+//                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
+//                 {
+//                     if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
+//                     {
+//                         $pickup = true;
+//                     }
+//                     // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
+//                     // {
+//                     //     $default = true;
+//                     // }
+//                 }
                 
-                if($pickup)
-                {
-                    $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
-                }
-            }
-        }
+//                 if($pickup)
+//                 {
+//                     $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
+//                 }
+//             }
+//         }
 		
-		
-		$parameter = [];
-		$parameter['original_price']    = count($dataVarian) > 0 ?(int)$dataVarian[0]->HARGAJUAL:(int)$hargaInduk;
-		$parameter['description']       = $this->input->post("DESKRIPSI");
-		$parameter['weight']            = (float)$this->input->post("BERAT");
-		$parameter['item_name']         = $this->input->post("NAMA");
-		$parameter['item_status']       = ($this->input->post("UNLISTED") == 1 ? "UNLIST" : "NORMAL");
-		$parameter['dimension'] = array(
-		    'package_height' => (float)$this->input->post("TINGGI"),
-		    'package_length' => (float)$this->input->post("PANJANG"),
-		    'package_width'  => (float)$this->input->post("LEBAR")
-		);
-		
-		$parameter['logistic_info'] = [];
-		foreach($dataLogistik as $itemLogistik)
+		if(count($dataVarian) > 0)
 		{
-		    $logistikArray = (array)$itemLogistik; // convert object to array
-            $logistikArray['enabled'] = filter_var($itemLogistik->enabled, FILTER_VALIDATE_BOOLEAN);
-            $logistikArray['logistic_id'] = (int)$itemLogistik->logistic_id;
-		    array_push($parameter['logistic_info'],$logistikArray);
+		    $indexVarian = 0;
+		    $detailParameter = [];
+		    foreach($dataVarian as $itemVarian)
+		    {
+		       array_push($detailParameter,
+		       [
+    		        'SellerSku' => $itemVarian->SKULAZADA,
+    		        'quantity' => 0,
+    		        'price' => (int)$itemVarian->HARGAJUAL,
+    		        'special_price' => (int)$itemVarian->HARGAJUAL,
+    		        'special_from_date' => "2025-06-20 17:18:31",
+    		        'special_to_date' => "2026-06-20 17:18:31",
+    		        'package_height' => (float)$this->input->post("TINGGI"),
+    		        'package_length' => (float)$this->input->post("PANJANG"),
+    		        'package_width' => (float)$this->input->post("LEBAR"),
+    		        'package_weight' => ((float)$this->input->post("BERAT")/1000),
+    		      //  'package_content' => "2026-06-20 17:18:31",
+    		        'Images' => [
+                      'Image' => $dataGambarVarian[$indexVarian]
+                    ]
+    		    ]);
+    		    $indexVarian++;
+		    }
+		}
+		else
+		{
+		    $detailParameter = [[
+		        'SellerSku' => $skuInduk,
+		        'quantity' => 0,
+		        'price' => (int)$hargaInduk,
+		        'special_price' => (int)$hargaInduk,
+		        'special_from_date' => "2025-06-20 17:18:31",
+		        'special_to_date' => "2026-06-20 17:18:31",
+		        'package_height' => (float)$this->input->post("TINGGI"),
+		        'package_length' => (float)$this->input->post("PANJANG"),
+		        'package_width' => (float)$this->input->post("LEBAR"),
+		        'package_weight' => ((float)$this->input->post("BERAT")/1000),
+		      //  'package_content' => "2026-06-20 17:18:31",
+		        'Images' => [
+                  'Image' => $dataGambarProduk
+                ]
+		    ]];
 		}
 		
-		$parameter['category_id'] = (int)$kategoriBarang;
+		$parameter = [
+           'Request' => [
+               'Product' => [
+                   'PrimaryCategory' => (int)$kategoriBarang,
+                   'Images' => [
+                        'Image' => $dataGambarProduk
+                    ],
+                    'Attributes' => [
+                        'name' => $this->input->post("NAMA"),
+                        'description' => $this->input->post("DESKRIPSI")
+                    ],
+                    'Skus' => [
+                        'Sku' => $detailParameter
+                    ]
+               ]
+           ]
+        ];
 		
-		$parameter['image'] = array(
-		    'image_id_list' => $dataGambarProduk
-		);
-		$parameter['item_sku'] =  count($dataVarian) > 0 ?$dataVarian[0]->SKULAZADA:$skuInduk;
-		$parameter['condition'] = "NEW";
+// 		$parameter = [];
+// 		$parameter['original_price']    = count($dataVarian) > 0 ?(int)$dataVarian[0]->HARGAJUAL:(int)$hargaInduk;
+// 		$parameter['weight']            = (float)$this->input->post("BERAT");
+// 		$parameter['item_status']       = $this->input->post("DEACTIVATED");
+// 		$parameter['dimension'] = array(
+// 		    'package_height' => (float)$this->input->post("TINGGI"),
+// 		    'package_length' => (float)$this->input->post("PANJANG"),
+// 		    'package_width'  => (float)$this->input->post("LEBAR")
+// 		);
 		
-		$parameter['brand'] = array(
-		    'brand_id' => 0, //3873176
-		    'original_brand_name' => "", //Little Twisty
-		);
+// 		$parameter['logistic_info'] = [];
+// 		foreach($dataLogistik as $itemLogistik)
+// 		{
+// 		    $logistikArray = (array)$itemLogistik; // convert object to array
+//             $logistikArray['enabled'] = filter_var($itemLogistik->enabled, FILTER_VALIDATE_BOOLEAN);
+//             $logistikArray['logistic_id'] = (int)$itemLogistik->logistic_id;
+// 		    array_push($parameter['logistic_info'],$logistikArray);
+// 		}
 		
-		$parameter['seller_stock'] = [];
-		if($sizeChartTipe == "COMBOBOX")
-		{
-		    $parameter['size_chart_info'] = array(
-    		    "size_chart"  => '',
-    		    "size_chart_id" => (int)$sizeChartID
-    		);
-		}
-		else if($sizeChartTipe == "GAMBAR")
-		{
-		    $parameter['size_chart_info'] = array(
-    		    "size_chart"  => $sizeChartID,
-    		    "size_chart_id" => 0
-    		);
-		}
+// 		$parameter['category_id'] = (int)$kategoriBarang;
 		
-		$parameter['attribute_list'] = $dataAttribut;
+// 		$parameter['image'] = array(
+// 		    'image_id_list' => $dataGambarProduk
+// 		);
+// 		$parameter['item_sku'] =  count($dataVarian) > 0 ?$dataVarian[0]->SKULAZADA:$skuInduk;
+// 		$parameter['condition'] = "NEW";
+		
+// 		$parameter['brand'] = array(
+// 		    'brand_id' => 0, //3873176
+// 		    'original_brand_name' => "", //Little Twisty
+// 		);
+		
+// 		$parameter['seller_stock'] = [];
+// 		if($sizeChartTipe == "COMBOBOX")
+// 		{
+// 		    $parameter['size_chart_info'] = array(
+//     		    "size_chart"  => '',
+//     		    "size_chart_id" => (int)$sizeChartID
+//     		);
+// 		}
+// 		else if($sizeChartTipe == "GAMBAR")
+// 		{
+// 		    $parameter['size_chart_info'] = array(
+//     		    "size_chart"  => $sizeChartID,
+//     		    "size_chart_id" => 0
+//     		);
+// 		}
+		
+// 		$parameter['attribute_list'] = $dataAttribut;
 // 		print_r(json_encode($parameter,JSON_PRETTY_PRINT));
 		
-		$endPoint = "product/add_item";
+		$endPoint = "/product/create";
 		if($idBarang != 0)
 		{
 		    $parameter['item_id'] = (int)$idBarang;
@@ -1870,7 +1759,9 @@ class Lazada extends MY_Controller {
           CURLOPT_CUSTOMREQUEST => 'POST',
           CURLOPT_POSTFIELDS =>  array(
           'endpoint' => $endPoint,
-          'parameter' => json_encode($parameter,JSON_PRETTY_PRINT)),
+          'parameter' => json_encode($parameter,JSON_PRETTY_PRINT),
+          'xml' => true
+          ),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -1880,10 +1771,10 @@ class Lazada extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['message'] != "")
         { 
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." ITEM : ".$ret['message'];
+            $data['message'] =  $ret['code']." CREATE : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -4911,96 +4802,98 @@ class Lazada extends MY_Controller {
 	    
 	}
 	
-	public function uploadUrlCoba(){
-	    $url = $this->input->post('url')??"";
-        $response =  $this->getRefreshToken();
+	public function changeLocalUrl(){
+
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		$url = $this->input->post('url')??[];
+		$dataUrl = json_decode($url,true);
+		$response =  $this->getRefreshToken();
         if($response)
         {
-               $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
-               $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
-               $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
-               $endpoint = "/image/migrate";
-               
-               // Current UTC time
-               $datetime = new DateTime('now', new DateTimeZone('UTC'));
-               
-               // Get Unix timestamp in seconds
-               $timestampSeconds = $datetime->getTimestamp();
-               
-               // Convert to milliseconds
-               $timest = $timestampSeconds * 1000;
-               
-               $signMethod = 'sha256';
-               
-               $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
-               
-               uksort($body, function($a, $b) {
-                   return strcmp($a, $b);
-               });
-               
-               //STEP 2
-               $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
+             $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
+             $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
+             $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
+             $endpoint = "/images/migrate";
+         
+             $this->load->library('Lazop', [
+                 'appKey'    => $appKey,
+                 'appSecret' => $appSecret
+             ]);
+    
+             $client = $this->lazop->getClient();
+             $request = new LazopRequest($endpoint);
+             
+             $linkUrl = [];
+             foreach($dataUrl as $itemUrl)
+             {
+                 array_push($linkUrl,array('Url' => $itemUrl['url']));
+             }
+             
+             // Prepare POST data
+             $array = [
+                'Request' => [
+                    'Images' => $linkUrl
+                ]
+             ];
            
-               //STEP 3
-               $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
-               echo $baseString;
-               //STEP 4 & 5
-               $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
-               
-               $body['sign'] = $sign;
-               
-               // Prepare POST data
-               $array = [
-               'Request' => [
-                       'Image' => [
-                           'Url' => $url
-                       ]
-                   ]
-               ];
-              
-               $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
-               $this->arrayToXml($array, $xml);
-               
-               $body['payload'] = $xml->Request->asXML();
-               
-               $postData = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
-               
-               echo $postData;
-               
-               $host = 'https://api.lazada.co.id/rest'.$endpoint;
-
-               // Initialize cURL
-               $ch = curl_init();
-               // Set cURL options
-               curl_setopt($ch, CURLOPT_URL,  $host); // destination URL
-               curl_setopt($ch, CURLOPT_POST, true);
-               curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-               curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-               curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                   "Content-Type: application/x-www-form-urlencoded"
-               ]);
-               
-               // Execute the request
-               $response = curl_exec($ch);
-               curl_close($ch);
-               $ret =  json_decode($response,true);
-               
-               if($ret['message'] != "")
-               {
-                   $data['success'] = false;
-                   print_r($ret);
-                   echo $ret['code']." : ".$ret['message'];
-               }
-               else
-               {
-                 $data['success'] = true;
-                 $data['id'] = $ret['data']['image']['hash_code'];
-                 $data['url'] = $ret['data']['image']['url'];
-           	     echo(json_encode($data));
-               }
+             $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
+             $this->arrayToXml($array, $xml);
+            
+             $payload = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
+            
+             $request->addApiParam('payload',$payload);
+             $response = $client->execute($request, $accessToken);
+             $ret = json_decode($response,true);
+    
+             if($ret['message'] == "")
+             {
+                 $batchID = $ret['batch_id'];
+                 
+                 $endpoint = "/image/response/get";
+                
+                 $this->load->library('Lazop', [
+                     'appKey'    => $appKey,
+                     'appSecret' => $appSecret
+                 ]);
+                 
+                 $client = $this->lazop->getClient();
+                 $request = new LazopRequest($endpoint,'GET');
+                 $request->addApiParam('batch_id',$batchID);
+                 $response = $client->execute($request, $accessToken);
+                 $retResp = json_decode($response,true);
+                
+                 if($retResp['message'] == "")
+                 {
+                     for($x = 0 ; $x < count($dataUrl) ; $x++)
+                     {
+                         $dataUrl[$x]['url-baru'] = $retResp['data']['images'][$x]['url'];
+                     }
+                     
+                     echo json_encode(array(
+                         "success" => true,
+                         "data" => $dataUrl
+                     ));
+                 }
+                 else
+                 {
+                     echo json_encode(array(
+                         "success" => false,
+                         "error" => "RESPONSE : ".$retResp['code']." : ".$retResp['message']
+                     ));
+                 }
+             }
+             else
+             {
+                 echo json_encode(array(
+                     "success" => false,
+                     "error" => "MIGRATES : ".$ret['code']." : ".$ret['message']
+                 ));
+             }
     
         }
-           else
+         else
         {
            // echo "Token gagal diperbaharui";
             echo json_encode(array(
@@ -5032,7 +4925,7 @@ class Lazada extends MY_Controller {
         // Create filename and move the file
         $type = ".".explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
         $destination = $uploadDir . $kode . "_" . $index.$type;
-        $host = "https://api.lazada.co.id/rest";
+        $urlLocal = $this->config->item('base_url'). '/assets/'.$this->input->post('reason').'/'. $kode . "_" . $index.$type;
 
         if (move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
             
@@ -5045,107 +4938,44 @@ class Lazada extends MY_Controller {
             	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
             	    $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
             	    $endpoint = "/image/migrate";
-            	    
-            	    // Current UTC time
-                    $datetime = new DateTime('now', new DateTimeZone('UTC'));
-                    
-                    // Get Unix timestamp in seconds
-                    $timestampSeconds = $datetime->getTimestamp();
-                    
-                    // Convert to milliseconds
-                    $timest = $timestampSeconds * 1000;
-
-                    // Path to the local file
-                    $filePath = $destination;
-                    
-                    // Check if file exists
-                    if (!file_exists($filePath)) {
-                    die('File not found.');
-                    }
-                    
-                    $signMethod = 'sha256';
-                    
-                    $body = array("access_token" => $accessToken,  "app_key" => $appKey, "timestamp" => $timest, "sign_method" => $signMethod); 
-                    
-                    uksort($body, function($a, $b) {
-                        return strcmp($a, $b);
-                    });
-                    
-                    //STEP 2
-                    $paramString = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
-            
-                    //STEP 3
-                    $baseString = str_replace("&","",str_replace("=","",sprintf("%s%s", $endpoint, $paramString)));
-                    echo $baseString;
-                    //STEP 4 & 5
-                    $sign = strtoupper(hash_hmac($signMethod, $baseString, $appSecret));
-                    
-                    $body['sign'] = $sign;
-                    
+                
+                    $this->load->library('Lazop', [
+                        'appKey'    => $appKey,
+                        'appSecret' => $appSecret
+                    ]);
+    
+                    $client = $this->lazop->getClient();
+                    $request = new LazopRequest($endpoint);
+  
                     // Prepare POST data
                     $array = [
                     'Request' => [
-                            'Image' => [
-                                'Url' => 'https://cf.shopee.co.id/file/sg-11134201-824h2-me9bkgo0rke826'
-                            ]
-                        ]
+                           'Image' => [
+                               'Url' => $urlLocal
+                           ]
+                       ]
                     ];
-                    
+                  
                     $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
                     $this->arrayToXml($array, $xml);
-                    
-                    $body['payload'] = $xml->asXML();
-                    print_r($body);
-                    $postData = http_build_query($body, '', '&', PHP_QUERY_RFC3986);
-                    
-                    
-                    $host = 'https://api.lazada.co.id/rest'.$endpoint;
                    
-                    // Initialize cURL
-                    $ch = curl_init();
-                    // Set cURL options
-                    curl_setopt($ch, CURLOPT_URL,  $host); // destination URL
-                    curl_setopt($ch, CURLOPT_POST, true);
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        "Content-Type: application/x-www-form-urlencoded"
-                    ]);
-                    
-                    // Execute the request
-                    $response = curl_exec($ch);
-                    curl_close($ch);
-                    $ret =  json_decode($response,true);
-                    
-                    if($ret['message'] != "")
+                    $payload = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
+                    $request->addApiParam('payload',$payload);
+                    $response = $client->execute($request, $accessToken);
+                    $ret = json_decode($response,true);
+                    if($ret['message'] == "")
                     {
-                        $data['success'] = false;
-                        print_r($ret);
-                        echo $ret['code']." : ".$ret['message'];
+                        echo json_encode(array(
+            	            "success" => true,
+            	            "url" => $ret['data']['image']['url']
+            	        )); 
                     }
                     else
                     {
-                      $data['success'] = true;
-                      $data['id'] = $ret['data']['image']['hash_code'];
-                      $data['url'] = $ret['data']['image']['url'];
-                       
-                      //HAPUS DLU
-                      $folder = FCPATH . '/assets/'.$this->input->post('reason').'/'; // Use FCPATH . 'assets/proof/' in CodeIgniter
-                
-                      if (!is_dir($folder)) {
-                          die('Folder does not exist.');
-                      }
-                       
-                      $files = glob($folder . '*'); // Get all files in the folder
-                       
-                      foreach ($files as $file) {
-                          if (is_file($file) && strpos(basename($file), $kode . "_" . $index) !== false) {
-                              unlink($file); // Delete file if name contains "a"
-                          }
-                      }
-        
-                      $data['urlLocal'] = $this->config->item('base_url')."/assets/".$this->input->post('reason')."/". $kode . "_" . $index.$type;
-            		   echo(json_encode($data));
+                        echo json_encode(array(
+            	            "success" => false,
+            	            "error" => $ret['code']." : ".$ret['message']
+            	        ));
                     }
     
         	    }

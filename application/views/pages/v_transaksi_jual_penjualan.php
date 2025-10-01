@@ -1618,7 +1618,7 @@ function cetak(row,type){
 						success : function(msg){
 							if (msg.success) {
 								$("#dataGrid").DataTable().ajax.reload();
-								if(type='PAJAK')
+								if(type == 'PAJAK')
 								{
 								    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakPajak/"+row.IDPENJUALAN, '_blank');
 								}
@@ -1638,7 +1638,7 @@ function cetak(row,type){
 					});
 				}
 				else if(data.status != 'D'){
-					if(type='PAJAK')
+					if(type == 'PAJAK')
 					{
 					    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakPajak/"+row.IDPENJUALAN, '_blank');
 					}

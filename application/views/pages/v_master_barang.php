@@ -1651,7 +1651,6 @@ function ubahHeader(row){
                                     $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
                                     $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
                                     $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
-                                    
                                     $("#ubahGambarVarian"+y).show();
                             	    $("#hapusGambarVarian"+y).show();
                             	    
@@ -3217,54 +3216,73 @@ function setGambarProdukMaster(){
               });
               return;
             }
-        
-            // Upload file asli ke server
-            const formData = new FormData();
-            formData.append('index', index.value);
-            formData.append('kode', "INDUK_"+index.value);
-            formData.append('file', file);
-            formData.append('tipe', 'GAMBAR');
-            formData.append('size', file.size);
-            formData.append("reason","produk");
             
-            $.ajax({
-              type: 'POST',
-              url: base_url + 'Shopee/uploadLocalUrl/',
-              data: formData,
-              contentType: false,
-              processData: false,
-              dataType: 'json',
-              success: function (msg) {
-               
-                if (msg.success) {
-                 format.value = "GAMBAR";
-                 previewImage.src = msg.url;
-                 url.value =  msg.url;
-                 id.value = msg.id;
-                 
-                 dataGambar[index.value] = {
-                    'ID'   : id.value,
-                    'NAMA' : "INDUK_"+index.value,
-                    'URL'  : url.value,
-                 };
-        
-                 ubahImage.style.display = '';
-                 hapusImage.style.display = '';
-                }
+            const img = new Image();
+            img.onload = function () {
+                if (img.width < 350 || img.height < 350) {
+                     Swal.fire({
+                        title: 'Panjang dan Lebar gambar minimal 350px',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 2000
+                      });
+                      
+                      return;
+                } 
                 else
                 {
-                    fileInput.value = '';
+                    // Upload file asli ke server
+                    const formData = new FormData();
+                    formData.append('index', index.value);
+                    formData.append('kode', "INDUK_"+index.value);
+                    formData.append('file', file);
+                    formData.append('tipe', 'GAMBAR');
+                    formData.append('size', file.size);
+                    formData.append("reason","produk");
+                    
+                    $.ajax({
+                      type: 'POST',
+                      url: base_url + 'Shopee/uploadLocalUrl/',
+                      data: formData,
+                      contentType: false,
+                      processData: false,
+                      dataType: 'json',
+                      success: function (msg) {
+                       
+                        if (msg.success) {
+                         format.value = "GAMBAR";
+                         previewImage.src = msg.url;
+                         url.value =  msg.url;
+                         id.value = msg.id;
+                         
+                         dataGambar[index.value] = {
+                            'ID'   : id.value,
+                            'NAMA' : "INDUK_"+index.value,
+                            'URL'  : url.value,
+                         };
+                
+                         ubahImage.style.display = '';
+                         hapusImage.style.display = '';
+                        }
+                        else
+                        {
+                            fileInput.value = '';
+                        }
+                      },
+                      error: function (xhr, status, error) {
+                        fileInput.value = '';
+                        Swal.fire({
+                          title: 'Upload gagal!',
+                          text: error,
+                          icon: 'error'
+                        });
+                      }
+                    });
                 }
-              },
-              error: function (xhr, status, error) {
-                fileInput.value = '';
-                Swal.fire({
-                  title: 'Upload gagal!',
-                  text: error,
-                  icon: 'error'
-                });
-              }
-            });
+                URL.revokeObjectURL(img.src); // free memory
+            };
+            
+            img.src = URL.createObjectURL(file); 
           }
         
           // Tipe file tidak valid
@@ -3440,54 +3458,71 @@ function setGambarVarianMaster(){
               });
               return;
             }
-        
-            // Upload file asli ke server
-            const formData = new FormData();
-            formData.append('index', index.value);
-            formData.append('kode', warna[index.value]);
-            formData.append('file', file);
-            formData.append('tipe', 'GAMBAR');
-            formData.append('size', file.size);
-            formData.append("reason","produk");
             
-            $.ajax({
-              type: 'POST',
-              url: base_url + 'Shopee/uploadLocalUrl/',
-              data: formData,
-              contentType: false,
-              processData: false,
-              dataType: 'json',
-              success: function (msg) {
-              
-                if (msg.success) {
-                 format.value = "GAMBAR";
-                 previewImage.src = msg.url;
-                 url.value =  msg.url;
-                 id.value = msg.id;
-                 
-                 dataGambarVarian[index.value] = {
-                    'ID'   : id.value,
-                    'NAMA' : warna[index.value],
-                    'URL'  : url.value,
-                 };
-        
-                 ubahImage.style.display = '';
-                 hapusImage.style.display = '';
-                }
+            const img = new Image();
+            img.onload = function () {
+                if (img.width < 350 || img.height < 350) {
+                     Swal.fire({
+                        title: 'Panjang dan Lebar gambar minimal 350px',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 2000
+                      });
+                } 
                 else
                 {
-                    fileInput.value = '';
+                    // Upload file asli ke server
+                    const formData = new FormData();
+                    formData.append('index', index.value);
+                    formData.append('kode', warna[index.value]);
+                    formData.append('file', file);
+                    formData.append('tipe', 'GAMBAR');
+                    formData.append('size', file.size);
+                    formData.append("reason","produk");
+                    
+                    $.ajax({
+                      type: 'POST',
+                      url: base_url + 'Shopee/uploadLocalUrl/',
+                      data: formData,
+                      contentType: false,
+                      processData: false,
+                      dataType: 'json',
+                      success: function (msg) {
+                      
+                        if (msg.success) {
+                         format.value = "GAMBAR";
+                         previewImage.src = msg.url;
+                         url.value =  msg.url;
+                         id.value = msg.id;
+                         
+                         dataGambarVarian[index.value] = {
+                            'ID'   : id.value,
+                            'NAMA' : warna[index.value],
+                            'URL'  : url.value,
+                         };
+                
+                         ubahImage.style.display = '';
+                         hapusImage.style.display = '';
+                        }
+                        else
+                        {
+                            fileInput.value = '';
+                        }
+                      },
+                      error: function (xhr, status, error) {
+                        fileInput.value = '';
+                        Swal.fire({
+                          title: 'Upload gagal!',
+                          text: error,
+                          icon: 'error'
+                        });
+                      }
+                    });
                 }
-              },
-              error: function (xhr, status, error) {
-                fileInput.value = '';
-                Swal.fire({
-                  title: 'Upload gagal!',
-                  text: error,
-                  icon: 'error'
-                });
-              }
-            });
+                URL.revokeObjectURL(img.src); // free memory
+            };
+            
+            img.src = URL.createObjectURL(file); 
           }
         });
     }
