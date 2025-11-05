@@ -183,13 +183,13 @@ class Barang extends MY_Controller {
 	
 	public function getDataVarian($kategori=""){
 		$this->output->set_content_type('application/json');
-		$response = $this->model_master_barang->getDataVarian(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",str_replace("%C2%A0","%",$kategori)))));
+		$response = $this->model_master_barang->getDataVarian(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20","%",str_replace("%C2%A0","%",$kategori)))));
 		echo json_encode($response);
 	}
 	
 	public function getDataInduk($kategori=""){
 		$this->output->set_content_type('application/json');
-		$response = $this->model_master_barang->getDataInduk(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",str_replace("%C2%A0","%",$kategori)))));
+		$response = $this->model_master_barang->getDataInduk(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20","%",str_replace("%C2%A0","%",$kategori)))));
 		echo json_encode($response);
 	}
 	
@@ -221,7 +221,7 @@ class Barang extends MY_Controller {
 		$kategori = $this->input->post('kategori');
 		$marketplace = $this->input->post('marketplace');
 		
-		$response = $this->model_master_barang->comboGridMarketplace(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",$kategori))),$marketplace);
+		$response = $this->model_master_barang->comboGridMarketplace(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20","%",$kategori))),$marketplace);
 
 		echo json_encode($response);
 	}
@@ -545,7 +545,7 @@ class Barang extends MY_Controller {
 	function hapusAll(){
 		$kategori = $this->input->post('kategori');
 
-		$exe = $this->model_master_barang->hapusHeader(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20"," ",$kategori))));
+		$exe = $this->model_master_barang->hapusHeader(str_replace("%2F","%",str_replace("%7C","%",str_replace("%20","%",$kategori))));
 		if ($exe != '') { die(json_encode(array('errorMsg'=>$exe))); }
 		
 		echo json_encode(array('success' => true));

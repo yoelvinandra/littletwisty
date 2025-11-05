@@ -230,6 +230,7 @@ class Penjualan extends MY_Controller {
 			'JAMENTRY'        => date('H:i:s'),
 			'USERENTRY'       => $_SESSION[NAMAPROGRAM]['USERID'],
 			'TOTAL'           => $this->input->post('TOTAL'),
+			'DPPLAINRP'       => $this->input->post('DPPLAINRP')??0,
 			'PPNRP'           => $this->input->post('PPNRP'),
 			'GRANDTOTAL'      => $this->input->post('GRANDTOTAL'),
 			'POTONGANRP'      => $this->input->post('POTONGANRP')??0,

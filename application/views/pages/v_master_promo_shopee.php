@@ -26,6 +26,7 @@
         <div class="col-md-12"  style="border:0px; padding:0px 15px 0px 15px;">
             <div class="box" style="border:0px; padding:0px; margin:0px;">
             <div class="box-header form-inline" style="padding:0px;">
+                <div  style="font-weight:bold; font-size:18pt; margin-bottom:10px;">Atur Promo Shopee</div>
                 <button class="btn btn-success" onclick="javascript:tambahShopee()">Tambah</button>
                 <div class="pull-right" style="width:170px; margin-right:0px;">
                 	<div class="input-group " >
@@ -230,7 +231,7 @@ $(document).ready(function() {
 		    {
 			    "targets": 0,
                 "data": null,
-                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash' aria-hidden='true' ></button>"	
+                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash' aria-hidden='true' ></i></button> <button id='btn_perpanjang' class='btn btn-success'><i class='fa fa-forward' aria-hidden='true' ></i></button>"	
 			}
 			,
 			{
@@ -277,8 +278,8 @@ $(document).ready(function() {
 	$('#dataGridPromoShopee tbody').on( 'click', 'button', function () {
 		var row = $('#dataGridPromoShopee').DataTable().row( $(this).parents('tr') ).data();
 		var mode = $(this).attr("id");
-		
-		if(mode == "btn_ubah"){ ubahShopee(row); }
+		if(mode == "btn_perpanjang"){ ubahShopee(row,'PERPANJANG');}
+		if(mode == "btn_ubah"){ ubahShopee(row,'UBAH'); }
 		if(mode == "btn_hapus"){ hapusShopee(row); }
 	});
     
@@ -291,11 +292,17 @@ $(document).ready(function() {
     });
     
     $("#TGLMULAISHOPEE").on('change.datetimepicker', function(e) {
-        $('#dataGridVarianPromo').DataTable().clear().draw();
+        if($("#modeShopee").val() == 'TAMBAH')
+        {
+            $('#dataGridVarianPromo').DataTable().clear().draw();
+        }
     });
     
     $("#TGLAKHIRSHOPEE").on('change.datetimepicker', function(e) {
-        $('#dataGridVarianPromo').DataTable().clear().draw();
+        if($("#modeShopee").val() == 'TAMBAH')
+        {
+            $('#dataGridVarianPromo').DataTable().clear().draw();
+        }
     })
     
     $('#dataGridVarianPromo').DataTable({
@@ -372,11 +379,16 @@ $(document).ready(function() {
     
     $('#pilihDetailProdukSemua').change(function (event) {
         let isChecked = $(this).prop('checked');
-        $(".pilihDetailProduk").prop('checked',isChecked);
         
         var table = $('#dataGridVarianPromo').DataTable();
         var allData = table.rows().data(); 
         allData.each(function (value, index) {
+            
+            if($("#check_"+value.ID).attr('disabled') != 'disabled')
+            { 
+                $("#check_"+value.ID).prop('checked',isChecked);
+            }
+            
             $("#harga_"+value.ID).attr('disabled','disabled');
             $("#batas_"+value.ID).attr('disabled','disabled');
             
@@ -771,25 +783,43 @@ function tambahShopee(){
     $("#modal-barang-shopee").modal('show');
 }
 
-function ubahShopee(row){
+function ubahShopee(row,title){
     reset();
-    $("#titleShopee").html("Ubah Promo");
-    if(row.STATUS == "expired")
-    {
-        $("#btn_simpan_detail_shopee").hide();
-    }
-    $("#statusTransShopee").val(row.STATUS);
     loading();
     $("#IDPROMOSISHOPEE").val(row.IDPROMOSI);
     $("#NAMAPROMOSISHOPEE").val(row.NAMAPROMOSI);
-    $("#TGLMULAISHOPEE").val(row.TGLMULAI);
-    $("#TGLAKHIRSHOPEE").val(row.TGLAKHIR);
     
-    $("#NAMAPROMOSISHOPEE").attr('disabled','disabled');
-    $("#TGLMULAISHOPEE").attr('disabled','disabled');
-    $("#TGLAKHIRSHOPEE").attr('disabled','disabled');
     
-    $("#modeShopee").val("UBAH");
+    if(title == "UBAH")
+    {
+        $("#statusTransShopee").val(row.STATUS);
+        $("#titleShopee").html("Ubah Promo");
+        
+        if(row.STATUS == "expired")
+        {
+            $("#btn_simpan_detail_shopee").hide();
+        }
+        
+        $("#NAMAPROMOSISHOPEE").attr('disabled','disabled');
+        $("#TGLMULAISHOPEE").attr('disabled','disabled');
+        $("#TGLAKHIRSHOPEE").attr('disabled','disabled');
+        
+        
+        $("#TGLMULAISHOPEE").val(row.TGLMULAI);
+        $("#TGLAKHIRSHOPEE").val(row.TGLAKHIR);
+    
+    }
+    else if(title == "PERPANJANG")
+    {
+        $("#statusTransShopee").val('upcoming');
+        $("#titleShopee").html("Perpanjang Promo");
+        
+        $("#TGLMULAISHOPEE").val(row.TGLAKHIR);
+        $("#TGLAKHIRSHOPEE").val("");
+    }
+    
+    
+    $("#modeShopee").val(title);
     $("#modal-barang-shopee").modal('show');
     //GET DATA ALL
     $.ajax({
@@ -798,14 +828,13 @@ function ubahShopee(row){
     	data    : {idpromosi: row.IDPROMOSI},
     	dataType: 'json',
     	success : function(msg){
-    	    
     	    for(var x = 0 ; x < msg.rows.length; x++)
     	    {
     	        var rowData = msg.rows[x];
                 // Add the row
                 var table = $('#dataGridVarianPromo').DataTable();
                 var rows = {
-                    'MODE'                  : 'UBAH',
+                    'MODE'                  : ($("#modeShopee").val() == "UBAH" ? 'UBAH' : 'TAMBAH'),
                     'ID'                    : rowData.ID,
                     'IDINDUKBARANGSHOPEE'   : rowData.IDINDUKBARANGSHOPEE,
                     'IDBARANGSHOPEE'        : rowData.IDBARANGSHOPEE,
@@ -817,7 +846,7 @@ function ubahShopee(row){
                 
                 table.row.add(rows).draw();
                 $("#check_"+rowData.ID).prop('checked',true);
-                $("#mode_"+rowData.ID).val('UBAH');
+                $("#mode_"+rowData.ID).val(($("#modeShopee").val() == "UBAH" ? 'UBAH' : 'TAMBAH'));
                 $("#harga_jual_"+rowData.ID).val(rowData.HARGAJUALTAMPIL);
                 $("#harga_"+rowData.ID).val(rowData.HARGACORET);
                 $("#batas_"+rowData.ID).val(rowData.BATASPEMBELIAN);

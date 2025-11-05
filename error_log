@@ -608,3 +608,9 @@
 [13-Feb-2025 19:37:58 Asia/Jakarta] PHP Fatal error:  Allowed memory size of 2097152 bytes exhausted (tried to allocate 20480 bytes) in /home/lits4589/public_html/updatepos/system/database/drivers/mysqli/mysqli_result.php on line 237
 [13-Feb-2025 22:00:38 Asia/Jakarta] PHP Fatal error:  Allowed memory size of 2097152 bytes exhausted (tried to allocate 20480 bytes) in /home/lits4589/public_html/updatepos/system/database/drivers/mysqli/mysqli_result.php on line 237
 [24-Sep-2025 10:46:18 Asia/Jakarta] PHP Fatal error:  Cannot use temporary expression in write context in /home/lits4589/public_html/pos/application/controllers/Shopee.php on line 349
+[03-Oct-2025 22:09:33 Asia/Jakarta] PHP Fatal error:  Allowed memory size of 536870912 bytes exhausted (tried to allocate 517996552 bytes) in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 1738
+[13-Oct-2025 17:18:09 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979
+[13-Oct-2025 17:18:10 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979
+[13-Oct-2025 17:18:10 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979
+[13-Oct-2025 17:18:10 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979
+[13-Oct-2025 17:18:10 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979

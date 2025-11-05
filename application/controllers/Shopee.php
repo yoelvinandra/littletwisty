@@ -1078,14 +1078,14 @@ class Shopee extends MY_Controller {
                 
                 $whereBarang .= ")";	
                 
-                $sql = "select IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
+                $sql = "select IDPERUSAHAAN, IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
             				from MBARANG
-            				where (1=1) $whereBarang
+            				where (1=1) $whereBarang and (IDBARANGSHOPEE is not null and IDBARANGSHOPEE <> 0)
             				order by IDINDUKBARANGSHOPEE
             				";	
             		
             	$dataHeader = $this->db->query($sql)->result();
-            		
+      
                  $idHeader = 0;
                  $parameter = [];
             	 foreach($dataHeader as $itemHeader)
@@ -1133,7 +1133,7 @@ class Shopee extends MY_Controller {
                      	$parameter['stock_list'] = [];
             	     }
             	     
-                     $result   = get_saldo_stok_new($_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+                     $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                      $saldoQty = $result->QTY??0;
                     
                     $modelId = 0;
@@ -1151,34 +1151,43 @@ class Shopee extends MY_Controller {
                     );
             	}
             	
-            	$curl = curl_init();
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'product/update_stock',
-                  'parameter' => json_encode($parameter)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                  
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                
-                if($ret['error'] != "")
-                {
-                    $data['success'] = false;
-                    $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                    die(json_encode($data));
-                }
+            	if(count($dataHeader) > 0)
+            	{
+                	$curl = curl_init();
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => '',
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 30,
+                      CURLOPT_FOLLOWLOCATION => true,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_CUSTOMREQUEST => 'POST',
+                      CURLOPT_POSTFIELDS =>  array(
+                      'endpoint' => 'product/update_stock',
+                      'parameter' => json_encode($parameter)),
+                      CURLOPT_HTTPHEADER => array(
+                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                      ),
+                    ));
+                      
+                    $response = curl_exec($curl);
+                    curl_close($curl);
+                    $ret =  json_decode($response,true);
+                    
+                    if($ret['error'] != "")
+                    {
+                        $data['success'] = false;
+                        $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
+                        die(json_encode($data));
+                    }
+            	}
+            	else
+            	{
+            	    $data['success'] = true;
+                    $data['msg'] =  "";
+            	    die(json_encode($data));
+            	}
             }
         }
         
@@ -2045,7 +2054,7 @@ class Shopee extends MY_Controller {
 		$parameter['description']       = $this->input->post("DESKRIPSI");
 		$parameter['weight']            = ((float)$this->input->post("BERAT")/1000);
 		$parameter['item_name']         = $this->input->post("NAMA");
-		$parameter['item_status']       = ($this->input->post("UNLISTED") == 1 ? "UNLIST" : "NORMAL");
+		$parameter['item_status']       = ($this->input->post("AKTIF") == 1 ? "NORMAL" : "UNLIST");
 		$parameter['dimension'] = array(
 		    'package_height' => (float)$this->input->post("TINGGI"),
 		    'package_length' => (float)$this->input->post("PANJANG"),
@@ -2074,7 +2083,20 @@ class Shopee extends MY_Controller {
 		    'original_brand_name' => "", //Little Twisty
 		);
 		
-		$parameter['seller_stock'] = [];
+		if(count($dataVarian) > 0)
+        {
+            $parameter['seller_stock'] = [];
+        }
+        else
+        {
+    		$sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE KATEGORI like '".str_replace("%2F","%",str_replace("%7C","%",str_replace("%20","%",$this->input->post("NAMA"))))."'";
+        
+            $itemHeader = $CI->db->query($sql)->row();
+            $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+            $saldoQty = $result->QTY??0;
+    		$parameter['seller_stock'] = array(array('stock' => (int)$saldoQty ));
+        }
+		
 		if($sizeChartTipe == "COMBOBOX")
 		{
 		    $parameter['size_chart_info'] = array(
@@ -2645,7 +2667,7 @@ class Shopee extends MY_Controller {
             SUM(CASE WHEN KODEPENGEMBALIANMARKETPLACE != '' THEN 1 ELSE 0 END) AS TOTALPESANANRETUR,
             USERNAME
         FROM TPENJUALANMARKETPLACE
-        WHERE STATUSMARKETPLACE != 'CANCELLED'
+        WHERE STATUSMARKETPLACE != 'CANCELLED' AND MARKETPLACE = 'SHOPEE'
         GROUP BY USERNAME, NAME, TELP, ALAMAT, KOTA
         ORDER BY NO ASC";
 		$dataCustomer = $CI->db->query($sql)->result(); 
@@ -6266,7 +6288,7 @@ class Shopee extends MY_Controller {
             }
         }
     
-        $output_file = "assets/label/waybill_merge.pdf";
+        $output_file = "assets/label/shopee/waybill_merge.pdf";
         $this->pdf_merger->Output('F', $output_file); // Simpan ke file
         
         // Kembalikan URL hasil merge sebagai JSON
@@ -6564,11 +6586,11 @@ class Shopee extends MY_Controller {
                 }
             }
     
-            $output_file = "assets/label/waybill_merge.pdf";
+            $output_file = "assets/label/shopee/waybill_merge.pdf";
             $this->pdf_merger->Output('F', $output_file); // Simpan ke file
         
             // Kembalikan URL hasil merge sebagai JSON
-            echo json_encode(['pdf_url' => base_url('assets/label/waybill_merge.pdf')]);
+            echo json_encode(['pdf_url' => base_url('assets/label/shopee/waybill_merge.pdf')]);
         } else {
             echo "Gagal convert PDF. Cek Ghostscript terinstall atau tidak.";
         }
@@ -6769,7 +6791,7 @@ class Shopee extends MY_Controller {
 	    else if($orderStatus == "TO_RETURN|REQUESTED")
 	    {
 	        return [
-	            "status" => "Pengembalian<br>Pending",
+	            "status" => "Pengembalian<br>Diajukan",
 	            "state"  => 4,
 	         ];
 	    }
@@ -7197,10 +7219,41 @@ class Shopee extends MY_Controller {
                                     $idBarang = $dataBarangKembali->IDBARANG??"0";
                                 }
                             }
+                            else
+                            {
+                                 //GET ID BARANG
+                                  $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
+                                             FROM MBARANG 
+                                             INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
+                                             INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
+                                             WHERE MBARANG.SKUSHOPEE = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'SHOPEE'";
+                
+                                 $dataBarangKembali = $CI->db->query($sql)->row();
+                                 
+                                 $param = array(
+                                 	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN??"2",
+                                 	"IDLOKASI"      => $lokasi,
+                                 	"MODUL"         => 'RETUR JUAL',
+                                 	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
+                                 	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
+                                 	"IDBARANG"      => $dataBarangKembali->IDBARANG??"0",
+                                 	"KONVERSI1"     => 1,
+                                 	"KONVERSI2"     => 1,
+                                 	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
+                                 	"JENISTRANS"    => 'RETUR JUAL SHOPEE',
+                                 	"KETERANGAN"    => 'RETUR SHOPEE KE '.$resultPesanan->USERNAME,
+                                 	"MK"            => 'M',
+                                 	"JML"           => explode("*",$produkDataKembali[$t])[0],
+                                 	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
+                                 	"STATUS"        => '1',
+                                 );
+                                 $exe = $CI->db->insert($labelKartuStok,$param);
+                                 $idBarang = $dataBarangKembali->IDBARANG??"0";
+                            }
                             
                             if($labelKartuStok == "KARTUSTOK")
                             {
-                                $dataBarang = [];
+                                // $dataBarang = [];
                                 $idlokasiset = $lokasi;
                                 //SET STOK
                                 $curl = curl_init();
@@ -7272,7 +7325,7 @@ class Shopee extends MY_Controller {
                                         
                                         $whereBarang .= ")";	
                                         
-                                        $sql = "select IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
+                                        $sql = "select IDPERUSAHAAN, IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
                                     				from MBARANG
                                     				where (1=1) $whereBarang
                                     				order by IDINDUKBARANGSHOPEE
@@ -7326,7 +7379,7 @@ class Shopee extends MY_Controller {
                                              	$parameter['stock_list'] = [];
                                     	     }
                                     	     
-                                             $result   = get_saldo_stok_new($_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+                                             $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                                              $saldoQty = $result->QTY??0;
                                             
                                             $modelId = 0;
@@ -7607,6 +7660,7 @@ class Shopee extends MY_Controller {
                         $data['CATATANPEMBELI']                 = $dataDetail['message_to_seller'];
                         $data['CATATANPENJUAL']                 = $dataDetail['note'];
                         $data['CATATANPENGEMBALIAN']            = $dataDetail['buyer_cancel_reason'];
+                        $data["LASTUPDATED"]                    =  date("Y-m-d H:i:s");
                   
                         array_push($finalData,$data);     
                      }
@@ -7696,6 +7750,7 @@ class Shopee extends MY_Controller {
                                 'CATATANPEMBELI'             => $finalData[$indexPackaging]['CATATANPEMBELI'],
                                 'CATATANPENJUAL'             => $finalData[$indexPackaging]['CATATANPENJUAL'],
                                 'CATATANPENGEMBALIAN'        => $finalData[$indexPackaging]['CATATANPENGEMBALIAN'],
+                                "LASTUPDATED"                =>  date("Y-m-d H:i:s")
         		            ));
                         }
                         else
@@ -8135,6 +8190,7 @@ class Shopee extends MY_Controller {
     		              ->updateRaw("TPENJUALANMARKETPLACE", array(
     		                  'TOTALHARGA'               =>  $itemPendapatan['escrow_detail']['buyer_payment_info']['merchant_subtotal'], 
     		                  'TOTALPENDAPATANPENJUAL'   =>  $itemPendapatan['escrow_detail']['order_income']['escrow_amount'],
+    		                  "LASTUPDATED"              =>  date("Y-m-d H:i:s")
     		                ));
                       }
               
@@ -8285,7 +8341,8 @@ class Shopee extends MY_Controller {
 		                        'MINTGLPENGEMBALIAN'            =>  date("Y-m-d H:i:s", $return[$x]['due_date']),
 		                        'MINTGLKIRIMPENGEMBALIAN'       =>  date("Y-m-d H:i:s", $return[$x]['return_ship_due_date']),
 		                        'RESIPENGEMBALIAN'              =>  $return[$x]['tracking_number'],
-		                        'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0)
+		                        'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0),
+		                        "LASTUPDATED"                   =>  date("Y-m-d H:i:s")
 		                      ));
                      }
                      $cursor++;
@@ -8521,7 +8578,7 @@ class Shopee extends MY_Controller {
                 }
             }
                 
-            $sql = "select IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
+            $sql = "select IDPERUSAHAAN, IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
             				from MBARANG
             				WHERE IDINDUKBARANGSHOPEE is not null AND
             				IDINDUKBARANGSHOPEE <> '' AND
@@ -8577,7 +8634,7 @@ class Shopee extends MY_Controller {
                  	$parameter['stock_list'] = [];
             	     }
             	     
-                 $result   = get_saldo_stok_new($_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
+                 $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
                  $saldoQty = $result->QTY??0;
                 
                 $modelId = 0;

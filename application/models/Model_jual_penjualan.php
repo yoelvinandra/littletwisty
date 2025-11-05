@@ -73,7 +73,7 @@ class Model_jual_penjualan extends MY_Model{
 		}
 		
 		$data = [];		
-		$sql = "select b.IDLOKASI,b.NAMALOKASI, a.IDPENJUALAN, a.TGLTRANS, a.KODEPENJUALAN, a.TOTAL,a.CATATAN,a.CATATANCUSTOMER,ifnull(a.POTONGANPERSEN,0) as POTONGANPERSEN, ifnull(a.POTONGANRP,0) as POTONGANRP ,a.PEMBAYARAN,
+		$sql = "select b.IDLOKASI,b.NAMALOKASI, a.IDPENJUALAN, a.TGLTRANS, a.KODEPENJUALAN, a.TOTAL,a.CATATAN,a.CATATANCUSTOMER,ifnull(a.POTONGANPERSEN,0) as POTONGANPERSEN, ifnull(a.POTONGANRP,0) as POTONGANRP ,a.PEMBAYARAN,a.DPPLAINRP,
 					   a.PPNRP as PPN, a.GRANDTOTAL, a.GRANDTOTALDISKON,a.CATATAN, d.USERNAME as USERINPUT, a.TGLENTRY as TGLINPUT, '' as HARI, a.KODETRANSREFERENSI,a.JENISTRANSAKSI,
 					   a.JAMENTRY, e.USERNAME as USERBATAL, a.TGLBATAL, a.STATUS, a.ALASANBATAL,f.NAMACUSTOMER,f.KODECUSTOMER,f.ALAMAT as ALAMATCUSTOMER,f.TELP as TELPCUSTOMER,f.MEMBER,f.KONSINYASI,f.DISKONMEMBER
 				from TPENJUALAN a
@@ -132,7 +132,7 @@ class Model_jual_penjualan extends MY_Model{
 	    }
 		
 		$data = [];		
-        $sql = "select b.IDBARANG as ID, b.KODEBARANG as KODE, a.JML as QTY, ".$harga." as HARGA,a.SATUANREF as SATUANKECIL,a.PAKAIPPN,c.PEMBAYARAN,ifnull(a.DISCPERSEN,0) as DISKON,ifnull(a.DISC,0) as DISKONRP
+        $sql = "select b.IDBARANG as ID, b.KODEBARANG as KODE, a.JML as QTY, ".$harga." as HARGA,a.SATUANREF as SATUANKECIL,a.PAKAIPPN,c.PEMBAYARAN,ifnull(a.DISCPERSEN,0) as DISKON,ifnull(a.DISC,0) as DISKONRP,a.SUBTOTALKURS
 				,d.ALAMAT as ALAMATCUSTOMER,d.TELP as TELPCUSTOMER,d.IDCUSTOMER,d.KODECUSTOMER,d.NAMACUSTOMER,c.CATATANCUSTOMER,a.KETERANGAN as NAMA,c.GRANDTOTAL,c.GRANDTOTALDISKON,c.POTONGANRP,c.POTONGANPERSEN
 				from TPENJUALANDTL a
 				left join MBARANG b on a.IDBARANG = b.IDBARANG
@@ -624,17 +624,10 @@ class Model_jual_penjualan extends MY_Model{
                 $sql .= "select '".$item['label']."' as LABEL, ifnull(SUM(a.TOTALPENDAPATANPENJUAL),0) as GRANDTOTAL,count(a.IDPENJUALANMARKETPLACE) as JMLNOTA,
                         IFNULL(SUM(a.TOTALBARANG),0) AS TOTALBARANG
                         from tpenjualanmarketplace a
-                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$item['tglawal']." 00:00:00' AND a.tgltrans <= '".$item['tglakhir']." 23:59:59' and a.statusmarketplace = 'COMPLETED')
+                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$item['tglawal']." 00:00:00' AND a.tgltrans <= '".$item['tglakhir']." 23:59:59' and (a.statusmarketplace = 'COMPLETED'))
                 		as a
                 		GROUP BY a.LABEL
                 ";
-                
-                // select '".$item['label']."' as LABEL, ifnull(SUM(a.TOTALPENDAPATANPENJUAL),0) as GRANDTOTAL,count(a.IDPENJUALANMARKETPLACE) as JMLNOTA,
-                //         IFNULL(SUM(a.TOTALBARANG - if(a.BARANGSAMPAI = 1,a.TOTALBARANGPENGEMBALIAN,0)),0) AS TOTALBARANG
-                //         from tpenjualanmarketplace a
-                // 		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$item['tglawal']." 00:00:00' AND a.tgltrans <= '".$item['tglakhir']." 23:59:59' and a.statusmarketplace = 'COMPLETED')
-                // 		as a
-                // 		GROUP BY a.LABEL
             }
             else
             {
@@ -793,7 +786,7 @@ class Model_jual_penjualan extends MY_Model{
                         from tpenjualanmarketplace a
                         inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                         inner join mbarang c on b.idbarang = c.idbarang
-                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and (a.statusmarketplace = 'COMPLETED')
                 		$whereBarangStok
                 		)
                 		as a
@@ -875,7 +868,7 @@ class Model_jual_penjualan extends MY_Model{
                         from tpenjualanmarketplace a
                         inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                         inner join mbarang c on b.idbarang = c.idbarang
-                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+                		where (1=1) $whereCustomerMarketplace AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and (a.statusmarketplace = 'COMPLETED')
                 		$whereBarangStok
                 		)
                 		as a
@@ -938,7 +931,7 @@ class Model_jual_penjualan extends MY_Model{
 	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 	                    )";
 	    $paramBarangMarketplace = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
-	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE
+	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and (x.statusmarketplace = 'COMPLETED') and x.MARKETPLACE = a.MARKETPLACE
 	                    )";
 	    if($barang != "0")
 	    {
@@ -971,7 +964,7 @@ class Model_jual_penjualan extends MY_Model{
         		from TPENJUALANMARKETPLACE a
         		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                 inner join mbarang c on b.idbarang = c.idbarang
-        		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+        		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and (a.statusmarketplace = 'COMPLETED')
         		$whereBarangStok
         	    Group by CONCAT('X', A.MARKETPLACE)
         	) as a
@@ -996,7 +989,7 @@ class Model_jual_penjualan extends MY_Model{
 	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 	                    )";
 	    $paramBarangMarketplace  = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
-	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and x.statusmarketplace = 'COMPLETED' and x.MARKETPLACE = a.MARKETPLACE and x.KOTA = a.KOTA
+	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and (x.statusmarketplace = 'COMPLETED') and x.MARKETPLACE = a.MARKETPLACE and x.KOTA = a.KOTA
 	                    )";
 	                    
 	    if($barang != "0")
@@ -1042,7 +1035,7 @@ class Model_jual_penjualan extends MY_Model{
         		from TPENJUALANMARKETPLACE a
         		inner join tpenjualanmarketplacedtl b on a.idpenjualanmarketplace = b.idpenjualanmarketplace
                 inner join mbarang c on b.idbarang = c.idbarang
-        		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and a.statusmarketplace = 'COMPLETED'
+        		where (1=1) AND a.tgltrans >= '".$tglawal." 00:00:00' AND a.tgltrans <= '".$tglakhir." 23:59:59' and (a.statusmarketplace = 'COMPLETED')
         		$whereBarangStok $whereCustomerMarketplace
         	    Group by NAMA
         	) as a

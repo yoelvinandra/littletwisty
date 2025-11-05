@@ -581,7 +581,6 @@ class Model_master_barang extends MY_Model{
     				order by SUBSTRING(a.URUTANTAMPIL, 1, 1) ASC ,
     		CAST(SUBSTRING(a.URUTANTAMPIL, 2) AS UNSIGNED) ASC";
     		$query = $this->db->query($sql);
-    		
     		$data['rows'] = $query->result();
 		}
 
@@ -889,10 +888,10 @@ class Model_master_barang extends MY_Model{
 		$query = $this->db->query($sql)->row();
 		
 	    $file = 'assets/foto-produk/INDUK_'.$query->KATEGORI.'.json';
-	    $data['dataInduk'] = json_decode(file_get_contents($file),true);
+	    $data['dataInduk'] = json_decode(file_get_contents($file),true)??[];
 	    
 	    $file = 'assets/foto-produk/VARIAN_'.$query->KATEGORI.'.json';
-	    $data['dataGambarVarian'] = json_decode(file_get_contents($file),true);
+	    $data['dataGambarVarian'] = json_decode(file_get_contents($file),true)??[];
 	     
 	    return $data;
 	}

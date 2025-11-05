@@ -77,20 +77,18 @@ class LaporanPenjualan extends MY_Controller {
            
            if($indexStatus == 0)
            {
-               $whereStatusMarketplace .= " AND ((1=1)";
+               $whereStatusMarketplace .= " AND (";
+           }
+           else
+           {
+               $whereStatusMarketplace .= " OR";
            }
            
            if (count($parts) == 2) {
                // Two values: map to two different fields
-               $whereStatusMarketplace .= " OR (tpenjualanmarketplace.status = '" . $parts[0] . "' AND tpenjualanmarketplace.statusmarketplace = '" . $parts[1] . "')";
+               $whereStatusMarketplace .= "(tpenjualanmarketplace.status = '" . $parts[0] . "' AND (tpenjualanmarketplace.statusmarketplace = '" . $parts[1] . "'))";
            } else {
-               // One or more values: OR conditions on status
-               $statuses = explode("|", $itemStatusMarketplace[0]);
-               $conditions = array_map(function($status) {
-                   return "tpenjualanmarketplace.status = '" . $status . "'";
-               }, $statuses);
-           
-               $whereStatusMarketplace .= " OR (" . implode(" OR ", $conditions) . ")";
+               $whereStatusMarketplace .= "(tpenjualanmarketplace.status = '" . $parts[0] . "')";
            }
            $indexStatus++;
 		}
@@ -102,7 +100,7 @@ class LaporanPenjualan extends MY_Controller {
 		
 		if (strpos($tampil,"REGISTER") !== FALSE) {
 
-			$sql = "select 1 as Nomor, mcustomer.namacustomer,mcustomer.kota, tpenjualan.catatan, tpenjualan.STATUS, tpenjualan.tgltrans, tpenjualan.kodepenjualan as kodetrans, tpenjualan.TOTAL, tpenjualan.PPNRP, tpenjualan.GRANDTOTAL, tpenjualan.nofakturpajak, 
+			$sql = "select 1 as Nomor, mcustomer.namacustomer,mcustomer.kota, tpenjualan.catatan, tpenjualan.STATUS, tpenjualan.tgltrans, tpenjualan.kodepenjualan as kodetrans, tpenjualan.TOTAL, tpenjualan.DPPLAINRP, tpenjualan.PPNRP, tpenjualan.GRANDTOTAL, tpenjualan.nofakturpajak, 
 			              mbarang.KodeBarang, tpenjualandtl.keterangan as NamaBarang, tpenjualandtl.Jml, tpenjualandtl.Satuan, tpenjualandtl.harga, tpenjualandtl.ppnrp as ppnrpdtl,
 						  tpenjualandtl.NilaiKurs, tpenjualandtl.HargaKurs, tpenjualandtl.DiscPersen, tpenjualandtl.Disc, tpenjualandtl.subtotal, tpenjualandtl.subtotalKurs, tpenjualandtl.subtotalKurs AS subtotalkurs2, tpenjualandtl.pakaippn
 						  ,tpenjualan.catatancustomer,tpenjualan.potonganrp,tpenjualan.pembayaran,tpenjualan.GRANDTOTALDISKON,tpenjualan.KODETRANSREFERENSI,tpenjualan.JENISTRANSAKSI, '' as statusmarketplace 
@@ -119,7 +117,7 @@ class LaporanPenjualan extends MY_Controller {
     			$whereFilterMarketplace =  str_replace("KODEPENJUALAN", "KODEPENJUALANMARKETPLACE",str_replace("TPENJUALAN", "TPENJUALANMARKETPLACE", $whereFilter));
     			
     			$sql .= " UNION ALL 
-    			    select 2 as Nomor, CONCAT(tpenjualanmarketplace.marketplace,' - ',tpenjualanmarketplace.username) as namacustomer,tpenjualanmarketplace.kota,tpenjualanmarketplace.CATATANPENJUAL as catatan, tpenjualanmarketplace.STATUS, tpenjualanmarketplace.tgltrans, tpenjualanmarketplace.kodepenjualanmarketplace as kodetrans, tpenjualanmarketplace.TOTALHARGA as TOTAL, 0 as PPNRP, tpenjualanmarketplace.totalharga as GRANDTOTAL, '' as nofakturpajak, 
+    			    select 2 as Nomor, CONCAT(tpenjualanmarketplace.marketplace,' - ',tpenjualanmarketplace.username) as namacustomer,tpenjualanmarketplace.kota,tpenjualanmarketplace.CATATANPENJUAL as catatan, tpenjualanmarketplace.STATUS, tpenjualanmarketplace.tgltrans, tpenjualanmarketplace.kodepenjualanmarketplace as kodetrans, tpenjualanmarketplace.TOTALHARGA as TOTAL, 0 as DPPLAINRP, 0 as PPNRP, tpenjualanmarketplace.totalharga as GRANDTOTAL, '' as nofakturpajak, 
     			           mbarang.KodeBarang, mbarang.namabarang as NamaBarang, tpenjualanmarketplacedtl.Jml, mbarang.Satuan, tpenjualanmarketplacedtl.harga, 0 as ppnrpdtl,
 						  0 as NilaiKurs, tpenjualanmarketplacedtl.harga as HargaKurs, 0 as DiscPersen, 0 as Disc, tpenjualanmarketplacedtl.total as subtotal, tpenjualanmarketplacedtl.total as subtotalKurs, tpenjualanmarketplacedtl.total AS subtotalkurs2, '' as pakaippn
 						  ,tpenjualanmarketplace.CATATANPEMBELI as catatancustomer,(tpenjualanmarketplace.TOTALHARGA - tpenjualanmarketplace.totalpendapatanpenjual) as potonganrp,tpenjualanmarketplace.TOTALBAYAR as pembayaran, tpenjualanmarketplace.totalpendapatanpenjual as GRANDTOTALDISKON,'' as KODETRANSREFERENSI,'ONLINE' as JENISTRANSAKSI, tpenjualanmarketplace.statusmarketplace 
@@ -204,7 +202,7 @@ class LaporanPenjualan extends MY_Controller {
 	
 		} else if (strpos($tampil,"REKAP") !== FALSE) {
 			$sql = "select 1 as NOMOR, mcustomer.namacustomer,mcustomer.kota, tpenjualan.CATATAN,tpenjualan.STATUS, tpenjualan.TGLTRANS, tpenjualan.KODEPENJUALAN as KODETRANS,
-				tpenjualan.TOTAL, tpenjualan.PPNRP, tpenjualan.GRANDTOTAL,tpenjualan.POTONGANRP,tpenjualan.POTONGANPERSEN,tpenjualan.PEMBAYARAN,tpenjualan.JENISTRANSAKSI 
+				tpenjualan.TOTAL, tpenjualan.DPPLAINRP, tpenjualan.PPNRP, tpenjualan.GRANDTOTAL,tpenjualan.POTONGANRP,tpenjualan.POTONGANPERSEN,tpenjualan.PEMBAYARAN,tpenjualan.JENISTRANSAKSI 
 				,tpenjualan.catatancustomer,tpenjualan.GRANDTOTALDISKON,
 				SUM(tpenjualandtl.jml) as QTY, '' as statusmarketplace
 				from tpenjualan 
@@ -222,7 +220,7 @@ class LaporanPenjualan extends MY_Controller {
     			
     			$sql .= " UNION ALL 
     			    select 2 as NOMOR, CONCAT(tpenjualanmarketplace.marketplace,' - ',tpenjualanmarketplace.username) as namacustomer,tpenjualanmarketplace.kota, tpenjualanmarketplace.CATATANPENJUAL as CATATAN,tpenjualanmarketplace.STATUS, tpenjualanmarketplace.TGLTRANS, tpenjualanmarketplace.KODEPENJUALANMARKETPLACE as KODETRANS,
-    				tpenjualanmarketplace.TOTALHARGA as TOTAL, 0 as PPNRP, tpenjualanmarketplace.TOTALHARGA as GRANDTOTAL,(tpenjualanmarketplace.TOTALHARGA - tpenjualanmarketplace.totalpendapatanpenjual) as POTONGANRP,0 as POTONGANPERSEN,tpenjualanmarketplace.TOTALBAYAR as PEMBAYARAN,'ONLINE' as JENISTRANSAKSI 
+    				tpenjualanmarketplace.TOTALHARGA as TOTAL,0 as DPPLAINRP,  0 as PPNRP, tpenjualanmarketplace.TOTALHARGA as GRANDTOTAL,(tpenjualanmarketplace.TOTALHARGA - tpenjualanmarketplace.totalpendapatanpenjual) as POTONGANRP,0 as POTONGANPERSEN,tpenjualanmarketplace.TOTALBAYAR as PEMBAYARAN,'ONLINE' as JENISTRANSAKSI 
     				,tpenjualanmarketplace.CATATANPEMBELI as catatancustomer,tpenjualanmarketplace.totalpendapatanpenjual as GRANDTOTALDISKON,
     				SUM(tpenjualanmarketplace.TOTALBARANG) as QTY, tpenjualanmarketplace.statusmarketplace 
     				from tpenjualanmarketplace 

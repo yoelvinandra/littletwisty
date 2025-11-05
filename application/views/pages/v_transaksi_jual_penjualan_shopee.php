@@ -260,7 +260,7 @@
       					 </div>
       					  <select id="cb_trans_status_shopee_4" name="cb_trans_status_shopee_4" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
-      					  	<option value="TO_RETURN|REQUESTED">Pengembalian Pending</option>
+      					  	<option value="TO_RETURN|REQUESTED">Pengembalian Diajukan</option>
       					  	<option value="TO_RETURN|PROCESSING">Pengembalian Diproses</option>
       					  	<option value="TO_RETURN|SELLER_DISPUTE-JUDGING">Pengembalian Dalam Sengketa</option>
       					  </select>
@@ -282,7 +282,7 @@
                                       <th>Tgl Pesanan</th>
                                       <th width="300px">Barang</th>
                                       <th>T. Qty</th>
-                                      <th>T. Harga</th>
+                                      <th>T. Bayar</th>
                                       <th width="150px">Metode Bayar</th>
                                       <th width="300px">Alamat Pembeli</th>
                                       <th>Kurir</th>
@@ -307,7 +307,7 @@
                                       <th>Tgl Pesanan</th>
                                       <th width="300px">Barang</th>
                                       <th>T. Qty</th>
-                                      <th>T. Harga</th>
+                                      <th>T. Bayar</th>
                                       <th width="150px">Metode Bayar</th>
                                       <th width="300px">Alamat Pembeli</th>
                                       <th>Kurir</th>
@@ -331,7 +331,7 @@
                                       <th>Tgl Pesanan</th>
                                       <th width="300px">Barang</th>
                                       <th>T. Qty</th>
-                                      <th>T. Harga</th>
+                                      <th>T. Bayar</th>
                                       <th width="150px">Metode Bayar</th>
                                       <th width="300px">Alamat Pembeli</th>
                                       <th>Kurir</th>
@@ -427,7 +427,7 @@
                    <label class="noKembaliShopee">No. Pengembalian</label>
                    <div class="noKembaliShopee" id="NOPENGEMBALIANSHOPEE">-</div>
                    <br>
-                   <label class="alasanKembaliShopee">Alasan Pengembalian Pembeli</label>
+                   <label class="alasanKembaliShopee">Alasan Batal / Kembali</label>
                    <div class="alasanKembaliShopee" id="ALASANPENGEMBALIANSHOPEE">-</div>
                 </div>
       	    	<!--SATU TABEL-->
@@ -2021,7 +2021,7 @@ $("#cb_alasan_sengketa_shopee").change(function(){
                     formData.append('file', file);
                     formData.append('tipe', 'GAMBAR');
                     formData.append('size', file.size);
-                    formData.append("reason","proof");
+                    formData.append("reason","proof/SHOPEE");
                 
                     loading();
                     
@@ -2099,7 +2099,7 @@ $("#cb_alasan_sengketa_shopee").change(function(){
                         formData.append('file', file);
                         formData.append('tipe', 'VIDEO');
                         formData.append('size', file.size);
-                        formData.append("reason","proof");
+                        formData.append("reason","proof/SHOPEE");
                     
                         loading();
                         
@@ -3619,11 +3619,27 @@ function sinkronShopeeNow(){
                             	dataType: 'json',
                             	success : function(msg){
                             	    totalPesananShopeeAll = msg.total;
+                            	    
+                                    var indexTab = 0;
+                                    var tabs = document.querySelectorAll('#tab_transaksi_shopee li');
+
+                                    tabs.forEach(function(tab, index) {
+                                        if (tab.classList.contains('active')) {
+                                            indexTab = (index+1);
+                                        }
+                                    });
+                                    
                                     for(var x = 1; x <= 4 ; x++)
                                     {
-                                        doneSinkronShopee[x] = false;
-                                        changeTabShopee(x);
+                                        if(x != indexTab)
+                                        {
+                                            doneSinkronShopee[x] = false;
+                                            changeTabShopee(x);
+                                        }
                                     }
+                                    
+                                    doneSinkronShopee[indexTab] = false;
+                                    changeTabShopee(indexTab);
                             }});
                         }
                 	}
@@ -3673,11 +3689,27 @@ function sinkronShopee(){
                             	dataType: 'json',
                             	success : function(msg){
                             	    totalPesananShopeeAll = msg.total;
+                            	    
+                                    var indexTab = 0;
+                                    var tabs = document.querySelectorAll('#tab_transaksi_shopee li');
+
+                                    tabs.forEach(function(tab, index) {
+                                        if (tab.classList.contains('active')) {
+                                            indexTab = (index+1);
+                                        }
+                                    });
+                                    
                                     for(var x = 1; x <= 4 ; x++)
                                     {
-                                        doneSinkronShopee[x] = false;
-                                        changeTabShopee(x);
+                                        if(x != indexTab)
+                                        {
+                                            doneSinkronShopee[x] = false;
+                                            changeTabShopee(x);
+                                        }
                                     }
+                                    
+                                    doneSinkronShopee[indexTab] = false;
+                                    changeTabShopee(indexTab);
                             }});
                         }
                 	}

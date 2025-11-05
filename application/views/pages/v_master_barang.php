@@ -128,7 +128,7 @@
                 <li class="active"><a href="#tab_master" onclick="javascript:changeTabMarketplace(0)" data-toggle="tab"><b>Master</b></a></li>
 				<li id="header_shopee"><a href="#tab_shopee" data-toggle="tab" onclick="javascript:changeTabMarketplace(1)"><img alt="Shopee" style="width:60px;"src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/960px-Shopee.svg.png"></a></li>
 				<!--<li id="header_tiktok"><a href="#tab_tiktok" data-toggle="tab" onclick="javascript:changeTabMarketplace(2)"><img alt="Tiktok" style="width:60px;"src="data:image/png;base64,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"></a></li>-->
-				<!--<li id="header_lazada"><a href="#tab_lazada" data-toggle="tab" onclick="javascript:changeTabMarketplace(3)"><img alt="Lazada" style="width:60px;"src="data:image/jpeg;base64,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"></a></li>-->
+				<li id="header_lazada"><a href="#tab_lazada" data-toggle="tab" onclick="javascript:changeTabMarketplace(3)"><img alt="Lazada" style="width:60px;"src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Lazada_%282019%29.svg/960px-Lazada_%282019%29.svg.png"></a></li>
             </ul>
             <div class="tab-content" style="padding:0px; margin:0px;">
                     <div class="tab-pane" id="tab_shopee">
@@ -366,7 +366,8 @@
                                                         </div>
                                                         <div class="box-footer">&nbsp;&nbsp;&nbsp;&nbsp;
                                                             <button type="button" id="btn_simpan" class="btn btn-primary" style="margin-right:5px;" onclick="javascript:simpanHeader()">Simpan</button>
-                                                            <button type="button" id="btn_simpan_shopee" class="btn" style="background:#EE4D2D; color:white;" onclick="javascript:simpanHeader('SHOPEE')">Simpan & Hubungkan Shopee</button>
+                                                            <button type="button" id="btn_simpan_shopee" class="btn" style="background:#EE4D2D; color:white; margin-right:5px;" onclick="javascript:simpanHeader('SHOPEE')">Simpan & Hubungkan Shopee</button>
+                                                            <button type="button" id="btn_simpan_lazada" class="btn" style="background:#201ADC; color:white;" onclick="javascript:simpanHeader('LAZADA')">Simpan & Hubungkan Lazada</button>
                                                         </div>
                                                     </div>
                         						</form>
@@ -585,6 +586,18 @@ if('<?=$_SESSION[NAMAPROGRAM]['USERNAME'] == 'USERTES'?>')
     $("#header_tiktok").hide();
     $("#header_lazada").hide();
 }
+
+if('<?=$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] == 'NO'?>')
+{
+    $("#header_shopee").hide();
+    $("#btn_simpan_shopee").hide();
+}
+if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'NO'?>')
+{
+    $("#header_lazada").hide();
+    $("#btn_simpan_lazada").hide();
+}
+
 var dataVarianLama = [];
 var dataLama = {};
 var kategoriBarangShopee = [
@@ -594,7 +607,15 @@ var kategoriBarangShopee = [
     101336,
     100685
 ];
+var kategoriBarangLazada = [
+    14010,
+    14010,
+    14010,
+    16722,
+    13580
+];
 var indukBarangShopee = 0;
+var indukBarangLazada = 0;
 var	dataGambar = [
             	{
             	    'ID'    : '',
@@ -922,11 +943,20 @@ $(document).ready(function() {
                     "targets": -5,
                     "render" :function (data,display,row) 
     					{
+    					    var logo = "";
     					    if(row.IDINDUKBARANGSHOPEE != 0)
     					    {
-    					        return '<img alt="Shopee" style="width:60px;"src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/960px-Shopee.svg.png">';
+    					        logo += '<img alt="Shopee" style="width:60px;"src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Shopee.svg/960px-Shopee.svg.png">';
     					    }
-    					    return 'Tidak Terhubung';
+    					    if(row.IDINDUKBARANGLAZADA != 0)
+    					    {
+    					        if(logo != ""){logo += '<br>'}
+    					        logo += '<img alt="Lazada" style="width:60px;"src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Lazada_%282019%29.svg/960px-Lazada_%282019%29.svg.png">';
+    					    }
+    					    
+    					    if(logo == "")return 'Tidak Terhubung';
+    					    
+    					    return logo
     					},	
     			},
     			{
@@ -1219,6 +1249,7 @@ function checkValid(data) {
 function tambahHeader(){
     $("#btn_simpan").show();
     indukBarangShopee = 0;
+    indukBarangLazada = 0;
     $("#FORMDATAINDUK").hide();
     $("#FORMDATAVARIAN").hide();	
 	$("#dataGridVarian").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/');
@@ -1374,6 +1405,7 @@ function tambahHeader(){
 function ubahHeader(row){
      $("#btn_simpan").show();
      indukBarangShopee = row.IDINDUKBARANGSHOPEE;
+     indukBarangLazada = row.IDINDUKBARANGLAZADA;
      $("#FORMDATAINDUK").hide();
      $("#FORMDATAVARIAN").hide();
      $('#checkbox-variation').hide();
@@ -1391,7 +1423,7 @@ function ubahHeader(row){
         	$("#PANJANG").val(row.PANJANG);
         	$("#LEBAR").val(row.LEBAR);
         	$("#TINGGI").val(row.TINGGI);
-        	$("#DESKRIPSI").val(row.DESKRIPSI.replaceAll("\R\N","\r\n").replaceAll("???? ",""));
+        	$("#DESKRIPSI").val(row.DESKRIPSI.replaceAll("\\R\\N","\\r\\n").replaceAll("???? ",""));
         	$("#KATEGORIONLINE").val(row.KATEGORIONLINE);
         	$("#KATEGORI").val(row.KATEGORI);
         	
@@ -1586,7 +1618,6 @@ function ubahHeader(row){
                                     
                                     $("#ubahGambarVarian"+y).show();
                             	    $("#hapusGambarVarian"+y).show();
-                            	    
                             	    dataGambarVarian[y] = {
                                        'ID'   : $("#id-input-varian-"+y).val(),
                                        'NAMA' : imageVarian[z].NAMA,
@@ -1595,72 +1626,72 @@ function ubahHeader(row){
                     	        }
                     	    }
                     	}
-                	}
-                	    
-                });
-	        }
-	        
-	        if(indukBarangShopee != 0)
-	        {
-    	        $.ajax({
-                	type    : 'POST',
-                	url     : base_url+'Shopee/getDataBarangdanVarian/',
-                	data    : {idindukbarangshopee: row.IDINDUKBARANGSHOPEE},
-                	dataType: 'json',
-                	success : function(msg){
-                	    
-                	    var imageProduk = msg.dataInduk.image;
-                    	//GAMBAR PRODUK
-                    	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
-                    	{
-                    	   // $("#file-input-"+y).val("-");
-                    	    $("#format-input-"+y).val('GAMBAR');
-                    	    $("#index-input-"+y).val(y);
-                    	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
-                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
-                    	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
-                    	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
-                    	   
-                        	$("#ubahGambarProduk-"+y).show();
-                        	$("#hapusGambarProduk-"+y).show();
-                        	
-                        	dataGambar[y] = {
-                               'ID'   : $("#id-input-"+y).val(),
-                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
-                               'URL'  : $("#preview-image-"+y).attr("src"),
-                            };
-                    	    
-                    	}
                     	
-                	    var imageVarian = msg.dataGambarVarian;
-                	    for(var y = 0 ; y < imageVarian.length ; y++)
+                    	if(imageProduk.length == 0 && imageVarian.length == 0 && indukBarangShopee != 0)
                     	{
-                    	    dataGambarVarian[y] = {
-                               'ID'   : '',
-                               'NAMA' : '',
-                               'URL'  : '',
-                            };
-                                                                   
-                    	    for(var z = 0 ; z < imageVarian.length ; z++)
-                    	    {
-                    	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
-                    	        {
-                            	    // $("#file-input-varian-"+y).val("-");
-                                    $("#format-input-varian-"+y).val('GAMBAR');
-                                    $("#index-input-varian-"+y).val(y);
-                                    $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
-                                    $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
-                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
-                                    $("#ubahGambarVarian"+y).show();
-                            	    $("#hapusGambarVarian"+y).show();
+                    	       
+                	        $.ajax({
+                            	type    : 'POST',
+                            	url     : base_url+'Shopee/getDataBarangdanVarian/',
+                            	data    : {idindukbarangshopee: row.IDINDUKBARANGSHOPEE},
+                            	dataType: 'json',
+                            	success : function(msg){
                             	    
-                            	    dataGambarVarian[y] = {
-                                       'ID'   : $("#id-input-varian-"+y).val(),
-                                       'NAMA' : imageVarian[z].WARNA,
-                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
-                                    };
-                    	        }
-                    	    }
+                            	    var imageProduk = msg.dataInduk.image;
+                                	//GAMBAR PRODUK
+                                	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                                	{
+                                	   // $("#file-input-"+y).val("-");
+                                	    $("#format-input-"+y).val('GAMBAR');
+                                	    $("#index-input-"+y).val(y);
+                                	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
+                                	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                                	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
+                                	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
+                                	   
+                                    	$("#ubahGambarProduk-"+y).show();
+                                    	$("#hapusGambarProduk-"+y).show();
+                                    	
+                                    	dataGambar[y] = {
+                                           'ID'   : $("#id-input-"+y).val(),
+                                           'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                           'URL'  : $("#preview-image-"+y).attr("src"),
+                                        };
+                                	    
+                                	}
+                                	
+                            	    var imageVarian = msg.dataGambarVarian;
+                            	    for(var y = 0 ; y < imageVarian.length ; y++)
+                                	{
+                                	    dataGambarVarian[y] = {
+                                           'ID'   : '',
+                                           'NAMA' : '',
+                                           'URL'  : '',
+                                        };
+                                                                               
+                                	    for(var z = 0 ; z < imageVarian.length ; z++)
+                                	    {
+                                	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
+                                	        {
+                                        	    // $("#file-input-varian-"+y).val("-");
+                                                $("#format-input-varian-"+y).val('GAMBAR');
+                                                $("#index-input-varian-"+y).val(y);
+                                                $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
+                                                $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
+                                                $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
+                                                $("#ubahGambarVarian"+y).show();
+                                        	    $("#hapusGambarVarian"+y).show();
+                                        	    dataGambarVarian[y] = {
+                                                   'ID'   : $("#id-input-varian-"+y).val(),
+                                                   'NAMA' : imageVarian[z].WARNA,
+                                                   'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                                };
+                                	        }
+                                	    }
+                                	}
+                            	}
+                            	    
+                            });
                     	}
                 	}
                 	    
@@ -1859,14 +1890,11 @@ function simpanHeader(jenis = '') {
             success: function(msg){
                 if (msg.success) {
                     
-                    //IDBARANGINDUK
-                    $("#IDBARANGINDUK").val();
-                    
-                    if(jenis == 'SHOPEE')
+                    if(jenis != '')
                     {
                         $("#mode").val("ubah");
                         loadingMaster();
-                        
+                        //JIKA DIA INDUK
                         if(!$("#VARIANSET").prop('checked'))
                         {
                              $.ajax({
@@ -1877,8 +1905,20 @@ function simpanHeader(jenis = '') {
                                     //$.messager.progress();
                                 },
                                 success: function(msg){
+                    
+                                    //IDBARANGINDUK
+                                    $("#IDBARANGINDUK").val(msg.rows[0].IDBARANG);
                                     $("#KODEBARANGINDUK").val(msg.rows[0].KODEBARANG);
-                                    simpanHeaderShopee();
+                                    if(jenis == 'SHOPEE')
+                                    {
+                                        indukBarangShopee = msg.rows[0].IDINDUKBARANGSHOPEE;
+                                        simpanHeaderShopee();
+                                    }
+                                    else if(jenis == 'LAZADA')
+                                    {
+                                        indukBarangLazada = msg.rows[0].IDINDUKBARANGLAZADA;
+                                        simpanHeaderLazada();
+                                    }
                                 }
                                  
                              });
@@ -1887,20 +1927,23 @@ function simpanHeader(jenis = '') {
                         {
                             $("#dataGridVarian").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent($("#KATEGORI").val()));
                             $("#dataGridVarian").DataTable().ajax.reload();
-                            simpanHeaderShopee();
+                            
+                            setTimeout(function() {
+                                var varian = $('#dataGridVarian').DataTable().rows().data().toArray();
+                                
+                                $("#IDBARANGINDUK").val(varian[0].IDBARANG);
+                                if(jenis == 'SHOPEE')
+                                {
+                                    indukBarangShopee = varian[0].IDINDUKBARANGSHOPEE;
+                                    simpanHeaderShopee();
+                                }
+                                else if(jenis == 'LAZADA')
+                                {
+                                    indukBarangLazada = varian[0].IDINDUKBARANGLAZADA;
+                                    simpanHeaderLazada();
+                                }
+                            },2000);
                         }
-                        //  $.ajax({
-                        //     type      : 'POST',
-                        //     url       : base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()),
-                        //     dataType  : 'json',
-                        //     beforeSend: function (){
-                        //         //$.messager.progress();
-                        //     },
-                        //     success: function(msg){
-                        //         simpanHeaderShopee();
-                        //     }
-                             
-                        //  });
                     }
                     else
                     {
@@ -1933,7 +1976,7 @@ function simpanHeader(jenis = '') {
 async function simpanHeaderShopee(){
     
     var arrLogistics = [];
-    var unlisted = 0;
+    var aktif = 1;
     
     // Helper: convert jQuery ajax to Promise
     function ajaxPost(url, data = {}) {
@@ -1964,7 +2007,7 @@ async function simpanHeaderShopee(){
         
         if(msg.dataInduk.item_status == "UNLIST")
         { 
-            unlisted = 1;
+            aktif = 1;
         }
        
     }
@@ -2158,7 +2201,7 @@ async function simpanHeaderShopee(){
     	   "TINGGI"         : $("#TINGGI").val(), 
     	   "HARGA"          : $("#HARGAJUALINDUK").val(),      
     	   "SKU"            : $("#SKUSHOPEEINDUK").val(), 
-    	   "UNLISTED"       : unlisted,
+    	   "AKTIF"          : aktif,
     	   "VARIAN"         : JSON.stringify(dataVarianSimpan),
     	   "WARNA"          : JSON.stringify(warna),
     	   "UKURAN"         : JSON.stringify(ukuran),
@@ -2183,11 +2226,335 @@ async function simpanHeaderShopee(){
             if(msg.success)
             {
                 $("#dataGrid").DataTable().ajax.reload();
-                tambahHeader();
-                $('.nav-tabs a[href="#tab_grid"]').tab('show');
+                // tambahHeader();
+                // $('.nav-tabs a[href="#tab_grid"]').tab('show');
             }
     	}
     }); 
+}
+
+async function simpanHeaderLazada(){
+    var aktif = 1;
+    
+    // Helper: convert jQuery ajax to Promise
+    function ajaxPost(url, data = {}) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: data,
+                dataType: 'json',
+                success: resolve,
+                error: reject
+            });
+        });
+    }
+    
+    var varian = $('#dataGridVarian').DataTable().rows().data().toArray();
+    var warna = [];
+    var ukuran = [];
+    for(var y = 0 ; y < varian.length; y++)
+    {
+        var tempWarna = varian[y].WARNA;
+        var tempUk = varian[y].SIZE;
+    	
+    	adaWarna = false;
+    	for(var w = 0 ; w < warna.length; w++)
+    	{
+    	    if(warna[w] == tempWarna)
+    	    {
+    	        adaWarna = true;
+    	    }
+    	}
+    	
+    	if(!adaWarna)
+    	{
+    	    warna.push(tempWarna);
+    	}
+    	
+    	adaUkuran = false;
+    	for(var u = 0 ; u < ukuran.length; u++)
+    	{
+    	    if(ukuran[u] == tempUk)
+    	    {
+    	        adaUkuran = true;
+    	    }
+    	}
+    	
+    	if(!adaUkuran)
+    	{
+    	    ukuran.push(tempUk);
+    	}
+    }
+    
+    
+    var arrImage = [];
+    var arrImageID = [];
+    var arrImageBukanLazada = [];
+    for(var y = 0 ; y < 9 ;y++)
+    {
+        //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
+        if($("#src-input-"+y).val() != "")
+        {
+            arrImageID.push($('#id-input-'+y).val());
+            arrImage.push($('#src-input-'+y).val());
+            if(!$("#src-input-"+y).val().includes('https://sg-test-11.slatic.net')){
+                arrImageBukanLazada.push(
+                    {
+                        "id" : $("#id-input-"+y).val(),
+                        "url" : $("#src-input-"+y).val(),
+                        "url-baru" : ""
+                    }
+                )
+            }
+        }
+    }
+    
+    var arrImageVarian = [];
+    var arrImageIDVarian = [];
+    for(var y = 0 ; y < warna.length; y++)
+    {
+        //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
+        if($("#src-input-varian-"+y).val() != "")
+        {
+            arrImageIDVarian.push($('#id-input-varian-'+y).val());
+            arrImageVarian.push($('#src-input-varian-'+y).val());
+            if(!$("#src-input-"+y).val().includes('https://sg-test-11.slatic.net')){
+                arrImageBukanLazada.push(
+                    {
+                        "id" : $('#id-input-varian-'+y).val(),
+                        "url" :$("#src-input-varian-"+y).val(),
+                        "url-baru" : ""
+                    }
+                )
+            }
+        }
+    }
+    
+    let ajax1;
+
+    if (arrImageBukanLazada.length > 0) {
+         ajax1 = $.ajax({
+             type    : 'POST',
+             url     : base_url+'Lazada/changeLocalUrl/',
+             data    : {
+                 "url" : JSON.stringify(arrImageBukanLazada),
+             },
+             dataType: 'json'
+         });
+     } else {
+         // kalau kosong langsung resolve dummy deferred
+         ajax1 = $.Deferred().resolve().promise();
+     }
+
+     $.when(ajax1).done(async function(msg){
+         var error = false;
+         if(msg)
+         {
+             if (msg.success) {
+                 for(var x = 0 ; x < arrImageID.length ; x++)
+                 {
+                     for(var y = 0 ; y < msg.data.length ; y++)
+                     {
+                         if(arrImageID[x] == msg.data[y]['id'])
+                         {
+                             arrImage[x] = msg.data[y]['url-baru']
+                         }
+                     }
+                 }
+                 for(var x = 0 ; x < arrImageIDVarian.length ; x++)
+                 {
+                     for(var y = 0 ; y < msg.data.length ; y++)
+                     {
+                         if(arrImageIDVarian[x] == msg.data[y]['id'])
+                         {
+                             arrImageVarian[x] = msg.data[y]['url-baru']
+                         } 
+                     }
+                 }
+             }
+             else
+             {
+                 error = true;
+                 Swal.close();	
+                //  Swal.fire({
+                //      title            : msg.msg,
+                //      type             : (msg.success?'success':'error'),
+                //      showConfirmButton: false,
+                //      timer            : 2000
+                //  });
+                simpanHeaderLazada();
+             }
+         }
+         
+         if(!error)
+         {
+    
+             var dataVarianSimpan = [];
+             var dataVarianMaster = [];
+             
+             const resMaster = await ajaxPost(base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()));
+             dataVarianMaster = resMaster.rows;
+             dataVarianSimpan = [...dataVarianMaster];
+             
+             //DATA KLO BLM ADA PAKE YANG DIBAWAH INI GPP, TAPI KLO DAH DISIMPEN DI DB DLU. JADI KEDOBELAN
+             
+             if(indukBarangLazada != 0)
+             {
+                 const msg = await ajaxPost(base_url + 'Lazada/getDataBarang/', { idindukbaranglazada: indukBarangLazada });
+               
+                 for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+                 {
+                     var rowData = dataVarianMaster[dv];
+                     var ada = false;
+                     for(var x = 0 ; x < msg.dataVarian.length; x++)
+                     {
+                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                             ada = true;
+                         }
+                     }
+                     
+                     if(!ada)
+                     {  
+                        // Update the NAMABARANG field
+                        rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:yellow; text-align:center; padding:5px; width:100px;'>Varian Baru</i>";
+                        rowData.MODE = "BARU";
+                        dataVarianSimpan[dv] = rowData;
+                     }
+                 }
+                 
+                 //CEK ADA YANG BERUBAH
+                 for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+                 {
+                     var rowData = dataVarianMaster[dv];
+                     var ada = false;
+                     for(var x = 0 ; x < msg.dataVarian.length; x++)
+                     {
+                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                             rowData.MODE = "";
+                             if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
+                             {
+                             // Update the NAMABARANG field
+                                rowData.IDBARANG   = msg.dataVarian[x].ID,
+                                rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>Harga Diubah</i>";
+                                rowData.MODE += "UBAH HARGA";
+                                dataVarianSimpan[dv] = rowData;
+                             }
+                             if(rowData.SKULAZADA != msg.dataVarian[x].SKU)
+                             {
+                                 if(rowData.MODE != "")
+                                 {
+                                     rowData.MODE += "|";
+                                 }
+                             // Update the NAMABARANG field
+                                rowData.IDBARANG   = msg.dataVarian[x].ID,
+                                rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>SKU Diubah</i>";
+                                rowData.MODE += "UBAH SKU";
+                                // Set the updated data back into the row
+                                dataVarianSimpan[dv] = rowData;
+                             }
+                         }
+                     }
+                 }
+                 
+                 // CEK ADA YANG DIHAPUS APA NDAK
+                 for(var x = 0 ; x < msg.dataVarian.length; x++)
+                 {
+                     ada = false;
+                     for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+                     {
+                         var rowData = dataVarianMaster[dv];
+                 	    
+                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                             ada = true;
+                         }
+                     }
+                     
+                     if(!ada)
+                     {
+                     var nama = msg.dataVarian[x].NAMA.replaceAll(' | SIZE ',' <span>|</span> SIZE ')+" <i class='pull-right' style='background:#FF5959; text-align:center; padding:5px; width:100px; color:white;'>Varian Dihapus</i>";
+                          
+                        // Update the NAMABARANG field
+                        var newRow = {
+                           IDBARANG   : msg.dataVarian[x].ID,
+                           NAMABARANG : nama,
+                           HARGAJUAL : msg.dataVarian[x].HARGA,
+                           SIZE : msg.dataVarian[x].SIZE,
+                           WARNA : msg.dataVarian[x].WARNA,
+                           HARGAJUAL : msg.dataVarian[x].HARGA,
+                           SKUSHOPEE : msg.dataVarian[x].SKU,
+                           MODE : 'HAPUS'
+                        };
+                        
+                        dataVarianSimpan.push(newRow);
+                     }
+                 }
+             }
+             
+             $.ajax({
+                type      : 'POST',
+                url       : base_url + 'Lazada/getDataBarangdanVarian',
+                data      : {idindukbaranglazada : indukBarangLazada},
+                dataType  : 'json',
+                beforeSend: function (){
+                    //$.messager.progress();
+                },
+                success: function(msg){
+                    if(indukBarangLazada != 0)
+                    {
+                        if(msg.status == 'Active')
+                        {
+                            aktif = 1;
+                        }
+                        else
+                        {
+                            aktif = 0;
+                        }
+                    }
+                    
+                     $.ajax({
+                     	type    : 'POST',
+                     	url     : base_url+'Lazada/setBarang/',
+                     	data    : {
+                     	   "IDBARANG"       : indukBarangLazada,
+                     	   "KATEGORI"       : kategoriBarangLazada[document.getElementById('KATEGORIONLINE').selectedIndex], 
+                     	   "NAMA"           : $("#KATEGORI").val(), 
+                     	   "DESKRIPSI"      : $("#DESKRIPSI").val(), 
+                     	   "BERAT"          : $("#BERAT").val(), 
+                     	   "PANJANG"        : $("#PANJANG").val(), 
+                     	   "LEBAR"          : $("#LEBAR").val(), 
+                     	   "TINGGI"         : $("#TINGGI").val(), 
+                     	   "HARGA"          : $("#HARGAJUALINDUK").val(),      
+                     	   "SKU"            : $("#SKULAZADAINDUK").val(), 
+                     	   "AKTIF"          : aktif,
+                     	   "VARIAN"         : JSON.stringify(dataVarianSimpan),
+                     	   "WARNA"          : JSON.stringify(warna),
+                     	   "UKURAN"         : JSON.stringify(ukuran),
+                     	   "GAMBARPRODUK"   : JSON.stringify(arrImage),
+                     	   "GAMBARVARIAN"   : JSON.stringify(arrImageVarian),
+                     	},
+                         dataType: 'json',
+                     	success : function(msg){
+                     	    Swal.close();
+                     	    Swal.fire({
+                                 	title            :  msg.msg,
+                                 	type             : (msg.success?'success':'error'),
+                                 	showConfirmButton: false,
+                                 	timer            : 2000
+                             });
+                             
+                             if(msg.success)
+                             {
+                                 $("#dataGrid").DataTable().ajax.reload();
+                                 // tambahHeader();
+                                 // $('.nav-tabs a[href="#tab_grid"]').tab('show');
+                             }
+                     	}
+                     }); 
+                }
+             });
+         }
+    });
 }
 
 function hapusHeader(row){
@@ -2240,6 +2607,39 @@ function hapusHeader(row){
                                                     	}
                                             	        
                                             	     });
+                            			        }
+                            			        
+                            			        if(row.IDINDUKBARANGLAZADA != 0)
+                            			        {
+                            			             loadingMaster();
+                            			             
+                                                      $.ajax({
+                                                                type      : 'POST',
+                                                                url       : base_url + 'Lazada/getDataBarangdanVarian',
+                                                                data      : {idindukbaranglazada : row.IDINDUKBARANGLAZADA},
+                                                                dataType  : 'json',
+                                                                beforeSend: function (){
+                                                                    //$.messager.progress();
+                                                                },
+                                                                success: function(msg){
+                                                                    
+                                                			         $.ajax({
+                                                                    	type    : 'POST',
+                                                                    	url     : base_url+'Lazada/removeBarang/',
+                                                                    	data    : {idindukbaranglazada: row.IDINDUKBARANGLAZADA, skulistlazada : JSON.stringify(msg.skus)},
+                                                                    	dataType: 'json',
+                                                                    	success : function(msg){
+                                                                    	    Swal.close();	
+                                                                            Swal.fire({
+                                                                            	title            :  msg.msg,
+                                                                            	type             : (msg.success?'success':'error'),
+                                                                            	showConfirmButton: false,
+                                                                            	timer            : 2000
+                                                                            });
+                                                                    	}
+                                                            	        
+                                                            	     });
+                                                     }});
                             			        }
                             			        
                     							$("#dataGrid").DataTable().ajax.reload();
@@ -2393,142 +2793,143 @@ function simpanMassal(){
                 table.row.add(newRowData).draw();
             });
         });
+        
         setGambarVarianMaster();
     	$("#modal-set-varian").modal('hide');	
     	
-    	 if(indukBarangShopee != 0)
-	     {
-    	        $.ajax({
-                	type    : 'POST',
-                	url     : base_url+'Shopee/getDataBarangdanVarian/',
-                	data    : {idindukbarangshopee: indukBarangShopee},
-                	dataType: 'json',
-                	success : function(msg){
-                	    
-                	    var imageProduk = msg.dataInduk.image;
-                    	//GAMBAR PRODUK
-                    	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
-                    	{
-                    	   // $("#file-input-"+y).val("-");
-                    	    $("#format-input-"+y).val('GAMBAR');
-                    	    $("#index-input-"+y).val(y);
-                    	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
-                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
-                    	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
-                    	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
-                    	   
-                        	$("#ubahGambarProduk-"+y).show();
-                        	$("#hapusGambarProduk-"+y).show();
-                        	
-                        	dataGambar[y] = {
-                               'ID'   : $("#id-input-"+y).val(),
-                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
-                               'URL'  : $("#preview-image-"+y).attr("src"),
-                            };
-                    	    
-                    	}
+    	if($("#IDBARANGINDUK").val() != 0)
+        {
+            $.ajax({
+            	type    : 'POST',
+            	url     : base_url+'Master/Data/Barang/getGambarBarang/',
+            	data    : {idbarang: $("#IDBARANGINDUK").val()},
+            	dataType: 'json',
+            	success : function(msg){
+            	    
+            	    var imageProduk = msg.dataInduk;
+                	//GAMBAR PRODUK
+                	for(var y = 0 ; y < imageProduk.length ; y++)
+                	{
+                	   // $("#file-input-"+y).val("-");
+                	    $("#format-input-"+y).val('GAMBAR');
+                	    $("#index-input-"+y).val(y);
+                	    $("#src-input-"+y).val(imageProduk[y].URL);
+                	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                	    $("#id-input-"+y).val(imageProduk[y].ID);
+                	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
+                	   
+                    	$("#ubahGambarProduk-"+y).show();
+                    	$("#hapusGambarProduk-"+y).show();
                     	
-                	    var imageVarian = msg.dataGambarVarian;
-                	    for(var y = 0 ; y < imageVarian.length ; y++)
-                    	{
-                    	    dataGambarVarian[y] = {
-                               'ID'   : '',
-                               'NAMA' : '',
-                               'URL'  : '',
-                            };
-                                                                   
-                    	    for(var z = 0 ; z < imageVarian.length ; z++)
-                    	    {
-                    	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
-                    	        {
-                            	    // $("#file-input-varian-"+y).val("-");
-                                    $("#format-input-varian-"+y).val('GAMBAR');
-                                    $("#index-input-varian-"+y).val(y);
-                                    $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
-                                    $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
-                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
-                                    
-                                    $("#ubahGambarVarian"+y).show();
-                            	    $("#hapusGambarVarian"+y).show();
-                            	    
-                            	    dataGambarVarian[y] = {
-                                       'ID'   : $("#id-input-varian-"+y).val(),
-                                       'NAMA' : imageVarian[z].WARNA,
-                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
-                                    };
-                    	        }
-                    	    }
-                    	}
+                    	dataGambar[y] = {
+                           'ID'   : $("#id-input-"+y).val(),
+                           'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                           'URL'  : $("#preview-image-"+y).attr("src"),
+                        };
+                	    
                 	}
-                	    
-                });
-	        }
-	        else if($("#IDBARANGINDUK").val() != 0)
-	        {
-	            $.ajax({
-                	type    : 'POST',
-                	url     : base_url+'Master/Data/Barang/getGambarBarang/',
-                	data    : {idbarang: $("#IDBARANGINDUK").val()},
-                	dataType: 'json',
-                	success : function(msg){
-                	    
-                	    var imageProduk = msg.dataInduk;
-                    	//GAMBAR PRODUK
-                    	for(var y = 0 ; y < imageProduk.length ; y++)
-                    	{
-                    	   // $("#file-input-"+y).val("-");
-                    	    $("#format-input-"+y).val('GAMBAR');
-                    	    $("#index-input-"+y).val(y);
-                    	    $("#src-input-"+y).val(imageProduk[y].URL);
-                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
-                    	    $("#id-input-"+y).val(imageProduk[y].ID);
-                    	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
-                    	   
-                        	$("#ubahGambarProduk-"+y).show();
-                        	$("#hapusGambarProduk-"+y).show();
-                        	
-                        	dataGambar[y] = {
-                               'ID'   : $("#id-input-"+y).val(),
-                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
-                               'URL'  : $("#preview-image-"+y).attr("src"),
-                            };
-                    	    
-                    	}
-                    	
-                	    var imageVarian = msg.dataGambarVarian;
-                	    for(var y = 0 ; y < imageVarian.length ; y++)
-                    	{
-                    	    dataGambarVarian[y] = {
-                               'ID'   : '',
-                               'NAMA' : '',
-                               'URL'  : '',
-                            };
-                    	    for(var z = 0 ; z < imageVarian.length ; z++)
-                    	    {
-                    	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
-                    	        {
-                            	    // $("#file-input-varian-"+y).val("-");
-                                    $("#format-input-varian-"+y).val('GAMBAR');
-                                    $("#index-input-varian-"+y).val(y);
-                                    $("#src-input-varian-"+y).val(imageVarian[z].URL);
-                                    $("#id-input-varian-"+y).val(imageVarian[z].ID);
-                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
-                                    
-                                    $("#ubahGambarVarian"+y).show();
-                            	    $("#hapusGambarVarian"+y).show();
-                            	    
-                            	    dataGambarVarian[y] = {
-                                       'ID'   : $("#id-input-varian-"+y).val(),
-                                       'NAMA' : imageVarian[z].NAMA,
-                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
-                                    };
-                    	        }
-                    	    }
-                    	}
+                	
+            	    var imageVarian = msg.dataGambarVarian;
+            	    for(var y = 0 ; y < imageVarian.length ; y++)
+                	{
+                	    dataGambarVarian[y] = {
+                           'ID'   : '',
+                           'NAMA' : '',
+                           'URL'  : '',
+                        };
+                                                               
+                	    for(var z = 0 ; z < imageVarian.length ; z++)
+                	    {
+                	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
+                	        {
+                        	    // $("#file-input-varian-"+y).val("-");
+                                $("#format-input-varian-"+y).val('GAMBAR');
+                                $("#index-input-varian-"+y).val(y);
+                                $("#src-input-varian-"+y).val(imageVarian[z].URL);
+                                $("#id-input-varian-"+y).val(imageVarian[z].ID);
+                                $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
+                                
+                                $("#ubahGambarVarian"+y).show();
+                        	    $("#hapusGambarVarian"+y).show();
+                        	    dataGambarVarian[y] = {
+                                   'ID'   : $("#id-input-varian-"+y).val(),
+                                   'NAMA' : imageVarian[z].NAMA,
+                                   'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                };
+                	        }
+                	    }
                 	}
-                	    
-                });
-	        }
+                	
+                	if(imageProduk.length == 0 && imageVarian.length == 0 && indukBarangShopee != 0)
+                	{
+                	       
+            	        $.ajax({
+                        	type    : 'POST',
+                        	url     : base_url+'Shopee/getDataBarangdanVarian/',
+                        	data    : {idindukbarangshopee: indukBarangShopee},
+                        	dataType: 'json',
+                        	success : function(msg){
+                        	    
+                        	    var imageProduk = msg.dataInduk.image;
+                            	//GAMBAR PRODUK
+                            	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                            	{
+                            	   // $("#file-input-"+y).val("-");
+                            	    $("#format-input-"+y).val('GAMBAR');
+                            	    $("#index-input-"+y).val(y);
+                            	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
+                            	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                            	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
+                            	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
+                            	   
+                                	$("#ubahGambarProduk-"+y).show();
+                                	$("#hapusGambarProduk-"+y).show();
+                                	
+                                	dataGambar[y] = {
+                                       'ID'   : $("#id-input-"+y).val(),
+                                       'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                       'URL'  : $("#preview-image-"+y).attr("src"),
+                                    };
+                            	    
+                            	}
+                            	
+                        	    var imageVarian = msg.dataGambarVarian;
+                        	    for(var y = 0 ; y < imageVarian.length ; y++)
+                            	{
+                            	    dataGambarVarian[y] = {
+                                       'ID'   : '',
+                                       'NAMA' : '',
+                                       'URL'  : '',
+                                    };
+                                                                           
+                            	    for(var z = 0 ; z < imageVarian.length ; z++)
+                            	    {
+                            	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
+                            	        {
+                                    	    // $("#file-input-varian-"+y).val("-");
+                                            $("#format-input-varian-"+y).val('GAMBAR');
+                                            $("#index-input-varian-"+y).val(y);
+                                            $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
+                                            $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
+                                            $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
+                                            $("#ubahGambarVarian"+y).show();
+                                    	    $("#hapusGambarVarian"+y).show();
+                                    	    dataGambarVarian[y] = {
+                                               'ID'   : $("#id-input-varian-"+y).val(),
+                                               'NAMA' : imageVarian[z].WARNA,
+                                               'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                            };
+                            	        }
+                            	    }
+                            	}
+                        	}
+                        	    
+                        });
+                	}
+            	}
+            	    
+            });
+        }
     }
 }
 
@@ -2742,142 +3143,147 @@ function hapus(row){
                             				// 		timer            : 1500
                             				// 	});
                                                 setGambarVarianMaster();
-                                                    
-                                                if(indukBarangShopee != 0)
-                                                    {
+                                                
+                                                if(indukBarangShopee != 0 || indukBarangLazada != 0)
+                                                {
                                                         
                                                       $("#btn_simpan").hide();
-                                                      $.ajax({
-                                                      	type    : 'POST',
-                                                      	url     : base_url+'Shopee/getDataBarangdanVarian/',
-                                                      	data    : {idindukbarangshopee: indukBarangShopee},
-                                                      	dataType: 'json',
-                                                      	success : function(msg){
-                                                      	    
-                                                      	    var imageProduk = msg.dataInduk.image;
-                                                          	//GAMBAR PRODUK
-                                                          	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
-                                                          	{
-                                                          	   // $("#file-input-"+y).val("-");
-                                                          	    $("#format-input-"+y).val('GAMBAR');
-                                                          	    $("#index-input-"+y).val(y);
-                                                          	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
-                                                          	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
-                                                          	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
-                                                          	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
-                                                          	   
-                                                              	$("#ubahGambarProduk-"+y).show();
-                                                              	$("#hapusGambarProduk-"+y).show();
-                                                              	
-                                                              	dataGambar[y] = {
-                                                                     'ID'   : $("#id-input-"+y).val(),
-                                                                     'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
-                                                                     'URL'  : $("#preview-image-"+y).attr("src"),
-                                                                  };
-                                                          	    
-                                                          	}
-                                                          	
-                                                      	    var imageVarian = msg.dataGambarVarian;
-                                                      	    for(var y = 0 ; y < imageVarian.length ; y++)
-                                                          	{
-                                                          	    dataGambarVarian[y] = {
-                                                                    'ID'   : '',
-                                                                    'NAMA' : '',
-                                                                    'URL'  : '',
-                                                                  };
-                                                          	    for(var z = 0 ; z < imageVarian.length ; z++)
-                                                          	    {
-                                                          	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
-                                                          	        {
-                                                                  	    // $("#file-input-varian-"+y).val("-");
-                                                                          $("#format-input-varian-"+y).val('GAMBAR');
-                                                                          $("#index-input-varian-"+y).val(y);
-                                                                          $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
-                                                                          $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
-                                                                          $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
-                                                                          
-                                                                          $("#ubahGambarVarian"+y).show();
-                                                                  	    $("#hapusGambarVarian"+y).show();
-                                                                  	    
-                                                                  	    dataGambarVarian[y] = {
-                                                                             'ID'   : $("#id-input-varian-"+y).val(),
-                                                                             'NAMA' : imageVarian[z].WARNA,
-                                                                             'URL'  : $("#preview-image-varian-"+y).attr("src"),
-                                                                          };
-                                                          	        }
-                                                          	    }
-                                                          	}
-                                                      	}
-                                                      	    
-                                                      });
-                                                  }
-                                                  else if($("#IDBARANGINDUK").val() != 0)
-                                                  {
-                                                      $.ajax({
-                                                      	type    : 'POST',
-                                                      	url     : base_url+'Master/Data/Barang/getGambarBarang/',
-                                                      	data    : {idbarang: $("#IDBARANGINDUK").val()},
-                                                      	dataType: 'json',
-                                                      	success : function(msg){
-                                                      	    
-                                                      	    var imageProduk = msg.dataInduk;
-                                                          	//GAMBAR PRODUK
-                                                          	for(var y = 0 ; y < imageProduk.length ; y++)
-                                                          	{
-                                                          	   // $("#file-input-"+y).val("-");
-                                                          	    $("#format-input-"+y).val('GAMBAR');
-                                                          	    $("#index-input-"+y).val(y);
-                                                          	    $("#src-input-"+y).val(imageProduk[y].URL);
-                                                          	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
-                                                          	    $("#id-input-"+y).val(imageProduk[y].ID);
-                                                          	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
-                                                          	   
-                                                              	$("#ubahGambarProduk-"+y).show();
-                                                              	$("#hapusGambarProduk-"+y).show();
-                                                              	
-                                                              	dataGambar[y] = {
-                                                                     'ID'   : $("#id-input-"+y).val(),
-                                                                     'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
-                                                                     'URL'  : $("#preview-image-"+y).attr("src"),
-                                                                  };
-                                                          	    
-                                                          	}
-                                                          	
-                                                      	    var imageVarian = msg.dataGambarVarian;
-                                                      	    for(var y = 0 ; y < imageVarian.length ; y++)
-                                                          	{
-                                                          	    dataGambarVarian[y] = {
-                                                                    'ID'   : '',
-                                                                    'NAMA' : '',
-                                                                    'URL'  : '',
-                                                                  };
-                                                          	    for(var z = 0 ; z < imageVarian.length ; z++)
-                                                          	    {
-                                                          	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
-                                                          	        {
-                                                                  	    // $("#file-input-varian-"+y).val("-");
-                                                                          $("#format-input-varian-"+y).val('GAMBAR');
-                                                                          $("#index-input-varian-"+y).val(y);
-                                                                          $("#src-input-varian-"+y).val(imageVarian[z].URL);
-                                                                          $("#id-input-varian-"+y).val(imageVarian[z].ID);
-                                                                          $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
-                                                                          
-                                                                          $("#ubahGambarVarian"+y).show();
-                                                                  	    $("#hapusGambarVarian"+y).show();
-                                                                  	    
-                                                                  	    dataGambarVarian[y] = {
-                                                                             'ID'   : $("#id-input-varian-"+y).val(),
-                                                                             'NAMA' : imageVarian[z].NAMA,
-                                                                             'URL'  : $("#preview-image-varian-"+y).attr("src"),
-                                                                          };
-                                                          	        }
-                                                          	    }
-                                                          	}
-                                                      	}
-                                                      	    
-                                                      });
-                                                  }
                                                 }
+                                                
+                                                if($("#IDBARANGINDUK").val() != 0)
+                                    	        {
+                                    	            $.ajax({
+                                                    	type    : 'POST',
+                                                    	url     : base_url+'Master/Data/Barang/getGambarBarang/',
+                                                    	data    : {idbarang: $("#IDBARANGINDUK").val()},
+                                                    	dataType: 'json',
+                                                    	success : function(msg){
+                                                    	    
+                                                    	    var imageProduk = msg.dataInduk;
+                                                        	//GAMBAR PRODUK
+                                                        	for(var y = 0 ; y < imageProduk.length ; y++)
+                                                        	{
+                                                        	   // $("#file-input-"+y).val("-");
+                                                        	    $("#format-input-"+y).val('GAMBAR');
+                                                        	    $("#index-input-"+y).val(y);
+                                                        	    $("#src-input-"+y).val(imageProduk[y].URL);
+                                                        	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                                                        	    $("#id-input-"+y).val(imageProduk[y].ID);
+                                                        	    $("#preview-image-"+y).attr("src",imageProduk[y].URL);
+                                                        	   
+                                                            	$("#ubahGambarProduk-"+y).show();
+                                                            	$("#hapusGambarProduk-"+y).show();
+                                                            	
+                                                            	dataGambar[y] = {
+                                                                   'ID'   : $("#id-input-"+y).val(),
+                                                                   'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                                                   'URL'  : $("#preview-image-"+y).attr("src"),
+                                                                };
+                                                        	    
+                                                        	}
+                                                        	
+                                                    	    var imageVarian = msg.dataGambarVarian;
+                                                    	    for(var y = 0 ; y < imageVarian.length ; y++)
+                                                        	{
+                                                        	    dataGambarVarian[y] = {
+                                                                   'ID'   : '',
+                                                                   'NAMA' : '',
+                                                                   'URL'  : '',
+                                                                };
+                                                                                                       
+                                                        	    for(var z = 0 ; z < imageVarian.length ; z++)
+                                                        	    {
+                                                        	        if("Gambar Varian "+imageVarian[z].NAMA == $("#keterangan-input-varian-"+y).val())
+                                                        	        {
+                                                                	    // $("#file-input-varian-"+y).val("-");
+                                                                        $("#format-input-varian-"+y).val('GAMBAR');
+                                                                        $("#index-input-varian-"+y).val(y);
+                                                                        $("#src-input-varian-"+y).val(imageVarian[z].URL);
+                                                                        $("#id-input-varian-"+y).val(imageVarian[z].ID);
+                                                                        $("#preview-image-varian-"+y).attr("src",imageVarian[z].URL);
+                                                                        
+                                                                        $("#ubahGambarVarian"+y).show();
+                                                                	    $("#hapusGambarVarian"+y).show();
+                                                                	    dataGambarVarian[y] = {
+                                                                           'ID'   : $("#id-input-varian-"+y).val(),
+                                                                           'NAMA' : imageVarian[z].NAMA,
+                                                                           'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                                                        };
+                                                        	        }
+                                                        	    }
+                                                        	}
+                                                        	
+                                                        	if(imageProduk.length == 0 && imageVarian.length == 0 && indukBarangShopee != 0)
+                                                        	{
+                                                        	       
+                                                    	        $.ajax({
+                                                                	type    : 'POST',
+                                                                	url     : base_url+'Shopee/getDataBarangdanVarian/',
+                                                                	data    : {idindukbarangshopee: row.IDINDUKBARANGSHOPEE},
+                                                                	dataType: 'json',
+                                                                	success : function(msg){
+                                                                	    
+                                                                	    var imageProduk = msg.dataInduk.image;
+                                                                    	//GAMBAR PRODUK
+                                                                    	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                                                                    	{
+                                                                    	   // $("#file-input-"+y).val("-");
+                                                                    	    $("#format-input-"+y).val('GAMBAR');
+                                                                    	    $("#index-input-"+y).val(y);
+                                                                    	    $("#src-input-"+y).val(imageProduk.image_url_list[y]);
+                                                                    	    $("#keterangan-input-"+y).val("Gambar Produk "+(y+1).toString());
+                                                                    	    $("#id-input-"+y).val(imageProduk.image_id_list[y]);
+                                                                    	    $("#preview-image-"+y).attr("src",imageProduk.image_url_list[y]);
+                                                                    	   
+                                                                        	$("#ubahGambarProduk-"+y).show();
+                                                                        	$("#hapusGambarProduk-"+y).show();
+                                                                        	
+                                                                        	dataGambar[y] = {
+                                                                               'ID'   : $("#id-input-"+y).val(),
+                                                                               'NAMA' : "INDUK_"+$("#index-input-"+y).val(),
+                                                                               'URL'  : $("#preview-image-"+y).attr("src"),
+                                                                            };
+                                                                    	    
+                                                                    	}
+                                                                    	
+                                                                	    var imageVarian = msg.dataGambarVarian;
+                                                                	    for(var y = 0 ; y < imageVarian.length ; y++)
+                                                                    	{
+                                                                    	    dataGambarVarian[y] = {
+                                                                               'ID'   : '',
+                                                                               'NAMA' : '',
+                                                                               'URL'  : '',
+                                                                            };
+                                                                                                                   
+                                                                    	    for(var z = 0 ; z < imageVarian.length ; z++)
+                                                                    	    {
+                                                                    	        if("Gambar Varian "+imageVarian[z].WARNA == $("#keterangan-input-varian-"+y).val())
+                                                                    	        {
+                                                                            	    // $("#file-input-varian-"+y).val("-");
+                                                                                    $("#format-input-varian-"+y).val('GAMBAR');
+                                                                                    $("#index-input-varian-"+y).val(y);
+                                                                                    $("#src-input-varian-"+y).val(imageVarian[z].IMAGEURL);
+                                                                                    $("#id-input-varian-"+y).val(imageVarian[z].IMAGEID);
+                                                                                    $("#preview-image-varian-"+y).attr("src",imageVarian[z].IMAGEURL);
+                                                                                    $("#ubahGambarVarian"+y).show();
+                                                                            	    $("#hapusGambarVarian"+y).show();
+                                                                            	    dataGambarVarian[y] = {
+                                                                                       'ID'   : $("#id-input-varian-"+y).val(),
+                                                                                       'NAMA' : imageVarian[z].WARNA,
+                                                                                       'URL'  : $("#preview-image-varian-"+y).attr("src"),
+                                                                                    };
+                                                                    	        }
+                                                                    	    }
+                                                                    	}
+                                                                	}
+                                                                	    
+                                                                });
+                                                        	}
+                                                    	}
+                                                    	    
+                                                    });
+                                    	        }
+                                            }
                                         // }
                                 //         else
                                 //         {
@@ -3380,7 +3786,7 @@ function setGambarVarianMaster(){
     $("#gambarvarian").html(htmlGambarVarian);
     $("#gambarvarian").css('margin-bottom','-20px');
     
-     for(var y = 0 ; y < warna.length ;y++)
+    for(var y = 0 ; y < warna.length ;y++)
     {
       
         const fileInput = document.getElementById('file-input-varian-'+y);
@@ -3574,7 +3980,7 @@ function importExcelUrutan(){
 function loadingMaster(){
     Swal.fire({
       title: '',
-      html: '<div style="font-size:20pt; font-weight:600;">Menghubungkan Master Barang dengan Shopee... <div>',                // no text or HTML content
+      html: '<div style="font-size:20pt; font-weight:600;">Menghubungkan Master Barang dengan Marketplace... <div>',                // no text or HTML content
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,

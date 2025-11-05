@@ -54,6 +54,9 @@ function login($user){
 	$_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'] = $CI->model_master_config->getConfig('GLOBAL','DECIMALDIGITAMOUNT');
 	$_SESSION[NAMAPROGRAM]['MULTICURRENCY'] = $CI->model_master_config->getConfig('GLOBAL','MULTICURRENCY');
 	
+	$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] = $CI->model_master_config->getConfig('SHOPEE','ACTIVE');
+	$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] = $CI->model_master_config->getConfig('LAZADA','ACTIVE');
+	
 	/*$items = array();
 	foreach($menu as $item){
 		$items[] = array(
@@ -340,9 +343,9 @@ function get_saldo_stok_new($idperusahaan,$idbarang,$idlokasi,$tgltrans,$closing
 			left join MBARANG 		 on saldostokdtl.IDBARANG = mbarang.IDBARANG and STOK = 1
 			left join MLOKASI  	 on saldostok.IDLOKASI = mlokasi.IDLOKASI
 			where (1=1) and saldostok.TGLTRANS <= '".$tgltrans."' and 
-				  saldostok.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and
-				  mbarang.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and
-				  mlokasi.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and
+				  saldostok.IDPERUSAHAAN = {$idperusahaan} and
+				  mbarang.IDPERUSAHAAN = {$idperusahaan} and
+				  mlokasi.IDPERUSAHAAN = {$idperusahaan} and
 				  mbarang.IDBARANG = $idbarang and
 				  saldostok.IDLOKASI = $idlokasi  and 
 				  saldostok.KODESALDOSTOK not like 'CLS%' and SALDOSTOK.STATUS = 'S'
@@ -373,9 +376,9 @@ function get_saldo_stok_new($idperusahaan,$idbarang,$idlokasi,$tgltrans,$closing
 			left join MBARANG 		 on saldostokdtl.IDBARANG = mbarang.IDBARANG and STOK = 1
 			left join MLOKASI  	 on saldostok.IDLOKASI = mlokasi.IDLOKASI
 			where (1=1) and saldostok.TGLTRANS = '".$tglSaldoCLS."' and 
-				  saldostok.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and
-				  mbarang.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and
-				  mlokasi.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and
+				  saldostok.IDPERUSAHAAN = {$idperusahaan} and
+				  mbarang.IDPERUSAHAAN = {$idperusahaan} and
+				  mlokasi.IDPERUSAHAAN = {$idperusahaan} and
 				  mbarang.IDBARANG = $idbarang and
 				  saldostok.IDLOKASI = $idlokasi  and 
 				  saldostok.KODESALDOSTOK like 'CLS%' and SALDOSTOK.STATUS = 'S'

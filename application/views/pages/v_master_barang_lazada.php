@@ -159,9 +159,9 @@
         <div class="col-md-12"  style="border:0px; padding:0px 15px 0px 15px;">
             <div class="box" style="border:0px; padding:0px; margin:0px;">
             <div class="box-header form-inline" style="padding:0px;">
-                <button class="btn btn-success" onclick="javascript:tambahlazada()">Tambah</button>
+                <button class="btn btn-success" onclick="javascript:tambahLazada()">Tambah</button>
                 &nbsp;&nbsp;
-                <!--<button class="btn btn-primary" onclick="javascript:naikkanlazada()">Naikkan Produk</button>-->
+                <!--<button class="btn btn-primary" onclick="javascript:naikkanLazada()">Naikkan Produk</button>-->
                 <!--<button class="btn btn-primary" onclick="javascript:sinkronisasilazada()">Sinkronisasi Stok Produk</button>-->
             	<div class="pull-right" style="width:170px; margin-right:0px;">
                 	<div class="input-group " >
@@ -170,9 +170,8 @@
                 	 </div>
                 		<select id="cb_barang_status_lazada" name="cb_barang_status_lazada" class="form-control "  panelHeight="auto" required="true">
                 			<option value="all">Semua </option>
-                			<option value="live" selected>Barang Aktif</option>
+                			<option value="live,sold-out" selected>Aktif</option>
                 			<option value="inactive">Tidak Aktif</option>
-                			<option value="sold-out">Habis</option>
                 			<option value="pending">Masa Review</option>
                 			<option value="deleted">Penjual Hapus</option>
                 			<option value="rejected">Lazada Tolak</option>
@@ -181,7 +180,7 @@
                 </div>
             </div>
             <br>          			
-            <table id="dataGridlazada" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+            <table id="datagridLazada" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                 <!-- class="table-hover"> -->
                 <thead>
                 <tr>
@@ -218,7 +217,7 @@
                   <br>
                   <div class="row">
                       <div class="form-group col-md-8">
-                          <h4 style="font-weight:bold;">Informasi Produk<label class="pull-right">&nbsp;&nbsp;&nbsp;<input type="checkbox" class="flat-blue" id="DEACTIVATED" name="DEACTIVATED" value="1">&nbsp; Tidak Aktif</label></h4>
+                          <h4 style="font-weight:bold;">Informasi Produk<label class="pull-right">&nbsp;&nbsp;&nbsp;<input type="checkbox" class="flat-blue" id="AKTIF" name="AKTIF" value="1">&nbsp; Aktif</label></h4>
                           <div class="row">
                                 <div class="col-md-12">
                                     <label>Kategori Lazada <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
@@ -270,18 +269,78 @@
                           <div class="row">
                              <div class ="form-group col-md-12">
                                  <br>
-                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2)</i></h4>
+                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></h4>
                                  <br>
                                  <table id="gambarProdukLazada">
                                  </table>  
                              </div>
-                             <div class ="form-group col-md-12" id="DIVGAMBARVarianLazada">
-                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Setiap Varian)</i></h4>
+                             <div class ="form-group col-md-12" id="DIVGAMBARVARIANLAZADA">
+                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></h4>
                                  <br>
                                  <table id="gambarVarianLazada">
                                  </table>    
                              </div>
                            </div>
+                      </div>
+                        <div class="form-group col-md-4">
+                          <h4 style="font-weight:bold;">Pengiriman</h4>
+                          <div class="row" style="margin-top:10px;">
+                              <div class="col-md-12">
+                          	    <label>Berat (gram) <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
+                                  <input type="text" class="form-control" id="BERATMASTERLAZADA" name="BERATMASTERLAZADA" placeholder="Dalam Gram" readonly>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <br>
+                              <div class="col-md-4">
+                                  <label>Panjang</label>
+                                  <input type="text" class="form-control" id="PANJANGMASTERLAZADA" name="PANJANGMASTERLAZADA" placeholder="Cm" readonly>
+                              </div>
+                              <div class="col-md-4">
+                                  <label>Lebar</label>
+                                  <input type="text" class="form-control" id="LEBARMASTERLAZADA" name="LEBARMASTERLAZADA" placeholder="Cm" readonly>
+                              </div>
+                              <div class="col-md-4">
+                                  <label>Tinggi</label>
+                                  <input type="text" class="form-control" id="TINGGIMASTERLAZADA" name="TINGGIMASTERLAZADA" placeholder="Cm" readonly>
+                              </div>
+                          </div>
+                          <!--<div class="row" style="height:200px;">-->
+                          <!--     <br>-->
+                          <!--     <div class="col-md-12">-->
+                          <!--         <label>Pilihan Pengiriman <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 1)</i></label> -->
+                          <!--         <div style="margin-top:-7px;">-->
+                          <!--              <table id="dataGridPengirimanShopee" class="table table-bordered table-striped table-hover display nowrap" width="200px">-->
+                                            <!-- class="table-hover"> -->
+                          <!--                  <thead style="display:none;">-->
+                          <!--                      <tr>-->
+                          <!--                          <th></th>-->
+                          <!--                          <th></th>-->
+                          <!--                          <th></th>-->
+                          <!--                      </tr>-->
+                          <!--                  </thead>-->
+                          <!--              </table> -->
+                          <!--          </div>-->
+                          <!--      </div>-->
+                          <!--</div>-->
+                          <!--<div class="row" style="margin-top:45px;">-->
+                          <!--    <br>-->
+                          <!--    <div class="col-md-12">-->
+                          <!--         <label>Spesifikasi Produk <i style="color:grey;"></i></label> -->
+                          <!--         <div style="margin-top:6px;">-->
+                          <!--              <table id="dataGridAttributShopee" class="table table-bordered table-striped table-hover display nowrap" width="200px">-->
+                                            <!-- class="table-hover"> -->
+                          <!--                  <thead>-->
+                          <!--                      <tr>-->
+                          <!--                          <th></th>-->
+                          <!--                          <th>Keterangan</th>-->
+                          <!--                          <th>Pilihan</th>-->
+                          <!--                      </tr>-->
+                          <!--                  </thead>-->
+                          <!--              </table> -->
+                          <!--          </div>-->
+                          <!--      </div>-->
+                          <!--</div>-->
                       </div>
                   </div>
               </div>
@@ -361,16 +420,16 @@ $(document).ready(function() {
     });
 
     loading();
-    $("#statuslazada").val('live');
+    $("#statuslazada").val('live,sold-out');
     //MENAMPILKAN TRANSAKSI
     $("#cb_barang_status_lazada").change(function(event){
         loading();
         $("#statuslazada").val($(this).val());
-    	$("#dataGridlazada").DataTable().ajax.reload();
+    	$("#datagridLazada").DataTable().ajax.reload();
     	
     });
 
-    $('#dataGridlazada').DataTable({
+    $('#datagridLazada').DataTable({
         'pageLength'  : 25,
         'paging'      : true,
         'lengthChange': true,
@@ -408,29 +467,25 @@ $(document).ready(function() {
                 "render" :function (data,display,row) 
     			{
     			    var status = "";
-                	if(data == "NORMAL")
+                	if(data == "Active")
                 	{
-                	    status = "Normal";
+                	    status = "Aktif";
                 	}
-                	if(data == "UNLIST")
+                	if(data == "InActive")
                 	{
-                	    status = "Unlist";
+                	    status = "Tidak Aktif";
                 	}
-                	if(data == "BANNED")
-                	{
-                	    status = "Banned";
-                	}
-                	if(data == "REVIEWING")
+                	if(data == "Pending QC")
                 	{
                 	  status = "Masa Review";
                 	}
-                	if(data == "SELLER_DELETE")
+                	if(data == "Deleted")
                 	{
                 	    status = "Penjual Hapus"; 
                 	}
-                	if(data == "lazada_DELETE")
+                	if(data == "Suspended")
                 	{
-                	    status = "lazada Hapus";
+                	    status = "Lazada Tolak";
                 	}
                 			
     			    return status;
@@ -440,15 +495,15 @@ $(document).ready(function() {
     });
 
     //DAPATKAN INDEX
-	$('#dataGridlazada tbody').on( 'click', 'button', function () {
-		var row = $('#dataGridlazada').DataTable().row( $(this).parents('tr') ).data();
+	$('#datagridLazada tbody').on( 'click', 'button', function () {
+		var row = $('#datagridLazada').DataTable().row( $(this).parents('tr') ).data();
 		var mode = $(this).attr("id");
 		
-		if(mode == "btn_ubah"){ ubahlazada(row); }
-		if(mode == "btn_hapus"){ hapuslazada(row); }
+		if(mode == "btn_ubah"){ ubahLazada(row); }
+		if(mode == "btn_hapus"){ hapusLazada(row); }
 	});
     
-    $('#dataGridlazada').DataTable().on('xhr.dt', function () {
+    $('#datagridLazada').DataTable().on('xhr.dt', function () {
         Swal.close();
     });
 
@@ -620,12 +675,12 @@ $(document).ready(function() {
                          }
                          else
                          {
-                           fileInput.click();
+                        //   fileInput.click();
                          }
                        });
                        
                        ubahImage.addEventListener('click', () => {
-                         fileInput.click();
+                        //  fileInput.click();
                        });
                        
                        hapusImage.addEventListener('click', () => {
@@ -892,14 +947,14 @@ function checklazadaDetail(){
 }
 
 
-function ubahlazada(row){
+function ubahLazada(row){
     reset();
     historyPerubahanlazada = [];
     setGambarProduk();
     $("#checklazada").hide();
     $("#DIVDATAVARIAN").hide();
     $("#DIVDATANONVARIAN").hide();
-    $("#DIVGAMBARVarianLazada").hide();
+    $("#DIVGAMBARVARIANLAZADA").hide();
     $("#titleLazada").html("Ubah Produk");
     loading();
     $("#modeLazada").val("UBAH");
@@ -909,17 +964,17 @@ function ubahlazada(row){
     }
     else
     {
-        getMasterBarang('lazada');
+        getMasterBarang('LAZADA');
     }
     setTimeout(() => { 
         $("#btn_simpan_detail_lazada").show();
-        if(row.item_status == "UNLIST")
+        if(row.STATUS == "InActive")
         { 
-            $("#DEACTIVATED").prop('checked',true).iCheck('update');
+            $("#AKTIF").prop('checked',false).iCheck('update');
         }
-        else if(row.item_status == "NORMAL")
+        else if(row.STATUS == "Active")
         {  
-            $("#DEACTIVATED").prop('checked',false).iCheck('update');
+            $("#AKTIF").prop('checked',true).iCheck('update');
         }
         else
         {
@@ -929,7 +984,7 @@ function ubahlazada(row){
         $("#IDBARANGLAZADA").val(row.item_id);
     	
         $("#modal-barang-lazada").modal("show");
-        $("#KATEGORILAZADA").val(row.category_id);
+        $("#KATEGORILAZADA").val(row.primary_category);
         $("#BARANGLAZADA").val(row.KATEGORIMASTERBARANG);
         $(".select2").trigger('change');
         
@@ -950,19 +1005,12 @@ function ubahlazada(row){
         $.ajax({
         	type    : 'POST',
         	url     : base_url+'Lazada/getDataBarang/',
-        	data    : {idindukBARANGLAZADA: row.item_id},
+        	data    : {idindukbaranglazada: row.item_id},
         	dataType: 'json',
         	success : function(msg){
         	    if(msg.dataVarian.length == 0 )
         	    {
-        	        var price = 0 ;
-        	        for(var p = 0 ; p < row.price_info.length;p++)
-        	        {
-        	            if(row.price_info[p].currency == "IDR")
-        	            {
-        	                price = row.price_info[p].original_price;
-        	            }
-        	        }
+        	        var price = row.skus[0].price;
         	        
         	        if(price != $("#HARGAJUALMASTERLAZADA").val())
         	        {
@@ -973,48 +1021,48 @@ function ubahlazada(row){
         	            });
         	            $("#checklazada").show();
         	        }
-        	        if(row.item_sku != $("#SKUMASTERLAZADA").val())
+        	        if(row.skus[0].SellerSku != $("#SKUMASTERLAZADA").val())
         	        {
         	            historyPerubahanlazada.push({
         	                'label' : 'SKU Produk',
-        	                'lama'  : (row.item_sku.toString()),
+        	                'lama'  : (row.skus[0].SellerSku.toString()),
         	                'baru'  : ($("#SKUMASTERLAZADA").val().toString())
         	            });
         	            $("#checklazada").show();
         	        }
-        	        if(row.weight != $("#BERATMASTERLAZADA").val())
+        	        if((row.skus[0].package_weight * 1000) != $("#BERATMASTERLAZADA").val())
         	        {
         	            historyPerubahanlazada.push({
         	                'label' : 'Berat Produk',
-        	                'lama'  : currency(row.weight.toString())+" gram",
+        	                'lama'  : currency((row.skus[0].package_weight * 1000).toString())+" gram",
         	                'baru'  : currency($("#BERATMASTERLAZADA").val().toString())+" gram"
         	            });
         	            $("#checklazada").show();
         	        }
-        	        if(row.dimension.package_length != $("#PANJANGMASTERLAZADA").val())
+        	        if(row.skus[0].package_length != $("#PANJANGMASTERLAZADA").val())
         	        {
         	            historyPerubahanlazada.push({
         	                'label' : 'Panjang Produk',
-        	                'lama'  : currency(row.dimension.package_length.toString())+" cm",
+        	                'lama'  : currency(row.skus[0].package_length.toString())+" cm",
         	                'baru'  : currency($("#PANJANGMASTERLAZADA").val().toString())+" cm"
         	            });
         	            $("#checklazada").show();
         	        }
-        	        if(row.dimension.package_width != $("#LEBARMASTERLAZADA").val())
+        	        if(row.skus[0].package_width != $("#LEBARMASTERLAZADA").val())
         	        {
         	            historyPerubahanlazada.push({
         	                'label' : 'Lebar Produk',
-        	                'lama'  : currency(row.dimension.package_width.toString())+" cm",
+        	                'lama'  : currency(row.skus[0].package_width.toString())+" cm",
         	                'baru'  : currency($("#LEBARMASTERLAZADA").val().toString())+" cm"
         	            });
         	            
         	            $("#checklazada").show();
         	        }
-        	        if(row.dimension.package_height != $("#TINGGIMASTERLAZADA").val())
+        	        if(row.skus[0].package_height != $("#TINGGIMASTERLAZADA").val())
         	        {
         	            historyPerubahanlazada.push({
         	                'label' : 'Lebar Produk',
-        	                'lama'  : currency(row.dimension.package_height.toString())+" cm",
+        	                'lama'  : currency(row.skus[0].package_height.toString())+" cm",
         	                'baru'  : currency($("#TINGGIMASTERLAZADA").val().toString())+" cm"
         	            });
         	            $("#checklazada").show();
@@ -1022,13 +1070,13 @@ function ubahlazada(row){
         	        
         	        $("#DIVDATAVARIAN").hide();
                     $("#DIVDATANONVARIAN").show();
-                    $("#DIVGAMBARVarianLazada").hide();
+                    $("#DIVGAMBARVARIANLAZADA").hide();
         	    }
         	    else
         	    {
         	        $("#DIVDATAVARIAN").show();
                     $("#DIVDATANONVARIAN").hide();
-                    $("#DIVGAMBARVarianLazada").show();
+                    $("#DIVGAMBARVARIANLAZADA").show();
         	    }
         	    
                 loading();
@@ -1123,7 +1171,6 @@ function ubahlazada(row){
                             ada = false;
                             table.rows().every(function () {
                                 var rowData = this.data();
-                        	    
                                 if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
                                     ada = true;
                                 }
@@ -1132,14 +1179,14 @@ function ubahlazada(row){
                             if(!ada)
                             {
                                 historyPerubahanlazada.push({
-                        	        'label' : 'Varian '+msg.dataVarian[x].NAMABARANG,
+                        	        'label' : 'Varian '+msg.dataVarian[x].NAMA,
                         	        'lama'  : 'Dihapus',
                         	        'baru'  : '-'
                         	    });
                         	            
                                $("#checklazada").show();
-                               var nama = msg.dataVarian[x].NAMA.replaceAll(',',' <span>|</span> SIZE ')+" <i class='pull-right' style='background:#FF5959; text-align:center; padding:5px; width:100px; color:white;'>Varian Dihapus</i>";
-
+                               var nama = msg.dataVarian[x].NAMA.replaceAll(' | SIZE ',' <span>|</span> SIZE ')+" <i class='pull-right' style='background:#FF5959; text-align:center; padding:5px; width:100px; color:white;'>Varian Dihapus</i>";
+                 
                                // Update the NAMABARANG field
                                var newRow = {
                                   IDBARANG   : msg.dataVarian[x].ID,
@@ -1156,20 +1203,21 @@ function ubahlazada(row){
                             }
                     	}
                     	
-                    	var imageProduk = row.image;
+                    	var imageProduk = row.images;
                     	//GAMBAR PRODUK
-                    	for(var y = 0 ; y < imageProduk.image_url_list.length ; y++)
+                    	for(var y = 0 ; y < imageProduk.length ; y++)
                     	{
                     	   // $("#file-input-lazada-"+y).val("-");
                     	    $("#format-input-lazada-"+y).val('GAMBAR');
                     	    $("#index-input-lazada-"+y).val(0);
-                    	    $("#src-input-lazada-"+y).val(imageProduk.image_url_list[y]);
+                    	    $("#src-input-lazada-"+y).val(imageProduk[y]);
                     	    $("#keterangan-input-lazada-"+y).val("Gambar Produk "+(y+1).toString());
-                    	    $("#id-input-lazada-"+y).val(imageProduk.image_id_list[y]);
-                    	    $("#preview-image-lazada-"+y).attr("src",imageProduk.image_url_list[y]);
-                    	   
-                        	$("#ubahGambarProdukLazada-"+y).show();
-                        	$("#hapusGambarProdukLazada-"+y).show();
+                    	    $("#id-input-lazada-"+y).val(imageProduk[y].split("/")[imageProduk[y].split("/").length-1].split(".")[0]);
+                    	    $("#preview-image-lazada-"+y).attr("src",imageProduk[y]);
+        
+                        //     	$("#ubahGambarProdukLazada-"+y).show();
+                        //     	$("#hapusGambarProdukLazada-"+y).show();
+                   
                     	    
                     	}
                     	
@@ -1187,9 +1235,10 @@ function ubahlazada(row){
                             	    $("#keterangan-input-varian-lazada-"+y).val("Gambar Varian "+warna[y]);
                             	    $("#id-input-varian-lazada-"+y).val(msg.dataGambarVarian[z].IMAGEID);
                             	    $("#preview-image-varian-lazada-"+y).attr("src",msg.dataGambarVarian[z].IMAGEURL);
-                            	    
-                            	    $("#ubahGambarVarianLazada-"+y).show();
-                    	            $("#hapusGambarVarianLazada-"+y).show();
+                  
+                                // 	    $("#ubahGambarVarianLazada-"+y).show();
+                        	       //     $("#hapusGambarVarianLazada-"+y).show();
+                      
                         	    }
                     	    }
                     	}
@@ -1205,9 +1254,9 @@ function ubahlazada(row){
 
 }
 
-function hapuslazada(row){
+function hapusLazada(row){
     Swal.fire({
-        title: 'Anda Yakin Akan Menghapus Barang ini di lazada <br>'+row.NAMABARANG+' ?',
+        title: 'Anda Yakin Akan Menghapus Barang ini di Lazada <br>'+row.NAMABARANG+' ?',
         showCancelButton: true,
         confirmButtonText: 'Yakin',
         cancelButtonText: 'Tidak',
@@ -1218,7 +1267,7 @@ function hapuslazada(row){
         	     $.ajax({
                 	type    : 'POST',
                 	url     : base_url+'Lazada/removeBarang/',
-                	data    : {idindukBARANGLAZADA: row.item_id},
+                	data    : {idindukbaranglazada: row.item_id, skulistlazada : JSON.stringify(row.skus)},
                 	dataType: 'json',
                 	success : function(msg){
                 	    Swal.close();	
@@ -1232,7 +1281,7 @@ function hapuslazada(row){
                         setTimeout(() => { 
                             if(msg.success)
                             {
-                                $("#dataGridlazada").DataTable().ajax.reload();
+                                $("#datagridLazada").DataTable().ajax.reload();
                                 reset();
                             }
                         }, "1000");
@@ -1257,7 +1306,7 @@ function reset() {
     $("#HARGAJUALMASTERLAZADA").val(0);
     $("#SKUMASTERLAZADA").val("");
     
-    $("#DEACTIVATED").prop('checked',false).iCheck('update');
+    $("#AKTIF").prop('checked',true).iCheck('update');
     
     $("#KATEGORILAZADA").removeAttr('disabled');
     $("#BARANGLAZADA").removeAttr('disabled');
@@ -1289,7 +1338,7 @@ $("#BARANGLAZADA").change(function(){
 		    if(dataMasterLazada[x].KATEGORI == $(this).val())
 		    {
 		        $("#NAMALAZADA").val(dataMasterLazada[x].KATEGORI);
-		        $("#DESKRIPSILAZADA").val(dataMasterLazada[x].DESKRIPSI.replaceAll("\R\N","\r\n").replaceAll("???? ",""));
+		        $("#DESKRIPSILAZADA").val(dataMasterLazada[x].DESKRIPSI.replaceAll("\\R\\N","\\r\\n").replaceAll("???? ",""));
 		        $("#BERATMASTERLAZADA").val(dataMasterLazada[x].BERAT);
 		        $("#PANJANGMASTERLAZADA").val(dataMasterLazada[x].PANJANG);
 		        $("#LEBARMASTERLAZADA").val(dataMasterLazada[x].LEBAR);
@@ -1299,7 +1348,7 @@ $("#BARANGLAZADA").change(function(){
 		        {
 		            $("#DIVDATAVARIAN").show();
 		            $("#DIVDATANONVARIAN").hide();
-		            $("#DIVGAMBARVarianLazada").show();
+		            $("#DIVGAMBARVARIANLAZADA").show();
                     $("#dataGridVarianLazada").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent($(this).val()));
             		$("#dataGridVarianLazada").DataTable().ajax.reload();
             		$("#HARGAJUALMASTERLAZADA").val(0);
@@ -1309,7 +1358,7 @@ $("#BARANGLAZADA").change(function(){
 		        {
 		            $("#DIVDATAVARIAN").hide();
 		            $("#DIVDATANONVARIAN").show();
-		            $("#DIVGAMBARVarianLazada").hide();
+		            $("#DIVGAMBARVARIANLAZADA").hide();
 		            
 		            $("#HARGAJUALMASTERLAZADA").val(dataMasterLazada[x].HARGAJUAL);
                     $("#SKUMASTERLAZADA").val(dataMasterLazada[x].SKULAZADA);
@@ -1343,9 +1392,11 @@ $("#BARANGLAZADA").change(function(){
                             	    $("#keterangan-input-lazada-"+y).val("Gambar Produk "+(y+1).toString());
                             	    $("#id-input-lazada-"+y).val(imageProduk[y].ID);
                             	    $("#preview-image-lazada-"+y).attr("src",imageProduk[y].URL);
-                            	   
-                                	$("#ubahGambarProdukLazada-"+y).show();
-                                	$("#hapusGambarProdukLazada-"+y).show();
+                            	    
+                            	 
+                                //     	$("#ubahGambarProdukLazada-"+y).show();
+                                //     	$("#hapusGambarProdukLazada-"+y).show();
+                             
                                 	
                                 	dataGambar[y] = {
                                        'ID'   : $("#id-input-lazada-"+y).val(),
@@ -1375,8 +1426,10 @@ $("#BARANGLAZADA").change(function(){
                                             $("#id-input-varian-lazada-"+y).val(imageVarian[z].ID);
                                             $("#preview-image-varian-lazada-"+y).attr("src",imageVarian[z].URL);
                                             
-                                            $("#ubahGambarVarianLazada-"+y).show();
-                                    	    $("#hapusGambarVarianLazada-"+y).show();
+                                          
+                                            //     $("#ubahGambarVarianLazada-"+y).show();
+                                        	   // $("#hapusGambarVarianLazada-"+y).show();
+                                        
                                     	    
                                     	    dataGambarVarian[y] = {
                                                'ID'   : $("#id-input-varian-lazada-"+y).val(),
@@ -1418,20 +1471,20 @@ function lihatLebihJelaslazada(jenis,title,url){
     }
 }
 
-function naikkanlazada(){
+function naikkanLazada(){
     $("#dataGridNaikkanProdukLazada").DataTable().ajax.reload();
     $("#modal-naik-produk-lazada").modal('show');
 }
 
-function tambahlazada(){
+function tambahLazada(){
     $("#checklazada").hide();
     $("#DIVDATAVARIAN").hide();
     $("#DIVDATANONVARIAN").hide();
-    $("#DIVGAMBARVarianLazada").hide();
+    $("#DIVGAMBARVARIANLAZADA").hide();
     $("#titleLazada").html("Tambah Produk");
     $("#modeLazada").val("TAMBAH");
     reset();
-    getMasterBarang('lazada');
+    getMasterBarang('LAZADA');
     $("#modal-barang-lazada").modal("show");
     $("#KATEGORILAZADA").val(0);
     $("#BARANGLAZADA").val(0);
@@ -1514,70 +1567,89 @@ function simpanLazada(){
         }
 
         $.when(ajax1).done(function(msg){
-            if (msg && msg.success) {
-                for(var x = 0 ; x < arrImageID.length ; x++)
-                {
-                    for(var y = 0 ; y < msg.data.length ; y++)
+            var error = false;
+            if(msg)
+            {
+                if (msg.success) {
+                    for(var x = 0 ; x < arrImageID.length ; x++)
                     {
-                        if(arrImageID[x] == msg.data[y]['id'])
+                        for(var y = 0 ; y < msg.data.length ; y++)
                         {
-                            arrImage[x] = msg.data[y]['url-baru']
+                            if(arrImageID[x] == msg.data[y]['id'])
+                            {
+                                arrImage[x] = msg.data[y]['url-baru']
+                            }
+                        }
+                    }
+                    for(var x = 0 ; x < arrImageIDVarian.length ; x++)
+                    {
+                        for(var y = 0 ; y < msg.data.length ; y++)
+                        {
+                            if(arrImageIDVarian[x] == msg.data[y]['id'])
+                            {
+                                arrImageVarian[x] = msg.data[y]['url-baru']
+                            } 
                         }
                     }
                 }
-                for(var x = 0 ; x < arrImageIDVarian.length ; x++)
+                else
                 {
-                    for(var y = 0 ; y < msg.data.length ; y++)
-                    {
-                        if(arrImageIDVarian[x] == msg.data[y]['id'])
-                        {
-                            arrImageVarian[x] = msg.data[y]['url-baru']
-                        } 
-                    }
+                    error = true;
+                    Swal.close();	
+                    // Swal.fire({
+                    //     title            : msg.msg,
+                    //     type             : (msg.success?'success':'error'),
+                    //     showConfirmButton: false,
+                    //     timer            : 2000
+                    // });
+                    simpanLazada();
                 }
             }
-        
-            // hanya sekali dipanggil di sini
-            $.ajax({
-                type    : 'POST',
-                url     : base_url+'Lazada/setBarang/',
-                data    : {
-                    "IDBARANG"       : $("#IDBARANGLAZADA").val(),
-                    "KATEGORI"       : $("#KATEGORILAZADA").val(), 
-                    "NAMA"           : $("#NAMALAZADA").val(), 
-                    "DESKRIPSI"      : $("#DESKRIPSILAZADA").val(), 
-                    "BERAT"          : $("#BERATMASTERLAZADA").val(), 
-                    "PANJANG"        : $("#PANJANGMASTERLAZADA").val(), 
-                    "LEBAR"          : $("#LEBARMASTERLAZADA").val(), 
-                    "TINGGI"         : $("#TINGGIMASTERLAZADA").val(), 
-                    "HARGA"          : $("#HARGAJUALMASTERLAZADA").val(),      
-                    "SKU"            : $("#SKUMASTERLAZADA").val(), 
-                    "DEACTIVATED"    : $("#DEACTIVATED").prop("checked")? 1 : 0,
-                    "VARIAN"         : JSON.stringify($('#dataGridVarianLazada').DataTable().rows().data().toArray()),
-                    "WARNA"          : JSON.stringify(warna),
-                    "UKURAN"         : JSON.stringify(ukuran),
-                    "GAMBARPRODUK"   : JSON.stringify(arrImage),
-                    "GAMBARVARIAN"   : JSON.stringify(arrImageVarian)
-                },
-                dataType: 'json',
-                success : function(msg){
-                    Swal.close();	
-                    Swal.fire({
-                        title            : msg.msg,
-                        type             : (msg.success?'success':'error'),
-                        showConfirmButton: false,
-                        timer            : 2000
-                    });
-        
-                    setTimeout(() => { 
-                        if(msg.success) {
-                            $("#modal-barang-lazada").modal("hide");
-                            $("#dataGridlazada").DataTable().ajax.reload();
-                            reset();
-                        }
-                    }, "1000");
-                }
-            });
+            
+            if(!error)
+            {
+                // hanya sekali dipanggil di sini
+                $.ajax({
+                    type    : 'POST',
+                    url     : base_url+'Lazada/setBarang/',
+                    data    : {
+                        "IDBARANG"       : $("#IDBARANGLAZADA").val(),
+                        "KATEGORI"       : $("#KATEGORILAZADA").val(), 
+                        "NAMA"           : $("#NAMALAZADA").val(), 
+                        "DESKRIPSI"      : $("#DESKRIPSILAZADA").val(), 
+                        "BERAT"          : $("#BERATMASTERLAZADA").val(), 
+                        "PANJANG"        : $("#PANJANGMASTERLAZADA").val(), 
+                        "LEBAR"          : $("#LEBARMASTERLAZADA").val(), 
+                        "TINGGI"         : $("#TINGGIMASTERLAZADA").val(), 
+                        "HARGA"          : $("#HARGAJUALMASTERLAZADA").val(),      
+                        "SKU"            : $("#SKUMASTERLAZADA").val(), 
+                        "AKTIF"          : $("#AKTIF").prop("checked")? 1 : 0,
+                        "VARIAN"         : JSON.stringify($('#dataGridVarianLazada').DataTable().rows().data().toArray()),
+                        "WARNA"          : JSON.stringify(warna),
+                        "UKURAN"         : JSON.stringify(ukuran),
+                        "GAMBARPRODUK"   : JSON.stringify(arrImage),
+                        "GAMBARVARIAN"   : JSON.stringify(arrImageVarian)
+                    },
+                    dataType: 'json',
+                    success : function(msg){
+                        Swal.close();	
+                        Swal.fire({
+                            title            : msg.msg,
+                            type             : (msg.success?'success':'error'),
+                            showConfirmButton: false,
+                            timer            : 2000
+                        });
+                
+                        setTimeout(() => { 
+                            if(msg.success) {
+                                $("#modal-barang-lazada").modal("hide");
+                                $("#datagridLazada").DataTable().ajax.reload();
+                                reset();
+                            }
+                        }, "1000");
+                    }
+                });
+            }
         });
     }
 }
@@ -1648,12 +1720,12 @@ function setGambarProduk(){
           }
           else
           {
-            fileInput.click();
+            // fileInput.click();
           }
         });
         
         ubahImage.addEventListener('click', () => {
-          fileInput.click();
+        //   fileInput.click();
         });
         
         hapusImage.addEventListener('click', () => {
@@ -1734,7 +1806,7 @@ function setGambarProduk(){
                          format.value = "GAMBAR";
                          previewImage.src = msg.url;
                          url.value =  msg.url;
-                         id.value = msg.url.split("/")[msg.url.split("/").length-1].split(".")[0];
+                         id.value = msg.id;
                 
                          ubahImage.style.display = '';
                          hapusImage.style.display = '';

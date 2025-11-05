@@ -170,9 +170,8 @@
                 	 </div>
                 		<select id="cb_barang_status_shopee" name="cb_barang_status_shopee" class="form-control "  panelHeight="auto" required="true">
                 			<option value="SEMUA">Semua </option>
-                			<option value="SEMUABARANGAKTIF" selected>Barang Aktif</option>
-                			<option value="NORMAL">Normal</option>
-                			<option value="UNLIST">Unlist</option>
+                			<option value="NORMAL" selected>Aktif</option>
+                			<option value="UNLIST">Tidak Aktif</option>
                 			<option value="BANNED">Banned</option>
                 			<option value="REVIEWING">Masa Review</option>
                 			<option value="SELLER_DELETE">Penjual Hapus</option>
@@ -219,7 +218,7 @@
                   <br>
                   <div class="row">
                       <div class="form-group col-md-8">
-                          <h4 style="font-weight:bold;">Informasi Produk<label class="pull-right">&nbsp;&nbsp;&nbsp;<input type="checkbox" class="flat-blue" id="UNLISTED" name="UNLISTED" value="1">&nbsp; Unlisted</label></h4>
+                          <h4 style="font-weight:bold;">Informasi Produk<label class="pull-right">&nbsp;&nbsp;&nbsp;<input type="checkbox" class="flat-blue" id="AKTIF" name="AKTIF" value="1">&nbsp; Aktif</label></h4>
                           <div class="row">
                                 <div class="col-md-12">
                                     <label>Kategori Shopee <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
@@ -271,13 +270,13 @@
                           <div class="row">
                              <div class ="form-group col-md-12">
                                  <br>
-                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2)</i></h4>
+                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></h4>
                                  <br>
                                  <table id="gambarprodukshopee">
                                  </table>  
                              </div>
                              <div class ="form-group col-md-12" id="DIVGAMBARVARIANSHOPEE">
-                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Setiap Varian)</i></h4>
+                                 <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></h4>
                                  <br>
                                  <table id="gambarvarianshopee">
                                  </table>    
@@ -549,7 +548,7 @@ $(document).ready(function() {
     });
 
     loading();
-    $("#statusShopee").val('NORMAL,UNLIST,REVIEWING');
+    $("#statusShopee").val('NORMAL');
     $("#TEMPLATESHOPEE").select2();
     //MENAMPILKAN TRANSAKSI
     $("#cb_barang_status_shopee").change(function(event){
@@ -558,10 +557,6 @@ $(document).ready(function() {
     	{
     		$("#statusShopee").val('NORMAL,UNLIST,BANNED,REVIEWING,SELLER_DELETE,SHOPEE_DELETE');
     	}
-    	else if($(this).val()  == 'SEMUABARANGAKTIF' )
-    	{
-    		$("#statusShopee").val('NORMAL,UNLIST,REVIEWING');
-    	}	
     	else
     	{
     		$("#statusShopee").val($(this).val());
@@ -629,11 +624,11 @@ $(document).ready(function() {
     			    var status = "";
                 	if(data == "NORMAL")
                 	{
-                	    status = "Normal";
+                	    status = "Aktif";
                 	}
                 	if(data == "UNLIST")
                 	{
-                	    status = "Unlist";
+                	    status = "Tidak Aktif";
                 	}
                 	if(data == "BANNED")
                 	{
@@ -1103,12 +1098,12 @@ $(document).ready(function() {
                          }
                          else
                          {
-                           fileInput.click();
+                        //   fileInput.click();
                          }
                        });
                        
                        ubahImage.addEventListener('click', () => {
-                         fileInput.click();
+                        //  fileInput.click();
                        });
                        
                        hapusImage.addEventListener('click', () => {
@@ -1646,11 +1641,11 @@ function ubahShopee(row){
         $("#btn_simpan_detail_shopee").show();
         if(row.item_status == "UNLIST")
         { 
-            $("#UNLISTED").prop('checked',true).iCheck('update');
+            $("#AKTIF").prop('checked',false).iCheck('update');
         }
         else if(row.item_status == "NORMAL")
         {  
-            $("#UNLISTED").prop('checked',false).iCheck('update');
+            $("#AKTIF").prop('checked',true).iCheck('update');
         }
         else
         {
@@ -1713,11 +1708,11 @@ function ubahShopee(row){
         	            });
         	            $("#checkShopee").show();
         	        }
-        	        if(row.weight != $("#BERATMASTERSHOPEE").val())
+        	        if((row.weight * 1000) != $("#BERATMASTERSHOPEE").val())
         	        {
         	            historyPerubahanShopee.push({
         	                'label' : 'Berat Produk',
-        	                'lama'  : currency(row.weight.toString())+" gram",
+        	                'lama'  : currency((row.weight * 1000).toString())+" gram",
         	                'baru'  : currency($("#BERATMASTERSHOPEE").val().toString())+" gram"
         	            });
         	            $("#checkShopee").show();
@@ -1906,8 +1901,8 @@ function ubahShopee(row){
                     	    $("#id-input-shopee-"+y).val(imageProduk.image_id_list[y]);
                     	    $("#preview-image-shopee-"+y).attr("src",imageProduk.image_url_list[y]);
                     	   
-                        	$("#ubahGambarProdukShopee-"+y).show();
-                        	$("#hapusGambarProdukShopee-"+y).show();
+                        // 	$("#ubahGambarProdukShopee-"+y).show();
+                        // 	$("#hapusGambarProdukShopee-"+y).show();
                     	    
                     	}
                     	
@@ -1926,8 +1921,8 @@ function ubahShopee(row){
                             	    $("#id-input-varian-shopee-"+y).val(msg.dataGambarVarian[z].IMAGEID);
                             	    $("#preview-image-varian-shopee-"+y).attr("src",msg.dataGambarVarian[z].IMAGEURL);
                             	    
-                            	    $("#ubahGambarVarianShopee-"+y).show();
-                    	            $("#hapusGambarVarianShopee-"+y).show();
+                            	   // $("#ubahGambarVarianShopee-"+y).show();
+                    	           // $("#hapusGambarVarianShopee-"+y).show();
                         	    }
                     	    }
                     	}
@@ -1944,8 +1939,8 @@ function ubahShopee(row){
                             
                             if(row.SIZECHARTID != "" || row.SIZECHARTURL)
                             {
-                                $("#ubahSizeProdukShopee").show();
-                                $("#hapusSizeProdukShopee").show();
+                                // $("#ubahSizeProdukShopee").show();
+                                // $("#hapusSizeProdukShopee").show();
                             }
                             $("#SIZETEMPLATESHOPEE").prop('checked',false).iCheck('update');
                             $("#TEMPLATESHOPEE").attr("disabled", "disabled");
@@ -2090,7 +2085,7 @@ function reset() {
     $("#SKUMASTERSHOPEE").val("");
     
     $("#SIZETEMPLATESHOPEE").prop('checked',true).iCheck('update');
-    $("#UNLISTED").prop('checked',false).iCheck('update');
+    $("#AKTIF").prop('checked',true).iCheck('update');
     
     $("#KATEGORISHOPEE").removeAttr('disabled');
     $("#BARANGSHOPEE").removeAttr('disabled');
@@ -2204,12 +2199,12 @@ $("#KATEGORISHOPEE").change(function(){
                   }
                   else
                   {
-                    fileInput.click();
+                    // fileInput.click();
                   }
                 });
                 
                 ubahImage.addEventListener('click', () => {
-                  fileInput.click();
+                //   fileInput.click();
                 });
                 
                 hapusImage.addEventListener('click', () => {
@@ -2443,8 +2438,8 @@ $("#KATEGORISHOPEE").change(function(){
                                 $("#id-size-shopee").val(dataGambar[x]['ID']);
                                 $("#preview-size-shopee").attr("src",dataGambar[x]['URL']);
                                 
-                                $("#ubahSizeProdukShopee").show();
-                                $("#hapusSizeProdukShopee").show();
+                                // $("#ubahSizeProdukShopee").show();
+                                // $("#hapusSizeProdukShopee").show();
                             }
                         }
                     }
@@ -2470,7 +2465,7 @@ $("#BARANGSHOPEE").change(function(){
 		    if(dataMasterShopee[x].KATEGORI == $(this).val())
 		    {
 		        $("#NAMASHOPEE").val(dataMasterShopee[x].KATEGORI);
-		        $("#DESKRIPSISHOPEE").val(dataMasterShopee[x].DESKRIPSI.replaceAll("\R\N","\r\n").replaceAll("???? ",""));
+		        $("#DESKRIPSISHOPEE").val(dataMasterShopee[x].DESKRIPSI.replaceAll("\\R\\N","\\r\\n").replaceAll("???? ",""));
 		        $("#BERATMASTERSHOPEE").val(dataMasterShopee[x].BERAT);
 		        $("#PANJANGMASTERSHOPEE").val(dataMasterShopee[x].PANJANG);
 		        $("#LEBARMASTERSHOPEE").val(dataMasterShopee[x].LEBAR);
@@ -2524,8 +2519,8 @@ $("#BARANGSHOPEE").change(function(){
                             	    $("#id-input-shopee-"+y).val(imageProduk[y].ID);
                             	    $("#preview-image-shopee-"+y).attr("src",imageProduk[y].URL);
                             	   
-                                	$("#ubahGambarProdukShopee-"+y).show();
-                                	$("#hapusGambarProdukShopee-"+y).show();
+                                // 	$("#ubahGambarProdukShopee-"+y).show();
+                                // 	$("#hapusGambarProdukShopee-"+y).show();
                                 	
                                 	dataGambar[y] = {
                                        'ID'   : $("#id-input-shopee-"+y).val(),
@@ -2555,8 +2550,8 @@ $("#BARANGSHOPEE").change(function(){
                                             $("#id-input-varian-shopee-"+y).val(imageVarian[z].ID);
                                             $("#preview-image-varian-shopee-"+y).attr("src",imageVarian[z].URL);
                                             
-                                            $("#ubahGambarVarianShopee-"+y).show();
-                                    	    $("#hapusGambarVarianShopee-"+y).show();
+                                        //     $("#ubahGambarVarianShopee-"+y).show();
+                                    	   // $("#hapusGambarVarianShopee-"+y).show();
                                     	    
                                     	    dataGambarVarian[y] = {
                                                'ID'   : $("#id-input-varian-shopee-"+y).val(),
@@ -2773,7 +2768,7 @@ function simpanShopee(){
         	   "TINGGI"         : $("#TINGGIMASTERSHOPEE").val(), 
         	   "HARGA"          : $("#HARGAJUALMASTERSHOPEE").val(),      
         	   "SKU"            : $("#SKUMASTERSHOPEE").val(), 
-        	   "UNLISTED"       : $("#UNLISTED").prop("checked")? 1 : 0,
+        	   "AKTIF"          : $("#AKTIF").prop("checked")? 1 : 0,
         	   "VARIAN"         : JSON.stringify($('#dataGridVarianShopee').DataTable().rows().data().toArray()),
         	   "WARNA"          : JSON.stringify(warna),
         	   "UKURAN"         : JSON.stringify(ukuran),
@@ -2875,12 +2870,12 @@ function setGambarProduk(){
           }
           else
           {
-            fileInput.click();
+            // fileInput.click();
           }
         });
         
         ubahImage.addEventListener('click', () => {
-          fileInput.click();
+        //   fileInput.click();
         });
         
         hapusImage.addEventListener('click', () => {

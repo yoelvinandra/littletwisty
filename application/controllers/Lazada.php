@@ -87,7 +87,7 @@ class Lazada extends MY_Controller {
         $resp = curl_exec($c);
         $ret = json_decode($resp, true);
 
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
           echo $ret['error']." : ".$ret['message'];
         }
@@ -153,7 +153,7 @@ class Lazada extends MY_Controller {
         $resp = curl_exec($c);
         $ret = json_decode($resp, true);
 
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
           echo $ret['error']." : ".$ret['message'];
         }
@@ -180,6 +180,7 @@ class Lazada extends MY_Controller {
 	    if($response)
 	    {
     	    $endpoint = $this->input->post("endpoint");
+    	    $debug     = $this->input->post('debug');
     	    $parameter = $this->input->post("parameter");
     	    
     	    $this->load->library('Lazop', [
@@ -190,37 +191,54 @@ class Lazada extends MY_Controller {
             $client = $this->lazop->getClient();
             // Example request: get user info
             $request = new LazopRequest($endpoint, 'GET');
-            // Parse into array
-            parse_str($parameter, $queryArray);
             
+          
+            $arrParam = explode("&",$parameter);
             // Loop and add to LazopRequest
-            foreach ($queryArray as $key => $value) {
-                $request->addApiParam($key, $value);
+            for ($x = 0 ; $x < count($arrParam) ; $x++) {
+                if($x != 0)
+                {
+                    $arrData = explode("=",$arrParam[$x]);
+                    $request->addApiParam($arrData[0], $arrData[1]);
+                }
             }
-
+            
+            if($debug == 1)
+            {
+               $this->output->set_output(json_encode([
+                "code" => 100,
+                   "message" =>  json_encode($arrData)
+               ]));
+            }
+                
             $response = $client->execute($request, $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN'));
-    
-            echo $response; 
+            
+            if($debug == 0)
+            {
+                echo $response; 
+            }
 	    }
 	    else
 	    {
-	       // echo "Token gagal diperbaharui";
-	        echo array(
-	            "error" => "failed refresh token"
-	        );
+	       $this->output->set_output(json_encode([
+	            "code" => 100,
+                "message" => "failed refresh token"
+            ]));
 	    }
 	}
 	
 	public function postAPI()
 	{
 	    $this->output->set_content_type('application/json');
+	    
 	    $response =  $this->getRefreshToken();
 	    if($response)
 	    {
+	        
     	    $endpoint = $this->input->post("endpoint");
-    	    $parameter = $this->input->post("parameter");
-    	    $xml = $this->input->post("xml")??"";
-    	    
+    	    $debug = $this->input->post("debug")??0;
+    	    $parameter = json_decode($this->input->post("parameter"),true);
+    
     	    $this->load->library('Lazop', [
                 'appKey'    => $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY'),
                 'appSecret' => $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET')
@@ -229,32 +247,41 @@ class Lazada extends MY_Controller {
             $client = $this->lazop->getClient();
             // Example request: get user info
             $request = new LazopRequest($endpoint);
-            
-            // Parse into array
-            parse_str($parameter, $queryArray);
-            
+           
             // Loop and add to LazopRequest
-            foreach ($queryArray as $key => $value) {
-                if($xml)
+            for ($x = 0 ; $x < count($parameter) ; $x++) {
+                if($parameter[$x]['xml'] == 1)
                 {
                     $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
-                    $this->arrayToXml($value, $xml);
-                   
-                    $value = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
+                    $this->arrayToXml($parameter[$x]['parameter'], $xml);
+                    $parameter[$x]['parameter'] = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
                 }
-                $request->addApiParam($key, $value);
+                $request->addApiParam($parameter[$x]['parameterKey'], $parameter[$x]['parameter']);
+                if($debug == 1)
+                {
+                    $this->output->set_output(json_encode([
+        	            "code" => 100,
+                        "message" =>  $parameter[$x]['parameter']
+                    ]));
+                }
             }
             
             $response = $client->execute($request, $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN'));
-    
-            echo $response; 
+            if($debug == 0)
+            {
+                echo $response; 
+            }
+         
+
 	    }
         else
 	    {
 	       // echo "Token gagal diperbaharui";
-	        echo array(
-	            "error" => "failed refresh token"
-	        );
+	        $this->output->set_output(json_encode([
+	            "code" => 100,
+                "message" => "failed refresh token"
+            ]));
+
 	    }
         
 	}
@@ -270,6 +297,7 @@ class Lazada extends MY_Controller {
                     $this->arrayToXml($value, $subnode, $key);
                 }
             } else {
+                $value = preg_replace("/\n+/", "<br>", $value);
                 if (is_numeric($key) && $parentKey) {
                     // numeric key tapi value string → pakai parentKey
                     $xmlData->addChild($parentKey, htmlspecialchars($value));
@@ -323,7 +351,7 @@ class Lazada extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 echo $ret['error']." : ".$ret['message'];
             }
@@ -359,7 +387,7 @@ class Lazada extends MY_Controller {
                     $response = curl_exec($curl);
                     curl_close($curl);
                     $ret =  json_decode($response,true);
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
                         echo $ret['error']." : ".$ret['message'];
                         $statusok = false;
@@ -411,7 +439,7 @@ class Lazada extends MY_Controller {
 		if($varian == "true")
 		{
     		$sql = "SELECT a.IDBARANG,a.KATEGORI,
-    		        a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA
+    		        a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA,a.SKULAZADA
     		        FROM MBARANG a";
     		$dataBarang = $CI->db->query($sql)->result();  
 		}
@@ -429,33 +457,14 @@ class Lazada extends MY_Controller {
     		            {
     		                if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
     		                {
-    		                    if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
-    		                    {
-    		                        $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
-    		                        array_push($dataBarangHarga, array(
-        		                        'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
-        		                        'model' => []
-    		                        ));
-    		                    }
-    		                    
-    		                    if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
-    		                    {
-    		                        array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
+    		                    array_push($dataBarangHarga,
         		                    array(
-        		                         'model_id'         => 0,
-        		                         'original_price'   => $item->hargajualnew,
-        		                         'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                         'IDBARANGLAZADA'           => $itemBarang->IDBARANGLAZADA,
+        		                         'IDINDUKBARANGLAZADA'      => $itemBarang->IDINDUKBARANGLAZADA,
+        		                         'SKULAZADA'                => $itemBarang->SKULAZADA,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
         		                    )); 
-    		                    }
-    		                    else
-    		                    {
-        		                    array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
-        		                    array(
-        		                         'model_id'         => $itemBarang->IDBARANGLAZADA,
-        		                         'original_price'   => $item->hargajualnew,
-        		                         'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-        		                    ));
-    		                    }
     		                }
     		            }
     		        }
@@ -472,33 +481,14 @@ class Lazada extends MY_Controller {
     		       {
     		           if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
     		           {
-    		               if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
-    		               {
-    		                   $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
-    		                   array_push($dataBarangHarga, array(
-        	                    'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
-        	                    'model' => []
-    		                   ));
-    		               }
-    		               
-    		               if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
-    		               {
-    		                array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
-        	                array(
-        	                     'model_id'         => 0,
-        	                     'original_price'   => $item->hargajualnew,
-        		                 'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-        	                )); 
-    		               }
-    		               else
-    		               {
-        	                array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
-        	                array(
-        	                     'model_id'         => $itemBarang->IDBARANGLAZADA,
-        	                     'original_price'   => $item->hargajualnew,
-        		                 'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-        	                ));
-    		               }
+    		               array_push($dataBarangHarga,
+        		                    array(
+        		                         'IDBARANGLAZADA'           => $itemBarang->IDBARANGLAZADA,
+        		                         'IDINDUKBARANGLAZADA'      => $itemBarang->IDINDUKBARANGLAZADA,
+        		                         'SKULAZADA'                => $itemBarang->SKULAZADA,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                    )); 
     		           }
     		       }
     		   }
@@ -509,7 +499,7 @@ class Lazada extends MY_Controller {
             $idbarang = 0;
     		foreach($data as $item)
     		{	
-        	   $sql = "SELECT a.IDBARANG, a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
+        	   $sql = "SELECT a.IDBARANG, a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA,a.SKULAZADA FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
         	   
         	   $allBarang = $CI->db->query($sql)->result();
         	   
@@ -517,33 +507,14 @@ class Lazada extends MY_Controller {
         	   {
                    if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
         	       {
-        	           if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
-        	           {
-        	               $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
-        	               array_push($dataBarangHarga, array(
-                            'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
-                            'model' => []
-        	               ));
-        	           }
-        	           
-        	           if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
-        	           {
-        	            array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
-                        array(
-                             'model_id'         => 0,
-                             'original_price'   => $item->hargajualnew,
-        		             'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-                        )); 
-        	           }
-        	           else
-        	           {
-                        array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
-                        array(
-                             'model_id'         => $itemBarang->IDBARANGLAZADA,
-                             'original_price'   => $item->hargajualnew,
-        		             'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-                        ));
-        	           }
+        	            array_push($dataBarangHarga,
+        		                    array(
+        		                         'IDBARANGLAZADA'           => $itemBarang->IDBARANGLAZADA,
+        		                         'IDINDUKBARANGLAZADA'      => $itemBarang->IDINDUKBARANGLAZADA,
+        		                         'SKULAZADA'                => $itemBarang->SKULAZADA,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                    )); 
         	       }
         	   }
     		}
@@ -555,7 +526,7 @@ class Lazada extends MY_Controller {
 		    
 		        if($IDCUSTOMER == $item->idcustomer)
     		    {
-        		    $sql = "SELECT a.IDBARANG, a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
+        		    $sql = "SELECT a.IDBARANG, a.IDBARANGLAZADA, a.IDINDUKBARANGLAZADA,a.SKULAZADA FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
         		    
         		    $allBarang = $CI->db->query($sql)->result();
         		    
@@ -563,33 +534,14 @@ class Lazada extends MY_Controller {
         		    {
             		    if($itemBarang->IDBARANGLAZADA != 0 && $itemBarang->IDINDUKBARANGLAZADA != 0)
         		        {
-        		            if($idbarang != $itemBarang->IDINDUKBARANGLAZADA)
-        		            {
-        		                $idbarang = $itemBarang->IDINDUKBARANGLAZADA;
-        		                array_push($dataBarangHarga, array(
-            	                 'item_id' => $itemBarang->IDINDUKBARANGLAZADA,
-            	                 'model' => []
-        		                ));
-        		            }
-        		            
-        		            if($itemBarang->IDBARANGLAZADA == $itemBarang->IDINDUKBARANGLAZADA)
-        		            {
-        		             array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
-            	             array(
-            	                  'model_id'         => 0,
-            	                  'original_price'   => $item->hargajualnew,
-        		                  'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-            	             )); 
-        		            }
-        		            else
-        		            {
-            	             array_push($dataBarangHarga[count($dataBarangHarga)-1]['model'],
-            	             array(
-            	                  'model_id'         => $itemBarang->IDBARANGLAZADA,
-            	                  'original_price'   => $item->hargajualnew,
-        		                  'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-            	             ));
-        		            }
+        		            array_push($dataBarangHarga,
+        		                    array(
+        		                         'IDBARANGLAZADA'           => $itemBarang->IDBARANGLAZADA,
+        		                         'IDINDUKBARANGLAZADA'      => $itemBarang->IDINDUKBARANGLAZADA,
+        		                         'SKULAZADA'                => $itemBarang->SKULAZADA,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                    )); 
         		        }
         		    }
     		    }
@@ -597,53 +549,76 @@ class Lazada extends MY_Controller {
     		
         }
         
+        $detailParameter = [];
+        
 		for($x = 0 ; $x < count($dataBarangHarga); $x++)
 		{
-        	$parameter = [];
-            $parameter['item_id'] = (int)$dataBarangHarga[$x]['item_id'];
-            $parameter['price_list'] = [];
-            for($h = 0 ; $h < count($dataBarangHarga[$x]['model']); $h++)
+    		
+             array_push($detailParameter,
+                   ['Sku' => [
+                        'ItemId' => $dataBarangHarga[$x]['IDINDUKBARANGLAZADA'],
+                        'SkuId' => $dataBarangHarga[$x]['IDBARANGLAZADA'],
+            	        'SellerSku' => $dataBarangHarga[$x]['SKULAZADA'],
+            	        'Price' => (int)$dataBarangHarga[$x]['HARGA'],
+            	        'SalePrice'  => (int)$dataBarangHarga[$x]['HARGADISKON'],
+            	    ]]);
+            	    
+        	if(($x % 19 == 0 && $x != 0) || $x == count($dataBarangHarga)-1)
             {
-                 array_push($parameter['price_list'],array(
-                     'model_id'       =>  (int)$dataBarangHarga[$x]['model'][$h]['model_id'],
-                     'original_price' =>  (float)$dataBarangHarga[$x]['model'][$h]['original_price'],
-                  ));
-            }
-            
-            $curl = curl_init();
+                $parameter = [[
+            	    'xml' => 1,
+            	    'parameterKey' => 'payload',
+            	    'parameter' => [
+                           'Request' => [
+                               'Product' => [
+                                    'Skus' => $detailParameter
+                               ]
+                           ]
+                    ]
+                ]];
+                
+                $curl = curl_init();
+                        
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS =>  array(
+                  'endpoint' => '/product/price_quantity/update',
+                  'parameter' => json_encode($parameter),
+                //   'debug' => 1
+                  ),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
                   
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => 'product/update_price',
-              'parameter' => json_encode($parameter)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            
-            if($ret['error'] != "")
-            {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." UBAH HARGA LAZADA : ".$ret['message'];
-                die(json_encode($data));
+                $response = curl_exec($curl);
+                curl_close($curl);
+                $ret =  json_decode($response,true);
+                
+                if($ret['code'] != 0)
+                { 
+                    $ret['success'] = false;
+                    $ret['msg'] = $ret['message'];
+                    die(json_encode($ret));
+                }
+                else
+                {
+                   $parameter = [];
+                   $detailParameter = [];
+                }
             }
 		}
 		
 		
         $data['success'] = true;
-        $data['msg'] =  'Update Harga LAZADA Berhasil';
+        $data['msg'] =  'Update Harga Lazada Berhasil';
         echo(json_encode($data));
 	}
 	
@@ -695,183 +670,121 @@ class Lazada extends MY_Controller {
 		    $idlokasiset = $itemRow->IDLOKASI;
 		}
 		
-        $curl = curl_init();
-        $parameter = "";
+        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
+        $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
         
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        $lokasi = 0;
-        $countSuccess = 0 ;
-        if($ret['error'] != "")
+        if($lokasi == $idlokasiset)
         {
-            echo $ret['error']." LOKASI : ".$ret['message'];
-        }
-        else
-        {
-            $dataAddress = $ret['response']['address_list'];
-            for($x = 0 ; $x < count($dataAddress);$x++)
+            $modeList = [];
+            $countBarang = 0;
+            $whereBarang = " and IDBARANG in (";
+            foreach($dataBarang as $itemBarang)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                $pickup = false;
-                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                {
-                    if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                    {
-                        $pickup = true;
-                    }
-                    // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                    // {
-                    //     $default = true;
-                    // }
-                }
-                
-                if($pickup)
-                {
-                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                }
+        		$whereBarang .= $itemBarang;
+        		if($countBarang < count($dataBarang)-1)
+        		{
+        		    $whereBarang .= ",";
+        		}
+        		$countBarang++;
             }
             
-            if($lokasi == $idlokasiset)
-            {
-                $modeList = [];
-                $countBarang = 0;
-                $whereBarang = " and IDBARANG in (";
-                foreach($dataBarang as $itemBarang)
+            $whereBarang .= ")";	
+            $count = 0;
+            $sql = "select IDPERUSAHAAN, IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG,SKULAZADA,HARGAJUAL
+        				from MBARANG
+        				where (1=1) $whereBarang and (IDBARANGLAZADA is not null and IDBARANGLAZADA <> 0)
+        				order by IDINDUKBARANGLAZADA
+        				";	
+        		
+        	$dataHeader = $this->db->query($sql)->result();
+        	
+        	$parameter = [];
+            $detailParameter = [];
+            
+        	for($x = 0; $x < count($dataHeader) ; $x++)
+        	{
+        	    
+            	$result   = get_saldo_stok_new($dataHeader[$x]->IDPERUSAHAAN,$dataHeader[$x]->IDBARANG, $idlokasiset, date('Y-m-d'));
+                $saldoQty = $result->QTY??0;
+                                              
+            	 array_push($detailParameter,
+            	       ['Sku' => [
+            	            'ItemId' => $dataHeader[$x]->IDINDUKBARANGLAZADA,
+            	            'SkuId' => $dataHeader[$x]->IDBARANGLAZADA,
+            		        'SellerSku' => $dataHeader[$x]->SKULAZADA,
+            		        'Quantity' => (int)$saldoQty
+            		      //  'Price' => (int)$dataHeader[$x]->HARGAJUAL
+            		    ]]);
+            		    
+        	    if(($x % 19 == 0 && $x != 0) || $x == count($dataHeader)-1)
                 {
-            		$whereBarang .= $itemBarang;
-            		if($countBarang < count($dataBarang)-1)
-            		{
-            		    $whereBarang .= ",";
-            		}
-            		$countBarang++;
-                }
-                
-                $whereBarang .= ")";	
-                
-                $sql = "select IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG
-            				from MBARANG
-            				where (1=1) $whereBarang
-            				order by IDINDUKBARANGLAZADA
-            				";	
-            		
-            	$dataHeader = $this->db->query($sql)->result();
-            		
-                 $idHeader = 0;
-                 $parameter = [];
-            	 foreach($dataHeader as $itemHeader)
-            	 {
-            	     if($itemHeader->IDINDUKBARANGLAZADA != $idHeader)
-            	     {
-            	         if(count($parameter) > 0)
-            	         {
-            	        
-            	            $curl = curl_init();
-                            curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                              CURLOPT_RETURNTRANSFER => true,
-                              CURLOPT_ENCODING => '',
-                              CURLOPT_MAXREDIRS => 10,
-                              CURLOPT_TIMEOUT => 30,
-                              CURLOPT_FOLLOWLOCATION => true,
-                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                              CURLOPT_CUSTOMREQUEST => 'POST',
-                              CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'product/update_stock',
-                              'parameter' => json_encode($parameter)),
-                              CURLOPT_HTTPHEADER => array(
-                                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                              ),
-                            ));
-                              
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $ret =  json_decode($response,true);
+                    
+                    $parameter = [[
+            		    'xml' => 1,
+            		    'parameterKey' => 'payload',
+            		    'parameter' => [
+                               'Request' => [
+                                   'Product' => [
+                                        'Skus' => $detailParameter
+                                   ]
+                               ]
+                        ]
+                    ]];
+                    
+                    $curl = curl_init();
                             
-                            if($ret['error'] != "")
-                            {
-                                $data['success'] = false;
-                                $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                                die(json_encode($data));
-                                print_r($ret);
-                            }
-            	         }
-            	         $idHeader = $itemHeader->IDINDUKBARANGLAZADA;
-            	         
-            	         //UPDATE KE LAZADANYA
-                        $parameter = [];
-                     	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGLAZADA;
-                     	$parameter['stock_list'] = [];
-            	     }
-            	     
-                     $result   = get_saldo_stok_new($_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
-                     $saldoQty = $result->QTY??0;
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => '',
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 30,
+                      CURLOPT_FOLLOWLOCATION => true,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_CUSTOMREQUEST => 'POST',
+                      CURLOPT_POSTFIELDS =>  array(
+                      'endpoint' => '/product/price_quantity/update',
+                      'parameter' => json_encode($parameter),
+                    //   'debug' => 1
+                      ),
+                      CURLOPT_HTTPHEADER => array(
+                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                      ),
+                    ));
+                      
+                    $response = curl_exec($curl);
+                    curl_close($curl);
+                    $ret =  json_decode($response,true);
                     
-                    $modelId = 0;
-                    
-                    if($itemHeader->IDBARANGLAZADA != $itemHeader->IDINDUKBARANGLAZADA)
-                    {
-                        $modelId = $itemHeader->IDBARANGLAZADA;
+                    if($ret['code'] != 0)
+                    { 
+                        $ret['success'] = false;
+                        $ret['msg'] = $ret['message'];
+                        die(json_encode($ret));
                     }
-                    
-                     array_push($parameter['stock_list'],array(
-                        'model_id'      => (int)$modelId,
-                        'seller_stock'  => array(
-                             array('stock' => (int)$saldoQty)
-                        ))
-                    );
-            	}
-            	
-            	$curl = curl_init();
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'product/update_stock',
-                  'parameter' => json_encode($parameter)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                  
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                
-                if($ret['error'] != "")
-                {
-                    $data['success'] = false;
-                    $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                    die(json_encode($data));
+                    else
+                    {
+                       $parameter = [];
+                       $detailParameter = [];
+                    }
                 }
+        	}
+        		    
+        	
+        	
+        	if(count($dataHeader) == 0)
+            {
+                $data['success'] = true;
+                $data['msg'] =  "";
+                die(json_encode($data));
             }
+        	
         }
         
         if($lokasi == $idlokasiset)
         {
             $data['success'] = true;
-            $data['msg'] = "Stok LAZADA Berhasil Diupdate";
+            $data['msg'] = "Stok Lazada Berhasil Diupdate";
             echo(json_encode($data));
         }
         else
@@ -910,9 +823,11 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['message'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['code']." : ".$ret['message'];
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
         }
         else
         {
@@ -1037,7 +952,7 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." : ".$ret['message'];
         }
@@ -1113,7 +1028,7 @@ class Lazada extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 echo $ret['error']." : ".$ret['message'];
             }
@@ -1213,7 +1128,7 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." : ".$ret['message'];
         }
@@ -1246,7 +1161,7 @@ class Lazada extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
                     echo $ret['error']." : ".$ret['message'];
                 }
@@ -1276,7 +1191,7 @@ class Lazada extends MY_Controller {
                         $response = curl_exec($curl);
                         curl_close($curl);
                         $ret =  json_decode($response,true);
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             echo $ret['error']." : ".$ret['message'];
                         }
@@ -1300,15 +1215,17 @@ class Lazada extends MY_Controller {
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		$status = $this->input->post('status');
-		
+		$arrStatus = explode(",",$status);
 		$data['rows'] = [];
 		$data["total"] = 0;
 		
-		$parameter = "&filter = $status";
-        
-		$curl = curl_init();
-		
-		 curl_setopt_array($curl, array(
+		for($x = 0 ; $x < count($arrStatus) ; $x++)
+		{
+    		$parameter = "&filter=$arrStatus[$x]";
+    
+    		$curl = curl_init();
+    		
+    		 curl_setopt_array($curl, array(
               CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
@@ -1326,7 +1243,7 @@ class Lazada extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-           if($ret['message'] != "")
+            if($ret['code'] != 0)
             {
                 echo $ret['code']." : ".$ret['message'];
             }
@@ -1334,7 +1251,7 @@ class Lazada extends MY_Controller {
             {
                  $dataBarang = $ret['data']['products'];
                  
-                 $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGSHOPEE from MBARANG where IDINDUKBARANGSHOPEE != 0 and IDINDUKBARANGSHOPEE != '' and IDINDUKBARANGSHOPEE is not null";
+                 $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGLAZADA from MBARANG where IDINDUKBARANGLAZADA != 0 and IDINDUKBARANGLAZADA != '' and IDINDUKBARANGLAZADA is not null";
                  $dataBarangMaster = $CI->db->query($sqlBarangMaster)->result();
                  
                  foreach($dataBarang as $itemBarang)
@@ -1345,7 +1262,7 @@ class Lazada extends MY_Controller {
                    $itemBarang['KATEGORIMASTERBARANG'] = '';
                    foreach($dataBarangMaster as $itemBarangMaster)
                    {
-                       if($itemBarangMaster->IDINDUKBARANGSHOPEE == $itemBarang['item_id'])
+                       if($itemBarangMaster->IDINDUKBARANGLAZADA == $itemBarang['item_id'])
                        {
                           $itemBarang['MASTERCONNECTED'] ="YA";  
                           $itemBarang['IDMASTERBARANG'] = $itemBarangMaster->IDBARANG;
@@ -1354,13 +1271,14 @@ class Lazada extends MY_Controller {
                    }
                    
                    $itemBarang['NAMABARANG'] = $itemBarang['attributes']['name'];    
-                   $itemBarang['VARIAN'] = count($itemBarang['skus']) != 0 ? "YA" : "TIDAK";     
-                   $itemBarang['TGLENTRY'] = date("Y-m-d H:i:s", $itemBarang['updated_time']??$itemBarang['created_time']);    
+                   $itemBarang['VARIAN'] = count($itemBarang['skus'][0]['saleProp']) != 0 ? "YA" : "TIDAK";     
+                   $itemBarang['TGLENTRY'] = date("Y-m-d H:i:s", (float)($itemBarang['updated_time']??$itemBarang['created_time'])/1000);    
                    $itemBarang['STATUS'] = $itemBarang['status'];    
                    
                    array_push($data['rows'],$itemBarang);
                 }
             }
+		}
 	
         
         //URUTKAN BERDASARKAN NAMA BARANG
@@ -1376,43 +1294,9 @@ class Lazada extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$itemid = $this->input->post('idindukbarangLAZADA');
+		$itemid = $this->input->post('idindukbaranglazada');
 		
 		$data = [];
-        $data['dataVarian'] = [];
-        $data['dataGambarInduk'];
-        $data['dataGambarVarian'] = [];
-	     //GET ORDER DETAIL
-        $parameter = "&item_id_list=".(int)$itemid;
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_base_info','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-         
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
-        {
-            echo $ret['error']." : ".$ret['message'];
-            $statusok = false;
-        }
-        else
-        {
-            $data['dataInduk'] = $ret['response']['item_list'][0];
-        }
         
         $parameter = '';
         //GET MODEL
@@ -1428,7 +1312,7 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/product/item/get','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -1437,43 +1321,17 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
-            $statusok = false;
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
         }
         else
         {
-            $dataUrutan = $ret['response']['tier_variation'][0]['option_list']; //URUTKAN DARI WARNA
-            $dataModel = $ret['response']['model'];
-            $dataGambarModel = $ret['response']['standardise_tier_variation'][0]['variation_option_list'];
-            for($u = 0 ; $u < count($dataUrutan); $u++)
-            {
-                for($m = 0 ; $m < count($dataModel);$m++)
-                {
-                    $model = explode(",",$dataModel[$m]['model_name']);
-                    if($dataUrutan[$u]['option'] == $model[0])
-                    {
-                        array_push($data['dataVarian'], array(
-                            'ID'    => $dataModel[$m]['model_id'],
-                            'NAMA'  => strtoupper($dataModel[$m]['model_name']),
-                            'WARNA'  => strtoupper($model[0]),
-                            'SIZE'  => strtoupper($model[1]),
-                            'SKU'   => $dataModel[$m]['model_sku'],
-                            "HARGA" => $dataModel[$m]['price_info'][0]['original_price']
-                        ));
-                    }
-                }
-            }
-            
-            for($g = 0 ; $g < count($dataGambarModel); $g++)
-            {
-                array_push($data['dataGambarVarian'], array(
-                    'WARNA'     => strtoupper($dataGambarModel[$g]['variation_option_name']),
-                    'IMAGEID'   => $dataGambarModel[$g]['image_id'],
-                    "IMAGEURL"  => $dataGambarModel[$g]['image_url'],
-                ));
-            }
+            $data['skus'] = $ret['data']['skus'];
+            $data['status'] = $ret['data']['status'];
         }
         echo(json_encode($data));
 	}
@@ -1482,12 +1340,11 @@ class Lazada extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$itemid = $this->input->post('idindukbarangLAZADA');
+		$itemid = $this->input->post('idindukbaranglazada');
 	    $parameter = '';
         //GET MODEL
         $parameter = "&item_id=".(int)$itemid;
         $curl = curl_init();
-        
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
@@ -1497,7 +1354,7 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/product/item/get','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -1506,48 +1363,51 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
-            $statusok = false;
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
         }
         else
         {
-            $dataUrutan = $ret['response']['tier_variation'][0]['option_list']; //URUTKAN DARI WARNA
-            $dataModel = $ret['response']['model'];
-            $dataGambarModel = $ret['response']['standardise_tier_variation'][0]['variation_option_list'];
+            $dataUrutan = $ret['data']['variation']['Variation1']['options']; //URUTKAN DARI WARNA
+            $dataModel = $ret['data']['skus'];
             $data['dataVarian'] = [];
             $data['dataGambarVarian'] = [];
-            for($u = 0 ; $u < count($dataUrutan); $u++)
+            
+            if(isset($dataModel[0]['saleProp']))
             {
-                for($m = 0 ; $m < count($dataModel);$m++)
+                for($u = 0 ; $u < count($dataUrutan); $u++)
                 {
-                    $model = explode(",",$dataModel[$m]['model_name']);
-                    if($dataUrutan[$u]['option'] == $model[0])
+                    $imageurl = "";
+                    for($m = 0 ; $m < count($dataModel);$m++)
                     {
-                        array_push($data['dataVarian'], array(
-                            'ID'    => $dataModel[$m]['model_id'],
-                            'NAMA'  => strtoupper($dataModel[$m]['model_name']),
-                            'WARNA'  => strtoupper($model[0]),
-                            'SIZE'  => strtoupper($model[1]),
-                            'SKU'   => $dataModel[$m]['model_sku'],
-                            "HARGA" => $dataModel[$m]['price_info'][0]['original_price']
-                        ));
+                        if($dataUrutan[$u] == $dataModel[$m]['saleProp']['color_family'])
+                        {
+                            array_push($data['dataVarian'], array(
+                                'ID'    => $dataModel[$m]['SkuId'],
+                                'NAMA'  => strtoupper($dataModel[$m]['saleProp']['color_family']." | SIZE ".$dataModel[$m]['saleProp']['size']),
+                                'WARNA' => strtoupper($dataModel[$m]['saleProp']['color_family']),
+                                'SIZE'  => strtoupper($dataModel[$m]['saleProp']['size']),
+                                'SKU'   => $dataModel[$m]['SellerSku'],
+                                "HARGA" => $dataModel[$m]['price']
+                            ));
+                            $imageurl = $dataModel[$m]['Images'][0];
+                        }
                     }
+                    // echo  explode(".",explode("/",$imageurl)[count(explode("/",$imageurl))-1])[0];
+                    array_push($data['dataGambarVarian'], array(
+                        'WARNA'     => strtoupper($dataUrutan[$u]),
+                        'IMAGEID'   => explode(".",explode("/",$imageurl)[count(explode("/",$imageurl))-1])[0],
+                        "IMAGEURL"  => $imageurl,
+                    ));
                 }
             }
-            
-            for($g = 0 ; $g < count($dataGambarModel); $g++)
-            {
-                array_push($data['dataGambarVarian'], array(
-                    'WARNA'     => strtoupper($dataGambarModel[$g]['variation_option_name']),
-                    'IMAGEID'   => $dataGambarModel[$g]['image_id'],
-                    "IMAGEURL"  => $dataGambarModel[$g]['image_url'],
-                ));
-            }
-        
-            echo(json_encode($data));
         }
+        
+        echo(json_encode($data));
 	}
 	
 	function setBarang(){
@@ -1569,180 +1429,265 @@ class Lazada extends MY_Controller {
 		$hargaInduk         = $this->input->post("HARGA");
 		$skuInduk           = $this->input->post("SKU");
 		
-// 		//FIND PICKUP LOCATION
-// 		$curl = curl_init();
-//         $parameter = "";
-//         $idlokasiset = "";
-//         curl_setopt_array($curl, array(
-//           CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-//           CURLOPT_RETURNTRANSFER => true,
-//           CURLOPT_ENCODING => '',
-//           CURLOPT_MAXREDIRS => 10,
-//           CURLOPT_TIMEOUT => 30,
-//           CURLOPT_FOLLOWLOCATION => true,
-//           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//           CURLOPT_CUSTOMREQUEST => 'POST',
-//           CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-//           CURLOPT_HTTPHEADER => array(
-//             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//           ),
-//         ));
+		if($dataUkuran[0] == 0)
+		{
+		    $dataUkuran = [];
+		}
+
+        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
+        $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
         
-//         $response = curl_exec($curl);
-//         curl_close($curl);
-//         $ret =  json_decode($response,true);
-//         $lokasi = 0;
-//         $countSuccess = 0 ;
-//         if($ret['error'] != "")
-//         {
-//             echo $ret['error']." LOKASI : ".$ret['message'];
-//         }
-//         else
-//         {
-//             $dataAddress = $ret['response']['address_list'];
-//             for($x = 0 ; $x < count($dataAddress);$x++)
-//             {
-//                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-//                 $pickup = false;
-//                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-//                 {
-//                     if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-//                     {
-//                         $pickup = true;
-//                     }
-//                     // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-//                     // {
-//                     //     $default = true;
-//                     // }
-//                 }
-                
-//                 if($pickup)
-//                 {
-//                     $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
-//                 }
-//             }
-//         }
-		
 		if(count($dataVarian) > 0)
 		{
 		    $indexVarian = 0;
 		    $detailParameter = [];
 		    foreach($dataVarian as $itemVarian)
 		    {
-		       array_push($detailParameter,
-		       [
-    		        'SellerSku' => $itemVarian->SKULAZADA,
-    		        'quantity' => 0,
-    		        'price' => (int)$itemVarian->HARGAJUAL,
-    		        'special_price' => (int)$itemVarian->HARGAJUAL,
-    		        'special_from_date' => "2025-06-20 17:18:31",
-    		        'special_to_date' => "2026-06-20 17:18:31",
-    		        'package_height' => (float)$this->input->post("TINGGI"),
-    		        'package_length' => (float)$this->input->post("PANJANG"),
-    		        'package_width' => (float)$this->input->post("LEBAR"),
-    		        'package_weight' => ((float)$this->input->post("BERAT")/1000),
-    		      //  'package_content' => "2026-06-20 17:18:31",
-    		        'Images' => [
-                      'Image' => $dataGambarVarian[$indexVarian]
-                    ]
-    		    ]);
-    		    $indexVarian++;
+		       if($itemVarian->MODE != 'HAPUS')
+    		   {
+    		        $indexWarna = 0;
+        		    for($w = 0 ; $w < count($dataWarna) ; $w++){
+        		        if($itemVarian->WARNA == $dataWarna[$w])
+        		        {
+        		            $indexWarna = $w;
+        		        }
+        		    }
+        		    
+        		    $dataSaleProp = [];
+    		        if(count($dataWarna) > 0)
+                    {
+                        array_push($dataSaleProp,array(
+                            'color_family' => $itemVarian->WARNA
+                        ));
+                    } 
+                    
+                    if(count($dataUkuran) > 0)
+                    {
+                        array_push($dataSaleProp,array(
+                            'size' => $itemVarian->SIZE,
+                        ));
+                    } 
+        		   
+        		    $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGLAZADA = ".$itemVarian->IDBARANG. " or IDBARANG = ".$itemVarian->IDBARANG ;
+                
+                    $itemHeader = $CI->db->query($sql)->row();
+                    $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+                    $saldoQty = $result->QTY??0;
+                                   
+    		       array_push($detailParameter,
+    		       ['Sku' => [
+    		            'Status' => 'active',
+        		        'SellerSku' => $itemVarian->SKULAZADA,
+        		        'quantity' => (int)$saldoQty,
+        		        'price' => (int)$itemVarian->HARGAJUAL,
+        		        'saleProp' => $dataSaleProp,
+        		      //  'special_price' => (int)$itemVarian->HARGAJUAL,
+        		      //  'special_from_date' => "2025-06-20 17:18:31",
+        		      //  'special_to_date' => "2026-06-20 17:18:31",
+        		        'package_height' => (float)$this->input->post("TINGGI"),
+        		        'package_length' => (float)$this->input->post("PANJANG"),
+        		        'package_width' => (float)$this->input->post("LEBAR"),
+        		        'package_weight' => ((float)$this->input->post("BERAT")/1000),
+        		        'Images' => [
+                          'Image' => $dataGambarVarian[$indexWarna]
+                        ]
+        		    ]]);
+    		   }
 		    }
 		}
 		else
 		{
-		    $detailParameter = [[
+		    $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE KATEGORI like '".str_replace("%2F","%",str_replace("%7C","%",str_replace("%20","%",$this->input->post("NAMA"))))."'";
+            
+            $itemHeader = $CI->db->query($sql)->row();
+            $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+            $saldoQty = $result->QTY??0;
+                    
+		    $detailParameter = ['Sku' => [[
+		        'Status' => 'active',
 		        'SellerSku' => $skuInduk,
-		        'quantity' => 0,
+		        'quantity' => (int)$saldoQty,
 		        'price' => (int)$hargaInduk,
-		        'special_price' => (int)$hargaInduk,
-		        'special_from_date' => "2025-06-20 17:18:31",
-		        'special_to_date' => "2026-06-20 17:18:31",
+		      //  'special_price' => (int)$hargaInduk,
+		      //  'special_from_date' => "2025-06-20 17:18:31",
+		      //  'special_to_date' => "2026-06-20 17:18:31",
 		        'package_height' => (float)$this->input->post("TINGGI"),
 		        'package_length' => (float)$this->input->post("PANJANG"),
 		        'package_width' => (float)$this->input->post("LEBAR"),
 		        'package_weight' => ((float)$this->input->post("BERAT")/1000),
-		      //  'package_content' => "2026-06-20 17:18:31",
-		        'Images' => [
-                  'Image' => $dataGambarProduk
-                ]
-		    ]];
+		    ]]];
 		}
 		
-		$parameter = [
-           'Request' => [
-               'Product' => [
-                   'PrimaryCategory' => (int)$kategoriBarang,
-                   'Images' => [
-                        'Image' => $dataGambarProduk
-                    ],
-                    'Attributes' => [
-                        'name' => $this->input->post("NAMA"),
-                        'description' => $this->input->post("DESKRIPSI")
-                    ],
-                    'Skus' => [
-                        'Sku' => $detailParameter
-                    ]
-               ]
-           ]
-        ];
 		
-// 		$parameter = [];
-// 		$parameter['original_price']    = count($dataVarian) > 0 ?(int)$dataVarian[0]->HARGAJUAL:(int)$hargaInduk;
-// 		$parameter['weight']            = (float)$this->input->post("BERAT");
-// 		$parameter['item_status']       = $this->input->post("DEACTIVATED");
-// 		$parameter['dimension'] = array(
-// 		    'package_height' => (float)$this->input->post("TINGGI"),
-// 		    'package_length' => (float)$this->input->post("PANJANG"),
-// 		    'package_width'  => (float)$this->input->post("LEBAR")
-// 		);
-		
-// 		$parameter['logistic_info'] = [];
-// 		foreach($dataLogistik as $itemLogistik)
-// 		{
-// 		    $logistikArray = (array)$itemLogistik; // convert object to array
-//             $logistikArray['enabled'] = filter_var($itemLogistik->enabled, FILTER_VALIDATE_BOOLEAN);
-//             $logistikArray['logistic_id'] = (int)$itemLogistik->logistic_id;
-// 		    array_push($parameter['logistic_info'],$logistikArray);
-// 		}
-		
-// 		$parameter['category_id'] = (int)$kategoriBarang;
-		
-// 		$parameter['image'] = array(
-// 		    'image_id_list' => $dataGambarProduk
-// 		);
-// 		$parameter['item_sku'] =  count($dataVarian) > 0 ?$dataVarian[0]->SKULAZADA:$skuInduk;
-// 		$parameter['condition'] = "NEW";
-		
-// 		$parameter['brand'] = array(
-// 		    'brand_id' => 0, //3873176
-// 		    'original_brand_name' => "", //Little Twisty
-// 		);
-		
-// 		$parameter['seller_stock'] = [];
-// 		if($sizeChartTipe == "COMBOBOX")
-// 		{
-// 		    $parameter['size_chart_info'] = array(
-//     		    "size_chart"  => '',
-//     		    "size_chart_id" => (int)$sizeChartID
-//     		);
-// 		}
-// 		else if($sizeChartTipe == "GAMBAR")
-// 		{
-// 		    $parameter['size_chart_info'] = array(
-//     		    "size_chart"  => $sizeChartID,
-//     		    "size_chart_id" => 0
-//     		);
-// 		}
-		
-// 		$parameter['attribute_list'] = $dataAttribut;
-// 		print_r(json_encode($parameter,JSON_PRETTY_PRINT));
+	    $arrayImageProduk = [];
+	    foreach($dataGambarProduk as $itemGambarProduk)
+	    {
+	        array_push($arrayImageProduk,array(
+	            'Image' => $itemGambarProduk
+	        ));
+	    }
+
+		$parameter = [[
+		    'xml' => 1,
+		    'parameterKey' => 'payload',
+		    'parameter' => [
+                   'Request' => [
+                       'Product' => [
+                           'PrimaryCategory' => (int)$kategoriBarang,
+                           'Images' => $arrayImageProduk,
+                            'Attributes' => [
+                                'name' => $this->input->post("NAMA"),
+                                'description' => trim($this->input->post("DESKRIPSI")),
+                                'brand' => "No Brand"
+                            ],
+                            'Skus' => $detailParameter
+                       ]
+                   ]
+            ]
+        ]];
+        
+        if(count($dataVarian) > 0)
+        {
+            $arrWarnaOption = [];
+            for($iv = 0 ; $iv < count($dataWarna); $iv++)
+            {
+                array_push($arrWarnaOption,[
+                    'option' =>   $dataWarna[$iv]  
+                ]);
+            }
+            
+            $arrSizeOption = [];
+            for($iv = 0 ; $iv < count($dataUkuran); $iv++)
+            {
+                array_push($arrSizeOption,[
+                    'option' =>   $dataUkuran[$iv]  
+                ]);
+            }
+            
+            if(count($dataWarna) > 0)
+            {
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation1']['name']= 'color_family';
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation1']['label']= 'WARNA';
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation1']['hasImage']= 'true';
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation1']['customize']= 'true';
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation1']['options']= $arrWarnaOption;
+            }
+            
+            if(count($dataUkuran) > 0)
+            {
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation2']['name']= 'size';
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation2']['label']= 'SIZE';
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation2']['hasImage']= 'false';//false
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation2']['customize']= 'false';
+                $parameter[0]['parameter']['Request']['Product']['variation']['variation2']['options']= $arrSizeOption;
+            }
+        }
 		
 		$endPoint = "/product/create";
+		$skuRemove = [];
 		if($idBarang != 0)
 		{
-		    $parameter['item_id'] = (int)$idBarang;
-		    $endPoint = "product/update_item";
+		    $parameter[0]['parameter']['Request']['Product']['ItemId'] = (int)$idBarang;
+		    
+		    if(count($dataVarian) > 0)
+		    {
+		       for($s = 0 ; $s < count($dataVarian);$s++)
+    		   {
+    		       $parameter[0]['parameter']['Request']['Product']['AssociatedSku'] =  $parameter[0]['parameter']['Request']['Product']['Skus'][0]['Sku']['SkuId'];
+    		       if($dataVarian[$s]->MODE != 'HAPUS')
+    		       {
+        		       //BERARTI ADA VARIAN BARU
+        		       if($dataVarian[$s]->IDBARANGLAZADA != "")
+        		       {
+        		            $parameter[0]['parameter']['Request']['Product']['Skus'][$s]['Sku']['SkuId'] = $dataVarian[$s]->IDBARANGLAZADA;
+        		       }
+    		       }
+    		       else if($dataVarian[$s]->MODE == 'HAPUS')
+    		       {
+    		           array_push($skuRemove,[
+    		              'Sku' => [
+    		                    'SkuId' =>  $dataVarian[$s]->IDBARANG
+    		                ] 
+    		           ]);
+    		       }
+    		   }
+    		   
+    		   if(count($skuRemove) > 0)
+    		   {
+    		        $varationSpec = [];
+    		        if(count($dataWarna) > 0)
+                    {
+                        array_push($varationSpec,array(
+                            'variation1' => array(
+                                'name' => 'color_family'
+                            )
+                        ));
+                    } 
+                    
+                    if(count($dataUkuran) > 0)
+                    {
+                        array_push($varationSpec,array(
+                            'variation2' => array(
+                                'name' => 'size'
+                            )
+                        ));
+                    } 
+        		   //JIKA ADA VARIAN DIHAPUS 
+        		   
+        		   $parameterRemove = [[
+            		    'xml' => 1,
+            		    'parameterKey' => 'payload',
+            		    'parameter' => [
+                               'Request' => [
+                                   'Product' => [
+                                        'ItemId' => (int)$idBarang,
+                                        'Skus' => $skuRemove
+                                   ]
+                               ]
+                        ],
+                        'variation' => $varationSpec
+                    ]];
+                    $curl = curl_init();
+                    
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => '',
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 30,
+                      CURLOPT_FOLLOWLOCATION => true,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_CUSTOMREQUEST => 'POST',
+                      CURLOPT_POSTFIELDS =>  array(
+                      'endpoint' => '/product/sku/remove',
+                      'parameter' => json_encode($parameterRemove),
+                    //   'debug' => 1
+                      ),
+                      CURLOPT_HTTPHEADER => array(
+                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                      ),
+                    ));
+                      
+                    $response = curl_exec($curl);
+                    curl_close($curl);
+                    $ret =  json_decode($response,true);
+                    //ANEH ERROR TERUS, TAPI KEHAPUS
+                    // if($ret['code'] != 0)
+                    // { 
+                    //     $ret['success'] = false;
+                    //     $ret['msg'] = $ret['message'];
+                    //     die(json_encode($ret));
+                    // }
+    		   }
+            
+		    }
+		    else
+		    {
+    		    $sql = "SELECT IDBARANGLAZADA FROM MBARANG WHERE IDINDUKBARANGLAZADA = $idBarang";
+    		    $parameter[0]['parameter']['Request']['Product']['Skus']['Sku'][0]['SkuId'] = explode("_",$CI->db->queryRaw($sql)->row()->IDBARANGLAZADA)[1];
+    		        
+		    }
+		    $endPoint = "/product/update";
 		}
 		$itemid = 0;
 		//TAMBAH BARANG
@@ -1759,8 +1704,8 @@ class Lazada extends MY_Controller {
           CURLOPT_CUSTOMREQUEST => 'POST',
           CURLOPT_POSTFIELDS =>  array(
           'endpoint' => $endPoint,
-          'parameter' => json_encode($parameter,JSON_PRETTY_PRINT),
-          'xml' => true
+          'parameter' => json_encode($parameter),
+        //   'debug' => 1
           ),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
@@ -1770,455 +1715,143 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-     
-        if($ret['message'] != "")
+    
+        if($ret['code'] != 0)
         { 
-            $data['success'] = false;
-            $data['message'] =  $ret['code']." CREATE : ".$ret['message'];
-            die(json_encode($data));
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
         }
         else
         {
-            
-            // $itemid = $ret['response']['item_id']??0;
-            // if(count($dataVarian) > 0)
-            // {
-            //   	//TAMBAH VARIAN
-            //     $parameter = [];
-            //     $parameter['item_id'] = $itemid;
-                
-            //     $optionWarna = [];
-            //     for($x = 0; $x < count($dataWarna) ; $x++)
-            //     {
-            //         array_push($optionWarna,array(
-            //             'option' => $dataWarna[$x] ,
-            //             'image' => array(
-            //                 'image_id' =>  $dataGambarVarian[$x],   
-            //             )
-            //         ));
-            //     }
-                
-            //     $optionUkuran = [];
-            //     for($x = 0; $x < count($dataUkuran) ; $x++)
-            //     {
-            //         array_push($optionUkuran,array(
-            //             'option' => $dataUkuran[$x] ,
-            //         ));
-            //     }
-                
-            //     $parameter['tier_variation'] = array(
-            //       array(
-            //         'name' => 'Warna',
-            //         'option_list' => $optionWarna
-            //       ),
-            //       array(
-            //         'name' => 'Ukuran',
-            //         'option_list' => $optionUkuran
-            //       )
-            //     );
-                
-            //     $dataModel = [];
-            //     $dataModelBaru = [];
-            //     $dataModelUbahHarga = [];
-            //     $dataModelUbahSKU = [];
-            //     $dataModelHapus = [];
-                
-            //     for($x = 0 ; $x < count($dataVarian); $x++)
-            //     {
-            //         $barangAda = false;
-            //         for($w = 0 ; $w < count($optionWarna); $w++)
-            //         {
-            //             for($u = 0 ; $u < count($optionUkuran); $u++)
-            //             {
-                           
-            //               if(strtoupper($dataVarian[$x]->WARNA) == strtoupper($optionWarna[$w]['option']) && $dataVarian[$x]->SIZE == $optionUkuran[$u]['option'])
-            //               {
-            //                   $barangAda = true;
-            //                   if($dataVarian[$x]->MODE != "HAPUS")
-            //                   {
-            //                       $sql = "SELECT IDPERUSAHAAN, IDBARANG FROM MBARANG WHERE IDBARANGLAZADA = ".$dataVarian[$x]->IDBARANG. " or IDBARANG = ".$dataVarian[$x]->IDBARANG ;
+            if($idBarang == 0)
+		    {
+                $itemid = $ret['data']['item_id'];
+                $dataList = $ret['data']['sku_list'];
+                if(count($dataVarian) > 0)
+                {
+                    foreach($dataList as $itemVarian)
+    		        {
+    		            $sql = "UPDATE MBARANG SET 
+                               IDBARANGLAZADA = '".$itemVarian['sku_id']."', 
+                               IDINDUKBARANGLAZADA = '".$itemid."' 
+                               WHERE SKULAZADA = '".strtoupper($itemVarian['seller_sku'])."'";
+                        $CI->db->queryRaw($sql);
+    		        }
+                }
+                else
+                {
+                    foreach($dataList as $itemVarian)
+    		        {
+                        $sql = "UPDATE MBARANG SET 
+                               IDBARANGLAZADA = '".$itemid."_".$itemVarian['sku_id']."', 
+                               IDINDUKBARANGLAZADA = '".$itemid."' 
+                               WHERE SKULAZADA = '".strtoupper($itemVarian['seller_sku'])."'";
+                        $CI->db->queryRaw($sql);
+    		        }
+                }
+		    }
+		    else
+		    {
+		        $itemid = $idBarang;
         
-            //                       $itemHeader = $CI->db->query($sql)->row();
-            //                       $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
-            //                       $saldoQty = $result->QTY??0;
-            //                   }
-            //                   else
-            //                   {
-            //                       $saldoQty = 0;
-            //                   }
-                                            
-            //                   array_push($dataModel,array(
-            //                       'model_id'          => $dataVarian[$x]->IDBARANG,
-            //                       'tier_index'        => array((int)$w,(int)$u),
-            //                       'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
-            //                       'model_sku'         => $dataVarian[$x]->SKULAZADA,
-            //                       // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
-            //                       'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-            //                       'weight'            => (float)$this->input->post("BERAT"),
-            //                       'dimension'         => array(
-            //                           'package_height' => (int)$this->input->post("TINGGI"),
-            //                           'package_width'  => (int)$this->input->post("LEBAR"),
-            //                           'package_length' => (int)$this->input->post("PANJANG"),
-            //                       ),
-            //                   ));
-                               
-            //                   if(strpos($dataVarian[$x]->MODE, 'BARU') !== false)
-            //                   {
-            //                       array_push($dataModelBaru,$dataModel[count($dataModel)-1]);
-            //                   }
-            //                   if(strpos($dataVarian[$x]->MODE, 'UBAH HARGA') !== false)
-            //                   {
-            //                       array_push($dataModelUbahHarga,$dataModel[count($dataModel)-1]);
-            //                   }
-            //                   if(strpos($dataVarian[$x]->MODE, 'UBAH SKU') !== false)
-            //                   { 
-            //                       array_push($dataModelUbahSKU,$dataModel[count($dataModel)-1]);
-            //                   }
-            //                   if(strpos($dataVarian[$x]->MODE, 'HAPUS') !== false)
-            //                   {
-            //                       array_push($dataModelHapus,$dataModel[count($dataModel)-1]);
-            //                   }
-            //               }
-            //             }
-            //         }
-                
+                if(count($dataVarian) > 0)
+                {
                     
-            //         if(!$barangAda && $dataVarian[$x]->MODE == "HAPUS")
-            //         {
-            //             $dataHapus = array(
-            //                 'model_id'          => $dataVarian[$x]->IDBARANG,
-            //                 'tier_index'        => array((int)$w,(int)$u),
-            //                 'original_price'    => (float)$dataVarian[$x]->HARGAJUAL,
-            //                 'model_sku'         => $dataVarian[$x]->SKULAZADA,
-            //                 // 'model_status'      => $dataVarian[$x]->STATUS == 1 ? 'NORMAL' : 'UNAVAILABLE',
-            //                 'seller_stock'      => array(array('stock' => (int)$saldoQty )),
-            //                 'weight'            => (float)$this->input->post("BERAT"),
-            //                 'dimension'         => array(
-            //                     'package_height' => (int)$this->input->post("TINGGI"),
-            //                     'package_width'  => (int)$this->input->post("LEBAR"),
-            //                     'package_length' => (int)$this->input->post("PANJANG"),
-            //                 ),
-            //             );
-                        
-            //             array_push($dataModelHapus,$dataHapus);
-            //         }
-            //     } 
-                
-            //     //CEK JIKA ADA VARIAN DIHAPUS, DELETE MODEL
-            //     if(count($dataModelHapus) > 0)
-            //     {
-            //       for($h = 0 ; $h < count($dataModelHapus); $h++)
-            //       {
-            //             $parameterHapus = [];
-            //             $parameterHapus['item_id'] = $itemid;
-            //             $parameterHapus['model_id'] = $dataModelHapus[$h]['model_id'];
-                 
-            //              $curl = curl_init();
-                         
-            //              curl_setopt_array($curl, array(
-            //               CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-            //               CURLOPT_RETURNTRANSFER => true,
-            //               CURLOPT_ENCODING => '',
-            //               CURLOPT_MAXREDIRS => 10,
-            //               CURLOPT_TIMEOUT => 30,
-            //               CURLOPT_FOLLOWLOCATION => true,
-            //               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //               CURLOPT_CUSTOMREQUEST => 'POST',
-            //               CURLOPT_POSTFIELDS =>  array(
-            //               'endpoint' => 'product/delete_model',
-            //               'parameter' => json_encode($parameterHapus)),
-            //               CURLOPT_HTTPHEADER => array(
-            //                  'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //               ),
-            //              ));
-                           
-            //              $response = curl_exec($curl);
-            //              curl_close($curl);
-            //              $ret =  json_decode($response,true);
-                      
-            //              if($ret['error'] != "")
-            //              {
-            //                  $data['success'] = false;
-            //                  $data['msg'] =  $ret['error']." MODEL HAPUS : ".$ret['message'];
-            //                  die(json_encode($data));
-            //              }
-            //       }
-            //     }
-                
-                
-            //     $parameter['model'] = $dataModel;
-            //     $curl = curl_init();
-                
-            //     $endpointModel = "product/init_tier_variation";
-            //     if($idBarang != 0)
-            // 	{
-            // 	    $endpointModel = "product/update_tier_variation";
-            // 	}
-            //     curl_setopt_array($curl, array(
-            //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-            //       CURLOPT_RETURNTRANSFER => true,
-            //       CURLOPT_ENCODING => '',
-            //       CURLOPT_MAXREDIRS => 10,
-            //       CURLOPT_TIMEOUT => 30,
-            //       CURLOPT_FOLLOWLOCATION => true,
-            //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //       CURLOPT_CUSTOMREQUEST => 'POST',
-            //       CURLOPT_POSTFIELDS =>  array(
-            //       'endpoint' => $endpointModel,
-            //       'parameter' => json_encode($parameter)),
-            //       CURLOPT_HTTPHEADER => array(
-            //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //       ),
-            //     ));
-                  
-            //     $response = curl_exec($curl);
-            //     curl_close($curl);
-            //     $ret =  json_decode($response,true);
-                
-            //     if($ret['error'] != "")
-            //     {
-            //         $data['success'] = false;
-            //         $data['msg'] =  $ret['error']." MODEL : ".$ret['message'];
-            //         die(json_encode($data));
-            //     }
-            //     else
-            //     {
-                  
-            //       sleep(3);
+        		    //GET PRODUCT FOR UPDATE ID
+        		
+                    $parameter = "&item_id=".(int)$itemid;
+                    $curl = curl_init();
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => '',
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 30,
+                      CURLOPT_FOLLOWLOCATION => true,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_CUSTOMREQUEST => 'POST',
+                      CURLOPT_POSTFIELDS => array('endpoint' => '/product/item/get','parameter' => $parameter),
+                      CURLOPT_HTTPHEADER => array(
+                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                      ),
+                    ));
                     
-            //       //CEK JIKA ADA VARIAN BARU, ADD MODEL
-            //       if(count($dataModelBaru) > 0)
-            //       {  
-            //           $parameter = [];
-            //           $parameter['item_id'] = $itemid;
-            //           $parameter['model_list'] = $dataModelBaru;
+                    $response = curl_exec($curl);
+                    curl_close($curl);
+                    $ret =  json_decode($response,true);
                 
-            //             $curl = curl_init();
-            //             curl_setopt_array($curl, array(
-            //               CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-            //               CURLOPT_RETURNTRANSFER => true,
-            //               CURLOPT_ENCODING => '',
-            //               CURLOPT_MAXREDIRS => 10,
-            //               CURLOPT_TIMEOUT => 30,
-            //               CURLOPT_FOLLOWLOCATION => true,
-            //               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //               CURLOPT_CUSTOMREQUEST => 'POST',
-            //               CURLOPT_POSTFIELDS =>  array(
-            //               'endpoint' => 'product/add_model',
-            //               'parameter' => json_encode($parameter)),
-            //               CURLOPT_HTTPHEADER => array(
-            //                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //               ),
-            //             ));
-                          
-            //             $response = curl_exec($curl);
-            //             curl_close($curl);
-            //             $ret =  json_decode($response,true);
-                     
-            //             if($ret['error'] != "")
-            //             {
-            //                 $data['success'] = false;
-            //                 $data['msg'] =  $ret['error']." MODEL BARU : ".$ret['message'];
-            //                 die(json_encode($data));
-                          
-            //             }
-            //       }
-                  
-            //       //CEK JIKA ADA VARIAN UBAH HARGA, UPDATE MODEL
-            //       if(count($dataModelUbahHarga) > 0)
-            //       {
-            //           $parameter = [];
-            //           $parameter['item_id'] = $itemid;
-            //           $parameter['price_list'] = [];
-            //           for($h = 0 ; $h < count($dataModelUbahHarga); $h++)
-            //           {
-            //               array_push($parameter['price_list'],array(
-            //                   'model_id'       =>  (int)$dataModelUbahHarga[$h]['model_id'],
-            //                   'original_price' =>  $dataModelUbahHarga[$h]['original_price'],
-            //                 ));
-            //           }
-                      
-            //           $curl = curl_init();
-                            
-            //           curl_setopt_array($curl, array(
-            //             CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-            //             CURLOPT_RETURNTRANSFER => true,
-            //             CURLOPT_ENCODING => '',
-            //             CURLOPT_MAXREDIRS => 10,
-            //             CURLOPT_TIMEOUT => 30,
-            //             CURLOPT_FOLLOWLOCATION => true,
-            //             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //             CURLOPT_CUSTOMREQUEST => 'POST',
-            //             CURLOPT_POSTFIELDS =>  array(
-            //             'endpoint' => 'product/update_price',
-            //             'parameter' => json_encode($parameter)),
-            //             CURLOPT_HTTPHEADER => array(
-            //               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //             ),
-            //           ));
-                        
-            //           $response = curl_exec($curl);
-            //           curl_close($curl);
-            //           $ret =  json_decode($response,true);
-                      
-            //           if($ret['error'] != "")
-            //           {
-            //               $data['success'] = false;
-            //               $data['msg'] =  $ret['error']." MODEL UBAH HARGA : ".$ret['message'];
-            //               die(json_encode($data));
-            //           }
-            //       }
-                  
-            //       sleep(3);
-                  
-            //       //CEK JIKA ADA VARIAN UBAH SKU, UPDATE MODEL
-            //       if(count($dataModelUbahSKU) > 0)
-            //       {
-            //           $parameter = [];
-            //           $parameter['item_id'] = $itemid;
-            //           $parameter['model'] = [];
-            //           for($h = 0 ; $h < count($dataModelUbahSKU); $h++)
-            //           {
-            //               array_push($parameter['model'],$dataModelUbahSKU[$h]);
-            //           }
-                      
-            //           $curl = curl_init();
-            //           curl_setopt_array($curl, array(
-            //             CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-            //             CURLOPT_RETURNTRANSFER => true,
-            //             CURLOPT_ENCODING => '',
-            //             CURLOPT_MAXREDIRS => 10,
-            //             CURLOPT_TIMEOUT => 30,
-            //             CURLOPT_FOLLOWLOCATION => true,
-            //             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //             CURLOPT_CUSTOMREQUEST => 'POST',
-            //             CURLOPT_POSTFIELDS =>  array(
-            //             'endpoint' => 'product/update_model',
-            //             'parameter' => json_encode($parameter)),
-            //             CURLOPT_HTTPHEADER => array(
-            //               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //             ),
-            //           ));
-                        
-            //           $response = curl_exec($curl);
-            //           curl_close($curl);
-            //           $ret =  json_decode($response,true);
-                      
-            //           if($ret['error'] != "")
-            //           {
-            //               $data['success'] = false;
-            //               $data['msg'] =  $ret['error']." MODEL UBAH SKU : ".$ret['message'];
-            //               die(json_encode($data));
-            //           }
-            //       }
-                  
-            //       sleep(3);
-                  
-            //       $parameter = '';
-            //       //GET MODEL
-            //       $parameter = "&item_id=".(int)$itemid;
-            //       $curl = curl_init();
-                  
-            //       curl_setopt_array($curl, array(
-            //         CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-            //         CURLOPT_RETURNTRANSFER => true,
-            //         CURLOPT_ENCODING => '',
-            //         CURLOPT_MAXREDIRS => 10,
-            //         CURLOPT_TIMEOUT => 30,
-            //         CURLOPT_FOLLOWLOCATION => true,
-            //         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //         CURLOPT_CUSTOMREQUEST => 'POST',
-            //         CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
-            //         CURLOPT_HTTPHEADER => array(
-            //           'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //         ),
-            //       ));
-                  
-            //       $response = curl_exec($curl);
-            //       curl_close($curl);
-            //       $ret =  json_decode($response,true);
-            //       if($ret['error'] != "")
-            //       {
-            //           echo $ret['error']." : ".$ret['message'];
-            //           $statusok = false;
-            //       }
-            //       else
-            //       {
-            //           $dataModelResponse = $ret['response']['model'];
-            //           for($m = 0 ; $m < count($dataModelResponse);$m++)
-            //           {
-            //               $sku = "";
-            //               if($dataModelResponse[$m]['model_sku'] == "")
-            //               {
-            //                   $sku = $dataModelResponse[$m]['item_sku'];
-            //               }
-            //               else
-            //               {
-            //                   $sku = $dataModelResponse[$m]['model_sku'];
-            //               }
-                          
-            //               $sql = "UPDATE MBARANG SET 
-            //                         IDBARANGLAZADA = ".$dataModelResponse[$m]['model_id'].", 
-            //                         IDINDUKBARANGLAZADA = ".$itemid." 
-            //                         WHERE SKULAZADA = '".strtoupper($sku)."'";
-            //               $CI->db->queryRaw($sql);
-            //           }
-                      
-            //           $data['success'] = true;
-            //           $data['msg'] = "Barang berhasil tersimpan di LAZADA";
-            //           echo(json_encode($data));
-                      
-            //       }
-            //     }
-            // }
-            // else
-            // {
-            //     //UPDATEPRICE
-            //     $parameter = [];
-            //     $parameter['item_id'] = $itemid;
-            //     $parameter['price_list'] = [];
-            //     array_push($parameter['price_list'],array(
-            //       'model_id'       =>  0,
-            //       'original_price' =>  (float)$hargaInduk,
-            //     ));
-            //     $curl = curl_init();
-                      
-            //     curl_setopt_array($curl, array(
-            //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-            //       CURLOPT_RETURNTRANSFER => true,
-            //       CURLOPT_ENCODING => '',
-            //       CURLOPT_MAXREDIRS => 10,
-            //       CURLOPT_TIMEOUT => 30,
-            //       CURLOPT_FOLLOWLOCATION => true,
-            //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //       CURLOPT_CUSTOMREQUEST => 'POST',
-            //       CURLOPT_POSTFIELDS =>  array(
-            //       'endpoint' => 'product/update_price',
-            //       'parameter' => json_encode($parameter)),
-            //       CURLOPT_HTTPHEADER => array(
-            //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //       ),
-            //     ));
-                  
-            //     $response = curl_exec($curl);
-            //     curl_close($curl);
-            //     $ret =  json_decode($response,true);
-                
-            //     if($ret['error'] != "")
-            //     {
-            //         $data['success'] = false;
-            //         $data['msg'] =  $ret['error']." PRODUK UBAH HARGA : ".$ret['message'];
-            //         die(json_encode($data));
-            //     }
-                      
-            //     $sql = "UPDATE MBARANG SET 
-            //                             IDBARANGLAZADA = ".$itemid.", 
-            //                             IDINDUKBARANGLAZADA = ".$itemid." 
-            //                             WHERE SKULAZADA = '".strtoupper($skuInduk)."'";
-            //                   $CI->db->queryRaw($sql);
-           
-            // }
+                    if($ret['code'] != 0)
+                    {
+                        $ret['success'] = false;
+                        $ret['msg'] = $ret['message'];
+                        die(json_encode($ret));
+                    }
+                    else
+                    {
+                        $dataList = $ret['data']['skus'];
+                    
+                        foreach($dataList as $itemVarian)
+                	    {
+                	        $sql = "UPDATE MBARANG SET 
+                                   IDBARANGLAZADA = '".$itemVarian['SkuId']."', 
+                                   IDINDUKBARANGLAZADA = '".$itemid."' 
+                                   WHERE SKULAZADA = '".strtoupper($itemVarian['SellerSku'])."'";
+                            $CI->db->queryRaw($sql);
+                	    }
+                    }
+                }
+		    }
             
+            sleep(5);
+            
+            if($this->input->post("AKTIF") == 0)
+            {
+                $endPoint = "/product/deactivate";
+                
+                $parameterDeactivated = [[
+        		    'xml' => 1,
+        		    'parameterKey' => 'apiRequestBody',
+        		    'parameter' => [
+                           'Request' => [
+                               'Product' => [
+                                   'ItemId' => (int)$itemid
+                               ]
+                           ]
+                    ]
+                ]];
+        		//DEACTIVATED
+                $curl = curl_init();
+                
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS =>  array(
+                  'endpoint' => $endPoint,
+                  'parameter' => json_encode($parameterDeactivated),
+                //   'debug' => 1,
+                  ),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                  
+                $response = curl_exec($curl);
+                curl_close($curl);
+                $ret =  json_decode($response,true);
+                // print_r($ret);
+                if($ret['code'] != 0)
+                { 
+                    $ret['success'] = false;
+                    die(json_encode($ret));
+                }
+            }
              
             $data['success'] = true;
             $data['msg'] = "Barang berhasil tersimpan di Lazada";
@@ -2231,9 +1864,22 @@ class Lazada extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		
-		$idBarang = $this->input->post("idindukbarangLAZADA",0);
-		$parameter['item_id'] = (int)$idBarang;
+		$idBarang = $this->input->post("idindukbaranglazada")??0;
+		$idSKU = $this->input->post("skulistlazada")??[];
+		$arrIDSKU = json_decode($idSKU,true);
+        
+        $arrIDBarangSKU = [];
+        
+        foreach($arrIDSKU as $itemIDSKU)
+        {
+            array_push($arrIDBarangSKU,'SkuId_'.$idBarang.'_'.$itemIDSKU['SkuId']);
+        }
+        
+		$parameter = [[
+		    'xml' => 0,
+		    'parameterKey' => 'sku_id_list',
+		    'parameter' => json_encode($arrIDBarangSKU)
+        ]];
 		
 	    $curl = curl_init();
         
@@ -2247,7 +1893,7 @@ class Lazada extends MY_Controller {
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
           CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'product/delete_item',
+          'endpoint' => '/product/remove',
           'parameter' => json_encode($parameter)),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
@@ -2257,20 +1903,22 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        sleep(3);
-        if($ret['error'] != "")
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
-            die(json_encode($data));
+
+        if($ret['code'] != 0 && $ret['code'] != 100)
+        { 
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
         }
         else
         {
             $sql = "UPDATE MBARANG SET IDBARANGLAZADA = '0' , IDINDUKBARANGLAZADA = '0' WHERE IDINDUKBARANGLAZADA = '".$idBarang."'";
             $CI->db->query($sql);
             
+            sleep(3);
+            
             $data['success'] = true;
-            $data['msg'] = "Barang Berhasil Dihapus dari LAZADA";
+            $data['msg'] = "Barang Berhasil Dihapus dari Lazada";
             echo(json_encode($data));
         }
 	}
@@ -2294,7 +1942,7 @@ class Lazada extends MY_Controller {
             SUM(CASE WHEN KODEPENGEMBALIANMARKETPLACE != '' THEN 1 ELSE 0 END) AS TOTALPESANANRETUR,
             USERNAME
         FROM TPENJUALANMARKETPLACE
-        WHERE STATUSMARKETPLACE != 'CANCELLED'
+        WHERE STATUSMARKETPLACE != 'CANCELLED' AND MARKETPLACE = 'LAZADA'
         GROUP BY USERNAME, NAME, TELP, ALAMAT, KOTA
         ORDER BY NO ASC";
 		$dataCustomer = $CI->db->query($sql)->result(); 
@@ -2320,89 +1968,23 @@ class Lazada extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		
-        $curl = curl_init();
+		$data['rows'] = [];
+        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI, IDLOKASILAZADA, if(IDLOKASILAZADA = 1,'PICKUP_ADDRESS ,   RETURN_ADDRESS','') as LABEL   FROM MLOKASI WHERE GROUPLOKASI like '%MARKETPLACE%'";
+        $dataAddress = $CI->db->query($sql)->result();
         
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        for($x = 0 ; $x < count($dataAddress);$x++)
         {
-            echo $ret['error']." : ".$ret['message'];
+            array_push($data['rows'],array(
+                'NO' => ($x+1),
+                'IDADDRESSAPI' => $dataAddress[$x]->IDLOKASI,
+                'ADDRESSAPI' => $dataAddress[$x]->NAMALOKASI." <br><i>".$dataAddress[$x]->LABEL."</i>",
+                'ADDRESSAPIRAW' => $dataAddress[$x]->NAMALOKASI,
+                'LABELDEFAULT' => ($dataAddress[$x]->IDLOKASILAZADA == 1 ? true : false),
+                'ADDRESS' => $dataAddress[$x]->IDLOKASI,
+                'LABELADDRESS' => $dataAddress[$x]->NAMALOKASI,
+            ));
         }
-        else
-        {
-            $dataAddress = $ret['response']['address_list'];
-            $data['rows'] = [];
-            for($x = 0 ; $x < count($dataAddress);$x++)
-            {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                
-                $label = "<br>&nbsp;&nbsp;<i class='fa fa-edit' style='margin-top:5px; cursor:pointer;' onclick='changeLabelLAZADA(".$x.")'></i>&nbsp;&nbsp;&nbsp;&nbsp;";
-                $default = 0;
-                $pickup = 0;
-                $return = 0;
-                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                {
-                    if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                    {
-                        $default = 1; 
-                    }
-                    else if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                    {
-                        $pickup = 1;
-                    }
-                    else if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
-                    {
-                        $return = 1;
-                    }
-                    
-                    if($y == 0)
-                    {
-                      $label.="<i>"; 
-                    }
-                    
-                    $label .= $dataAddress[$x]['address_type'][$y];
-                    if($y != count($dataAddress[$x]['address_type'])-1)
-                    {
-                      $label.="&nbsp;,&nbsp;&nbsp;&nbsp;"; 
-                    }
-                }
-                
-                if($label != "")
-                {
-                    $label .= "</i>";
-                }
-                
-                array_push($data['rows'],array(
-                    'NO' => ($x+1),
-                    'IDADDRESSAPI' => $dataAddress[$x]['address_id'],
-                    'ADDRESSAPI' => $dataAddress[$x]['address']." ".$label,
-                    'ADDRESSAPIRAW' => $dataAddress[$x]['address'],
-                    'LABELDEFAULT' => $default,
-                    'LABELPICKUP' => $pickup,
-                    'LABELRETURN' => $return,
-                    'ADDRESS' => $CI->db->query($sql)->row()->IDLOKASI??0,
-                    'LABELADDRESS' => $CI->db->query($sql)->row()->NAMALOKASI??''
-                ));
-            }
-            echo(json_encode($data));
-        }
+        echo(json_encode($data));
 	}
 	
 	public function setStokLokasi(){
@@ -2410,85 +1992,23 @@ class Lazada extends MY_Controller {
         $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
         $id = $this->input->post('id')??"0";
-        $idAPI = $this->input->post('idAPI')??"0";
-        
+        $value = $this->input->post('value')??"false";
+   
         //RESET SEMUA
-        $CI->db->where("IDLOKASILAZADA",$idAPI)
+        $CI->db->where("IDLOKASILAZADA",1)
                     ->set("IDLOKASILAZADA",0)
-                    ->updateRaw("MLOKASI");    
-        //UPDATE TERBARU     
-        $CI->db->where("IDLOKASI",$id)
-                    ->set("IDLOKASILAZADA",$idAPI)
                     ->updateRaw("MLOKASI");
+
+        if($value == "true")
+        {
+            //UPDATE TERBARU     
+            $CI->db->where("IDLOKASI",$id)
+                    ->set("IDLOKASILAZADA","1")
+                    ->updateRaw("MLOKASI");
+        }
                     
         $data['success'] = true;            
         echo json_encode($data); 
-	}
-	
-	public function setLabelLokasi(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$id = $this->input->post('id')??"";
-		$default = $this->input->post('default')??"false";
-		$pickup = $this->input->post('pickup')??"false";
-		$return = $this->input->post('return')??"false";
-		
-		$arrayLabel = [];
-		if($default == 'true')
-		{
-		    array_push($arrayLabel,"DEFAULT_ADDRESS");
-		}
-		if($pickup == 'true')
-		{
-		    array_push($arrayLabel,"PICKUP_ADDRESS");
-		}
-		if($return == 'true')
-		{
-		    array_push($arrayLabel,"RETURN_ADDRESS");
-		}
-		
-		$parameter = [];
-		$parameter['address_type_config'] = array(
-		    'address_id' => (int)$id,
-		    'address_type' => $arrayLabel
-		);
-		//HAPUS PESANAN
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'logistics/set_address_config',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-     
-        if($ret['error'] != "")
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-            $data['success'] = true;
-            $data['msg'] = "Label Berhasil Diubah";
-            echo(json_encode($data));
-        }
 	}
 	
 	public function cekStokLokasi(){
@@ -2498,72 +2018,37 @@ class Lazada extends MY_Controller {
 	    //CEK LOKASI SUDAH DISET
 		$curl = curl_init();
         
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
+        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
+        $idlokasiSet = $CI->db->query($sql)->row()->IDLOKASI??0;
         
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($idlokasiSet == 0)
         {
-            echo $ret['error']." : ".$ret['message'];
-        }
-        else
-        {
-            $dataAddress = $ret['response']['address_list'];
-            for($x = 0 ; $x < count($dataAddress);$x++)
-            {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ". $dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                $idlokasiSet = $CI->db->query($sql)->row()->IDLOKASI??0;
-                
-                if($idlokasiSet == 0)
-                {
-                    $data['success'] = false;
-                    $data['msg'] = "Terdapat Lokasi Marketplace dengan Master Lokasi yang belum tersambung";
-                    die(json_encode($data));
-                }
-            }
+            $data['success'] = false;
+            $data['msg'] = "Terdapat Lokasi Marketplace dengan Master Lokasi yang belum tersambung";
+            die(json_encode($data));
         }
         
         $data['success'] = true;
         echo json_encode($data);
 	}
 	
+
+	
 	function dataGridPromo(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$status = $this->input->post('status');
-		
-		$statusok = true;
-		$statusParam = "";
-		$data['rows'] = [];
-		$data["total"] = 0;
-		$pageno = 1;
-		$pageSize = 100;
-		
-		//LOGISTIC
-		$curl = curl_init();
-		
-		while(!$bigger && $statusok)
-        {
+	    $sql = "SELECT KATEGORI, IDBARANGLAZADA,IDINDUKBARANGLAZADA,NAMABARANG FROM MBARANG WHERE IDBARANGLAZADA != '' and IDBARANGLAZADA != '0' and IDBARANGLAZADA is not null group by kategori";
+	    
+	    $dataBarang = $CI->db->query($sql)->result();
+	    $arrBarang = [];
+	    foreach($dataBarang as $itemBarang)
+	    {
+    	    $parameter = '';
+            //GET MODEL
+            $parameter = "&item_id=".(int)$itemBarang->IDINDUKBARANGLAZADA;
+            $curl = curl_init();
             
-		    $parameter = "&discount_status=".$status."&page_no=".$pageno."&page_size=".$pageSize.$statusParam;
-		    
-		  //  echo $parameter;
-		    
             curl_setopt_array($curl, array(
               CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
@@ -2573,7 +2058,7 @@ class Lazada extends MY_Controller {
               CURLOPT_FOLLOWLOCATION => true,
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount_list','parameter' => $parameter),
+              CURLOPT_POSTFIELDS => array('endpoint' => '/product/item/get','parameter' => $parameter),
               CURLOPT_HTTPHEADER => array(
                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
               ),
@@ -2582,64 +2067,93 @@ class Lazada extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+    
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                $ret['success'] = false;
+                $ret['msg'] = $ret['message'];
+                die(json_encode($ret));
             }
             else
             {
-                $response = $ret['response'];
-                $statusok = $response['more'];
-                if($statusok){
-                    $pageno++;
-                }
-                
-                for($p = 0 ; $p < count($response['discount_list']);$p++)
-                {
-                    $dataPromo = $response['discount_list'][$p];
-                    array_push($data['rows'],array(
-                        'NAMAPROMOSI'   => $dataPromo['discount_name'],
-                        'TGLMULAI'      => date("Y-m-d H:i:s", $dataPromo['start_time']),
-                        'TGLAKHIR'      => date("Y-m-d H:i:s", $dataPromo['end_time']),
-                        'STATUS'        => $dataPromo['status'],
-                        'IDPROMOSI'     => $dataPromo['discount_id'],
-                    ));
-                }
+                 $dataLazada = $ret['data']['skus'];
+                 $sqlDetail = "SELECT IDBARANGLAZADA,IDINDUKBARANGLAZADA,NAMABARANG,SKULAZADA FROM MBARANG WHERE IDBARANGLAZADA != '' and IDBARANGLAZADA != '0' and IDBARANGLAZADA is not null and kategori = '".$itemBarang->KATEGORI."'";
+	    
+	             $dataDetaiBarang = $CI->db->query($sqlDetail)->result();
+	             
+	            for($x = 0 ; $x < count($dataLazada); $x++)
+	            {
+    	            foreach($dataDetaiBarang as $itemdetailbarang)
+    	            {
+    	                if($dataLazada[$x]['SkuId'] == $itemdetailbarang->IDBARANGLAZADA)
+    	                {
+        	              array_push($arrBarang,array(
+        	                  'IDBARANGLAZADA' => $itemdetailbarang->IDBARANGLAZADA,
+        	                  'IDINDUKBARANGLAZADA' => $itemdetailbarang->IDINDUKBARANGLAZADA,
+        	                  'NAMABARANG' =>  $itemdetailbarang->NAMABARANG,
+        	                  'SKULAZADA' => $itemdetailbarang->SKULAZADA,
+        	                  'HARGA' =>    $dataLazada[$x]['price'],
+        	                  'HARGAPROMO' =>  $dataLazada[$x]['special_price']??0,
+        	                  'PROMOMULAI' => $dataLazada[$x]['special_from_date']??"",
+        	                  'PROMOBERAKHIR' => $dataLazada[$x]['special_to_date']??"",
+        	              ));  
+    	                }
+    	            }
+	            }
             }
-        }
+	    }
+	    
+	     //URUTKAN BERDASARKAN NAMA BARANG
+        usort($arrBarang, function($a, $b) {
+            return strcmp($a['NAMABARANG'], $b['NAMABARANG']);
+        });
         
-        //URUTKAN BERDASARKAN NAMA BARANG
-        // usort($data['rows'], function($a, $b) {
-        //     return strcmp($a['NAMABARANG'], $b['NAMABARANG']);
-        // });
-                        
-        $data["total"] = count($data['rows']);
-        echo json_encode($data);
+	    $data['rows'] = $arrBarang;
+	    $data['total'] = count($data['rows']);
+	    
+	     echo(json_encode($data));
 	}
 	
-	function getItemPromo(){
+	function setPromo(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$dataBarang = json_decode($this->input->post('databarang'),true);
-		$tglAw = strtotime($this->input->post('tglmulai'));
-		$tglAk = strtotime($this->input->post('tglakhir'));
-         
-        $sql = "SELECT IDBARANG,IDBARANGLAZADA FROM MBARANG";
-        $dataBarangMaster = $CI->db->query($sql)->result();
-        $data['rows'] = [];
-        $item_id_list = "";
-        for($x = 0 ; $x < count($dataBarang);$x++)
-        {
-            $item_id_list .= $dataBarang[$x];
-            if(($x % 49 == 0 && $x != 0) || $x == count($dataBarang)-1)
+		$dataBarangHarga   = json_decode($this->input->post("databarang",[]),true);
+		
+		$parameter = [];
+		$detailParameter = [];
+        
+		for($x = 0 ; $x < count($dataBarangHarga); $x++)
+		{
+             array_push($detailParameter,
+                   ['Sku' => [
+                        'ItemId' => $dataBarangHarga[$x]['IDINDUKBARANGLAZADA'],
+                        'SkuId' => $dataBarangHarga[$x]['IDBARANGLAZADA'],
+            	        'SellerSku' => $dataBarangHarga[$x]['SKULAZADA'],
+            	        'Price' => (int)$dataBarangHarga[$x]['HARGA'],
+            	        'SalePrice'  => (int)$dataBarangHarga[$x]['HARGAPROMO'],
+            	        'SaleStartDate' => $dataBarangHarga[$x]['PROMOMULAI'],
+            	        'SaleEndDate' =>$dataBarangHarga[$x]['PROMOBERAKHIR'],
+            	    ]]);
+            	    
+        	if(($x % 19 == 0 && $x != 0) || $x == count($dataBarangHarga)-1)
             {
-                //GET ORDER DETAIL
-                $parameter = "&item_id_list=".$item_id_list;
+                $parameter = [[
+            	    'xml' => 1,
+            	    'parameterKey' => 'payload',
+            	    'parameter' => [
+                           'Request' => [
+                               'Product' => [
+                                    'Skus' => $detailParameter
+                               ]
+                           ]
+                    ]
+                ]];
                 
                 $curl = curl_init();
+                
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -2647,491 +2161,36 @@ class Lazada extends MY_Controller {
                   CURLOPT_FOLLOWLOCATION => true,
                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                   CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_promotion','parameter' => $parameter),
+                  CURLOPT_POSTFIELDS =>  array(
+                  'endpoint' => '/product/price_quantity/update',
+                  'parameter' => json_encode($parameter),
+                //   'debug' => 1
+                  ),
                   CURLOPT_HTTPHEADER => array(
                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
                   ),
                 ));
-                
+                  
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
-                {
-                    echo $ret['error']." ITEM PROMO : ".$ret['message'];
-                    $statusok = false;
+                
+                if($ret['code'] != 0)
+                { 
+                    $ret['success'] = false;
+                    $ret['msg'] = $ret['message'];
+                    die(json_encode($ret));
                 }
                 else
                 {
-                    
-                    $dataPromo = $ret['response']['success_list'];
-                 
-                    for($p = 0 ; $p < count($dataPromo) ; $p++)
-                    {   
-                        for($pm = 0 ; $pm < count($dataPromo[$p]['promotion']) ; $pm++)
-                        {
-                            $ID = "";
-                            foreach($dataBarangMaster as $itemBarangMaster)
-                            {
-                                if((int)$itemBarangMaster->IDBARANGLAZADA == (int)($dataPromo[$p]['promotion'][$pm]['model_id']??$dataPromo[$p]['item_id']))
-                                {
-                                    $ID = $itemBarangMaster->IDBARANG;
-                                }
-                            }
-                            
-                            array_push($data['rows'], array(
-                                'ID'                => $ID,
-                                'IDINDUKBARANGSHOPE'=> $dataPromo[$p]['item_id'],
-                                'IDBARANGLAZADA'    => $dataPromo[$p]['promotion'][$pm]['model_id']??$dataPromo[$p]['item_id'],
-                                'STARTDATE'         => $dataPromo[$p]['promotion'][$pm]['start_time'],
-                                'ENDDATE'           => $dataPromo[$p]['promotion'][$pm]['end_time'],
-                                'STARTDATELASTPROMO'=> $tglAw,
-                                'ENDDATELASTPROMO'  => $tglAk,
-                                'DISABLED'          => $tglAw > $dataPromo[$p]['promotion'][$pm]['end_time'] ? false : true
-                            ));
-                        }
-                    }
+                   $parameter = [];
+                   $detailParameter = [];
                 }
-                $item_id_list = "";
-            }
-            else
-            {
-                $item_id_list .= ",";
-            }
-            
-        }
-        
-        usort($data['rows'], function($a, $b) {
-           return strcmp($a['ID'], $b['ID']);
-        });
-        
-        echo json_encode($data);
-	}
-	
-	function getPromo(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$idPromosi = $this->input->post("idpromosi",0);
-		
-		$statusok = true;
-		$pageno = 1;
-		$pageSize = 100;
-		$data['rows'] = [];
-		
-		//LOGISTIC
-		$curl = curl_init();
-		
-		while(!$bigger && $statusok)
-        {
-            
-		    $parameter = "&discount_id=".$idPromosi."&page_no=".$pageno."&page_size=".$pageSize;
-		    
-		  //  echo $parameter;
-		    
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['error'] != "")
-            {
-                echo $ret['error']." : ".$ret['message'];
-            }
-            else
-            {
-                $response = $ret['response'];
-                $statusok = $response['more'];
-                if($statusok){
-                    $pageno++;
-                }
-                
-                $sql = "SELECT * FROM MBARANG";
-                $dataBarang = $CI->db->query($sql)->result();
-                
-                for($p = 0 ; $p < count($response['item_list']);$p++)
-                {
-                    $dataItem = $response['item_list'][$p];
-                    for($m = 0 ; $m < count($dataItem['model_list']); $m++)
-                    {
-                        //MODEL
-                        $dataModel = $dataItem['model_list'][$m];
-                        $namamodel = $dataModel['model_name'];
-                        $id = "";
-                        foreach($dataBarang as $itemBarang)
-                        {
-                            if($itemBarang->IDINDUKBARANGLAZADA == $dataItem['item_id'] && $itemBarang->IDBARANGLAZADA == $dataModel['model_id'])
-                            {
-                                $namamodel = $itemBarang->NAMABARANG;
-                                $id        = $itemBarang->IDBARANG;
-                            }
-                        }
-                        
-                        array_push($data['rows'],array(
-                            'ID'                 => $id,
-                            'IDINDUKBARANGLAZADA'=> $dataItem['item_id'],
-                            'IDBARANGLAZADA'     => $dataModel['model_id'],
-                            'NAMABARANG'         => $namamodel,
-                            'HARGAJUALTAMPIL'    => $dataModel['model_original_price'],
-                            'HARGACORET'         => $dataModel['model_promotion_price'],
-                            'BATASPEMBELIAN'     => $dataItem['purchase_limit'],
-                        ));
-                    }
-                    
-                    //INDUK
-                    if(count($dataItem['model_list']) == 0)
-                    {
-                        $namainduk = $dataItem['item_name'];
-                        $id = "";
-                        foreach($dataBarang as $itemBarang)
-                        {
-                            if($itemBarang->IDINDUKBARANGLAZADA == $dataItem['item_id'] && $itemBarang->IDINDUKBARANGLAZADA == $itemBarang->IDBARANGLAZADA)
-                            {
-                                $namainduk = $itemBarang->NAMABARANG;
-                                $id        = $itemBarang->IDBARANG;
-                            }
-                        }
-                        
-                        array_push($data['rows'],array(
-                            'ID'                 => $id,
-                            'IDINDUKBARANGLAZADA'=> $dataItem['item_id'],
-                            'IDBARANGLAZADA'     => $dataItem['item_id'],
-                            'NAMABARANG'         => $namainduk,
-                            'HARGAJUALTAMPIL'    => $dataItem['item_original_price'],
-                            'HARGACORET'         => $dataItem['item_promotion_price'],
-                            'BATASPEMBELIAN'     => $dataItem['purchase_limit'],
-                        ));
-                    }
-                }
-            }
-        }
-        
-        usort($data['rows'], function($a, $b) {
-           return strcmp($a['NAMABARANG'], $b['NAMABARANG']);
-        });
-        
-        echo json_encode($data);
-	}
-	
-	function setPromo(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		
-		$mode       = $this->input->post("mode","");
-		$id         = $this->input->post("idpromosi","");
-		$nama       = $this->input->post("namapromosi","");
-		$tglMulai   = $this->input->post("tglmulai","");
-		$tglAkhir   = $this->input->post("tglakhir","");
-		$status     = $this->input->post("status","");
-		$dataBarang   = json_decode($this->input->post("databarang",[]),true);
-		
-		$parameter = [];
-		$parameter['discount_name'] = $nama;
-		$parameter['start_time']    = strtotime($tglMulai);
-		$parameter['end_time']      = strtotime($tglAkhir);
-		
-		if($status == 'upcoming')
-		{
-    		$endpoint = "";
-    		
-    		if($mode == "UBAH")
-    		{
-    		    $parameter['discount_id'] = (int)$id;
-    		    $endpoint = 'discount/update_discount';
-    		}
-    		else
-    		{
-    		    $endpoint = 'discount/add_discount';
-    		}
-    		
-    	    $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => $endpoint,
-              'parameter' => json_encode($parameter)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-         
-            if($ret['error'] != "")
-            {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." BUAT PROMO : ".$ret['message'];
-                die(json_encode($data));
-            }
-            else
-            {
-                $id = $ret['response']['discount_id'];
             }
 		}
         
-        $response = $ret['response'];
-        $parameterTambah = [];
-    	$parameterTambah['discount_id']   = (int)$id;
-    	$parameterTambah['item_list']  = array();
-    	
-    	$parameterUbah = [];
-    	$parameterUbah['discount_id']   = (int)$id;
-    	$parameterUbah['item_list']  = array();
-    	
-    	$parameterHapus = [];
-    	$parameterHapus['discount_id']   = (int)$id;
-    	$parameterHapus['item_list']  = array();
-    	
-    	$idbarangTambah = "";
-    	$idbarangUbah   = "";
-    	$idbarangHapus = "";
-    	
-    	foreach($dataBarang as $itemBarang){
-    	   if($itemBarang['IDBARANGLAZADA'] != 0 && $itemBarang['IDINDUKBARANGLAZADA'] != 0)
-    	   {
-    	       if($itemBarang['MODE'] == "TAMBAH")
-    	       {
-        	       if($idbarangTambah != $itemBarang['IDINDUKBARANGLAZADA'])
-        	       {
-        	           $idbarangTambah = $itemBarang['IDINDUKBARANGLAZADA'];
-        	           array_push($parameterTambah['item_list'], array(
-        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGLAZADA'],
-        	               'item_promotion_price'   => (float)$itemBarang['HARGACORET'],
-        	               'purchase_limit'         => (int)$itemBarang['BATASPEMBELIAN']??0,
-        	               'model_list' => []
-        	           ));
-        	       }
-        	       
-        	       if($itemBarang['IDBARANGLAZADA'] != $itemBarang['IDINDUKBARANGLAZADA'])
-        	       {
-        	           array_push($parameterTambah['item_list'][count($parameterTambah['item_list'])-1]['model_list'],
-        	           array(
-        	                'model_id'               => (int)$itemBarang['IDBARANGLAZADA'],
-        	                'model_promotion_price'   => (float)$itemBarang['HARGACORET'],
-        	           ));
-        	       }
-    	       }
-    	       else if($itemBarang['MODE'] == "UBAH")
-    	       {
-        	       if($idbarangUbah != $itemBarang['IDINDUKBARANGLAZADA'])
-        	       {
-        	           $idbarangUbah = $itemBarang['IDINDUKBARANGLAZADA'];
-        	           array_push($parameterUbah['item_list'], array(
-        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGLAZADA'],
-        	               'item_promotion_price'   => (float)$itemBarang['HARGACORET'],
-        	               'purchase_limit'         => (int)$itemBarang['BATASPEMBELIAN']??0,
-        	               'model_list' => []
-        	           ));
-        	       }
-        	       
-        	       if($itemBarang['IDBARANGLAZADA'] != $itemBarang['IDINDUKBARANGLAZADA'])
-        	       {
-        	           array_push($parameterUbah['item_list'][count($parameterUbah['item_list'])-1]['model_list'],
-        	           array(
-        	                'model_id'               => (int)$itemBarang['IDBARANGLAZADA'],
-        	                'model_promotion_price'   => (float)$itemBarang['HARGACORET'],
-        	           ));
-        	       }
-    	       }
-    	       else if($itemBarang['MODE'] == "HAPUS")
-    	       {
-        	       if($idbarangHapus != $itemBarang['IDINDUKBARANGLAZADA'])
-        	       {
-        	           $idbarangHapus = $itemBarang['IDINDUKBARANGLAZADA'];
-        	           array_push($parameterHapus['item_list'], array(
-        	               'item_id'                => (int)$itemBarang['IDINDUKBARANGLAZADA'],
-        	               'item_promotion_price'   => (float)$itemBarang['HARGACORET'],
-        	               'purchase_limit'         => (int)$itemBarang['BATASPEMBELIAN']??0,
-        	               'model_list' => []
-        	           ));
-        	       }
-        	       
-        	       if($itemBarang['IDBARANGLAZADA'] != $itemBarang['IDINDUKBARANGLAZADA'])
-        	       {
-        	           array_push($parameterHapus['item_list'][count($parameterHapus['item_list'])-1]['model_list'],
-        	           array(
-        	                'model_id'               => (int)$itemBarang['IDBARANGLAZADA'],
-        	                'model_promotion_price'   => (float)$itemBarang['HARGACORET'],
-        	           ));
-        	       }
-    	       }
-    	   }
-    	}
-    	
-    	if(count($parameterTambah['item_list']) > 0)
-    	{
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => 'discount/add_discount_item',
-              'parameter' => json_encode($parameterTambah)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-         
-            if($ret['error'] != "")
-            {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']."PROMO BARANG TAMBAH : ".$ret['message'];
-                die(json_encode($data));
-            }
-    	}
-    	
-    	if(count($parameterUbah['item_list']) > 0)
-    	{
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => 'discount/update_discount_item',
-              'parameter' => json_encode($parameterUbah)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-         
-            if($ret['error'] != "")
-            {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']."PROMO BARANG UBAH : ".$ret['message'];
-                die(json_encode($data));
-            }
-    	}
-    	
-    	if(count($parameterHapus['item_list']) > 0)
-    	{
-    	    for($h = 0 ; $h < count($parameterHapus['item_list']) ; $h++)
-    	    {
-    	        if(count($parameterHapus['item_list'][$h]['model_list']) == 0)
-    	        {
-    	            $curl = curl_init();
-            	    $parameter = [];
-            	    $parameter['discount_id']   = (int)$parameterHapus['discount_id'];
-            	    $parameter['item_id']       = (int)$parameterHapus['item_list'][$h]['item_id'];
-
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS =>  array(
-                      'endpoint' => 'discount/delete_discount_item',
-                      'parameter' => json_encode($parameter)),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                      
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-                 
-                    if($ret['error'] != "")
-                    {
-                        $data['success'] = false;
-                        $data['msg'] =  $ret['error']."PROMO BARANG HAPUS : ".$ret['message'];
-                        die(json_encode($data));
-                    }
-    	        }
-    	        else
-    	        {
-    	        
-        	        for($v = 0 ; $v < count($parameterHapus['item_list'][$h]['model_list']) ; $v++)
-        	        {
-                	    $curl = curl_init();
-                	    $parameter = [];
-                	    $parameter['discount_id']   = (int)$parameterHapus['discount_id'];
-                	    $parameter['item_id']       = (int)$parameterHapus['item_list'][$h]['item_id'];
-                	    $parameter['model_id']      = (int)$parameterHapus['item_list'][$h]['model_list'][$v]['model_id'];
-
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'discount/delete_discount_item',
-                          'parameter' => json_encode($parameter)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                          
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-                     
-                        if($ret['error'] != "")
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  $ret['error']."PROMO BARANG HAPUS : ".$ret['message'];
-                            die(json_encode($data));
-                        }
-        	        }
-    	        }
-    	    }
-    	}
-        
         $data['success'] = true;
-        $data['msg'] = "Promo Produk pada LAZADA Berhasil Disimpan";
+        $data['msg'] = "Promo Produk pada Lazada Berhasil Disimpan";
         
         echo(json_encode($data));
     
@@ -3176,7 +2235,7 @@ class Lazada extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         sleep(3);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
             $data['msg'] =  $ret['error']." : ".$ret['message'];
@@ -3246,7 +2305,7 @@ class Lazada extends MY_Controller {
     //   $response = curl_exec($curl);
     //   curl_close($curl);
     //   $ret =  json_decode($response,true);
-    //   if($ret['error'] != "")
+    //   if($ret['code'] != 0)
     //   {
     //       echo $ret['error']." : ".$ret['message'];
     //   }
@@ -3306,12 +2365,12 @@ class Lazada extends MY_Controller {
         $statusVar = "";
         if(count($status)>1)
         {
-            $whereStatus = "and STATUS = $state";
-            $statusVar = "STATUSMARKETPLACE";
+            $whereStatus = "and b.STATUS = $state";
+            $statusVar = "b.STATUSMARKETPLACE";
             
             if($state == 4)
             {
-                $statusVar = "CONCAT(STATUSMARKETPLACE,'|',STATUSPENGEMBALIANMARKETPLACE)";
+                $statusVar = "CONCAT(b.STATUSMARKETPLACE,'|',b.STATUSPENGEMBALIANMARKETPLACE)";
             }
         }
         else
@@ -3322,36 +2381,72 @@ class Lazada extends MY_Controller {
                 $statusGanda = explode("-",$statusKhusus[1]);
                 if(count($statusGanda) == 2)
                 {
-                    $whereStatus = "and STATUSMARKETPLACE = '".$statusKhusus[0]."' and (STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[0]."' OR STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[1]."')";
+                    $whereStatus = "and b.STATUSMARKETPLACE = '".$statusKhusus[0]."' and (b.STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[0]."' OR b.STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[1]."')";
                 }
                 else
                 {
-                    $whereStatus = "and STATUSMARKETPLACE = '".$statusKhusus[0]."' and STATUSPENGEMBALIANMARKETPLACE = '".$statusKhusus[1]."'";
+                    $whereStatus = "and b.STATUSMARKETPLACE = '".$statusKhusus[0]."' and b.STATUSPENGEMBALIANMARKETPLACE = '".$statusKhusus[1]."'";
                 }
-                $statusVar = "CONCAT(STATUSMARKETPLACE,'|',STATUSPENGEMBALIANMARKETPLACE)";
+                $statusVar = "CONCAT(b.STATUSMARKETPLACE,'|',b.STATUSPENGEMBALIANMARKETPLACE)";
             }
             else
             {
-                $whereStatus = "and STATUSMARKETPLACE = '$status[0]'";
-                $statusVar = "STATUSMARKETPLACE";
+                $whereStatus = "and b.STATUSMARKETPLACE = '$status[0]'";
+                $statusVar = "b.STATUSMARKETPLACE";
             }
         }
         
-        $sql = "SELECT KODEPENJUALANMARKETPLACE as KODEPESANAN, TGLTRANS as TGLPESANAN, MINTGLKIRIM, $statusVar AS STATUS,KODEPENGAMBILAN,
-                        SKUPRODUK, '' as BARANG, TOTALBARANG, TOTALHARGA, TOTALBAYAR,  '' as ALAMAT,SKUPRODUKOLD,USERNAME,
-                        NAME as BUYERNAME, TELP as BUYERPHONE, ALAMAT as BUYERALAMAT, KOTA,
-                        METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
-                        KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
-                        TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI
-                        FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
-                        order by TGLTRANS DESC";
+        if($state != 4)
+        {
+            $sql = "SELECT IDPENJUALANDARIMARKETPLACE as IDPESANAN, KODEPENJUALANMARKETPLACE as KODEPESANAN, TGLTRANS as TGLPESANAN, if(MINTGLKIRIM = '0000-00-00 00:00:00','-',MINTGLKIRIM) as MINTGLKIRIM, $statusVar AS STATUS,KODEPENGAMBILAN,
+                            SKUPRODUK, '' as BARANG, TOTALBARANG, TOTALHARGA, TOTALBAYAR,  '' as ALAMAT,SKUPRODUKOLD,USERNAME,
+                            NAME as BUYERNAME, TELP as BUYERPHONE, ALAMAT as BUYERALAMAT, KOTA,
+                            METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
+                            KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
+                            TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI,STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
+                            FROM TPENJUALANMARKETPLACE b WHERE MARKETPLACE = 'LAZADA' and TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
+                            order by TGLTRANS DESC";
+        }
+        else
+        {
+            $sql = "SELECT  a.IDPENJUALANDARIMARKETPLACE as IDPESANAN, b.KODEPENJUALANMARKETPLACE as KODEPESANAN, a.TGLTRANS as TGLPESANAN, if(a.MINTGLKIRIM = '0000-00-00 00:00:00','-',a.MINTGLKIRIM) as MINTGLKIRIM, $statusVar AS STATUS,a.KODEPENGAMBILAN,
+                            a.SKUPRODUK, '' as BARANG, a.TOTALBARANG, a.TOTALHARGA, a.TOTALBAYAR,  '' as ALAMAT,a.SKUPRODUKOLD,a.USERNAME,
+                            a.NAME as BUYERNAME, a.TELP as BUYERPHONE, a.ALAMAT as BUYERALAMAT, a.KOTA,
+                            a.METODEBAYAR, a.KURIR, a.RESI, a.CATATANPEMBELI as CATATANBELI, a.CATATANPENJUAL AS CATATANJUAL, b.CATATANPENGEMBALIAN,KODEPACKAGING,
+                            b.KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, b.TGLPENGEMBALIAN, b.MINTGLPENGEMBALIAN, b.RESIPENGEMBALIAN, 0 as TOTALBARANGPENGEMBALIAN,b.MINTGLKIRIMPENGEMBALIAN,
+                            SUM(b.TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, group_concat(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, b.TIPEPENGEMBALIAN, a.SELLERMENUNGGUBARANGDATANG,SUM(IF(b.BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,b.STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
+                            FROM TPENJUALANMARKETPLACEDTL b
+                            INNER JOIN TPENJUALANMARKETPLACE a ON b.IDPENJUALANMARKETPLACE = a.IDPENJUALANMARKETPLACE
+                            WHERE a.MARKETPLACE = 'LAZADA' and a.TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
+                            group by b.KODEPENGEMBALIANMARKETPLACE
+                            order by a.TGLTRANS DESC";
+        }
+        
         $result = $CI->db->query($sql)->result();
         
         foreach($result as $item)
         {
+            
+            if($state == 4)
+            {
+                 $skukembalidata = explode("|",$item->SKUPRODUKPENGEMBALIAN);
+
+                  for($j = 0 ; $j < count($skukembalidata); $j++)
+                  {
+                     $item->TOTALBARANGPENGEMBALIAN += (int)(explode("*",$skukembalidata[$j])[0]);
+                  }
+            }
+            else
+            {
+                $sqlDetail = "SELECT GROUP_CONCAT(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACEDTL WHERE KODEPENJUALANMARKETPLACE = '$item->KODEPESANAN' and (KODEPENGEMBALIANMARKETPLACE != '' AND KODEPENGEMBALIANMARKETPLACE IS NOT NULL)";
+                $item->KODEPENGEMBALIAN = $CI->db->query($sqlDetail)->row()->KODEPENGEMBALIANMARKETPLACE;
+                
+            }
+          
             $produk = explode("|",$item->SKUPRODUK);
             $produkOld = explode("|",$item->SKUPRODUKOLD);
-            $item->STATUS = $this->getStatus($item->STATUS)['status'];
+
+            $item->STATUS = $this->getStatus([($item->STATUS == "RETURNED"?$item->STATUS."|".$item->STATUSPENGEMBALIAN:$item->STATUS)])['status'];
             $item->TGLPESANAN = explode(" ",$item->TGLPESANAN)[0]."<br>".explode(" ",$item->TGLPESANAN)[1];
             $item->TGLPENGEMBALIAN = explode(" ",$item->TGLPENGEMBALIAN)[0]."<br>".explode(" ",$item->TGLPENGEMBALIAN)[1];
             
@@ -3432,12 +2527,18 @@ class Lazada extends MY_Controller {
             {
                 $item->BARANGPENGEMBALIAN = $item->BARANG;
             }
+            
+            $item->BUYERALAMAT = "<div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
+                                                white-space: -moz-pre-wrap; /* Firefox */    
+                                                white-space: -pre-wrap;     /* Opera <7 */   
+                                                white-space: -o-pre-wrap;   /* Opera 7 */    
+                                                word-wrap: break-word;      /* IE */'>". $item->BUYERALAMAT."<br>".$item->KOTA."</span></div>";
         
             $item->ALAMAT = "<div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
                                                 white-space: -moz-pre-wrap; /* Firefox */    
                                                 white-space: -pre-wrap;     /* Opera <7 */   
                                                 white-space: -o-pre-wrap;   /* Opera 7 */    
-                                                word-wrap: break-word;      /* IE */'>".$item->BUYERNAME." (".$item->USERNAME.")<br>".$item->BUYERPHONE."<br>".$item->BUYERALAMAT."</div>";
+                                                word-wrap: break-word;      /* IE */'>".$item->BUYERNAME." (".$item->USERNAME.")<br>".$item->BUYERPHONE."<br>".$item->BUYERALAMAT."</span></div>";
             $item->CATATANPENGEMBALIAN = "<div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
                                                 white-space: -moz-pre-wrap; /* Firefox */    
                                                 white-space: -pre-wrap;     /* Opera <7 */   
@@ -3449,7 +2550,7 @@ class Lazada extends MY_Controller {
                                                 white-space: -o-pre-wrap;   /* Opera 7 */    
                                                 word-wrap: break-word;      /* IE */'>".$item->CATATANBELI??''."</div>";
             $item->CATATANJUALRAW = $item->CATATANJUAL;                                    
-            $item->CATATANJUAL = "<i class='fa fa-edit' id='editNoteLAZADA' style='cursor:pointer;'></i>
+            $item->CATATANJUAL = "<i class='fa fa-edit' id='editNoteLazada' style='cursor:pointer;'></i>
                                   <div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
                                                 white-space: -moz-pre-wrap; /* Firefox */    
                                                 white-space: -pre-wrap;     /* Opera <7 */   
@@ -3468,9 +2569,10 @@ class Lazada extends MY_Controller {
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		$nopesanan = $this->input->post('kode')??"";
+		$metodeBayar = $this->input->post('metodebayar')??"";
 		
-		//PAYMENT DETAIL
-	    $parameter = "&order_sn=".$nopesanan;
+		//PAYMENT BUYER DETAIL
+	    $parameter = "&order_id=".$nopesanan;
         
         $curl = curl_init();
         
@@ -3483,7 +2585,7 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'payment/get_escrow_detail','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/items/get','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -3492,163 +2594,420 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." : ".$ret['message'];
         }
         else
         {
-            $result;
-		    $result['BIAYALAINBELI']        = $ret['response']['buyer_payment_info']['buyer_service_fee']; 
-		    $result['PEMBAYARANBELI']       = $ret['response']['buyer_payment_info']['buyer_total_amount']; 
-		    $result['DISKONBELI']           = ($ret['response']['buyer_payment_info']['LAZADA_voucher']+$ret['response']['buyer_payment_info']['seller_voucher']+$ret['response']['buyer_payment_info']['LAZADA_coins_redeemed']); 
-		    $result['SUBTOTALBELI']         = $ret['response']['buyer_payment_info']['merchant_subtotal']; 
-		    $result['BIAYAKIRIMBELI']       = $ret['response']['buyer_payment_info']['shipping_fee']; 
-		    
-		    $result['BIAYALAYANANJUAL']     = ($ret['response']['order_income']['service_fee']+$ret['response']['order_income']['commission_fee']+$ret['response']['order_income']['order_ams_commission_fee']) * -1; 
-		    $result['PENERIMAANJUAL']       = $ret['response']['order_income']['escrow_amount']; 
-		    $result['DISKONJUAL']           = $ret['response']['buyer_payment_info']['seller_voucher']; 
-		    $result['SUBTOTALJUAL']         = $ret['response']['order_income']['merchant_subtotal']; 
-		    $result['BIAYAKIRIMJUAL']       = ($ret['response']['order_income']['reverse_shipping_fee']*-1) + $ret['response']['order_income']['final_shipping_fee']  + $ret['response']['order_income']['buyer_paid_shipping_fee']; 
-		    $result['REFUNDJUAL']           = $ret['response']['order_income']['seller_return_refund'];
-		    $result['PENYELESAIANPENJUAL']  = $ret['response']['order_income']['escrow_amount'];
-		    $result['DETAILBARANG'] = [];
-		    
-		    $sql = "SELECT SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD, SKUPRODUKPENGEMBALIAN
-                        FROM TPENJUALANMARKETPLACE 
-                        WHERE MARKETPLACE = 'LAZADA' and KODEPENJUALANMARKETPLACE = '$nopesanan' ";
-                        
-            $resultPesanan = $CI->db->query($sql)->row();
+            $dataPaymentBuyer = $ret['data'];
+            // print_r($dataPaymentBuyer);
             
-            $produkData = explode("|",$resultPesanan->SKUPRODUK);
-            $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
-            $dataProduk = [];
-            $dataProdukKembali = [];
+            $result;
+            $result['BIAYALAINBELI']        = 0;
+            $result['DISKONBELI']           = 0;
+            $result['SUBTOTALBELI']         = 0;
+            $result['BIAYAKIRIMBELI']       = 0;
+            $result['PEMBAYARANBELI']       = 0;
+            //PAYMENT SELLER DETAIL
+            $result['PENERIMAANJUAL']       = 0;
+            $result['DISKONJUAL']           = 0;
+            $result['SUBTOTALJUAL']         = 0;
+            $result['BIAYAKIRIMJUAL']       = 0;
+            $result['REFUNDJUAL']           = 0;
+            $result['BIAYALAYANANJUAL']     = 0;
+            $result['PENYELESAIANPENJUAL']  = 0;
+            
+            $biayaLayanan = 1000;
+            $biayaPenanganan = 0;
+            if (strpos(str_replace("_"," ",$metodeBayar), 'VA') !== false) {
+                $biayaPenanganan = 1000;
+            }
+            else if (strpos(str_replace("_"," ",$metodeBayar), 'INDOMARET') !== false || strpos(str_replace("_"," ",$metodeBayar), 'ALFA') !== false) {
+                $biayaPenanganan = 2000;
+            }
+           
+            foreach($dataPaymentBuyer as $itemPaymentBuyer)
+            {
+                if($itemPaymentBuyer['status'] != 'canceled')
+                {
+        		    $result['BIAYALAINBELI']        += $itemPaymentBuyer['tax_amount']+(int)(($biayaLayanan+$biayaPenanganan) / count($dataPaymentBuyer)); 
+        		    $result['DISKONBELI']           += -($itemPaymentBuyer['voucher_seller']+$itemPaymentBuyer['shipping_fee_discount_seller']+$itemPaymentBuyer['voucher_platform']); 
+        		    $result['SUBTOTALBELI']         += $itemPaymentBuyer['item_price']; 
+        		    $result['BIAYAKIRIMBELI']       += $itemPaymentBuyer['shipping_amount']; 
+                }
+            }
+            $result['BIAYALAINBELI']        = $this->pembulatanSatuan($result['BIAYALAINBELI']);
+            $result['PEMBAYARANBELI']       += $result['SUBTOTALBELI']+$result['BIAYALAINBELI']+$result['BIAYAKIRIMBELI']+$result['DISKONBELI'];
+        }
+    		    
+		$createDate = new DateTime($dataPaymentBuyer[0]['created_at']);
+		$createDate = $createDate->format('Y-m-d');
+
+    	$parameter = "&trade_order_id=".$nopesanan."&start_time=".$createDate."&end_time=".date('Y-m-d');
+        
+        $curl = curl_init();
+    
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/finance/transaction/details/get','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+ 
+        if($ret['code'] != 0)
+        {
+            echo $ret['error']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataPaymentSeller = $ret['data'];
+            // print_r($dataPaymentSeller);
+            
+            $transactiontype = [];
+            foreach($dataPaymentSeller as $itemPaymentSeller)
+            {
+                $itemPaymentSeller['amount'] = str_replace(",","",$itemPaymentSeller['amount']);
+                $adaPS = false;
+                for($ps = 0 ; $ps < count($transactiontype);$ps++)
+                {
+                    if($transactiontype[$ps]['name'] == $itemPaymentSeller['fee_name'])
+                    {
+                        $adaPS = true;
+                        $transactiontype[$ps]['amount'] += ($itemPaymentSeller['amount']);
+                    }
+                }
+                
+                if(!$adaPS)
+                {
+                    array_push($transactiontype,array(
+                        'name' => $itemPaymentSeller['fee_name'],
+                        'amount' => $itemPaymentSeller['amount'],
+                    ));
+                }
+            }
+            
+            for($pay = 0 ; $pay < count($transactiontype);$pay++)
+            {
+                
+        		  //  $result['PENERIMAANJUAL']       = 0;
+            //         $result['DISKONJUAL']           = 0;
+            //         $result['SUBTOTALJUAL']         = 0;
+            //         $result['BIAYAKIRIMJUAL']       = 0;
+            //         $result['REFUNDJUAL']           = 0;
+            //         $result['BIAYALAYANANJUAL']     = 0;
+            //         $result['PENYELESAIANPENJUAL']  = 0;
+            
+        		    //PAYMENT SELLER DETAIL
+            		$result['DISKONJUAL']           += 0; 
+            		if($transactiontype[$pay]['name'] == 'Item Price Credit')
+            		{
+            		    $result['SUBTOTALJUAL']         += $transactiontype[$pay]['amount']; 
+            		}
+            		else if($transactiontype[$pay]['name'] == 'Reversal Item Price')
+            		{
+            		    $result['REFUNDJUAL']         += $transactiontype[$pay]['amount']; 
+            		}
+            		else
+            		{
+            		    $result['BIAYALAYANANJUAL']   += $transactiontype[$pay]['amount']; 
+            		}
+            }
+            
+            $result['BIAYAKIRIMJUAL']       = $itemPaymentBuyer['shipping_fee_discount_seller']+$itemPaymentBuyer['voucher_seller']; 
+            // print_r($transactiontype);
+        }
+		$result['DETAILBARANG'] = [];
+		
+		$sql = "SELECT SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD, SKUPRODUKPENGEMBALIAN, KODEPENGEMBALIANMARKETPLACE
+                    FROM TPENJUALANMARKETPLACE 
+                    WHERE MARKETPLACE = 'LAZADA' and KODEPENJUALANMARKETPLACE = '$nopesanan' ";
+                    
+        $resultPesanan = $CI->db->query($sql)->row();
+        
+        $produkData = explode("|",$resultPesanan->SKUPRODUK);
+        $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
+        $dataProduk = [];
+        $dataProdukKembali = [];
+        $indexProduk = 0;
+        foreach($produkData as $item)
+        {
+            //GET NAMA BARANG
+            $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU,IDBARANGLAZADA,IDINDUKBARANGLAZADA,HARGAJUAL
+                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
+            $dataBarang = $CI->db->query($sql)->row();
+            $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
+            if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
+            {
+                $dataProduk[$indexProduk]->BARANG .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
+            }
+            $dataProduk[$indexProduk]->JML = explode("*",$item)[0];
+            $dataProduk[$indexProduk]->ID = $dataBarang->IDINDUKBARANGLAZADA;
+            if(count(explode("_",$dataBarang->IDBARANGLAZADA)) > 1)
+            {
+                $dataProduk[$indexProduk]->MODELID =  explode("_",$dataBarang->IDBARANGLAZADA)[1];
+            }
+            else
+            {
+                $dataProduk[$indexProduk]->MODELID = $dataBarang->IDBARANGLAZADA;
+            }
+            $dataProduk[$indexProduk]->SATUAN = $dataBarang->SATUAN;
+            $dataProduk[$indexProduk]->HARGA = $dataBarang->HARGAJUAL;
+            $dataProduk[$indexProduk]->KATEGORI = $dataBarang->KATEGORI;
+            $dataProduk[$indexProduk]->WARNA = $dataBarang->WARNA;
+            $dataProduk[$indexProduk]->SIZE = $dataBarang->SIZE;
+            $dataProduk[$indexProduk]->SKU = $dataBarang->SKU;
+            $dataProduk[$indexProduk]->BARANGOLD = $dataProduk[$indexProduk]->BARANG;
+            $dataProduk[$indexProduk]->WARNAOLD = $dataProduk[$indexProduk]->WARNA;
+            $dataProduk[$indexProduk]->SIZEOLD = $dataProduk[$indexProduk]->SIZE;
+            $dataProduk[$indexProduk]->SKUOLD = $dataProduk[$indexProduk]->SKU;
+            $dataProduk[$indexProduk]->BARANGKEMBALI = "";
+            $dataProduk[$indexProduk]->WARNAKEMBALI = "";
+            $dataProduk[$indexProduk]->SIZEKEMBALI = "";
+            $dataProduk[$indexProduk]->SKUKEMBALI = "";
+            $indexProduk++;
+        }
+        
+        if($resultPesanan->SKUPRODUKOLD != "")
+        {
+            
             $indexProduk = 0;
-            foreach($produkData as $item)
+            foreach($produkDataOld as $item)
             {
                 //GET NAMA BARANG
                 $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
                             FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                 $dataBarang = $CI->db->query($sql)->row();
-                $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
+                $dataProduk[$indexProduk]->BARANGOLD  = explode(" | ",$dataBarang->NAMABARANG)[0];
                 if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
                 {
-                    $dataProduk[$indexProduk]->BARANG .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
+                    $dataProduk[$indexProduk]->BARANGOLD .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
                 }
-                $dataProduk[$indexProduk]->SATUAN = $dataBarang->SATUAN;
-                $dataProduk[$indexProduk]->KATEGORI = $dataBarang->KATEGORI;
-                $dataProduk[$indexProduk]->WARNA = $dataBarang->WARNA;
-                $dataProduk[$indexProduk]->SIZE = $dataBarang->SIZE;
-                $dataProduk[$indexProduk]->SKU = $dataBarang->SKU;
-                $dataProduk[$indexProduk]->BARANGOLD = $dataProduk[$indexProduk]->BARANG;
-                $dataProduk[$indexProduk]->WARNAOLD = $dataProduk[$indexProduk]->WARNA;
-                $dataProduk[$indexProduk]->SIZEOLD = $dataProduk[$indexProduk]->SIZE;
-                $dataProduk[$indexProduk]->SKUOLD = $dataProduk[$indexProduk]->SKU;
-                $dataProduk[$indexProduk]->BARANGKEMBALI = "";
-                $dataProduk[$indexProduk]->WARNAKEMBALI = "";
-                $dataProduk[$indexProduk]->SIZEKEMBALI = "";
-                $dataProduk[$indexProduk]->SKUKEMBALI = "";
+                
+                $dataProduk[$indexProduk]->WARNAOLD = $dataBarang->WARNA;
+                $dataProduk[$indexProduk]->SIZEOLD = $dataBarang->SIZE;
+                $dataProduk[$indexProduk]->SKUOLD = $dataBarang->SKU;
                 $indexProduk++;
             }
-            
-            if($resultPesanan->SKUPRODUKOLD != "")
+        }
+        
+        
+        if($resultPesanan->SKUPRODUKPENGEMBALIAN != "")
+        {
+            $indexPengganti;
+            $produkDataKembali = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
+            for($s = 0 ; $s < count($dataProduk);$s++)
             {
-                
-                $indexProduk = 0;
-                foreach($produkDataOld as $item)
+                $dataProduk[$s]->JMLKEMBALI = 0;
+                $dataProduk[$s]->BARANGKEMBALI =  "";
+                $dataProduk[$s]->WARNAKEMBALI =  "";
+                $dataProduk[$s]->SIZEKEMBALI =  "";
+                $dataProduk[$s]->SKUKEMBALI =  "";
+            
+                for($t = 0 ; $t < count($produkDataKembali);$t++)
                 {
-                    //GET NAMA BARANG
-                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
-                                FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
-                    $dataBarang = $CI->db->query($sql)->row();
-                    $dataProduk[$indexProduk]->BARANGOLD  = explode(" | ",$dataBarang->NAMABARANG)[0];
-                    if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
+                    if(explode("*",$produkDataKembali[$t])[1] == $dataProduk[$s]->SKUOLD)
                     {
-                        $dataProduk[$indexProduk]->BARANGOLD .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
-                    }
+                       
+                         //JIKA ADA YANG BEDA UPDATE LAGI
+                        $sql = "SELECT NAMABARANG, WARNA, SIZE,SKULAZADA as SKU
+                                    FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkDataKembali[$t])[1]."'";
+                        $dataBarangKembali = $CI->db->query($sql)->row();
                     
-                    $dataProduk[$indexProduk]->WARNAOLD = $dataBarang->WARNA;
-                    $dataProduk[$indexProduk]->SIZEOLD = $dataBarang->SIZE;
-                    $dataProduk[$indexProduk]->SKUOLD = $dataBarang->SKU;
-                    $indexProduk++;
-                }
-            }
-            
-            
-            if($resultPesanan->SKUPRODUKPENGEMBALIAN != "")
-            {
-                $indexPengganti;
-                $produkDataKembali = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
-                for($s = 0 ; $s < count($dataProduk);$s++)
-                {
-                    $dataProduk[$s]->JMLKEMBALI = 0;
-                    $dataProduk[$s]->BARANGKEMBALI =  "";
-                    $dataProduk[$s]->WARNAKEMBALI =  "";
-                    $dataProduk[$s]->SIZEKEMBALI =  "";
-                    $dataProduk[$s]->SKUKEMBALI =  "";
-                
-                    for($t = 0 ; $t < count($produkDataKembali);$t++)
-                    {
-                        if(explode("*",$produkDataKembali[$t])[1] == $dataProduk[$s]->SKUOLD)
+                        if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
                         {
-                           
-                             //JIKA ADA YANG BEDA UPDATE LAGI
-                            $sql = "SELECT NAMABARANG, WARNA, SIZE,SKULAZADA as SKU
-                                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkDataKembali[$t])[1]."'";
-                            $dataBarangKembali = $CI->db->query($sql)->row();
-                        
+                            
+                            $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
                             if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
                             {
-                                
-                                $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
-                                if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
-                                {
-                                    $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
-                                }
-                                
-                                
-                                $dataProduk[$s]->JMLKEMBALI = explode("*",$produkDataKembali[$t])[0];
-                                $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
-                                $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
-                                $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
-                                
+                                $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
                             }
+                            
+                            
+                            $dataProduk[$s]->JMLKEMBALI = explode("*",$produkDataKembali[$t])[0];
+                            $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
+                            $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
+                            $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
+                            
                         }
                     }
                 }
             }
-            
-		    
-		    for($x = 0; $x < count($ret['response']['order_income']['items']) ; $x++)
-		    {
-            
-		        $resultDetail;
-		        $resultDetail['KATEGORI'] = $dataProduk[$x]->KATEGORI;
-		        $resultDetail['ITEMID'] = $ret['response']['order_income']['items'][$x]['item_id'];
-		        $resultDetail['MODELID'] = $ret['response']['order_income']['items'][$x]['model_id'];
-		        $resultDetail['NAMA'] = $dataProduk[$x]->BARANG;
-		        $resultDetail['WARNA'] = $dataProduk[$x]->WARNA;
-		        $resultDetail['SIZE'] = $dataProduk[$x]->SIZE;
-		        $resultDetail['SKU'] = $dataProduk[$x]->SKU;
-		        $resultDetail['NAMAOLD'] = $dataProduk[$x]->BARANGOLD;
-		        $resultDetail['WARNAOLD'] = $dataProduk[$x]->WARNAOLD;
-		        $resultDetail['SIZEOLD'] = $dataProduk[$x]->SIZEOLD;
-		        $resultDetail['SKUOLD'] = $dataProduk[$x]->SKUOLD;
-		        $resultDetail['NAMAKEMBALI'] = $dataProduk[$x]->BARANGKEMBALI;
-		        $resultDetail['WARNAKEMBALI'] = $dataProduk[$x]->WARNAKEMBALI;
-		        $resultDetail['SIZEKEMBALI'] = $dataProduk[$x]->SIZEKEMBALI;
-		        $resultDetail['SKUKEMBALI'] = $dataProduk[$x]->SKUKEMBALI;
-		        $resultDetail['JUMLAH'] = $ret['response']['order_income']['items'][$x]['quantity_purchased'];
-		        $resultDetail['JUMLAHKEMBALI'] = $dataProduk[$x]->JMLKEMBALI??"0";
-		        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
-		        $resultDetail['HARGATAMPIL'] = $ret['response']['order_income']['items'][$x]['original_price'] / $resultDetail['JUMLAH'];
-		        $resultDetail['HARGACORET'] =  $ret['response']['order_income']['items'][$x]['selling_price'] / $resultDetail['JUMLAH'];
-		        $resultDetail['SUBTOTAL'] =  $resultDetail['JUMLAH'] * $resultDetail['HARGACORET'];
-		        array_push($result['DETAILBARANG'],$resultDetail);
-		    }
-		    echo(json_encode($result));
         }
+        
+        $parameter ="&order_id=".$nopesanan;
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/items/get','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+
+        if($ret['code'] != 0)
+        {
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
+        }
+        else
+        { 
+    	    for($x = 0; $x < count($dataProduk) ; $x++)
+    	    {
+    	        $resultDetail;
+    	        $resultDetail['KATEGORI'] = $dataProduk[$x]->KATEGORI;
+    	        $resultDetail['ITEMID'] = $dataProduk[$x]->ID;
+    	        $resultDetail['MODELID'] = $dataProduk[$x]->MODELID;
+    	        $resultDetail['NAMA'] = $dataProduk[$x]->BARANG;
+    	        $resultDetail['WARNA'] = $dataProduk[$x]->WARNA;
+    	        $resultDetail['SIZE'] = $dataProduk[$x]->SIZE;
+    	        $resultDetail['SKU'] = $dataProduk[$x]->SKU;
+    	        $resultDetail['NAMAOLD'] = $dataProduk[$x]->BARANGOLD;
+    	        $resultDetail['WARNAOLD'] = $dataProduk[$x]->WARNAOLD;
+    	        $resultDetail['SIZEOLD'] = $dataProduk[$x]->SIZEOLD;
+    	        $resultDetail['SKUOLD'] = $dataProduk[$x]->SKUOLD;
+    	        $resultDetail['NAMAKEMBALI'] = $dataProduk[$x]->BARANGKEMBALI;
+    	        $resultDetail['WARNAKEMBALI'] = $dataProduk[$x]->WARNAKEMBALI;
+    	        $resultDetail['SIZEKEMBALI'] = $dataProduk[$x]->SIZEKEMBALI;
+    	        $resultDetail['SKUKEMBALI'] = $dataProduk[$x]->SKUKEMBALI;
+    	        $resultDetail['JUMLAH'] = (int)($dataProduk[$x]->JML??"0");
+    	        $resultDetail['JUMLAHKEMBALI'] = (int)($dataProduk[$x]->JMLKEMBALI??"0");
+    	        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
+    	        $resultDetail['HARGATAMPIL'] = $dataProduk[$x]->HARGA;
+    	        $resultDetail['HARGACORET'] = 0;
+    	        
+    	        for($y = 0; $y < count($ret['data']) ; $y++)
+    	        {
+    	            if($resultDetail['MODELID'] == $ret['data'][$y]['sku_id'])
+    	            {
+        		        $resultDetail['HARGACORET'] =  $ret['data'][$y]['item_price'];
+    	            }
+    	        }
+    	        
+    	        $resultDetail['SUBTOTAL'] =  $resultDetail['JUMLAH'] * $resultDetail['HARGACORET'];
+    	        array_push($result['DETAILBARANG'],$resultDetail);
+    	    }
+    	    
+    	   
+    	   //$dataDetailRetur = [];
+        //   $parameter = "&reverse_order_id=".$resultPesanan->KODEPENGEMBALIANMARKETPLACE;
+           
+        //   $curl = curl_init();
+           
+        //   curl_setopt_array($curl, array(
+        //      CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+        //      CURLOPT_RETURNTRANSFER => true,
+        //      CURLOPT_ENCODING => '',
+        //      CURLOPT_MAXREDIRS => 10,
+        //      CURLOPT_TIMEOUT => 30,
+        //      CURLOPT_FOLLOWLOCATION => true,
+        //      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        //      CURLOPT_CUSTOMREQUEST => 'POST',
+        //      CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/detail/list','parameter' => $parameter),
+        //      CURLOPT_HTTPHEADER => array(
+        //       'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+        //      ),
+        //   ));
+           
+        //   $response = curl_exec($curl);
+        //   curl_close($curl);
+        //   $retDetail =  json_decode($response,true);
+        //   if($retDetail['code'] != 0)
+        //   {
+        //       echo $retDetail['error']." : ".$retDetail['message'];
+        //   }
+        //   else
+        //   {
+        //       $dataDetailRetur = $retDetail['data']['reverseOrderLineDTOList'];
+        //   }
+           
+    	   //$result['DETAILBARANG'] = [];
+    	   //for($y = 0; $y < count($ret['data']) ; $y++)
+    	   //{
+    	   // $resultDetail;
+        //     $resultDetail['KATEGORI'] = "-";
+        //     $resultDetail['ITEMID'] = 0;
+        //     $resultDetail['MODELID'] = $ret['data'][$y]['sku_id'];
+        //     $resultDetail['NAMA'] =  $ret['data'][$y]['name']. " <br><i>Tidak terhubung dengan master barang</i>";
+        //     $resultDetail['WARNA'] = "";
+        //     $resultDetail['SIZE'] = "";
+        //     $resultDetail['SKU'] =  $ret['data'][$y]['sku'];
+        //     $resultDetail['NAMAOLD'] = $ret['data'][$y]['name'];
+        //     $resultDetail['WARNAOLD'] = "";
+        //     $resultDetail['SIZEOLD'] = "";
+        //     $resultDetail['SKUOLD'] = $ret['data'][$y]['sku'];
+        //     $checkReverse = false;
+            
+        //     for($z = 0 ; $z < count($dataDetailRetur); $z++)
+        //     {
+        //         if($dataDetailRetur[$z]['reverse_status'] == 'REQUEST_CANCEL')
+        //         {
+        //             $resultDetail['NAMAKEMBALI'] = $ret['data'][$y]['name'];
+        //       	    $resultDetail['WARNAKEMBALI'] = "";
+        //       	    $resultDetail['SIZEKEMBALI'] =  "";
+        //       	    $resultDetail['SKUKEMBALI'] = $ret['data'][$y]['sku'];
+        //       	    $resultDetail['JUMLAHKEMBALI'] = 0;
+        //             $checkReverse = true;
+        //         }
+        //         else if($dataDetailRetur[$z]['trade_order_line_id'] == $ret['data'][$y]['order_item_id'])
+        //         {
+        //   	        $resultDetail['NAMAKEMBALI'] = $ret['data'][$y]['name'];
+        //   	        $resultDetail['WARNAKEMBALI'] = "";
+        //   	        $resultDetail['SIZEKEMBALI'] =  "";
+        //   	        $resultDetail['SKUKEMBALI'] = $ret['data'][$y]['sku'];
+        //   	        $resultDetail['JUMLAHKEMBALI'] = 1;
+        //   	        $checkReverse = true;
+        //         }
+        //     }
+            
+        //     if(!$checkReverse)
+        //     {
+        //         $resultDetail['NAMAKEMBALI'] = $ret['data'][$y]['name'];
+        //   	    $resultDetail['WARNAKEMBALI'] = "";
+        //   	    $resultDetail['SIZEKEMBALI'] =  "";
+        //   	    $resultDetail['SKUKEMBALI'] = $ret['data'][$y]['sku'];
+        //   	    $resultDetail['JUMLAHKEMBALI'] = 0;
+        //     }
+            
+        //     $resultDetail['JUMLAH'] = 1;
+        //     $resultDetail['SATUAN'] = "-";
+        //     $resultDetail['HARGATAMPIL'] =  $ret['data'][$y]['item_price'];
+        //     $resultDetail['HARGACORET'] =  $ret['data'][$y]['item_price'];
+            
+        //     $resultDetail['SUBTOTAL'] =  $resultDetail['JUMLAH'] * $resultDetail['HARGACORET'];
+        //     array_push($result['DETAILBARANG'],$resultDetail);
+    	   //}
+           	
+           $result['PENERIMAANJUAL']       = ($result['SUBTOTALJUAL'] + $result['BIAYAKIRIMJUAL'] + $result['DISKONJUAL']  + $result['REFUNDJUAL'] + $result['BIAYALAYANANJUAL'] ); 
+           $result['PENYELESAIANPENJUAL']  = 	$result['PENERIMAANJUAL'];
+    	   
+        }
+        
+		echo(json_encode($result));
 
 	}
 	
@@ -3659,7 +3018,7 @@ class Lazada extends MY_Controller {
 		$nopengembalian = $this->input->post('kode')??"";
 		
 		//PAYMENT DETAIL
-	    $parameter = "&return_sn=".$nopengembalian;
+	    $parameter = "&reverse_order_id=".$nopengembalian;
         
         $curl = curl_init();
         
@@ -3672,7 +3031,7 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_detail','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/detail/list','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -3681,33 +3040,100 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." : ".$ret['message'];
         }
         else
         {
-            $result;
-            $result['TOTALREFUND'] = $ret['response']['refund_amount'];
-            $result['GAMBAR'] = $ret['response']['image'];
-            $result['VIDEO'] = $ret['response']['buyer_videos'];
-            $result['MINTGLCEKBARANG'] =  date("Y-m-d H:i:s", $ret['response']['return_seller_due_date']);
+            $reason = [];
+            $refundAmount = 0;
+            $dataDetail = $ret['data']['reverseOrderLineDTOList'];
+            $result['REFUNDTYPE'] =  $ret['data']['request_type'];
             
-            $result['NEGOTIATIONSTATUS'] = $ret['response']['negotiation']['negotiation_status'];
-            $result['NEGOTIATIONREFUND'] = $ret['response']['negotiation']['latest_offer_amount'];
-            $result['NEGOTIATIONCOUNTER'] = $ret['response']['negotiation']['counter_limit']??0;
-            $result['NEGOTIATIONSOLUTION'] = $ret['response']['negotiation']['latest_solution'];
-            $result['NEGOTIATIONDATE'] = date("Y-m-d H:i:s", $ret['response']['negotiation']['offer_due_date']);
-            $result['LOGISTICSTATUS'] = $ret['response']['logistics_status'];
-            $result['REFUNDTYPE'] = $ret['response']['return_refund_type'];
+            $result['GAMBAR'] = [];
+            $result['VIDEO'] = [];
             
-            $result['ALASANPILIHPENGEMBALIAN'] = $this->getAlasanKembali($ret['response']['reason']);
+            for($d = 0 ; $d < count($dataDetail);$d++)
+            {
+                $statusRetur = $dataDetail[$d]['reverse_status'];
+            
+                if($statusRetur != "REQUEST_CANCEL")
+                {
+                    $refundAmount += (float)($dataDetail[$d]['refund_amount'] / 100); 
+                }
+                $adaReason = false;
+                for($r = 0 ; $r < count($reason); $r++)
+                {
+                    if($dataDetail[$d]['reason_text'] == $reason[$r])
+                    {
+                        $adaReason = true;
+                    }
+                }
+                if(!$adaReason)
+                {
+                    if(count($reason) > 0)
+                    {
+                        $reasonText .= ", ";
+                    }
+                    array_push($reason,$dataDetail[$d]['reason_text']);
+                   $reasonText .= $dataDetail[$d]['reason_text'];
+                }
+                
+                //LOAD GAMBAR
+        	    $parameter = "&reverse_order_line_id=".$dataDetail[$d]['reverse_order_line_id'];
+                
+                $curl = curl_init();
+                
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/history/list','parameter' => $parameter),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                
+                $response = curl_exec($curl);
+                curl_close($curl);
+                $ret =  json_decode($response,true);
+                if($ret['code'] != 0)
+                {
+                    echo $ret['error']." : ".$ret['message'];
+                }
+                else
+                {
+                    for($g = 0 ; $g < count($ret['data']['list']) ;$g++)
+                    {
+                        $dataGambar = $ret['data']['list'][$g];
+                        if(count($dataGambar['picture']) > 0)
+                        {
+                            for($p = 0 ; $p < count($dataGambar['picture']); $p++)
+                            {
+                                array_push($result['GAMBAR'],$dataGambar['picture'][$p]);
+                            }
+                        }
+                    }
+                }
+                //LOAD GAMBAR
+            }
+            
+            $result['TOTALREFUND'] = $refundAmount;
+        
+            $result['ALASANPILIHPENGEMBALIAN'] = $reasonText;
             
 		    $result['DETAILBARANG'] = [];
 		    
-		    $sql = "SELECT SKUPRODUKPENGEMBALIAN, SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD
-                        FROM TPENJUALANMARKETPLACE 
-                        WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE = '$nopengembalian' ";
+		    $sql = "SELECT GROUP_CONCAT(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, a.SKUPRODUK, ifnull(a.SKUPRODUKOLD,'') as SKUPRODUKOLD
+                        FROM TPENJUALANMARKETPLACE a
+                        INNER JOIN  TPENJUALANMARKETPLACEDTL b  on a.IDPENJUALANMARKETPLACE = b.IDPENJUALANMARKETPLACE
+                        WHERE b.MARKETPLACE = 'LAZADA' and b.KODEPENGEMBALIANMARKETPLACE = '$nopengembalian' ";
                         
             $resultPesanan = $CI->db->query($sql)->row();
             $produkDataPengembalian = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
@@ -3715,10 +3141,12 @@ class Lazada extends MY_Controller {
             $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
             $dataProduk = [];
             $indexProduk = 0;
+            
+            $itemTidakAda = true;
             foreach($produkData as $item)
             {
                 //GET NAMA BARANG
-                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
+                $sql = "SELECT IDINDUKBARANGLAZADA, NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
                             FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
                 $dataBarang = $CI->db->query($sql)->row();
                 $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
@@ -3726,6 +3154,7 @@ class Lazada extends MY_Controller {
                 {
                     $dataProduk[$indexProduk]->BARANG .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
                 }
+                $dataProduk[$indexProduk]->IDINDUKBARANGLAZADA = $dataBarang->IDINDUKBARANGLAZADA;
                 $dataProduk[$indexProduk]->SATUAN = $dataBarang->SATUAN;
                 $dataProduk[$indexProduk]->KATEGORI = $dataBarang->KATEGORI;
                 $dataProduk[$indexProduk]->WARNA = $dataBarang->WARNA;
@@ -3736,6 +3165,10 @@ class Lazada extends MY_Controller {
                 $dataProduk[$indexProduk]->SIZEOLD = $dataProduk[$indexProduk]->SIZE;
                 $dataProduk[$indexProduk]->SKUOLD = $dataProduk[$indexProduk]->SKU;
                 $indexProduk++;
+                if($dataBarang->NAMABARANG != "")
+                {
+                    $itemTidakAda = false;
+                }
             }
             
             if($resultPesanan->SKUPRODUKOLD != "")
@@ -3798,26 +3231,49 @@ class Lazada extends MY_Controller {
                 }
             }
 		    
-		    for($x = 0; $x < count($ret['response']['item']) ; $x++)
+		    for($x = 0; $x < count($dataDetail) ; $x++)
 		    {
-            
-		        $resultDetail;
-		        $resultDetail['KATEGORI'] = $dataProduk[$x]->KATEGORI;
-		        $resultDetail['ITEMID'] = $ret['response']['item'][$x]['item_id'];
-		        $resultDetail['MODELID'] = $ret['response']['item'][$x]['model_id'];
-		        $resultDetail['NAMA'] = $dataProduk[$x]->BARANG;
-		        $resultDetail['WARNA'] = $dataProduk[$x]->WARNA;
-		        $resultDetail['SIZE'] = $dataProduk[$x]->SIZE;
-		        $resultDetail['SKU'] = $dataProduk[$x]->SKU;
-		        $resultDetail['NAMAOLD'] = $dataProduk[$x]->BARANGOLD;
-		        $resultDetail['WARNAOLD'] = $dataProduk[$x]->WARNAOLD;
-		        $resultDetail['SIZEOLD'] = $dataProduk[$x]->SIZEOLD;
-		        $resultDetail['SKUOLD'] = $dataProduk[$x]->SKUOLD;
-		        $resultDetail['JUMLAH'] = $ret['response']['item'][$x]['amount'];
-		        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
-		        $resultDetail['HARGA'] = $ret['response']['item'][$x]['item_price'];
-		        $resultDetail['SUBTOTAL'] =  $ret['response']['item'][$x]['refund_amount'];
-		        array_push($result['DETAILBARANG'],$resultDetail);
+                if(!$itemTidakAda)
+                {
+    		        $resultDetail;
+    		        $resultDetail['KATEGORI'] = $dataProduk[$x]->KATEGORI;
+    		        $resultDetail['ITEMID'] =  $dataDetail[$x]['productDTO']['product_id'];
+    		        $resultDetail['MODELID'] = $dataDetail[$x]['productDTO']['sku'];
+    		        $resultDetail['NAMA'] = $dataProduk[$x]->BARANG;
+    		        $resultDetail['WARNA'] = $dataProduk[$x]->WARNA;
+    		        $resultDetail['SIZE'] = $dataProduk[$x]->SIZE;
+    		        $resultDetail['SKU'] = $dataProduk[$x]->SKU;
+    		        $resultDetail['NAMAOLD'] = $dataProduk[$x]->BARANGOLD;
+    		        $resultDetail['WARNAOLD'] = $dataProduk[$x]->WARNAOLD;
+    		        $resultDetail['SIZEOLD'] = $dataProduk[$x]->SIZEOLD;
+    		        $resultDetail['SKUOLD'] = $dataProduk[$x]->SKUOLD;
+    		        $resultDetail['JUMLAH'] = 1;
+    		        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
+    		        $resultDetail['HARGA'] =  (float)($dataDetail[$x]['refund_amount'] / 100) ;
+    		        $resultDetail['SUBTOTAL'] = ($resultDetail['JUMLAH'] * $resultDetail['HARGA']);
+    		        array_push($result['DETAILBARANG'],$resultDetail);
+                }
+                else
+                {
+                    $resultDetail;
+    		        $resultDetail['KATEGORI'] = "-";
+    		        $resultDetail['ITEMID'] =  $dataDetail[$x]['productDTO']['product_id'];
+    		        $resultDetail['MODELID'] = $dataDetail[$x]['productDTO']['sku'];
+    		        $resultDetail['NAMA'] = "-<br>Barang Tidak terhubung dengan master barang"."<br>".($dataDetail[$x]['reverse_status'] != "REFUND_SUCCESS" && $dataDetail[$x]['reverse_status'] != "REQUEST_CANCEL"?"<i style='color:grey';>Masih Proses</i>":"");
+    		        $resultDetail['WARNA'] = "";
+    		        $resultDetail['SIZE'] = "";
+    		        $resultDetail['SKU'] =  "";
+    		        $resultDetail['NAMAOLD'] = "-<br>Barang Tidak terhubung dengan master barang";
+    		        $resultDetail['WARNAOLD'] =  "";
+    		        $resultDetail['SIZEOLD'] =  "";
+    		        $resultDetail['SKUOLD'] =  "";
+    		        
+    		        $resultDetail['JUMLAH'] = 1;
+    		        $resultDetail['SATUAN'] = "";
+    		        $resultDetail['HARGA'] =  ($dataDetail[$x]['reverse_status'] == "REFUND_SUCCESS"?(float)($dataDetail[$x]['refund_amount'] / 100):0) ;
+    		        $resultDetail['SUBTOTAL'] =  ($resultDetail['JUMLAH'] * $resultDetail['HARGA']);
+    		        array_push($result['DETAILBARANG'],$resultDetail);
+                }
 		    }
 		    echo(json_encode($result));
         }
@@ -3898,15 +3354,16 @@ class Lazada extends MY_Controller {
 		$this->output->set_content_type('application/json');
 		$nopengembalian = $this->input->post('kodepengembalian')??"";
 		$nopesanan = $this->input->post('kodepesanan')??"";
+		$idbaranglist = [];
+		$parameter = '';
+		$requestType = '';
 		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		//HAPUS PESANAN
-		
+	    $parameter = "&reverse_order_id=".$nopengembalian;
+        
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -3914,235 +3371,113 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/confirm',
-          'parameter' => json_encode($parameter)),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/detail/list','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
         ));
-          
+        
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-     
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
-            die(json_encode($data));
+            echo $ret['error']." : ".$ret['message'];
         }
         else
         {
-          //GET ORDER DETAIL
-          $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-          // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-          // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-          $curl = curl_init();
-           
-          curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-              'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-          ));
-           
-          $response = curl_exec($curl);
-          curl_close($curl);
-          $ret =  json_decode($response,true);
-          if($ret['error'] != "")
-          {
-              echo $ret['error']." : ".$ret['message'];
-              $statusok = false;
-          }
-          else
-          {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                {
-                  $dataDetail = $ret['response']['order_list'][$y];
-                  $data;
-                  //DAPATKAN RESI
-                  $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                  $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                  $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                  $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                  $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                  $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                  $data['KOTA']                       = $dataDetail['recipient_address']['city'];
-                  $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                  $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                  $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                  ->where('MARKETPLACE',"LAZADA")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                      'NAME'                       => $data['NAME'],  
-                      'TELP'                       => $data['TELP'],  
-                      'ALAMAT'                     => $data['ALAMAT'],
-                      'KOTA'                       => $data['KOTA'],  
-                      'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                      'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                      'STATUS'                     => $data['STATUS'],
-                      'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                    ));    
-                }
-          }
-           
-            //UPDATE TOTAL PENDAPATAN DANA
-            $parameter = "";
-    	    $parameter = "&order_sn=".$nopesanan;
+            $dataDetail = $ret['data']['reverseOrderLineDTOList'];
+            $requestType = $ret['data']['request_type'];
             
+            for($d = 0 ; $d < count($dataDetail);$d++)
+            {
+                $statusRetur = $dataDetail[$d]['reverse_status'];
+            
+                if($statusRetur == "REQUEST_INITIATE")
+                {
+                    array_push($idbaranglist,(int)$dataDetail[$d]['reverse_order_line_id']);
+                }
+            }
+        }
+        
+        if($requestType == "ONLY_REFUND")
+        {
+            $parameter = '';
+    		$parameter = '&action=agreeRefund&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist);
+    		//REFUND
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'payment/get_escrow_detail','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
+                 CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/onlyrefund/seller/decide','parameter' => $parameter),
+                 CURLOPT_HTTPHEADER => array(
+                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
             ));
-            
+              
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+         
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                $data['success'] = false;
+                $data['msg'] =  $ret['error']." : ".$ret['message'];
+                die(json_encode($data));
             }
             else
             {
-    		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','LAZADA')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
-    		    ));
-            }
-            
-           //UPDATE BARANG SAMPAI
-           $parameter = "&return_sn=".$nopengembalian;
-           
-           $curl = curl_init();
-           $logisticStatus = "";
-           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['error'] != "")
-           {
-               echo $ret['error']." : ".$ret['message'];
-           }
-           else
-           {
-               $logisticStatus = $ret['response']['logistics_status'];
-               
-                $CI->db->where("KODEPENGEMBALIANMARKETPLACE",$nopengembalian)
-		          ->where('MARKETPLACE','LAZADA')
-		          ->updateRaw("TPENJUALANMARKETPLACE", array(
-		              'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0)
-		            ));
-		            
-		        if($logisticStatus == "LOGISTICS_DELIVERY_DONE")
-		        {
-    		        //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
-                    $lokasi = "0";
-                    $parameter="";
-                    $curl = curl_init();
-                    
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                    
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-                    if($ret['error'] != "")
-                    {
-                        echo $ret['error']." : ".$ret['message'];
-                    }
-                    else
-                    {
-                        $dataAddress = $ret['response']['address_list'];
-                        $data['rows'] = [];
-                        for($x = 0 ; $x < count($dataAddress);$x++)
-                        {
-                            $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                            
-                            for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                            {
-                                if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
-                                {
-                                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                                }
-                            }
-                        }
-                    }
-                    
-            	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
-            	    
-            	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
-                    for($f = 0 ; $f < count($finalData) ; $f++)
-                    {
-                        $wherePesanan .= "'".$finalData[$f]['KODEPENJUALANMARKETPLACE']."'";
-                        
-                        if($f != count($finalData)-1)
-                        {
-                             $wherePesanan .= ",";
-                        }
-                    }
-                    $wherePesanan .= ")";
-                    
-                    $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
-                    $dataRetur = $CI->db->query($sqlRetur)->result();
-            
-                    foreach($dataRetur as $itemRetur)
-                    {
-                       $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
-                    }
-                    //CEK LOKASI RETURN
-		        }
-           }
-            
+                sleep(5);
+                $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+            }  
         }
+        else if($requestType == "RETURN")
+        {
+        
+            $parameter = '';
+    		$parameter = '&action=instantRefund&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist);
+    		//REFUND
+            $curl = curl_init();
+            
+            curl_setopt_array($curl, array(
+                 CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/update','parameter' => $parameter),
+                 CURLOPT_HTTPHEADER => array(
+                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
+            ));
+              
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+         
+            if($ret['code'] != 0)
+            {
+                $data['success'] = false;
+                $data['msg'] =  $ret['error']." : ".$ret['message'];
+                die(json_encode($data));
+            }
+            else
+            {
+                sleep(5);
+                $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+            }  
+        }
+     
         
         $data['success'] = true;
         $data['msg'] = "Pengembalian Dana #".$nopengembalian." Berhasil Dilakukan";
@@ -4151,23 +3486,21 @@ class Lazada extends MY_Controller {
 	}
 	
 	public function returnRefund(){
-	    $CI =& get_instance();	
+	  $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$offeramount = $this->input->post('offeramount')??"";
-		$solution = $this->input->post('solution')??"";
+		$nopesanan = $this->input->post('kodepesanan')??"";
+		$idbaranglist = [];
+		$parameter = '';
+		$requestType = '';
 		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		$parameter['proposed_solution'] = $solution;
-		$parameter['proposed_adjusted_refund_amount'] = (float)$offeramount;
-		//HAPUS PESANAN
-		
+	    $parameter = "&reverse_order_id=".$nopengembalian;
+        
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4175,19 +3508,72 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/offer',
-          'parameter' => json_encode($parameter)),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/detail/list','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            echo $ret['error']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataDetail = $ret['data']['reverseOrderLineDTOList'];
+            $requestType = $ret['data']['request_type'];
+            
+            for($d = 0 ; $d < count($dataDetail);$d++)
+            {
+                $statusRetur = $dataDetail[$d]['reverse_status'];
+            
+                if($statusRetur == "REQUEST_INITIATE")
+                {
+                    array_push($idbaranglist,(int)$dataDetail[$d]['reverse_order_line_id']);
+                }
+            }
+        }
+        
+        $parameter = '';
+    	$parameter = '&action=agreeReturn&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist);
+    	//REFUND
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+             CURLOPT_RETURNTRANSFER => true,
+             CURLOPT_ENCODING => '',
+             CURLOPT_MAXREDIRS => 10,
+             CURLOPT_TIMEOUT => 30,
+             CURLOPT_FOLLOWLOCATION => true,
+             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+             CURLOPT_CUSTOMREQUEST => 'POST',
+             CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/update','parameter' => $parameter),
+             CURLOPT_HTTPHEADER => array(
+               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+             ),
         ));
           
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
+        
+        if($ret['code'] != 0)
+        {
+            $data['success'] = false;
+            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            die(json_encode($data));
+        }
+        else
+        {
+            sleep(5);
+            $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+        }  
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
             $data['msg'] =  $ret['error']." : ".$ret['message'];
@@ -4196,7 +3582,7 @@ class Lazada extends MY_Controller {
         else
         {
             $data['success'] = true;
-            $data['msg'] = "Negosiasi Pengembalian #".$parameter['return_sn']." Berhasil Dilakukan";
+            $data['msg'] = "Pengembalian Barang dan Dana #".$nopengembalian." Berhasil Dilakukan";
             echo(json_encode($data));
         }
 
@@ -4236,7 +3622,7 @@ class Lazada extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
             $data['msg'] =  $ret['error']." : ".$ret['message'];
@@ -4269,7 +3655,7 @@ class Lazada extends MY_Controller {
            $response = curl_exec($curl);
            curl_close($curl);
            $ret =  json_decode($response,true);
-           if($ret['error'] != "")
+           if($ret['code'] != 0)
            {
                echo $ret['error']." : ".$ret['message'];
                $statusok = false;
@@ -4288,7 +3674,7 @@ class Lazada extends MY_Controller {
                    $data['TELP']                       = $dataDetail['recipient_address']['phone'];
                    $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
                    $data['KOTA']                       = $dataDetail['recipient_address']['city'];
-                   $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
+                   $data['STATUS']                     = $this->getStatus([$dataDetail['order_status']])['state'];
                    $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
                    $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
@@ -4331,7 +3717,7 @@ class Lazada extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 echo $ret['error']." : ".$ret['message'];
             }
@@ -4358,239 +3744,13 @@ class Lazada extends MY_Controller {
 		$this->output->set_content_type('application/json');
 		$nopengembalian = $this->input->post('kodepengembalian')??"";
 		$nopesanan = $this->input->post('kodepesanan')??"";
-		$email = $this->input->post('email')??"";
-		$disputeid = $this->input->post('id')??"";
-		$disputetext = $this->input->post('description')??"";
-		$imageData = json_decode($this->input->post('data')??"",true);
+		$alasandispute = $this->input->post('alasandispute')??"";
+		$disputeproof = json_decode($this->input->post('disputeproof')??[],true);
+		$requestType = '';
+		$idbaranglist = [];
+		$parameter = '';
 		
-		$imageDataSave = [];
-		
-		for($x = 0 ; $x < count($imageData); $x++)
-		{
-		    array_push($imageDataSave,array(
-		        'module_index' => (int)$imageData[$x]['index'],
-		        'requirement' => $imageData[$x]['requirement'],
-		        'image_url' => $imageData[$x]['url']
-		    ));
-		}
-		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		$parameter['email'] = $email;
-		$parameter['dispute_reason_id'] = (int)$disputeid;
-		$parameter['dispute_text_reason'] = $disputetext;
-		$parameter['image_list'] = $imageDataSave;
-		//HAPUS PESANAN
-		
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/dispute',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-     
-        if($ret['error'] != "")
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-             //GET ORDER DETAIL
-           $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-           // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-           // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-           $curl = curl_init();
-           
-           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['error'] != "")
-           {
-               echo $ret['error']." : ".$ret['message'];
-               $statusok = false;
-           }
-           else
-           {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                {
-                   $dataDetail = $ret['response']['order_list'][$y];
-                   $data;
-                   //DAPATKAN RESI
-                   $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                   $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                   $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                   $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                   $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                   $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = $dataDetail['recipient_address']['city'];
-                   $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                   $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"LAZADA")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                       'NAME'                       => $data['NAME'],  
-                       'TELP'                       => $data['TELP'],  
-                       'ALAMAT'                     => $data['ALAMAT'],
-                       'KOTA'                       => $data['KOTA'],  
-                       'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                       'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                       'STATUS'                     => $data['STATUS'],
-                       'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                    ));    
-                }
-           }
-           
-           
-            //UPDATE TOTAL PENDAPATAN DANA
-            $parameter = "";
-    	    $parameter = "&order_sn=".$nopesanan;
-            
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'payment/get_escrow_detail','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['error'] != "")
-            {
-                echo $ret['error']." : ".$ret['message'];
-            }
-            else
-            {
-    		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','LAZADA')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
-    		    ));
-            }
-            
-            //UPDATE BARANG SAMPAI
-            $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','LAZADA')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'BARANGSAMPAI'   =>  1,
-    		 ));
-        
-            //CEK LOKASI RETURN
-            $lokasi = "0";
-            $parameter="";
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['error'] != "")
-            {
-                echo $ret['error']." : ".$ret['message'];
-            }
-            else
-            {
-                $dataAddress = $ret['response']['address_list'];
-                $data['rows'] = [];
-                for($x = 0 ; $x < count($dataAddress);$x++)
-                {
-                    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                    
-                    for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                    {
-                        if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
-                        {
-                            $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                        }
-                    }
-                }
-            }
-            
-    	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
-            
-            $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE = '".$nopengembalian."'";
-            $dataRetur = $CI->db->query($sqlRetur)->result();
-            
-            foreach($dataRetur as $itemRetur)
-            {
-               $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
-            }
-            //CEK LOKASI RETURN
-            
-            $data['success'] = true;
-            $data['msg'] = "Proses Sengketa #".$nopengembalian." Berhasil Dilakukan";
-            echo(json_encode($data));
-        }
-
-	}
-	
-	public function getDispute(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kode')??"";
-		
-		//PAYMENT DETAIL
-	    $parameter = "&return_sn=".$nopengembalian;
+	    $parameter = "&reverse_order_id=".$nopengembalian;
         
         $curl = curl_init();
         
@@ -4603,7 +3763,7 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_dispute_reason','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/detail/list','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -4612,21 +3772,129 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." : ".$ret['message'];
         }
         else
         {
-           $response = $ret['response']['dispute_reason_list'];
-           $index = 0 ;
-           foreach($response as $item)
-           {
-               $response[$index]['dispute_text'] = $this->getAlasanDispute($response[$index]['dispute_reason']);
-               $index++;
-           }
-		   echo(json_encode($response));
+            $dataDetail = $ret['data']['reverseOrderLineDTOList'];
+            $requestType = $ret['data']['request_type'];
+            for($d = 0 ; $d < count($dataDetail);$d++)
+            {
+                $statusRetur = $dataDetail[$d]['reverse_status'];
+            
+                if($statusRetur == "REQUEST_INITIATE")
+                {
+                    array_push($idbaranglist,(int)$dataDetail[$d]['reverse_order_line_id']);
+                }
+            }
         }
+        
+        $imageProof = [];
+        for($x = 0 ; $x < count($disputeproof); $x++)
+        {
+            array_push($imageProof,array(
+               'name' => $disputeproof[$x]['id'],
+               'url' => $disputeproof[$x]['url-baru']
+            ));
+            
+           $folder = FCPATH . '/assets/proof/LAZADA/'; // Use FCPATH . 'assets/proof/' in CodeIgniter
+           
+           if (!is_dir($folder)) {
+               die('Folder does not exist.');
+           }
+            
+           $files = glob($folder . '*'); // Get all files in the folder
+            
+           foreach ($files as $file) {
+               if (is_file($file) && strpos(basename($file), $kode . "_" . $index) !== false) {
+                   unlink($file); // Delete file if name contains "a"
+               }
+           }
+                                          
+        }
+        
+        if($requestType == "ONLY_REFUND")
+        {
+            $parameter = '';
+    		$parameter = '&action=startDispute&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist).'&comment='.$alasandispute.'&image_info_list='.json_encode($imageProof);
+    		//REFUND
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                 CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/onlyrefund/seller/decide','parameter' => $parameter),
+                 CURLOPT_HTTPHEADER => array(
+                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
+            ));
+              
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+         
+            if($ret['code'] != 0)
+            {
+                $data['success'] = false;
+                $data['msg'] =  $ret['error']." : ".$ret['message'];
+                die(json_encode($data));
+            }
+            else
+            {
+                sleep(5);
+                $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+            }  
+        }
+        else if($requestType == "RETURN")
+        {
+    //         $parameter = '';
+    // 		$parameter = '&action=instantRefund&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist).'&comment='.$alasandispute.'&image_info='.json_encode($imageProof);
+    // 		//REFUND
+    //         $curl = curl_init();
+            
+    //         curl_setopt_array($curl, array(
+    //              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+    //              CURLOPT_RETURNTRANSFER => true,
+    //              CURLOPT_ENCODING => '',
+    //              CURLOPT_MAXREDIRS => 10,
+    //              CURLOPT_TIMEOUT => 30,
+    //              CURLOPT_FOLLOWLOCATION => true,
+    //              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //              CURLOPT_CUSTOMREQUEST => 'POST',
+    //              CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/update','parameter' => $parameter),
+    //              CURLOPT_HTTPHEADER => array(
+    //               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+    //              ),
+    //         ));
+              
+    //         $response = curl_exec($curl);
+    //         curl_close($curl);
+    //         $ret =  json_decode($response,true);
+         
+    //         if($ret['code'] != 0)
+    //         {
+    //             $data['success'] = false;
+    //             $data['msg'] =  $ret['error']." : ".$ret['message'];
+    //             die(json_encode($data));
+    //         }
+    //         else
+    //         {
+    //             sleep(5);
+    //             $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+    //         }  
+        }
+     
+        
+        $data['success'] = true;
+        $data['msg'] = "Pengembalian Dana #".$nopengembalian." Berhasil Dilakukan";
+        echo(json_encode($data));
 
 	}
 	
@@ -4666,7 +3934,7 @@ class Lazada extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
             $data['msg'] =  $ret['error']." : ".$ret['message'];
@@ -4682,11 +3950,11 @@ class Lazada extends MY_Controller {
 	}
 	
 	public function uploadLocalUrlProof(){
-	      $CI =& get_instance();	
+	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		$kode = $this->input->post('kode')??"";
-		$index = $this->input->post('index')??0;
+		$index = $this->input->post('index')??"0";
 		$tipe = $this->input->post('tipe')??0;
 		$size = $this->input->post('size')??0;
 		
@@ -4708,95 +3976,12 @@ class Lazada extends MY_Controller {
             
             if($tipe == "GAMBAR")
             {
-                $response =  $this->getRefreshToken();
-        	    if($response)
-        	    {
-        	        $endpoint = "returns/convert_image";
-            	    
-            	    $code = $this->model_master_config->getConfigMarketplace('LAZADA','CODE');
-            	    $shopId = $this->model_master_config->getConfigMarketplace('LAZADA','SHOP_ID');
-            	    $partnerId = $this->model_master_config->getConfigMarketplace('LAZADA','PARTNER_ID');
-            	    $partnerKey = $this->model_master_config->getConfigMarketplace('LAZADA','PARTNER_KEY');
-            	    $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
-                    $path = "/api/v2/";
-                    
-                    $timest = time();
-                    $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest.$accessToken.$shopId,$partnerKey);
-                    
-                    $host = 'https://partner.LAZADAmobile.com'.$path.$endpoint;
-                    // Path to the local file
-                    $filePath = $destination;
-                    
-                    // Check if file exists
-                    if (!file_exists($filePath)) {
-                    die('File not found.');
-                    }
-                    
-                    // Prepare the CURLFile object
-                    $cfile = new CURLFile($filePath, mime_content_type($filePath), basename($filePath));
-                    
-                    // Prepare POST data
-                    $postData = [
-                    'return_sn' => $kode,
-                    'upload_image' => $cfile
-                    ];
-                    
-                    // Initialize cURL
-                    $ch = curl_init();
-                    // Set cURL options
-                    curl_setopt($ch, CURLOPT_URL,  $host.'?timestamp='.$timest.'&sign='.$sign.'&partner_id='.$partnerId.'&shop_id='.$shopId."&access_token=".$accessToken); // destination URL
-                    curl_setopt($ch, CURLOPT_POST, true);
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        'Content-Type: multipart/form-data'
-                    ]);
-                    
-                    // Execute the request
-                    $response = curl_exec($ch);
-                    curl_close($ch);
-                    $ret =  json_decode($response,true);
-                    if($ret['error'] != "")
-                    {
-                        $data['success'] = false;
-                        print_r($ret);
-                        echo json_encode($postData).$ret['error']." : ".$ret['message'];
-                    }
-                    else
-                    {
-                      $data['success'] = true;
-                      $data['url'] = $ret['response']['url'];
-                      $data['thumbnail'] = $ret['response']['thumbnail'];
-                      $data['id'] = 0;
-                       
-                      //HAPUS DLU
-                      $folder = FCPATH . '/assets/'.$this->input->post('reason').'/'; // Use FCPATH . 'assets/proof/' in CodeIgniter
-                
-                      if (!is_dir($folder)) {
-                          die('Folder does not exist.');
-                      }
-                       
-                      $files = glob($folder . '*'); // Get all files in the folder
-                       
-                      foreach ($files as $file) {
-                          if (is_file($file) && strpos(basename($file), $kode . "_" . $index) !== false) {
-                              unlink($file); // Delete file if name contains "a"
-                          }
-                      }
-        
-                      $data['urlLocal'] = $this->config->item('base_url')."/assets/".$this->input->post('reason')."/". $kode . "_" . $index.$type;
-            		   echo(json_encode($data));
-                    }
-    
-        	    }
-                else
-        	    {
-        	       // echo "Token gagal diperbaharui";
-        	        echo json_encode(array(
-        	            "success" => false,
-        	            "error" => "failed refresh token"
-        	        ));
-        	    }
+                $data['success'] = true;
+                $data['url'] = $this->config->item('base_url')."/assets/".$this->input->post('reason')."/". $kode . "_" . $index.$type."?t=".date('Ymdhms');
+                $data['thumbnail'] =  $data['url'];
+                $data['id'] = $index;
+                $data['urlLocal'] =  $data['url'];
+            	echo(json_encode($data));
            }
         }
 	    
@@ -4810,6 +3995,7 @@ class Lazada extends MY_Controller {
 		$url = $this->input->post('url')??[];
 		$dataUrl = json_decode($url,true);
 		$response =  $this->getRefreshToken();
+        $error = 0;
         if($response)
         {
              $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
@@ -4826,79 +4012,97 @@ class Lazada extends MY_Controller {
              $request = new LazopRequest($endpoint);
              
              $linkUrl = [];
-             foreach($dataUrl as $itemUrl)
-             {
-                 array_push($linkUrl,array('Url' => $itemUrl['url']));
-             }
+             $counterUrl = 0;
              
-             // Prepare POST data
-             $array = [
-                'Request' => [
-                    'Images' => $linkUrl
-                ]
-             ];
-           
-             $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
-             $this->arrayToXml($array, $xml);
-            
-             $payload = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
-            
-             $request->addApiParam('payload',$payload);
-             $response = $client->execute($request, $accessToken);
-             $ret = json_decode($response,true);
-    
-             if($ret['message'] == "")
+             for($f = 0 ; $f < count($dataUrl) ; $f++)
              {
-                 $batchID = $ret['batch_id'];
+                 array_push($linkUrl,array('Url' => $dataUrl[$f]['url']));
                  
-                 $endpoint = "/image/response/get";
-                
-                 $this->load->library('Lazop', [
-                     'appKey'    => $appKey,
-                     'appSecret' => $appSecret
-                 ]);
-                 
-                 $client = $this->lazop->getClient();
-                 $request = new LazopRequest($endpoint,'GET');
-                 $request->addApiParam('batch_id',$batchID);
-                 $response = $client->execute($request, $accessToken);
-                 $retResp = json_decode($response,true);
-                
-                 if($retResp['message'] == "")
+                 if(($f % 7 == 0 && $f != 0) || $f == count($dataUrl)-1)
                  {
-                     for($x = 0 ; $x < count($dataUrl) ; $x++)
+                 
+                     // Prepare POST data
+                     $array = [
+                        'Request' => [
+                            'Images' => $linkUrl
+                        ]
+                     ];
+                   
+                     $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
+                     $this->arrayToXml($array, $xml);
+                    
+                     $payload = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
+            
+                     $request->addApiParam('payload',$payload);
+                     $response = $client->execute($request, $accessToken);
+                     $ret = json_decode($response,true);
+            
+                     if($ret['code'] == 0)
                      {
-                         $dataUrl[$x]['url-baru'] = $retResp['data']['images'][$x]['url'];
+                         $batchID = $ret['batch_id'];
+                         
+                         $endpoint = "/image/response/get";
+                        
+                         $this->load->library('Lazop', [
+                             'appKey'    => $appKey,
+                             'appSecret' => $appSecret
+                         ]);
+                         
+                         $client = $this->lazop->getClient();
+                         $request = new LazopRequest($endpoint,'GET');
+                         $request->addApiParam('batch_id',$batchID);
+                         $response = $client->execute($request, $accessToken);
+                         $retResp = json_decode($response,true);
+                        
+                         if($retResp['code'] == 0)
+                         {
+                             for($x = (7*$counterUrl) ; $x < ($f+1) ; $x++)
+                             {
+                                 $dataUrl[$x]['url-baru'] = $retResp['data']['images'][$x]['url'];
+                                 $dataUrl[$x]['id-baru'] = $retResp['data']['images'][$x]['hash_code'];
+                             }
+                            $linkUrl = [];
+                            $counterUrl++;
+                         }
+                         else
+                         {
+                             $error = 1;
+                             echo json_encode(array(
+                                 "success" => false,
+                                 "message" => "RESPONSE : ".$retResp['code']." : ".$retResp['message'],
+                                 "msg" => "Terjadi kesalahan di respon, mohon lakukan simpan ulang"
+                             ));
+                         }
                      }
-                     
-                     echo json_encode(array(
-                         "success" => true,
-                         "data" => $dataUrl
-                     ));
+                     else
+                     {
+                         $error = 1;
+                         echo json_encode(array(
+                             "success" => false,
+                             "message" => "MIGRATES : ".$ret['code']." : ".$ret['message'],
+                             "msg" => "Terjadi kesalahan di migrasi url, mohon lakukan simpan ulang"
+                         ));
+                     }
                  }
-                 else
-                 {
-                     echo json_encode(array(
-                         "success" => false,
-                         "error" => "RESPONSE : ".$retResp['code']." : ".$retResp['message']
-                     ));
-                 }
-             }
-             else
-             {
-                 echo json_encode(array(
-                     "success" => false,
-                     "error" => "MIGRATES : ".$ret['code']." : ".$ret['message']
-                 ));
-             }
+            }
+             
+            if($error == 0)
+            {
+               //JIKA BERHASIL, KIRIM BALIK SEMUA       
+               echo json_encode(array(
+                   "success" => true,
+                   "data" => $dataUrl
+               ));
+            }
     
         }
          else
         {
+            $error = 1;
            // echo "Token gagal diperbaharui";
             echo json_encode(array(
                 "success" => false,
-                "error" => "failed refresh token"
+                "message" => "failed refresh token"
             ));
         }
 	}
@@ -4925,7 +4129,7 @@ class Lazada extends MY_Controller {
         // Create filename and move the file
         $type = ".".explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
         $destination = $uploadDir . $kode . "_" . $index.$type;
-        $urlLocal = $this->config->item('base_url'). '/assets/'.$this->input->post('reason').'/'. $kode . "_" . $index.$type;
+        $urlLocal = $this->config->item('base_url'). '/assets/'.$this->input->post('reason').'/'. $kode . "_" . $index.$type."?t=".date('ymdhis');
 
         if (move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
             
@@ -4958,7 +4162,6 @@ class Lazada extends MY_Controller {
                   
                     $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
                     $this->arrayToXml($array, $xml);
-                   
                     $payload = str_replace('<?xml version="1.0" encoding="UTF-8"?>','',$xml->Request->asXML());
                     $request->addApiParam('payload',$payload);
                     $response = $client->execute($request, $accessToken);
@@ -4967,14 +4170,16 @@ class Lazada extends MY_Controller {
                     {
                         echo json_encode(array(
             	            "success" => true,
-            	            "url" => $ret['data']['image']['url']
+            	            "url"   => $ret['data']['image']['url'],
+            	            "id"   => explode(".",explode("/",$ret['data']['image']['url'])[count(explode("/",$ret['data']['image']['url']))-1])[0],
+            	            "urlLocal" => $urlLocal
             	        )); 
                     }
                     else
                     {
                         echo json_encode(array(
             	            "success" => false,
-            	            "error" => $ret['code']." : ".$ret['message']
+            	            "message" => $ret['code']." : ".$ret['message']
             	        ));
                     }
     
@@ -4984,7 +4189,7 @@ class Lazada extends MY_Controller {
         	       // echo "Token gagal diperbaharui";
         	        echo json_encode(array(
         	            "success" => false,
-        	            "error" => "failed refresh token"
+        	            "message" => "failed refresh token"
         	        ));
         	    }
            }
@@ -5049,7 +4254,7 @@ class Lazada extends MY_Controller {
               curl_close($curl);
               $ret =  json_decode($response,true);
                
-              if($ret['error'] != "")
+              if($ret['code'] != 0)
               {
                   $data['success'] = false;
                   $data['msg'] =  $ret['error']." init : ".$ret['message'];
@@ -5113,7 +4318,7 @@ class Lazada extends MY_Controller {
                         curl_close($ch);
                         $ret =  json_decode($response,true);
                         
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
                             echo $ret['error']." part : ".$ret['message'];
@@ -5160,7 +4365,7 @@ class Lazada extends MY_Controller {
                           curl_close($curl);
                           $ret =  json_decode($response,true);
                            
-                          if($ret['error'] != "")
+                          if($ret['code'] != 0)
                           {
                               $data['success'] = false;
                               $data['msg'] =  $ret['error']." complete : ".$ret['message'];
@@ -5194,7 +4399,7 @@ class Lazada extends MY_Controller {
                                     $response = curl_exec($curl);
                                     curl_close($curl);
                                     $ret =  json_decode($response,true);
-                                    if($ret['error'] != "")
+                                    if($ret['code'] != 0)
                                     {
                                         echo $ret['error']." : ".$ret['message'];
                                     }
@@ -5244,7 +4449,7 @@ class Lazada extends MY_Controller {
             	       // echo "Token gagal diperbaharui";
             	        echo json_encode(array(
             	            "success" => false,
-            	            "error" => "failed refresh token"
+            	            "message" => "failed refresh token"
             	        ));
             	    }
               }
@@ -5297,7 +4502,7 @@ class Lazada extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
             $data['msg'] =  $ret['error']." : ".$ret['message'];
@@ -5341,7 +4546,7 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." : ".$ret['message'];
         }
@@ -5351,25 +4556,6 @@ class Lazada extends MY_Controller {
 		   echo(json_encode($response));
         }
 
-	}
-	
-	public function menungguBarangDatang(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$nopesanan = $this->input->post('kodepesanan')??"";
-		
-		
-	    $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-		        ->where('MARKETPLACE','LAZADA')
-		            ->set("SELLERMENUNGGUBARANGDATANG", 1)
-		            ->updateRaw("TPENJUALANMARKETPLACE");
-
-           
-        $data['success'] = true;
-        $data['msg'] = "Proses Pengembalian #".$nopengembalian." Ditunda Hingga Barang Tiba";
-        echo(json_encode($data));
 	}
 	
 	public function ubah(){
@@ -5432,200 +4618,42 @@ class Lazada extends MY_Controller {
 		$nopesanan = $this->input->post('kode')??"";
 		$note = $this->input->post('note')??"";
 		
-		$parameter = [];
-		$parameter['order_sn'] = $nopesanan;
-		$parameter['note'] = $note;
-		//HAPUS PESANAN
-		
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'order/set_note',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-            $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-                    ->where("MARKETPLACE","LAZADA")
-		            ->set("CATATANPENJUAL", $note)
-		            ->updateRaw("TPENJUALANMARKETPLACE");
-		            
-            $data['success'] = true;
-            $data['msg'] = "Catatan #".$parameter['order_sn']." Berhasil Disimpan";
-            echo(json_encode($data));
-        }
+		$CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
+                ->where("MARKETPLACE","LAZADA")
+		        ->set("CATATANPENJUAL", $note)
+		        ->updateRaw("TPENJUALANMARKETPLACE");
+		        
+        $data['success'] = true;
+        $data['msg'] = "Catatan #".$nopesanan." Berhasil Disimpan";
+        echo(json_encode($data));
 
-	}
-	
-	public function setKirim(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-	    $dataNoPackaging = json_decode($this->input->post('dataNoPackaging'),true)??"";
-        
-		$parameter = [];
-	    $packaging = [];
-        $indexPackaging = 0;
-        for($f = 0 ; $f < count($dataNoPackaging);$f++){
-            $packaging[count($packaging)]['package_number'] = $dataNoPackaging[$f]['KODEPACKAGING'];
-            if(($f % 49 == 0 && $f != 0) || $f == count($dataNoPackaging)-1)
-            {
-                //GET RESI
-                $parameter['package_list'] =  $packaging;
-                $curl = curl_init();
-                
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'logistics/get_mass_shipping_parameter',
-                  'parameter' => json_encode($parameter)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                  
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['error'] != "")
-                {
-                    echo $ret['error']." : ".$ret['message'];
-                    $statusok = false;
-                }
-                else
-                {
-                    $data['pickup'] = $ret['response']['pickup']['address_list'];
-                    
-                    for($x = 0 ; $x < count($data['pickup']) ; $x++)
-                    {
-                        
-                        $sql = "SELECT IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ". $data['pickup'][$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                        $namalokasiset = $CI->db->query($sql)->row()->NAMALOKASI??'';
-                        
-                        if($namalokasiset != "")
-                        {
-                            $data['pickup'][$x]['address'] .= ("&nbsp;&nbsp;|&nbsp;&nbsp;".$namalokasiset);
-                        }
-                
-                        for($y = 0 ; $y < count($data['pickup'][$x]['time_slot_list']);$y++)
-                        {
-                            $data['pickup'][$x]['time_slot_list'][$y]['date'] =  date("Y-m-d",$data['pickup'][$x]['time_slot_list'][$y]['date']);
-                        }
-                        
-                    }
-                    
-                    $data['info'] =$ret['response']['info_needed'];
-                    $data['dropoff'] =$ret['response']['dropoff'];
-                    $data['index'] = $this->input->post('index')??0;
-                    echo(json_encode($data));
-                }
-                
-                $packaging = [];
-            }
-        }
 	}
 	
 	public function kirim(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-	    $dataAll = json_decode($this->input->post('dataAll'),true)??"";
-	    
-	    $dataPesanan = [];
-	    $order = [];
-		$kurir = [];
-		foreach($dataAll as $item)
-		{
-		    
-		    $ada = false;
-		    for($x = 0 ; $x < count($kurir) ; $x++)
-		    {
-		        if($kurir[$x] == $item["KURIR"])
-		        {
-		            $ada = true;
-		        }
-		    }
-		    
-		    if(!$ada)
-		    {
-		       array_push($kurir,$item["KURIR"]) ;
-		    }
-		    $index = count($order);
-            $order[$index] = $item;
-		}
-		
-		for($a = 0 ; $a < count($kurir); $a++)
-		{
-		    $dataPesanan = [];
-    		for($s = 0 ; $s < count($order);$s++){
-    		    if($kurir[$a] == $order[$s]['KURIR'])
-    		    {
-    		        array_push($dataPesanan, $order[$s]);
-    		    }
-    		}
-            
-            for($k = 0 ; $k < count($dataPesanan);$k++){
-                
-        		$parameter = [];
-        	    $packaging = [];
-                $indexPackaging = 0;
-            
-                $indexPackaging = count($packaging);
-                
-                $packaging[$indexPackaging]['package_number'] = $dataPesanan[$k]['KODEPACKAGING'];
-                $packaging[$indexPackaging]['order_sn'] = $dataPesanan[$k]['KODEPESANAN'];
+	    $history = json_decode($this->input->post('dataAll'),true)??"";
 
-                //GET RESI
-                $parameter['package_list'] =  $packaging;
-                if($dataPesanan[$k]['METHOD'] == "PICK_UP")
-                {
-                    $parameter['pickup'] =  array(
-                        'address_id'     => (int) $dataPesanan[$k]['ADDRESS'],
-                        'pickup_time_id' =>  $dataPesanan[$k]['PICKUP']
-                    );
-                }
-                else
-                {
-                     $parameter['dropoff'] =  array(
-                        'branch_id'     => "",
-                        'sender_real_name' => "",
-                        'tracking_number' =>  ""
-                    );
-                }
-                
-                // print_r($parameter);
+	    
+	    $arrayKirim = [];
+	    for($x = 0  ; $x < count($history); $x++)
+        {
+            array_push($arrayKirim,array(
+             'package_id' => $history[$x]['package_id']
+            ));
+            
+            if(($x % 19 == 0 && $x != 0) || $x == count($history)-1)
+            {
+                $parameter = [];
+        	    $parameter = [[
+                	'xml' => 0,
+                	'parameterKey' => 'readyToShipReq',
+                	'parameter' => json_encode([
+                	    'packages' => $arrayKirim,
+                ])]];
                 
                 $curl = curl_init();
-                
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -5636,8 +4664,10 @@ class Lazada extends MY_Controller {
                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                   CURLOPT_CUSTOMREQUEST => 'POST',
                   CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'logistics/mass_ship_order',
-                  'parameter' => json_encode($parameter)),
+                  'endpoint' => '/order/package/rts',
+                  'parameter' => json_encode($parameter),
+                //   'debug' => 1
+                  ),
                   CURLOPT_HTTPHEADER => array(
                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
                   ),
@@ -5646,244 +4676,31 @@ class Lazada extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                
-                if($ret['error'] != "")
-                {
-                    echo $ret['error']." : ".$ret['message'];
-                    $statusok = false;
+           
+                if($ret['code'] != 0)
+                { 
+                    $ret['success'] = false;
+                    $ret['msg'] = $ret['message'];
+                    die(json_encode($ret));
                 }
                 else
                 {
-                    $parameter = [];
-                    $packaging = [];
-                    $indexPackaging2 = 0;
-                    for($f = 0 ; $f < count($dataPesanan);$f++){
-                        $packaging[count($packaging)]['package_number'] = $dataPesanan[$f]['KODEPACKAGING'];
-                        if(($f % 49 == 0 && $f != 0) || $f == count($dataPesanan)-1)
-                        {
-                            //GET RESI
-                            $parameter['package_list'] =  $packaging;
-                            $curl = curl_init();
-                            curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                              CURLOPT_RETURNTRANSFER => true,
-                              CURLOPT_ENCODING => '',
-                              CURLOPT_MAXREDIRS => 10,
-                              CURLOPT_TIMEOUT => 30,
-                              CURLOPT_FOLLOWLOCATION => true,
-                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                              CURLOPT_CUSTOMREQUEST => 'POST',
-                              CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'logistics/get_mass_tracking_number',
-                              'parameter' => json_encode($parameter)),
-                              CURLOPT_HTTPHEADER => array(
-                                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                              ),
-                            ));
-                              
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $ret =  json_decode($response,true);
-                            if($ret['error'] != "")
-                            {
-                                echo $ret['error']." : ".$ret['message'];
-                                $statusok = false;
-                            }
-                            else
-                            {
-                                for($x = 0 ;$x < count($ret['response']['success_list']); $x++)
-                                {
-                                    
-                                    $dataPesanan[$indexPackaging2]['RESI'] = $ret['response']['success_list'][$x]['tracking_number'];
-                                    $dataPesanan[$indexPackaging2]['KODEPENGAMBILAN'] = $ret['response']['success_list'][$x]['pickup_code'];
-                                    
-                                    $CI->db->where("KODEPENJUALANMARKETPLACE",$dataPesanan[$indexPackaging2]['KODEPESANAN'])
-                                        ->where('MARKETPLACE',"LAZADA")
-                    		            ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                            'RESI'                       => $dataPesanan[$indexPackaging2]['RESI'],
-                                            'KODEPENGAMBILAN'            => $dataPesanan[$indexPackaging2]['KODEPENGAMBILAN'],
-                    		        ));
-                    		            
-                                    $indexPackaging2++;
-                                }
-                            }
-                            
-                            $packaging = [];
-                        }
-                    }
-            
-            
-                    $nopesanan = "";
-                    if(count($dataPesanan) == 1)
+                    $arrayKirim = [];
+                    if(count($history) == 1)
                     {
-                        $nopesanan = "#".$dataPesanan[0]['KODEPESANAN'];
+                     $nopesanan = "#".$history[0]['order_number'];
                     }
-                  //MASUK KE PROCCESSED
-                  $data['success'] = true;
-                  $data['msg'] = "Pesanan ".$nopesanan." Berhasil Dikirim";
+                    
+                   //MASUK KE PROCCESSED
+                   $data['success'] = true;
+                   $data['msg'] = "Pesanan ".$nopesanan." Berhasil Dikirim";
                 }
-            
             }
-		}
-		sleep(3); 
-		$nopesanan = "";
-        for($x = 0 ; $x < count($dataAll);$x++)
-        {
-            $nopesanan .= $dataAll[$x]['KODEPESANAN'];
-            if(($x % 49 == 0 && $x != 0) || $x == count($dataAll)-1)
-            {
-                //GET ORDER DETAIL
-                $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-                // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-                // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-                
-                $curl = curl_init();
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['error'] != "")
-                {
-                    echo $ret['error']." : ".$ret['message'];
-                    $statusok = false;
-                }
-                else
-                {
-                     for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                     {
-                        $dataDetail = $ret['response']['order_list'][$y];
-
-                        $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                        ->where('MARKETPLACE',"LAZADA")
-                         ->updateRaw("TPENJUALANMARKETPLACE", array(
-                            'STATUSMARKETPLACE'          => $dataDetail['order_status'],
-                            'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
-                        ));   
-                        
-                        //JAGA2x
-                        if($dataDetail['order_status'] == "READY_TO_SHIP")
-                        {
-                           $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                            ->where('MARKETPLACE',"LAZADA")
-                             ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                'STATUSMARKETPLACE'          => 'PROCESSED',
-                                'STATUS'                     => $this->getStatus('PROCESSED')['state'],
-                            ));   
-                        }
-                        else
-                        {
-                            $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                            ->where('MARKETPLACE',"LAZADA")
-                             ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                'STATUSMARKETPLACE'          => $dataDetail['order_status'],
-                                'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
-                            ));   
-                        }
-                     }
-                }
-                $nopesanan = "";
-            }
-            else
-            {
-                $nopesanan .= "%2C";
-            }
-            
         }
+                     
+        sleep(5);
         
-    //     //CEK LOKASI PICKUP
-    //     $lokasi = "0";
-    //     $parameter="";
-    //     $curl = curl_init();
-        
-    //     curl_setopt_array($curl, array(
-    //       CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-    //       CURLOPT_RETURNTRANSFER => true,
-    //       CURLOPT_ENCODING => '',
-    //       CURLOPT_MAXREDIRS => 10,
-    //       CURLOPT_TIMEOUT => 30,
-    //       CURLOPT_FOLLOWLOCATION => true,
-    //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    //       CURLOPT_CUSTOMREQUEST => 'POST',
-    //       CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-    //       CURLOPT_HTTPHEADER => array(
-    //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-    //       ),
-    //     ));
-        
-    //     $response = curl_exec($curl);
-    //     curl_close($curl);
-    //     $ret =  json_decode($response,true);
-    //     if($ret['error'] != "")
-    //     {
-    //         echo $ret['error']." : ".$ret['message'];
-    //     }
-    //     else
-    //     {
-    //         $dataAddress = $ret['response']['address_list'];
-    //     }
-        
-	   // $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
-	    
-    //     for($f = 0 ; $f < count($dataAll) ; $f++)
-    //     {
-    //         //DROP OFF
-    //         if($dataAll[$f]['ADDRESS'] == "")
-    //         {
-    //             for($x = 0 ; $x < count($dataAddress);$x++)
-    //             {
-                    
-    //                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-    //                 $pickup = false;
-    //                 // $default = false;
-                    
-    //                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-    //                 {
-    //                     if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-    //                     {
-    //                         $pickup = true;
-    //                     }
-    //                     // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-    //                     // {
-    //                     //     $default = true;
-    //                     // }
-    //                 }
-                    
-                    
-                
-    //                 if($pickup)
-    //                 {
-    //                     $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-    //                 }
-    //             }
-    //         }
-    //         //PICKUP
-    //         else
-    //         {
-    //              $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAll[$f]['ADDRESS']." AND GROUPLOKASI like '%MARKETPLACE%'";
-    //              $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-    //         }
-            
-    //         //INSERT KARTUSTOK
-    //         if($this->getStatus($dataAll[$f]['STATUSMARKETPLACE'])['state'] != 1)
-    //         {
-    //             $this->insertKartuStokPesanan($dataAll[$f]['KODEPESANAN'],$dataAll[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
-    //         }
-    //     }
-    //     //CEK LOKASI PICKUP
+        $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
         
         echo(json_encode($data));
         
@@ -5894,10 +4711,9 @@ class Lazada extends MY_Controller {
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 	    $nopesanan = $this->input->post('kode')??"";
-		$nopackaging = $this->input->post('kodepackaging')??"";
 		
 	    //GET RESI
-        $parameter = "&order_sn=".$nopesanan."&package_number=".$nopackaging;
+        $parameter = "&order_id=".$nopesanan."&locale=ID";
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
@@ -5909,7 +4725,7 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_tracking_info','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/logistic/order/trace','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -5918,18 +4734,18 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." : ".$ret['message'];
             $statusok = false;
         }
         else
         {
-            $data = $ret['response']['tracking_info'];
+            $data = $ret['result']['module'][0]['package_detail_info_list'][0]['logistic_detail_info_list'];
              
             for($x = 0 ; $x < count($data) ; $x++)
             {
-                $data[$x]['update_time'] = date("Y-m-d H:i:s", $data[$x]['update_time']);
+                $data[$x]['event_time'] = date("Y-m-d H:i:s", (float)($data[$x]['event_time'])/1000);
             }
             
             echo(json_encode($data));
@@ -5939,55 +4755,117 @@ class Lazada extends MY_Controller {
 	public function print(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-	    $dataPesanan = json_decode($this->input->post('dataNoPesanan'),true)??"";
-	  
 	    $CI->load->library('Pdf_merger'); 
-        
-        $a++;
-		foreach($dataPesanan as $item)
-		{
-		    if (file_exists(FCPATH."assets/label/waybill_".$item['KODEPESANAN']."_compressed.pdf")) {
-               $files[$a] = FCPATH."assets/label/waybill_".$item['KODEPESANAN']."_compressed.pdf";
-               $data['code'] = "Done";
-            } else {
-               $dataRePrint = $this->reprint([$item]);
-               if($dataRePrint['success'])
-               {
-                $files[$a] = FCPATH."assets/label/waybill_".$dataRePrint['KODEPESANAN']."_compressed.pdf";
-                 $data['code'] = "Reprint";
+		$this->output->set_content_type('application/json');
+	    $history = json_decode($this->input->post('dataNoPesanan'),true)??"";
+	    $printPDF = [];
+	    $arrayPrint = [];
+	    for($x = 0  ; $x < count($history); $x++)
+        {
+            array_push($arrayPrint,array(
+             'package_id' => $history[$x]['package_id']
+            ));
+            
+            if(($x % 19 == 0 && $x != 0) || $x == count($history)-1)
+            {
+                
+               $parameterPrint = [];
+               
+               $parameterPrint = [[
+               	'xml' => 0,
+               	'parameterKey' => 'getDocumentReq',
+               	'parameter' => json_encode([
+               	    'doc_type'               => 'PDF',
+                       'packages'               => $arrayPrint
+               ])]];
+               
+               //TAMBAH BARANG
+               $curl = curl_init();
+               curl_setopt_array($curl, array(
+                 CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS =>  array(
+                 'endpoint' => '/order/package/document/get',
+                 'parameter' => json_encode($parameterPrint),
+               //   'debug' => 1
+                 ),
+                 CURLOPT_HTTPHEADER => array(
+                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
+               ));
+                 
+               $response = curl_exec($curl);
+               curl_close($curl);
+               $ret =  json_decode($response,true);
+               
+               if($ret['code'] != 0)
+               { 
+                   $ret['success'] = false;
+                   $ret['msg'] = $ret['message'];
+                   die(json_encode($ret));
                }
                else
                {
-                   $data['success'] = false;
-                   $data['code'] = "Failed Reprint";
-                   $data['msg'] = "Lakukan Cetak Ulang";
-                   die(json_encode($data));
+                   $arrayPrint = [];
+                   array_push($printPDF, $ret['result']['data']['pdf_url']);
                }
             }
-            $a++;
-		}
-		
-          
-        foreach ($files as $file) {
-            $pageCount = $this->pdf_merger->setSourceFile($file);
-            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                $tpl = $this->pdf_merger->importPage($pageNo);
-                $this->pdf_merger->AddPage('P',[100, 150]);
-                $this->pdf_merger->useTemplate($tpl);
+        }
+        
+        foreach ($printPDF as $url) {
+        
+            // Create a temp file
+            $file = tempnam(sys_get_temp_dir(), 'pdf_');
+        
+            // Download PDF content from Lazada signed URL
+            $pdfData = file_get_contents($url);
+        
+            if ($pdfData === false || strlen($pdfData) === 0) {
+                log_message('error', 'Failed to download PDF from: ' . $url);
+                continue;
+            }
+        
+            // Save it locally
+            file_put_contents($file, $pdfData);
+            $tempFiles[] = $file; // ✅ FIXED (not $localFile)
+        
+            // Import pages
+            try {
+                $pageCount = $this->pdf_merger->setSourceFile($file);
+        
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $tpl = $this->pdf_merger->importPage($pageNo);
+                    $size = $this->pdf_merger->getTemplateSize($tpl);
+                    $this->pdf_merger->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $this->pdf_merger->useTemplate($tpl);
+                }
+            } catch (Exception $e) {
+                log_message('error', 'FPDI error: ' . $e->getMessage());
             }
         }
-    
-        $output_file = "assets/label/waybill_merge.pdf";
-        $this->pdf_merger->Output('F', $output_file); // Simpan ke file
+        
+        // Output merged file
+        $output_file = "assets/label/lazada/waybill_merge.pdf";
+        $this->pdf_merger->Output('F', $output_file);
+        
+        // Clean up
+        foreach ($tempFiles as $file) {
+            @unlink($file);
+        }
         
         // Kembalikan URL hasil merge sebagai JSON
         $data['merge_url'] = base_url($output_file);
         $data['success'] = true;
         
-        if(count($dataPesanan) == 1)
+        if(count($history) == 1)
         {
-            $data['msg'] = "Pesanan #".$dataPesanan[0]['KODEPESANAN']." Berhasil Dicetak"; 
+            $data['msg'] = "Pesanan #".$history[0]['order_number']." Berhasil Dicetak"; 
         }
         else
         { 
@@ -5997,251 +4875,6 @@ class Lazada extends MY_Controller {
         
         // $data['merge_url'] = $this->config->item('base_url')."/assets/label/merged.pdf";
         echo(json_encode($data));
-
-	}
-
-	public function reprint($dataPesanan){
-        
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-	   // $dataPesanan = json_decode($this->input->post('dataNoPesanan'),true)??"";
-	  
-	    $CI->load->library('Pdf_merger'); 
-
-		$invoice = [];
-		$kurir = [];
-		$files = [];
-		foreach($dataPesanan as $item)
-		{
-		    $ada = false;
-		    for($x = 0 ; $x < count($kurir) ; $x++)
-		    {
-		        if($kurir[$x] == $item["KURIR"])
-		        {
-		            $ada = true;
-		        }
-		    }
-		    
-		    if(!$ada)
-		    {
-		       array_push($kurir,$item["KURIR"]) ;
-		    }
-		    $index = count($invoice);
-            $invoice[$index]['order_sn'] = $item["KODEPESANAN"];
-            $invoice[$index]['package_number'] = $item["KODEPACKAGING"];
-            $invoice[$index]['kurir'] = $item["KURIR"];
-            $invoice[$index]['tracking_number'] = $item["RESI"];
-            $invoice[$index]['shipping_document_type'] = "";
-		}
-		
-		
-		$invoiceKirim = [];
-		for($a = 0 ; $a < count($kurir); $a++)
-		{
-		    $invoiceKirim = [];
-    		for($f = 0 ; $f < count($invoice);$f++){
-    		    if($kurir[$a] == $invoice[$f]['kurir'])
-    		    {
-    		        array_push($invoiceKirim, $invoice[$f]);
-    		    }
-    		}
-    		
-        	for($f = 0 ; $f < count($invoiceKirim);$f++){	    
-                if(($f % 49 == 0 && $f != 0) || $f == count($invoiceKirim)-1)
-                {
-            		$parameter = [];
-            		$parameter['order_list'] = $invoiceKirim;
-            		
-            		//GET RESI
-                    $curl = curl_init();
-                    
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS =>  array(
-                      'endpoint' => 'logistics/get_shipping_document_parameter',
-                      'parameter' => json_encode($parameter)),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                      
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-    		        $data = [];
-                    if($ret['error'] != "")
-                    {
-                        $data['success'] = false;
-                        $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
-                        $data['ret'] = $ret;
-                    }
-                    else
-                    {
-                        
-                        $dataDocumentType = $ret['response']['result_list'];
-                    
-                        $indexCetak = 0;
-                        foreach($parameter['order_list'] as $item)
-                    	{
-                            foreach($dataDocumentType as $itemDocumentType)
-                            {
-                        	    if($item['order_sn'] == $itemDocumentType['order_sn'])
-                        	    {
-                        	        $parameter['order_list'][$indexCetak]['shipping_document_type'] =  $itemDocumentType['suggest_shipping_document_type']??"NORMAL_AIR_WAYBILL";
-                        	        $indexCetak++;
-                        	    }
-                            }
-                    	}
-                    	
-                    	//BUAT LABEL PESANAN
-                    	
-                        $curl = curl_init();
-                        
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'logistics/create_shipping_document',
-                          'parameter' => json_encode($parameter)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                          
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-    		            $data = [];
-                        if($ret['error'] != "")
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  "2 ".$ret['error']." : ".$ret['message'];
-                            $data['ret'] = $ret;
-                        }
-                        else
-                        {
-                
-                            //DAPATKAN HASIL LABEL PESANAN
-                            $curl = curl_init();
-                            curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                              CURLOPT_RETURNTRANSFER => true,
-                              CURLOPT_ENCODING => '',
-                              CURLOPT_MAXREDIRS => 10,
-                              CURLOPT_TIMEOUT => 30,
-                              CURLOPT_FOLLOWLOCATION => true,
-                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                              CURLOPT_CUSTOMREQUEST => 'POST',
-                              CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'logistics/get_shipping_document_result',
-                              'parameter' => json_encode($parameter)),
-                              CURLOPT_HTTPHEADER => array(
-                                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                              ),
-                            ));
-                                  
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $ret =  json_decode($response,true);
-                                
-                            if($ret['error'] != "")
-                            {
-                                $data['success'] = false;
-                                $data['msg'] =   "3 ".$ret['error']." : ".$ret['message'];
-                                $data['ret'] = $ret;
-                            }
-                            else
-                            {
-                                $dataDocumentDownload = $ret['response']['result_list'];
-                                
-                                $invoiceKirim = [];
-                                foreach($dataDocumentDownload as $itemDocumentDownload)
-                                {
-                                    $index = count($invoiceKirim);
-                                		$invoiceKirim[$index]['order_sn'] = $itemDocumentDownload['order_sn'];
-                                		$invoiceKirim[$index]['package_number'] = $itemDocumentDownload['package_number'];
-                                }
-                                $parameter = [];
-                                $parameter['order_list'] = $invoiceKirim;
-                                	//DAPATKAN HASIL LABEL PESANAN
-                                $curl = curl_init();
-                                curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                                  CURLOPT_RETURNTRANSFER => true,
-                                  CURLOPT_ENCODING => '',
-                                  CURLOPT_MAXREDIRS => 10,
-                                  CURLOPT_TIMEOUT => 30,
-                                  CURLOPT_FOLLOWLOCATION => true,
-                                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                  CURLOPT_CUSTOMREQUEST => 'POST',
-                                  CURLOPT_POSTFIELDS =>  array(
-                                  'endpoint' => 'logistics/download_shipping_document',
-                                  'parameter' => json_encode($parameter)),
-                                  CURLOPT_HTTPHEADER => array(
-                                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                  ),
-                                ));
-                                  
-                                $response = curl_exec($curl);
-                                $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                                $content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-                                
-                                curl_close($curl);
-                                $ret =  json_decode($response,true);
-                                if($ret['error'] != "")
-                                {
-                                    $data['success'] = false;
-                                    $data['msg'] =   "4 ".$ret['error']." : ".$ret['message'];
-                                    $data['ret'] = $ret;
-                                }
-                                else
-                                {
-                                    // Save the file if request is successful
-                                    if ($http_code == 200) {
-                                        file_put_contents("assets/label/waybill_".$invoice[0]['order_sn'].".pdf", $response);
-                                        
-                                        $input = FCPATH . "assets/label/waybill_".$invoice[0]['order_sn'].".pdf";
-                                        $output = FCPATH . "assets/label/waybill_".$invoice[0]['order_sn']."_compressed.pdf";
-                                        
-                                        $cmd = "gs -sDEVICE=pdfwrite \
-                                              -dDEVICEWIDTHPOINTS=283 \
-                                              -dDEVICEHEIGHTPOINTS=425 \
-                                              -dPDFFitPage \
-                                              -dNOPAUSE -dQUIET -dBATCH \ -sOutputFile='$output' '$input'";
-                                        
-                                        exec($cmd, $outputLines, $status);
-                                        $data['success'] = true;
-                                        $data['KODEPESANAN'] = $invoice[0]['order_sn'];
-                                    } else {
-                                        $data['success'] = false;
-                                        $data['msg'] =  "Failed to download file. HTTP Status: $http_code\n";;
-                                    }
-                                }
-                            }
-                        }
-                    
-                    }
-                          
-                    $invoiceKirim = [];
-                }
-        	}
-    	}
-        
-        return $data;
 
 	}
 	
@@ -6276,11 +4909,11 @@ class Lazada extends MY_Controller {
                 }
             }
     
-            $output_file = "assets/label/waybill_merge.pdf";
+            $output_file = "assets/label/lazada/waybill_merge.pdf";
             $this->pdf_merger->Output('F', $output_file); // Simpan ke file
         
             // Kembalikan URL hasil merge sebagai JSON
-            echo json_encode(['pdf_url' => base_url('assets/label/waybill_merge.pdf')]);
+            echo json_encode(['pdf_url' => base_url('assets/label/lazada/waybill_merge.pdf')]);
         } else {
             echo "Gagal convert PDF. Cek Ghostscript terinstall atau tidak.";
         }
@@ -6292,25 +4925,13 @@ class Lazada extends MY_Controller {
 		$this->output->set_content_type('application/json');
 		$nopesanan = $this->input->post('kode')??"";
 		$alasan = $this->input->post('alasan')??"";
-		$dataitem = json_decode($this->input->post('dataItem'),true)??"";
-		
-		$parameter = [];
-		$parameter['order_sn'] = $nopesanan;
-		$parameter['cancel_reason'] = $alasan;
-		$parameter['item_list'] = [];
-		foreach($dataitem as $item)
-		{
-		    $parameter['item_list'][count($parameter['item_list'])] = array(
-		      "item_id"  => $item['ITEMID'],
-		      "model_id"  => $item['MODELID']
-		    );
-		}
-		//HAPUS PESANAN
-		
+	
+	    $parameter = "&order_id=".$nopesanan;
+        $idbarang = [];
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -6318,86 +4939,65 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'order/cancel_order',
-          'parameter' => json_encode($parameter)),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/items/get','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
         ));
-          
+        
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
-            die(json_encode($data));
+            echo $ret['error']." : ".$ret['message'];
         }
         else
         {
-           //GET ORDER DETAIL
-           $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-           // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-           // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-           $curl = curl_init();
-           
-           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['error'] != "")
-           {
-               echo $ret['error']." : ".$ret['message'];
-               $statusok = false;
-           }
-           else
-           {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
+            $dataBarang = $ret['data'];
+            foreach($dataBarang as $itemBarang)
+            {
+                if($itemBarang['status'] != 'canceled')
                 {
-                   $dataDetail = $ret['response']['order_list'][$y];
-                   $data;
-                   //DAPATKAN RESI
-                   $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                   $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                   $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                   $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                   $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                   $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = $dataDetail['recipient_address']['city'];
-                   $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                   $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"LAZADA")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                       'NAME'                       => $data['NAME'],  
-                       'TELP'                       => $data['TELP'],  
-                       'ALAMAT'                     => $data['ALAMAT'],
-                       'KOTA'                       => $data['KOTA'],  
-                       'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                       'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                       'STATUS'                     => $data['STATUS'],
-                       'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                ));    
+                    array_push($idbarang,$itemBarang['order_item_id']);
                 }
-           }
+                $idpesanan = $itemBarang['order_id'];
+            }
+        }
+        $curl = curl_init();
+        
+        $parameter = "&order_id=".$idpesanan."&reason_id=".$alasan."&order_item_id_list=".json_encode($idbarang);
+
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/cancel/create','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
+        }
+        else
+        {
+            sleep(5);
+            
+            $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+        
         
             $data['success'] = true;
             $data['msg'] = "Pesanan #".$nopesanan." Berhasil Dibatalkan";
@@ -6407,12 +5007,41 @@ class Lazada extends MY_Controller {
 
 	}
 	
-	public function getStatus($orderStatus){
+	public function getStatus($arrOrderStatus){
+	    
+	    $urutanStatus = ['UNPAID','PENDING','TOPACK','PACKED','TOSHIP','READY_TO_SHIP','SHIPPED','FAILED','DELIVERED','CONFIRMED','COMPLETED','CANCELED','CANCELLED','RETURNED|REQUEST_INITIATE','RETURNED|RETURN_PICKUP_PENDING','RETURNED|BUYER_RETURN_ITEM','RETURNED|DISPUTE'];
+	    $urutanTertinggi = -1;
+	    //ARRAY ORDER STATUS
+	    for($o = 0 ; $o < count($arrOrderStatus); $o++)
+	    {
+	        for($u = 0 ; $u < count($urutanStatus);$u++)
+	        {
+	            if(strtoupper($arrOrderStatus[$o]) == $urutanStatus[$u])
+	            {
+	                if($u > $urutanTertinggi)
+	                {
+	                    $urutanTertinggi = $u;
+	                }
+	            }
+	        }
+	    }
+	    
+	    $orderStatus = strtoupper($urutanStatus[$urutanTertinggi]);
+	    
 	    if($orderStatus == "UNPAID")
 	    {
 	        return [
 	            "status" => "Belum Bayar",
 	            "state"  => 1,
+	            "statusLabel" => $orderStatus
+	         ];
+	    }
+	    else if($orderStatus == "PENDING")
+	    {
+	         return [
+	            "status" => "Siap Dikemas",
+	            "state"  => 1,
+	            "statusLabel" => $orderStatus
 	         ];
 	    }
 	    else if($orderStatus == "READY_TO_SHIP")
@@ -6420,156 +5049,159 @@ class Lazada extends MY_Controller {
 	         return [
 	            "status" => "Siap Dikirim",
 	            "state"  => 1,
+	            "statusLabel" => $orderStatus
 	         ];
 	    }
-	    else if($orderStatus == "RETRY_SHIP")
+	    else if($orderStatus == "TOPACK" || $orderStatus == "PACKED")
 	    {
-	        return [
-	            "status" => "Dikirim Ulang",
-	            "state"  => 2,
-	         ];
-	    }
-	    else if($orderStatus == "PROCESSED")
-	    {
-	        return [
-	            "status" => "Diproses",
+	         return [
+	            "status" => "Dikemas",
 	            "state"  => 1,
-	        ];
+	            "statusLabel" => $orderStatus
+	         ];
+	    }
+	    else if($orderStatus == "TOSHIP")
+	    {
+	         return [
+	            "status" => "Proses Kirim",
+	            "state"  => 1,
+	            "statusLabel" => $orderStatus
+	         ];
 	    }
 	    else if($orderStatus == "SHIPPED")
 	    {
 	        return [
 	            "status" => "Dalam Pengiriman",
 	            "state"  => 2,
+	            "statusLabel" => $orderStatus
 	         ];
 	    }
-	    else if($orderStatus == "TO_CONFIRM_RECEIVE")
+	    else if($orderStatus == "FAILED")
 	    {
 	         return [
-	            "status" => "Telah Dikirim",
+	            "status" => "Gagal Kirim",
 	            "state"  => 2,
+	            "statusLabel" => $orderStatus
 	         ];
 	    }
-	    else if($orderStatus == "COMPLETED")
+	    else if($orderStatus == "DELIVERED")
+	    {
+	        return [
+	            "status" => "Telah Dikirim",
+	            "state"  => 2,
+	            "statusLabel" => $orderStatus
+	         ];
+	    }
+	    else if($orderStatus == "CONFIRMED" || $orderStatus == "COMPLETED")
 	    {
 	        return [
 	            "status" => "Selesai",
 	            "state"  => 3,
+	            "statusLabel" => "COMPLETED"
 	         ];
 	    }
-	    else if($orderStatus == "IN_CANCEL")
-	    {
-	        return [
-	            "status" => "Dibatalkan Penjual",
-	            "state"  => 1,
-	         ];
-	    }
-	    else if($orderStatus == "CANCELLED")
+	    else if($orderStatus == "CANCELED" || $orderStatus == "CANCELLED")
 	    {
 	        return [
 	            "status" => "Pembatalan",
 	            "state"  => 3,
+	            "statusLabel" => "CANCELLED"
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN")
+	    else if($orderStatus == "RETURNED")
 	    {
 	        return [
 	            "status" => "Pengembalian",
 	            "state"  => 4,
+	            "statusLabel" => $orderStatus
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN|REQUESTED")
+	    else if($orderStatus == "RETURNED|REQUEST_INITIATE")
 	    {
 	        return [
-	            "status" => "Pengembalian<br>Pending",
+	            "status" => "Pengembalian<br>Diajukan",
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN|PROCESSING")
+	    else if($orderStatus == "RETURNED|RETURN_PICKUP_PENDING" || $orderStatus == "RETURNED|BUYER_RETURN_ITEM")
 	    {
 	        return [
 	            "status" => "Pengembalian<br>Diproses",
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN|JUDGING")
+	    else if($orderStatus == "RETURNED|DISPUTE")
 	    {
 	        return [
 	            "status" => "Pengembalian<br>Dalam Sengketa",
 	            "state"  => 4,
-	         ];
-	    }
-	    else if($orderStatus == "TO_RETURN|SELLER_DISPUTE")
-	    {
-	        return [
-	            "status" => "Pengembalian<br>Dalam Sengketa",
-	            "state"  => 4,
+	            "statusLabel" => $orderStatus
 	         ];
 	    }
 	    
 	    return $orderStatus;
 	}
 	
-	public function getAlasanKembali($alasan){
-	    if($alasan == "WRONG_ITEM")
-	    {
-	        $alasan = "Barang yang dikirim salah (salah ukuran, variasi, dll)";
-	    }
-	    else if($alasan == "CHANGE_MIND")
-	    {
-	        $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "NONE")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "NOT_RECEIPT")
-	    {
-	        $alasan = "Semua barang tidak sampai";
-	    }
-	    else if($alasan == "ITEM_DAMAGED")
-	    {
-	       // $alasan = "Barang Rusak";
-	    }
-	    else if($alasan == "DIFFERENT_DESCRIPTION")
-	    {
-	        $alasan = "Barang berbeda dengan deskripsi/foto";
-	    }
-	    else if($alasan == "MUTUAL_AGREE")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "OTHER")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "ITEM_MISSING")
-	    {
-	        $alasan = "Barang sampai namun tidak lengkap";
-	    }
-	    else if($alasan == "EXPECTATION_FAILED")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "ITEM_FAKE")
-	    {
-	        $alasan = "Barang palsu";
-	    }
-	    else if($alasan == "PHYSICAL_DMG")
-	    {
-	        $alasan = "Barang rusak";
-	    }
-	    else if($alasan == "FUNCTIONAL_DMG")
-	    {
-	        $alasan = "Barang tidak berfungsi/tidak bisa dipakai";
-	    }
-	    else if($alasan == "SLIGHT_SCRATCH_DENTS")
-	    {
-	        $alasan = "Barang tidak sempurna (Cacat)";
-	    }
+// 	public function getAlasanKembali($alasan){
+// 	    if($alasan == "WRONG_ITEM")
+// 	    {
+// 	        $alasan = "Barang yang dikirim salah (salah ukuran, variasi, dll)";
+// 	    }
+// 	    else if($alasan == "CHANGE_MIND")
+// 	    {
+// 	        $alasan = "Ingin kembalikan barang sesuai kondisi awal";
+// 	    }
+// 	    else if($alasan == "NONE")
+// 	    {
+// 	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
+// 	    }
+// 	    else if($alasan == "NOT_RECEIPT")
+// 	    {
+// 	        $alasan = "Semua barang tidak sampai";
+// 	    }
+// 	    else if($alasan == "ITEM_DAMAGED")
+// 	    {
+// 	       // $alasan = "Barang Rusak";
+// 	    }
+// 	    else if($alasan == "DIFFERENT_DESCRIPTION")
+// 	    {
+// 	        $alasan = "Barang berbeda dengan deskripsi/foto";
+// 	    }
+// 	    else if($alasan == "MUTUAL_AGREE")
+// 	    {
+// 	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
+// 	    }
+// 	    else if($alasan == "OTHER")
+// 	    {
+// 	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
+// 	    }
+// 	    else if($alasan == "ITEM_MISSING")
+// 	    {
+// 	        $alasan = "Barang sampai namun tidak lengkap";
+// 	    }
+// 	    else if($alasan == "EXPECTATION_FAILED")
+// 	    {
+// 	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
+// 	    }
+// 	    else if($alasan == "ITEM_FAKE")
+// 	    {
+// 	        $alasan = "Barang palsu";
+// 	    }
+// 	    else if($alasan == "PHYSICAL_DMG")
+// 	    {
+// 	        $alasan = "Barang rusak";
+// 	    }
+// 	    else if($alasan == "FUNCTIONAL_DMG")
+// 	    {
+// 	        $alasan = "Barang tidak berfungsi/tidak bisa dipakai";
+// 	    }
+// 	    else if($alasan == "SLIGHT_SCRATCH_DENTS")
+// 	    {
+// 	        $alasan = "Barang tidak sempurna (Cacat)";
+// 	    }
 	    
-	    return $alasan;
-	}
+// 	    return $alasan;
+// 	}
 	
 	public function getAlasanDispute($id){
 	    
@@ -6706,10 +5338,11 @@ class Lazada extends MY_Controller {
         $ada = $CI->db->query($sqlStok)->row()->ADA;
         if($ada == 0)
         {
-            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENJUALANMARKETPLACE = '".$kodetrans."'";
+            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENJUALANMARKETPLACE = '".$kodetrans."'"; 
             $resultPesanan = $CI->db->query($sqlPesanan)->row();
-            
+   
             $produkData = explode("|",$resultPesanan->SKUPRODUK);
+            
             foreach($produkData as $item)
             {
                 //GET ID BARANG
@@ -6741,6 +5374,43 @@ class Lazada extends MY_Controller {
                 $exe = $CI->db->insert($labelKartuStok,$param);
                 
             }
+            
+            //CEK TAKUTNYA ADA BARANG YANG SAMA TAPI 1-1
+            
+            $sqlGroup = 'SELECT IDPERUSAHAAN, IDLOKASI, MODUL, IDTRANS, KODETRANS, IDBARANG, TGLTRANS, JENISTRANS, KETERANGAN, MK, SUM(JML) as JML, SUM(TOTALHARGA) as TOTALHARGA 
+                        FROM '.$labelKartuStok.'
+                        WHERE KODETRANS = "'.$resultPesanan->KODEPENJUALANMARKETPLACE.'"
+                        AND JENISTRANS = "JUAL LAZADA"
+                        GROUP BY IDBARANG
+                        ORDER BY URUTAN';
+           
+            $queryGroup = $CI->db->query($sqlGroup)->result();
+            
+            $CI->db->where('KODETRANS',$resultPesanan->KODEPENJUALANMARKETPLACE)->where('JENISTRANS','JUAL LAZADA')->delete($labelKartuStok);
+            
+            foreach($queryGroup as $itemGroup)
+            {
+                $param = array(
+                	"IDPERUSAHAAN"  => $itemGroup->IDPERUSAHAAN,
+                	"IDLOKASI"      => $itemGroup->IDLOKASI,
+                	"MODUL"         => $itemGroup->MODUL,
+                	"IDTRANS"       => $itemGroup->IDTRANS,
+                	"KODETRANS"     => $itemGroup->KODETRANS,
+                	"IDBARANG"      => $itemGroup->IDBARANG,
+                	"KONVERSI1"     => 1,
+                	"KONVERSI2"     => 1,
+                	"TGLTRANS"      => $itemGroup->TGLTRANS,
+                	"JENISTRANS"    => $itemGroup->JENISTRANS,
+                	"KETERANGAN"    => $itemGroup->KETERANGAN,
+                	"MK"            => $itemGroup->MK,
+                	"JML"           => $itemGroup->JML,
+                	"TOTALHARGA"    => $itemGroup->TOTALHARGA,
+                	"STATUS"        => '1',
+                );
+                $exe = $CI->db->insert($labelKartuStok,$param);
+                
+            }
+            
         }
         
 	}
@@ -6763,59 +5433,12 @@ class Lazada extends MY_Controller {
         $ada = $CI->db->query($sqlStok)->row()->ADA;
         if($ada == 0)
         {
-            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE = '".$kodetrans."'";
+            $sqlPesanan = "SELECT b.SKUPRODUKPENGEMBALIAN, a.SKUPRODUK,a.SKUPRODUKOLD,b.KODEPENGEMBALIANMARKETPLACE,b.TGLPENGEMBALIAN,b.KODEBARANGPENGEMBALIANMARKETPLACE AS IDTRANS,a.USERNAME FROM TPENJUALANMARKETPLACE  a
+                            INNER JOIN TPENJUALANMARKETPLACEDTL b ON a.KODEPENJUALANMARKETPLACE = b.KODEPENJUALANMARKETPLACE
+                            WHERE a.MARKETPLACE = 'LAZADA' and b.KODEPENGEMBALIANMARKETPLACE = '".$kodetrans."'";
             $resultPesanan = $CI->db->query($sqlPesanan)->row();
             
             $produkDataPengembalian = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
-            $produkData = explode("|",$resultPesanan->SKUPRODUK);
-            $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
-            $dataProduk = [];
-            $indexProduk = 0;
-            foreach($produkData as $item)
-            {
-                //GET NAMA BARANG
-                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
-                            FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
-                $dataBarang = $CI->db->query($sql)->row();
-                $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
-                if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
-                {
-                    $dataProduk[$indexProduk]->BARANG .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
-                }
-                $dataProduk[$indexProduk]->SATUAN = $dataBarang->SATUAN;
-                $dataProduk[$indexProduk]->KATEGORI = $dataBarang->KATEGORI;
-                $dataProduk[$indexProduk]->WARNA = $dataBarang->WARNA;
-                $dataProduk[$indexProduk]->SIZE = $dataBarang->SIZE;
-                $dataProduk[$indexProduk]->SKU = $dataBarang->SKU;
-                $dataProduk[$indexProduk]->BARANGOLD = $dataProduk[$indexProduk]->BARANG;
-                $dataProduk[$indexProduk]->WARNAOLD = $dataProduk[$indexProduk]->WARNA;
-                $dataProduk[$indexProduk]->SIZEOLD = $dataProduk[$indexProduk]->SIZE;
-                $dataProduk[$indexProduk]->SKUOLD = $dataProduk[$indexProduk]->SKU;
-                $indexProduk++;
-            }
-            
-            if($resultPesanan->SKUPRODUKOLD != "")
-            {
-                
-                $indexProduk = 0;
-                foreach($produkDataOld as $item)
-                {
-                    //GET NAMA BARANG
-                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKULAZADA as SKU
-                                FROM MBARANG WHERE SKULAZADA = '".explode("*",$item)[1]."'";
-                    $dataBarang = $CI->db->query($sql)->row();
-                    $dataProduk[$indexProduk]->BARANGOLD  = explode(" | ",$dataBarang->NAMABARANG)[0];
-                    if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
-                    {
-                        $dataProduk[$indexProduk]->BARANGOLD .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
-                    }
-                    
-                    $dataProduk[$indexProduk]->WARNAOLD = $dataBarang->WARNA;
-                    $dataProduk[$indexProduk]->SIZEOLD = $dataBarang->SIZE;
-                    $dataProduk[$indexProduk]->SKUOLD = $dataBarang->SKU;
-                    $indexProduk++;
-                }
-            }
             
             if($resultPesanan->SKUPRODUKPENGEMBALIAN != "")
             {
@@ -6824,403 +5447,364 @@ class Lazada extends MY_Controller {
 
                 for($t = 0 ; $t < count($produkDataKembali);$t++)
                 {
-                    for($s = 0 ; $s < count($produkDataOld);$s++)
-                    {
-                        if(explode("*",$produkDataKembali[$t])[1] == explode("*",$produkDataOld[$s])[1])
-                        {
-                           $indexPengganti = $s;
-                           
-                             //GET NAMA BARANG
-                            $sql = "SELECT NAMABARANG, WARNA, SIZE, SKULAZADA as SKU
-                                        FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkData[$indexPengganti])[1]."'";
-                            $dataBarang = $CI->db->query($sql)->row();
-                            
-                            $sqlOld = "SELECT NAMABARANG, WARNA, SIZE, SKULAZADA as SKU
-                                    FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkDataOld[$indexPengganti])[1]."'";
-                            $dataBarangOld = $CI->db->query($sqlOld)->row();
-                            
-                            $idBarang = "0";
-                            if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
-                            {
-                                
-                                if($dataBarang->SIZE != $dataBarangOld->SIZE || $dataBarang->WARNA != $dataBarangOld->WARNA)
-                                {
-                                    
-                                    //GET ID BARANG
-                                    $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
-                                                FROM MBARANG 
-                                                INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
-                                                INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                                WHERE MBARANG.SKULAZADA = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
+                      //GET ID BARANG
+                        $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
+                                   FROM MBARANG 
+                                   INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
+                                   INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
+                                   WHERE MBARANG.SKULAZADA = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
                 
-                                    $dataBarangKembali = $CI->db->query($sql)->row();
-                                    
-                                    
-                                    $param = array(
-                                    	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN??"2",
-                                    	"IDLOKASI"      => $lokasi,
-                                    	"MODUL"         => 'RETUR JUAL',
-                                    	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
-                                    	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
-                                    	"IDBARANG"      => $dataBarangKembali->IDBARANG??"0",
-                                    	"KONVERSI1"     => 1,
-                                    	"KONVERSI2"     => 1,
-                                    	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
-                                    	"JENISTRANS"    => 'RETUR JUAL LAZADA',
-                                    	"KETERANGAN"    => 'RETUR LAZADA KE '.$resultPesanan->USERNAME,
-                                    	"MK"            => 'M',
-                                    	"JML"           => explode("*",$produkDataKembali[$t])[0],
-                                    	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
-                                    	"STATUS"        => '1',
-                                    );
-                                    $exe = $CI->db->insert($labelKartuStok,$param);
-                                    $idBarang = $dataBarangKembali->IDBARANG??"0";
-                                }
-                                else
-                                {
-                                    //GET ID BARANG
-                                    $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
-                                                FROM MBARANG 
-                                                INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
-                                                INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                                WHERE MBARANG.SKULAZADA = '".$dataBarangOld->SKU."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
-                
-                                    $dataBarangKembali = $CI->db->query($sql)->row();
-                                    
-                                    
-                                    $param = array(
-                                    	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN,
-                                    	"IDLOKASI"      => $lokasi,
-                                    	"MODUL"         => 'RETUR JUAL',
-                                    	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
-                                    	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
-                                    	"IDBARANG"      => $dataBarangKembali->IDBARANG,
-                                    	"KONVERSI1"     => 1,
-                                    	"KONVERSI2"     => 1,
-                                    	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
-                                    	"JENISTRANS"    => 'RETUR JUAL LAZADA',
-                                    	"KETERANGAN"    => 'RETUR LAZADA KE '.$resultPesanan->USERNAME,
-                                    	"MK"            => 'M',
-                                    	"JML"           => explode("*",$produkDataKembali[$t])[0],
-                                    	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * $dataBarangKembali->HARGA),
-                                    	"STATUS"        => '1',
-                                    );
-                                    $exe = $CI->db->insert($labelKartuStok,$param);
-                                    $idBarang = $dataBarangKembali->IDBARANG??"0";
-                                }
-                            }
-                            
-                            if($labelKartuStok == "KARTUSTOK")
-                            {
-                                $dataBarang = [];
-                                $idlokasiset = $lokasi;
-                                //SET STOK
-                                $curl = curl_init();
-                                $parameter = "";
-                                
-                                curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                                  CURLOPT_RETURNTRANSFER => true,
-                                  CURLOPT_ENCODING => '',
-                                  CURLOPT_MAXREDIRS => 10,
-                                  CURLOPT_TIMEOUT => 30,
-                                  CURLOPT_FOLLOWLOCATION => true,
-                                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                  CURLOPT_CUSTOMREQUEST => 'POST',
-                                  CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-                                  CURLOPT_HTTPHEADER => array(
-                                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                  ),
-                                ));
-                                
-                                $response = curl_exec($curl);
-                                curl_close($curl);
-                                $ret =  json_decode($response,true);
-                                $lokasi = 0;
-                                $countSuccess = 0 ;
-                                if($ret['error'] != "")
-                                {
-                                    echo $ret['error']." LOKASI : ".$ret['message'];
-                                }
-                                else
-                                {
-                                    $dataAddress = $ret['response']['address_list'];
-                                    for($x = 0 ; $x < count($dataAddress);$x++)
-                                    {
-                                        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                                        $pickup = false;
-                                        for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                                        {
-                                            if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                                            {
-                                                $pickup = true;
-                                            }
-                                            // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                                            // {
-                                            //     $default = true;
-                                            // }
-                                        }
-                                        
-                                        if($pickup)
-                                        {
-                                            $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                                        }
-                                    }
-                                    
-                                    if($lokasi == $idlokasiset)
-                                    {
-                                        $modeList = [];
-                                        $countBarang = 0;
-                                        $whereBarang = " and IDBARANG in (";
-                                        foreach($dataBarang as $itemBarang)
-                                        {
-                                    		$whereBarang .= $itemBarang;
-                                    		if($countBarang < count($dataBarang)-1)
-                                    		{
-                                    		    $whereBarang .= ",";
-                                    		}
-                                    		$countBarang++;
-                                        }
-                                        
-                                        $whereBarang .= ")";	
-                                        
-                                        $sql = "select IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG
-                                    				from MBARANG
-                                    				where (1=1) $whereBarang
-                                    				order by IDINDUKBARANGLAZADA
-                                    				";	
-                                    		
-                                    	$dataHeader = $this->db->query($sql)->result();
-                                    		
-                                         $idHeader = 0;
-                                         $parameter = [];
-                                    	 foreach($dataHeader as $itemHeader)
-                                    	 {
-                                    	     if($itemHeader->IDINDUKBARANGLAZADA != $idHeader)
-                                    	     {
-                                    	         if(count($parameter) > 0)
-                                    	         {
-                                    	            $curl = curl_init();
-                                                    curl_setopt_array($curl, array(
-                                                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                                                      CURLOPT_RETURNTRANSFER => true,
-                                                      CURLOPT_ENCODING => '',
-                                                      CURLOPT_MAXREDIRS => 10,
-                                                      CURLOPT_TIMEOUT => 30,
-                                                      CURLOPT_FOLLOWLOCATION => true,
-                                                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                                      CURLOPT_CUSTOMREQUEST => 'POST',
-                                                      CURLOPT_POSTFIELDS =>  array(
-                                                      'endpoint' => 'product/update_stock',
-                                                      'parameter' => json_encode($parameter)),
-                                                      CURLOPT_HTTPHEADER => array(
-                                                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                                      ),
-                                                    ));
-                                                      
-                                                    $response = curl_exec($curl);
-                                                    curl_close($curl);
-                                                    $ret =  json_decode($response,true);
-                                                    
-                                                    if($ret['error'] != "")
-                                                    {
-                                                        $data['success'] = false;
-                                                        $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                                                        die(json_encode($data));
-                                                        print_r($ret);
-                                                    }
-                                    	         }
-                                    	         $idHeader = $itemHeader->IDINDUKBARANGLAZADA;
-                                    	         
-                                    	         //UPDATE KE LAZADANYA
-                                                $parameter = [];
-                                             	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGLAZADA;
-                                             	$parameter['stock_list'] = [];
-                                    	     }
-                                    	     
-                                             $result   = get_saldo_stok_new($_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
-                                             $saldoQty = $result->QTY??0;
-                                            
-                                            $modelId = 0;
-                                            
-                                            if($itemHeader->IDBARANGLAZADA != $itemHeader->IDINDUKBARANGLAZADA)
-                                            {
-                                                $modelId = $itemHeader->IDBARANGLAZADA;
-                                            }
-                                            
-                                             array_push($parameter['stock_list'],array(
-                                                'model_id'      => (int)$modelId,
-                                                'seller_stock'  => array(
-                                                     array('stock' => (int)$saldoQty)
-                                                ))
-                                            );
-                                    	}
-                                    	
-                                    	  
-                                    	$curl = curl_init();
-                                        curl_setopt_array($curl, array(
-                                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                                          CURLOPT_RETURNTRANSFER => true,
-                                          CURLOPT_ENCODING => '',
-                                          CURLOPT_MAXREDIRS => 10,
-                                          CURLOPT_TIMEOUT => 30,
-                                          CURLOPT_FOLLOWLOCATION => true,
-                                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                          CURLOPT_CUSTOMREQUEST => 'POST',
-                                          CURLOPT_POSTFIELDS =>  array(
-                                          'endpoint' => 'product/update_stock',
-                                          'parameter' => json_encode($parameter)),
-                                          CURLOPT_HTTPHEADER => array(
-                                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                          ),
-                                        ));
-                                          
-                                        $response = curl_exec($curl);
-                                        curl_close($curl);
-                                        $ret =  json_decode($response,true);
-                                        
-                                        if($ret['error'] != "")
-                                        {
-                                            $data['success'] = false;
-                                            $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                                            die(json_encode($data));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                       $dataBarangKembali = $CI->db->query($sql)->row();
+                       
+                       $param = array(
+                       	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN??"2",
+                       	"IDLOKASI"      => $lokasi,
+                       	"MODUL"         => 'RETUR JUAL',
+                       	"IDTRANS"       => 0,
+                       	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
+                       	"IDBARANG"      => $dataBarangKembali->IDBARANG??"0",
+                       	"KONVERSI1"     => 1,
+                       	"KONVERSI2"     => 1,
+                       	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
+                       	"JENISTRANS"    => 'RETUR JUAL LAZADA',
+                       	"KETERANGAN"    => 'RETUR LAZADA KE '.$resultPesanan->USERNAME,
+                       	"MK"            => 'M',
+                       	"JML"           => explode("*",$produkDataKembali[$t])[0],
+                       	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
+                       	"STATUS"        => '1',
+                       );
+                       $exe = $CI->db->insert($labelKartuStok,$param);
+                       $idBarang = $dataBarangKembali->IDBARANG??"0";
                 }
+                
+                
+               
+              //CEK TAKUTNYA ADA BARANG YANG SAMA TAPI 1-1
+               
+              $sqlGroup = 'SELECT IDPERUSAHAAN, IDLOKASI, MODUL, IDTRANS, KODETRANS, IDBARANG, TGLTRANS, JENISTRANS, KETERANGAN, MK, SUM(JML) as JML, SUM(TOTALHARGA) as TOTALHARGA 
+                          FROM '.$labelKartuStok.'
+                          WHERE KODETRANS = "'.$resultPesanan->KODEPENGEMBALIANMARKETPLACE.'"
+                          AND JENISTRANS = "RETUR JUAL LAZADA"
+                          GROUP BY IDBARANG
+                          ORDER BY URUTAN';
+               
+              $queryGroup = $CI->db->query($sqlGroup)->result();
+               
+              $CI->db->where('KODETRANS',$resultPesanan->KODEPENGEMBALIANMARKETPLACE)->where('JENISTRANS','RETUR JUAL LAZADA')->delete($labelKartuStok);
+               
+              foreach($queryGroup as $itemGroup)
+              {
+                  $param = array(
+                  	"IDPERUSAHAAN"  => $itemGroup->IDPERUSAHAAN,
+                  	"IDLOKASI"      => $itemGroup->IDLOKASI,
+                  	"MODUL"         => $itemGroup->MODUL,
+                  	"IDTRANS"       => $itemGroup->IDTRANS,
+                  	"KODETRANS"     => $itemGroup->KODETRANS,
+                  	"IDBARANG"      => $itemGroup->IDBARANG,
+                  	"KONVERSI1"     => 1,
+                  	"KONVERSI2"     => 1,
+                  	"TGLTRANS"      => $itemGroup->TGLTRANS,
+                  	"JENISTRANS"    => $itemGroup->JENISTRANS,
+                  	"KETERANGAN"    => $itemGroup->KETERANGAN,
+                  	"MK"            => $itemGroup->MK,
+                  	"JML"           => $itemGroup->JML,
+                  	"TOTALHARGA"    => $itemGroup->TOTALHARGA,
+                  	"STATUS"        => '1',
+                  );
+                  $exe = $CI->db->insert($labelKartuStok,$param);
+                   
+              }
+               
+              if($labelKartuStok == "KARTUSTOK")
+              {
+                   	
+                  $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
+                  $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                   
+                  $modeList = [];
+                  $countBarang = 0;
+                  $whereBarang = " and IDBARANG in (";
+
+                  foreach($queryGroup as $itemBarang)
+                  {
+                  	$whereBarang .= $itemBarang->IDBARANG;
+                  	if($countBarang < count($queryGroup)-1)
+                  	{
+                  	    $whereBarang .= ",";
+                  	}
+                  	$countBarang++;
+                  }
+                   
+                  $whereBarang .= ")";	
+                  $count = 0;
+                  $sql = "select IDPERUSAHAAN, IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG,SKULAZADA,HARGAJUAL
+                  			from MBARANG
+                  			where (1=1) $whereBarang and (IDBARANGLAZADA is not null and IDBARANGLAZADA <> 0)
+                  			order by IDINDUKBARANGLAZADA
+                  			";	
+                   	
+                  $dataHeader = $this->db->query($sql)->result();
+                   
+                  $parameter = [];
+                  $detailParameter = [];
+                   
+                  for($x = 0; $x < count($dataHeader) ; $x++)
+                  {
+                       
+                  	$result   = get_saldo_stok_new($dataHeader[$x]->IDPERUSAHAAN,$dataHeader[$x]->IDBARANG, $lokasi, date('Y-m-d'));
+                      $saldoQty = $result->QTY??0;
+                                                     
+                  	 array_push($detailParameter,
+                  	       ['Sku' => [
+                  	            'ItemId' => $dataHeader[$x]->IDINDUKBARANGLAZADA,
+                  	            'SkuId' => $dataHeader[$x]->IDBARANGLAZADA,
+                  		        'SellerSku' => $dataHeader[$x]->SKULAZADA,
+                  		        'Quantity' => (int)$saldoQty
+                  		      //  'Price' => (int)$dataHeader[$x]->HARGAJUAL
+                  		    ]]);
+                   		    
+                      if(($x % 19 == 0 && $x != 0) || $x == count($dataHeader)-1)
+                      {
+                           
+                          $parameter = [[
+                  		    'xml' => 1,
+                  		    'parameterKey' => 'payload',
+                  		    'parameter' => [
+                                      'Request' => [
+                                          'Product' => [
+                                              'Skus' => $detailParameter
+                                          ]
+                                      ]
+                              ]
+                          ]];
+                           
+                          $curl = curl_init();
+                                   
+                          curl_setopt_array($curl, array(
+                             CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+                             CURLOPT_RETURNTRANSFER => true,
+                             CURLOPT_ENCODING => '',
+                             CURLOPT_MAXREDIRS => 10,
+                             CURLOPT_TIMEOUT => 30,
+                             CURLOPT_FOLLOWLOCATION => true,
+                             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                             CURLOPT_CUSTOMREQUEST => 'POST',
+                             CURLOPT_POSTFIELDS =>  array(
+                             'endpoint' => '/product/price_quantity/update',
+                             'parameter' => json_encode($parameter),
+                          //   'debug' => 1
+                             ),
+                             CURLOPT_HTTPHEADER => array(
+                              'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                             ),
+                          ));
+                             
+                          $response = curl_exec($curl);
+                          curl_close($curl);
+                          $ret =  json_decode($response,true);
+                           
+                          if($ret['code'] != 0)
+                          { 
+                              $ret['success'] = false;
+                              $ret['msg'] = $ret['message'];
+                              die(json_encode($ret));
+                          }
+                          else
+                          {
+                              $parameter = [];
+                              $detailParameter = [];
+                          }
+                      }
+                  }
+              }
             }
         }
         
 	}
 	
-	public function init($tgl_aw,$tgl_ak,$jenis = 'create_time') {
+	public function getAlasanPembatalan(){
+
+        $curl = curl_init();
+        
+        $nopesanan = $this->input->post('kode')??"";
+        $idbarang = [];
+        $idpesanan = 0;
+        	//PAYMENT BUYER DETAIL
+	    $parameter = "&order_id=".$nopesanan;
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/items/get','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            echo $ret['error']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataBarang = $ret['data'];
+            foreach($dataBarang as $itemBarang)
+            {
+                array_push($idbarang,$itemBarang['order_item_id']);
+                $idpesanan = $itemBarang['order_id'];
+            }
+        }
+        
+        $curl = curl_init();
+        
+        $parameter = "&order_id=".$idpesanan."&order_item_id_list=".json_encode($idbarang);
+
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/cancel/validate','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            $ret['success'] = false;
+            $ret['msg'] = $ret['message'];
+            die(json_encode($ret));
+        }
+        else
+        {
+            $ret['success'] = true;
+            $ret['data'] = $ret['data']['reason_options'];
+            echo json_encode($ret); 
+        }
+	}
+	
+    public function pembulatanSatuan($angka) {
+        $satuan = $angka % 10;
+        if ($satuan == 0) {
+            return $angka; // sudah bulat
+        } else {
+            return $angka + (10 - $satuan); // naikkan ke puluhan terdekat
+        }
+    }
+    
+    function extractDateTime($text) {
+        // Match date and time pattern: YYYY-MM-DD HH:MM:SS
+        if (preg_match('/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $text, $matches)) {
+            return $matches[0]; // return the matched date-time string
+        }
+        return null;
+    }
+	
+	public function init($tgl_aw,$tgl_ak,$jenis = 'create',$showResponse = true) {
 	    
+	    
+        $dateAw = new DateTime($tgl_aw." 00:00:00",new DateTimeZone('+08:00'));
+        $dateAk = new DateTime($tgl_ak." 23:59:59",new DateTimeZone('+08:00'));
+        $paramgrid = "";
 	    if($jenis == "update")
 	    {
-	        $jenis = "update_time";
+	        $paramgrid = "&update_after=".$dateAw->format('Y-m-d\TH:i:sP');
 	    }
-	    
+	    else
+	    {
+	        $paramgrid = "&created_after=".$dateAw->format('Y-m-d\TH:i:sP')."&created_before=".$dateAk->format('Y-m-d\TH:i:sP');
+	    }
 		$this->output->set_content_type('application/json');
         $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		
-// 		$tgl_aw = "2025-06-01";
-// 		$tgl_ak = "2025-06-30";
-        
-        $result = [];
-        $resultTemp2 = [];
+
+        $finalResult = [];
         $history = [];
-        $finalData = [];
-        $index=0;
-        $indexTemp2 = 0;
+        $parameterhistory = [];
+        $parameterreturnhistory = [];
+        
+        $count = 0;
+        $countTotal = 1;
         $newOrder = 0;
-       
-        $bigger = false;
-        $cursor = "0";
-        $statusok = true; 
-        $tglTemp = $tgl_aw." 00:00:00"; 
-        $dateAk = new DateTime($tgl_ak." 23:59:59");
-        $tglcobaAW;
-        $tglcobaAK;
-        while(!$bigger && $statusok)
+        while($count < $countTotal)
         {
-            $dateAw = new DateTime($tglTemp);
-            $dateTemp = new DateTime($tglTemp);
-            $tglTempAdd = $dateTemp->modify('+14 days')->format('Y-m-d')." 23:59:59"; // Add 15 days
-            $dateTemp = new DateTime($tglTempAdd);    
-            if($dateTemp >= $dateAk)
+            $curl = curl_init();
+        
+            $parameter = $paramgrid."&limit=100&offset=".$count."&sort_by=created_at&sort_direction=ASC";
+            array_push($parameterhistory,$parameter);
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS => array('endpoint' => '/orders/get','parameter' => $parameter),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+            
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            if($ret['code'] != 0)
             {
-                $tglcobaAW = $tglTemp;
-                $tglcobaAK = $tgl_ak." 23:59:59";
-                
-                $bigger = true;
-                $tglAw = $dateAw->getTimestamp();
-                $tglAk = $dateAk->getTimestamp();
+                $ret['success'] = false;
+                $ret['msg'] = $ret['message'];
+                die(json_encode($ret));
             }
             else
             {
-                $tglcobaAW = $tglTemp;
-                $tglcobaAK = $tglTempAdd;
-                
-                $tglAw = $dateAw->getTimestamp();
-                $tglAk = $dateTemp->getTimestamp();
+                $count += $ret['data']['count'];
+                $countTotal = $ret['data']['countTotal'];
+                for($x = 0 ; $x < count($ret['data']['orders']); $x++)
+                {
+                 array_push($history,$ret['data']['orders'][$x]);
+                }
             }
-                 
-            while($cursor != ""  && $statusok)
-            {
-                 $parameter = "&time_range_field=".$jenis."&time_from=".$tglAw."&time_to=".$tglAk."&page_size=100&cursor=".$cursor;
-                //  echo $parameter."\n";
-                 array_push($history,$parameter." ".$tglcobaAW." | ".$tglcobaAK);
-                 $curl = curl_init();
-                //GET ORDER LIST
-                 curl_setopt_array($curl, array(
-                   CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                   CURLOPT_RETURNTRANSFER => true,
-                   CURLOPT_ENCODING => '',
-                   CURLOPT_MAXREDIRS => 10,
-                   CURLOPT_TIMEOUT => 30,
-                   CURLOPT_FOLLOWLOCATION => true,
-                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                   CURLOPT_CUSTOMREQUEST => 'POST',
-                   CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_list','parameter' => $parameter),
-                   CURLOPT_HTTPHEADER => array(
-                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                   ),
-                 ));
-                 
-                 $response = curl_exec($curl);
-                 curl_close($curl);
-                 $ret =  json_decode($response,true);
-                 if($ret['error'] != "")
-                 {
-                     echo $ret['error']." : ".$ret['message'];
-                     $statusok = false;
-                 }
-                 else
-                 {
-                     for($x = 0  ; $x < count($ret['response']['order_list']); $x++)
-                     {
-                         $resultTemp2[$indexTemp2]['KODEPESANAN'] = $ret['response']['order_list'][$x]['order_sn'];
-                         $indexTemp2++;
-                     }
-                     $cursor = $ret['response']['next_cursor'];
-                 }
-                 
-                 if($cursor == "")
-                 {
-                      for($x = count($resultTemp2)-1 ; $x >= 0; $x--)
-                      {
-                          $result[$index]['KODEPESANAN'] = $resultTemp2[$x]['KODEPESANAN'];
-                          $index++;
-                      }
-                     $resultTemp2 = [];
-                     $indexTemp2 = 0;
-                 }
-            }
-            $cursor = "0";
-            $statusok = true;
-            
-            $dateAddOne = new DateTime($tglTempAdd);
-            $tglTempAddOne = $dateAddOne->modify('+1 days')->format('Y-m-d')." 00:00:00"; // Add 1 days
-            $tglTemp = $tglTempAddOne;
         }
         
-        $nopesanan = "";
-        for($x = 0 ; $x < count($result);$x++)
+        $parameter = "";
+        $indexFirst = 0;
+        //INDEX DIBUAT 1 KARENA, 0 DISIKAT DLU
+        for($x = 0  ; $x < count($history); $x++)
         {
-            $nopesanan .= $result[$x]['KODEPESANAN'];
-            if(($x % 49 == 0 && $x != 0) || $x == count($result)-1)
+            if($parameter == "")
             {
-                //GET ORDER DETAIL
-                $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-                // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-                // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-                
-                $curl = curl_init();
+                $indexFirst = $x;
+                $parameter = "&order_ids=[".$history[$x]['order_number'];
+            }
+            else
+            {
+                $parameter .= (",".$history[$x]['order_number']);
+            }
             
+            if(($x % 49 == 0 && $x != 0) || $x == count($history)-1)
+            {
+                $parameter.= "]";
+                $curl = curl_init();
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -7230,7 +5814,7 @@ class Lazada extends MY_Controller {
                   CURLOPT_FOLLOWLOCATION => true,
                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                   CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
+                  CURLOPT_POSTFIELDS => array('endpoint' => '/orders/items/get','parameter' => $parameter),
                   CURLOPT_HTTPHEADER => array(
                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
                   ),
@@ -7239,111 +5823,295 @@ class Lazada extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
-                    $statusok = false;
+                    $ret['success'] = false;
+                    $ret['msg'] = $ret['message'];
+                    die(json_encode($ret));
                 }
                 else
                 {
-                     for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                     {
-                        $dataDetail = $ret['response']['order_list'][$y];
-                        $allsku = "";
-                        $jml = 0;
-                        
-                        //URUTKAN BERDASARKAN NAMA BARANG
-                        usort($dataDetail['item_list'], function($a, $b) {
-                            return strcmp($a['item_name'], $b['item_name']);
-                        });
-                        
-                        for($d = 0 ; $d < count($dataDetail['item_list']);$d++)
+                    for($z = $indexFirst  ; $z < ($x+1) ; $z++)
+                    {
+                        for($y = 0 ; $y < count($ret['data']); $y++)
                         {
-                            //KHUSUS SKU YANG KOSONG
-                            if($dataDetail['item_list'][$d]['model_sku'] == "")
+                            $detail = $ret['data'][$y];
+                            if($history[$z]['order_number'] == $detail['order_number'])
                             {
-                                $sku = $dataDetail['item_list'][$d]['item_sku'];
+                                $history[$z]['order_items'] = $detail['order_items'];
                             }
-                            else
-                            {  
-                                $sku = $dataDetail['item_list'][$d]['model_sku'];
-                            }
-                            
-                            if(strpos(strtoupper($dataDetail['item_list'][$d]['item_name']),"BIRTHDAY CARD") !== false){
-                                $sku = "LTWS";
-                            }
-                            else if(strpos(strtoupper($dataDetail['item_list'][$d]['item_name']),"NEWBORN CARD") !== false){
-                                $sku = "CARD-BOX-OTHER";
-                            }
-                            $jml += $dataDetail['item_list'][$d]['model_quantity_purchased'];
-                            $allsku .= $dataDetail['item_list'][$d]['model_quantity_purchased']."*".$sku."|";
                         }
-                        
-                        $allsku = substr($allsku, 0, -1);
-                        
-                        $catatanBeli = "<div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
-                                                                white-space: -moz-pre-wrap; /* Firefox */    
-                                                                white-space: -pre-wrap;     /* Opera <7 */   
-                                                                white-space: -o-pre-wrap;   /* Opera 7 */    
-                                                                word-wrap: break-word;      /* IE */'>".$dataDetail['message_to_seller']."</div>";
-                                                                
-                        $catatanJual = "<div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
-                                                                white-space: -moz-pre-wrap; /* Firefox */    
-                                                                white-space: -pre-wrap;     /* Opera <7 */   
-                                                                white-space: -o-pre-wrap;   /* Opera 7 */    
-                                                                word-wrap: break-word;      /* IE */'>".$dataDetail['message_to_seller']."</div>";
-                        
-                        $data;
-                        //DAPATKAN RESI
-                        $data['ALLBARANG']                      = $dataDetail['item_list'];
-                        $data['IDPENJUALAN']                    = 0;
-                        $data['MARKETPLACE']                    = "LAZADA";
-                        $data['KODEPENJUALANMARKETPLACE']       = $dataDetail['order_sn'];
-                        $data['TGLTRANS']                       = date("Y-m-d H:i:s", $dataDetail['create_time']);
-                        $data['USERNAME']                       = $dataDetail['buyer_username']??"-";
-                        $data['NAME']                           = $dataDetail['recipient_address']['name'];
-                        $data['TELP']                           = $dataDetail['recipient_address']['phone'];
-                        $data['ALAMAT']                         = $dataDetail['recipient_address']['full_address'];
-                        $data['KOTA']                           = $dataDetail['recipient_address']['city'];
-                        $data['KURIR']                          = $dataDetail['shipping_carrier'];
-                        $data['KODEPACKAGING']                  = $dataDetail['package_list'][0]['package_number'];
-                        $data['RESI']                           = "";
-                        $data['SKUPRODUK']                      = $allsku;
-                        $data['SKUPRODUKOLD']                   = $allsku;
-                        $data['MINTGLKIRIM']                    = date("Y-m-d H:i:s", $dataDetail['ship_by_date']);
-                        $data['METODEBAYAR']                    = $dataDetail['payment_method'];
-                        $data['TOTALBARANG']                    = $jml;
-                        $data['TOTALBAYAR']                     = $dataDetail['total_amount'];
-                        $data['STATUSMARKETPLACE']              = $dataDetail['order_status'];
-                        $data['STATUS']                         = $this->getStatus($dataDetail['order_status'])['state'];
-                        $data['CATATANPEMBELI']                 = $dataDetail['message_to_seller'];
-                        $data['CATATANPENJUAL']                 = $dataDetail['note'];
-                        $data['CATATANPENGEMBALIAN']            = $dataDetail['buyer_cancel_reason'];
-                  
-                        array_push($finalData,$data);     
-                     }
+                    }
+                    $parameter = "";
                 }
-                $nopesanan = "";
+            }
+        }
+        
+        $tempDataPack = [];
+        $tempDataShipping = [];
+        
+        for($x = 0  ; $x < count($history); $x++)
+        {
+            $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS,if(MINTGLKIRIM = '0000-00-00 00:00:00','-',MINTGLKIRIM) as MINTGLKIRIM  FROM TPENJUALANMARKETPLACE 
+                                    WHERE MARKETPLACE = 'LAZADA' 
+                                    and KODEPENJUALANMARKETPLACE = '".$history[$x]['order_number']."'";
+                                
+            $dataPesananDB = $CI->db->query($sql)->row();
+            
+            $ada = $dataPesananDB->ADA;
+            $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
+            $idtrans =  $dataPesananDB->IDTRANS;
+            
+            $dataDetail = $history[$x]['order_items'];
+            $allsku = "";
+            $totalBarangAktif = 0;
+            $totalBayarAktif = 0;
+            $totalHargaAktif = 0;
+            
+            $biayaLayanan = 1000;
+            $biayaPenanganan = 0;
+            
+            if (strpos(str_replace("_"," ",$history[$x]['payment_method']), 'VA') !== false) {
+                $biayaPenanganan = 1000;
+            }
+            else if (strpos(str_replace("_"," ",$history[$x]['payment_method']), 'INDOMARET') !== false || strpos(str_replace("_"," ",$history[$x]['payment_method']), 'ALFA') !== false) {
+                $biayaPenanganan = 2000;
+            }
+            
+            for($d = 0 ; $d < count($dataDetail);$d++)
+            {
+                //KHUSUS SKU YANG KOSONG
+                $sku = $dataDetail[$d]['sku'];
+                
+                if(strpos(strtoupper($dataDetail[$d]['name']),"BIRTHDAY CARD") !== false){
+                    $sku = "LTWS";
+                }
+                else if(strpos(strtoupper($dataDetail[$d]['name']),"NEWBORN CARD") !== false){
+                    $sku = "CARD-BOX-OTHER";
+                }
+                
+                if($dataDetail[$d]['status'] == 'canceled')
+                {
+                     $allsku .= ("0*".$sku."|");
+                }
+                else
+                {
+                     $allsku .= ("1*".$sku."|");
+                     $totalBarangAktif++;
+                     $totalBayarAktif += ($dataDetail[$d]['paid_price'] + $dataDetail[$d]['shipping_amount'] + (int)(($biayaLayanan + $biayaPenanganan) / count($dataDetail)));
+                     $totalHargaAktif += $dataDetail[$d]['item_price'];
+                }
+               
+            }
+            
+            $totalBayarAktif        = $this->pembulatanSatuan($totalBayarAktif); 
+            
+            $allsku = substr($allsku, 0, -1);
+            
+            $data;
+            $createDate = new DateTime($history[$x]['created_at']);
+            //DAPATKAN RESI
+            $data['ALLBARANG']                      = $dataDetail;
+            $data['IDPENJUALAN']                    = 0;
+            $data['MARKETPLACE']                    = "LAZADA";
+            $data['IDPENJUALANDARIMARKETPLACE']     = $history[$x]['order_id'];
+            $data['KODEPENJUALANMARKETPLACE']       = $history[$x]['order_number'];
+            $data['TGLTRANS']                       = $createDate->format('Y-m-d H:i:s');
+            $data['USERNAME']                       = $history[$x]['customer_first_name']." ".$history[$x]['customer_last_name'];
+            $data['NAME']                           = $history[$x]['address_shipping']['first_name']." ".$history[$x]['address_shipping']['last_name'];
+            $data['TELP']                           = $history[$x]['address_shipping']['phone']??"-";
+            $data['ALAMAT']                         = $history[$x]['address_shipping']['address1'].($history[$x]['address_shipping']['address2'] != ""?("<br>".$history[$x]['address_shipping']['address2']):"").($history[$x]['address_shipping']['address3'] != ""?("<br>".$history[$x]['address_shipping']['address3']):"").($history[$x]['address_shipping']['address4'] != ""?("<br>".$history[$x]['address_shipping']['address4']):"");
+            $data['KOTA']                           = $history[$x]['address_shipping']['city'];
+            $data['SKUPRODUK']                      = $allsku;
+            $data['SKUPRODUKOLD']                   = $allsku;
+            if($this->extractDateTime($data['ALLBARANG'][0]['fulfillment_sla']) != null && $dataPesananDB->MINTGLKIRIM == "-")
+            {
+                $data['MINTGLKIRIM']                    = $this->extractDateTime($data['ALLBARANG'][0]['fulfillment_sla']);
+            }
+            $data['METODEBAYAR']                    = str_replace("_"," ",$history[$x]['payment_method']);
+            $data['TOTALBARANG']                    = $totalBarangAktif;
+            $data['TOTALBAYAR']                     = $totalBayarAktif;
+            $data['TOTALHARGA']                     = $totalHargaAktif; 
+     
+            $data['STATUSMARKETPLACE']              = $this->getStatus($history[$x]['statuses'])['statusLabel'];
+            $data['STATUS']                         = $this->getStatus($history[$x]['statuses'])['state'];
+            $data['CATATANPEMBELI']                 = $history[$x]['buyer_note'];
+            $data['CATATANPENJUAL']                 = ($dataPesananDB->CATATANPENJUAL??"");
+            $data["LASTUPDATED"]                    =  date("Y-m-d H:i:s");
+            
+            if($ada)
+            {
+                $detailBarang = $data['ALLBARANG'];
+                
+                unset($data['ALLBARANG']);
+                
+                $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
+                ->where('MARKETPLACE',"LAZADA")
+                ->updateRaw("TPENJUALANMARKETPLACE", array(
+                    'USERNAME'                          => $data['USERNAME'],
+                    'NAME'                              => $data['NAME'],
+                    'TELP'                              => $data['TELP'],
+                    'ALAMAT'                            => $data['ALAMAT'],
+                    'KOTA'                              => $data['KOTA'],
+                    'SKUPRODUK'                         => $data['SKUPRODUK'],   
+                    'SKUPRODUKOLD'                      => $data['SKUPRODUKOLD'],
+                    'KODEPENGAMBILAN'                   => $data['KODEPENGAMBILAN'],
+                    'MINTGLKIRIM'                       => $data['MINTGLKIRIM'],
+                    'METODEBAYAR'                       => $data['METODEBAYAR'],
+                    'TOTALBARANG'                       => $data['TOTALBARANG'],
+                    'TOTALBAYAR'                        => $data['TOTALBAYAR'],
+                    'TOTALHARGA'                        => $data['TOTALHARGA'],
+                    'STATUSMARKETPLACE'                 => $data['STATUSMARKETPLACE'],
+                    'STATUSPENGEMBALIANMARKETPLACE'     => "",
+                    'STATUS'                            => $data['STATUS'],
+                    'CATATANPEMBELI'                    => $data['CATATANPEMBELI'],
+                    'CATATANPENJUAL'                    => $data['CATATANPENJUAL'],
+                    "LASTUPDATED"                       =>  date("Y-m-d H:i:s")
+                ));
+                
+                $CI->db->where('KODEPENJUALANMARKETPLACE',$data['KODEPENJUALANMARKETPLACE'])->delete("TPENJUALANMARKETPLACEDTL");
+                $urutan = 0;
+                foreach($detailBarang as $itemBarang){
+                    $urutan++;
+                    
+                    //KHUSUS SKU YANG KOSONG
+                    $sku = $itemBarang['sku'];
+                
+                    if(strpos(strtoupper($itemBarang['name']),"BIRTHDAY CARD") !== false){
+                        $sku = "LTWS";
+                    }
+                    else if(strpos(strtoupper($itemBarang['name']),"NEWBORN CARD") !== false){
+                        $sku = "CARD-BOX-OTHER";
+                    }
+                
+                    $sqlBarang = "select idbarang from mbarang where SKULAZADA = '$sku'";
+                    $queryBarang = $CI->db->query($sqlBarang)->row();
+        
+                    $CI->db->insertRaw("TPENJUALANMARKETPLACEDTL",
+                    array(
+                        'IDPENJUALANMARKETPLACE'    => $idtrans,
+                        'KODEPENJUALANMARKETPLACE'  => $data['KODEPENJUALANMARKETPLACE'],
+                        'IDBARANG'                  => $queryBarang->IDBARANG??0,
+                        'MARKETPLACE'               => 'LAZADA',
+                        'SKU'                       => $sku,
+                        'URUTAN'                    => $urutan,
+                        'JML'                       => ($itemBarang['status'] == "canceled"? 0 : 1),
+                        'HARGA'                     => $itemBarang['item_price'],
+                        'TOTAL'                     => (($itemBarang['status'] == "canceled"? 0 : 1) * $itemBarang['item_price']),
+                        'STATUS'                    => $this->getStatus([$itemBarang['status']])['state'],
+                        'STATUSMARKETPLACE'         => $this->getStatus([$itemBarang['status']])['statusLabel'],
+                    ));
+                }
             }
             else
             {
-                $nopesanan .= "%2C";
+                $detailBarang = $data['ALLBARANG'];
+                
+                unset($data['ALLBARANG']);
+                
+                $newOrder++;
+                $CI->db->insertRaw("TPENJUALANMARKETPLACE",$data);
+                
+                $idtrans = $CI->db->insert_id();
+                $urutan = 0;
+                foreach($detailBarang as $itemBarang){
+                    $urutan++;
+                    
+                    //KHUSUS SKU YANG KOSONG
+                    $sku = $itemBarang['sku'];
+                
+                    if(strpos(strtoupper($itemBarang['name']),"BIRTHDAY CARD") !== false){
+                        $sku = "LTWS";
+                    }
+                    else if(strpos(strtoupper($itemBarang['name']),"NEWBORN CARD") !== false){
+                        $sku = "CARD-BOX-OTHER";
+                    }
+                
+                    $sqlBarang = "select idbarang from mbarang where SKULAZADA = '$sku'";
+                    $queryBarang = $CI->db->query($sqlBarang)->row();
+                    
+                    $CI->db->insertRaw("TPENJUALANMARKETPLACEDTL",
+                    array(
+                        'IDPENJUALANMARKETPLACE'    => $idtrans,
+                        'KODEPENJUALANMARKETPLACE'  => $data['KODEPENJUALANMARKETPLACE'],
+                        'IDBARANG'                  => $queryBarang->IDBARANG??0,
+                        'MARKETPLACE'               => 'LAZADA',
+                        'SKU'                       => $sku,
+                        'URUTAN'                    => $urutan,
+                        'JML'                       => ($itemBarang['status'] == "canceled"? 0 : 1),
+                        'HARGA'                     => $itemBarang['item_price'],
+                        'TOTAL'                     => (($itemBarang['status'] == "canceled"? 0 : 1) * $itemBarang['item_price']),
+                        'STATUS'                    => $this->getStatus([$itemBarang['status']])['state'],
+                        'STATUSMARKETPLACE'         => $this->getStatus([$itemBarang['status']])['statusLabel'],
+                    ));
+                }
+            } 
+            
+            $detailItem = [];
+            foreach($detailBarang as $itemBarang){
+                array_push($detailItem,$itemBarang['order_item_id']);
             }
             
-        }
-        
-        $parameter = [];
-        $packaging = [];
-        $indexPackaging = 0;
-        
-        for($f = 0 ; $f < count($finalData);$f++){
-            $packaging[count($packaging)]['package_number'] = $finalData[$f]['KODEPACKAGING'];
-            if(($f % 49 == 0 && $f != 0) || $f == count($finalData)-1)
+            array_push($tempDataPack, array(
+                'order_id' => $history[$x]['order_number'],
+                'order_item_list' =>  $detailItem
+            ));
+            
+            array_push($tempDataShipping, array(
+                'order_id' => $history[$x]['order_number'],
+                'order_item_ids' => $detailItem
+            ));
+            
+            if(($x % 19 == 0 && $x != 0) || $x == count($history)-1)
             {
-                //GET RESI
-                $parameter['package_list'] =  $packaging;
-                $curl = curl_init();
+                $shipping_alocation = "";
                 
+                $parameterShipping = "&getShipmentProvidersReq=".json_encode(array(
+                    'orders' => $tempDataShipping
+                ));
+                $curl = curl_init();
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS =>   array('endpoint' => '/order/shipment/providers/get','parameter' => $parameterShipping),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                  
+                $response = curl_exec($curl);
+                curl_close($curl);
+                $ret =  json_decode($response,true);
+   
+                if($ret['code'] != 0)
+                { 
+                    $ret['success'] = false;
+                    $ret['msg'] = $ret['message'];
+                    die(json_encode($ret));
+                }
+                else
+                {
+                    $tempDataShipping = [];
+                    $shipping_alocation = $ret['result']['data']['shipping_allocate_type'];
+                }
+                
+                $parameterPack = [[
+                	'xml' => 0,
+                	'parameterKey' => 'packReq',
+                	'parameter' => json_encode([
+                	    'pack_order_list' => $tempDataPack,
+                	    'delivery_type' => 'dropship',
+                        'shipping_allocate_type' => $shipping_alocation
+                ])]];
+                
+                $curl = curl_init();
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -7354,8 +6122,10 @@ class Lazada extends MY_Controller {
                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                   CURLOPT_CUSTOMREQUEST => 'POST',
                   CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'logistics/get_mass_tracking_number',
-                  'parameter' => json_encode($parameter)),
+                  'endpoint' => '/order/fulfill/pack',
+                  'parameter' => json_encode($parameterPack),
+                //   'debug' => 1
+                  ),
                   CURLOPT_HTTPHEADER => array(
                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
                   ),
@@ -7364,826 +6134,433 @@ class Lazada extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
-                {
-                    echo $ret['error']." : ".$ret['message'];
-                    $statusok = false;
+   
+                if($ret['code'] != 0)
+                { 
+                    $ret['success'] = false;
+                    $ret['msg'] = $ret['message'];
+                    die(json_encode($ret));
                 }
                 else
                 {
-                    for($x = 0 ;$x < count($ret['response']['success_list']); $x++)
+                    $tempDataPack = [];
+                    $dataPackage = $ret['result']['data']['pack_order_list'];
+                    //DAPAT KURIR
+                    foreach($dataPackage as $itemPackage)
                     {
-                       $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACE 
-                                    WHERE MARKETPLACE = 'LAZADA' 
-                                    and KODEPENJUALANMARKETPLACE = '".$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE']."'";
-                                
-                        $dataPesananDB = $CI->db->query($sql)->row();
-                        
-                        $ada = $dataPesananDB->ADA;
-                        $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
-                        
-                        $finalData[$indexPackaging]['RESI'] = $ret['response']['success_list'][$x]['tracking_number'];
-                        $finalData[$indexPackaging]['KODEPENGAMBILAN'] = $ret['response']['success_list'][$x]['pickup_code'];
-                        
-                        if($ada)
+                        $kodepackaging = "";
+                        $kurir = "";
+                        $resi = "";
+                        foreach($itemPackage['order_item_list'] as $itemPackageDetail)
                         {
-                            $CI->db->where("KODEPENJUALANMARKETPLACE",$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'])
-                            ->where('MARKETPLACE',"LAZADA")
-        		            ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                'USERNAME'                   => $finalData[$indexPackaging]['USERNAME']??"-",
-                                'NAME'                       => $finalData[$indexPackaging]['NAME'],
-                                'TELP'                       => $finalData[$indexPackaging]['TELP'],
-                                'ALAMAT'                     => $finalData[$indexPackaging]['ALAMAT'],
-                                'KOTA'                       => $finalData[$indexPackaging]['KOTA'],
-                                'KURIR'                      => $finalData[$indexPackaging]['KURIR'],
-                                'KODEPENGAMBILAN'            => $finalData[$indexPackaging]['KODEPENGAMBILAN'],
-                                'KODEPACKAGING'              => $finalData[$indexPackaging]['KODEPACKAGING'],
-                                'RESI'                       => $finalData[$indexPackaging]['RESI'],
-                                'MINTGLKIRIM'                => $finalData[$indexPackaging]['MINTGLKIRIM'],
-                                'METODEBAYAR'                => $finalData[$indexPackaging]['METODEBAYAR'],
-                                'TOTALBARANG'                => $finalData[$indexPackaging]['TOTALBARANG'],
-                                'TOTALBAYAR'                 => $finalData[$indexPackaging]['TOTALBAYAR'],
-                                'STATUSMARKETPLACE'          => $finalData[$indexPackaging]['STATUSMARKETPLACE'],
-                                'STATUS'                     => $finalData[$indexPackaging]['STATUS'],
-                                'CATATANPEMBELI'             => $finalData[$indexPackaging]['CATATANPEMBELI'],
-                                'CATATANPENJUAL'             => $finalData[$indexPackaging]['CATATANPENJUAL'],
-                                'CATATANPENGEMBALIAN'        => $finalData[$indexPackaging]['CATATANPENGEMBALIAN'],
-        		            ));
-                        }
-                        else
-                        {
-                            $detailBarang = $finalData[$indexPackaging]['ALLBARANG'];
-                            
-                            unset($finalData[$indexPackaging]['ALLBARANG']);
-                            
-                            $newOrder++;
-                            $CI->db->insertRaw("TPENJUALANMARKETPLACE",$finalData[$indexPackaging]);
-                            
-                            $idtrans = $CI->db->insert_id();
-                            $urutan = 0;
-                            foreach($detailBarang as $itemBarang){
-                                $urutan++;
-                                
-                               //KHUSUS SKU YANG KOSONG
-                                if($itemBarang['model_sku'] == "")
-                                {
-                                    $sku = $itemBarang['item_sku'];
-                                }
-                                else
-                                {  
-                                    $sku = $itemBarang['model_sku'];
-                                }
-                            
-                                if(strpos(strtoupper($itemBarang['item_name']),"BIRTHDAY CARD") !== false){
-                                    $sku = "LTWS";
-                                }
-                                else if(strpos(strtoupper($itemBarang['item_name']),"NEWBORN CARD") !== false){
-                                    $sku = "CARD-BOX-OTHER";
-                                }
-                            
-                                $sqlBarang = "select idbarang from mbarang where SKULAZADA = '$sku'";
-                                $queryBarang = $CI->db->query($sqlBarang)->row();
-                                
-                                $CI->db->insertRaw("TPENJUALANMARKETPLACEDTL",
-                                array(
-                                    'IDPENJUALANMARKETPLACE'    => $idtrans,
-                                    'KODEPENJUALANMARKETPLACE'  => $finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'],
-                                    'IDBARANG'                  => $queryBarang->IDBARANG??0,
-                                    'MARKETPLACE'               => 'LAZADA',
-                                    'SKU'                       => $sku,
-                                    'URUTAN'                    => $urutan,
-                                    'JML'                       => $itemBarang['model_quantity_purchased'],
-                                    'HARGA'                     => $itemBarang['model_discounted_price'],
-                                    'TOTAL'                     => ($itemBarang['model_quantity_purchased'] * $itemBarang['model_discounted_price']),
-            		            ));
-                            }
-                        }
-                        
-                        $indexPackaging++;
-                    }
-                }
-                
-                $packaging = [];
-            }
-        }
-        
-        //CEK LOKASI PICKUP
-        $lokasi = "0";
-        $parameter="";
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
-        {
-            echo $ret['error']." : ".$ret['message'];
-        }
-        else
-        {
-            $dataAddress = $ret['response']['address_list'];
-            $data['rows'] = [];
-            for($x = 0 ; $x < count($dataAddress);$x++)
-            {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                $pickup = false;
-                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                {
-                    if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                    {
-                        $pickup = true;
-                    }
-                    // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                    // {
-                    //     $default = true;
-                    // }
-                }
-                
-                if($pickup)
-                {
-                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                }
-            }
-        }
-        
-	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
-	    
-        for($f = 0 ; $f < count($finalData) ; $f++)
-        {
-            //INSERT KARTUSTOK
-            if($this->getStatus($finalData[$f]['STATUSMARKETPLACE'])['state'] != 1 && $finalData[$f]['STATUSMARKETPLACE'] != "CANCELLED" )
-            {
-                $this->insertKartuStokPesanan($finalData[$f]['KODEPENJUALANMARKETPLACE'],$finalData[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
-            }
-        }
-        //CEK LOKASI PICKUP
-        
-        //PRINT
-        $invoice = [];
-		$kurir = [];
-		$files = [];
-		$parameter = [];
-		
-		foreach($finalData as $item)
-		{
-		   
-        	$file = FCPATH."assets/label/waybill_".$item['KODEPENJUALANMARKETPLACE'].".pdf";
-        	$fileCompressed = FCPATH."assets/label/waybill_".$item['KODEPENJUALANMARKETPLACE']."_compressed.pdf";
-        	//JIKA DIA DIPROSES dan SIAP DIKIRIM, CEK DULU ADA APA NDAK BARANGNYA, KALAU NDAK ADA BARU BUAT
-    		if(strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "DIPROSES" || (strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "SIAP DIKIRIM" && $item['KODEPENGAMBILAN'] != ""))
-        	{
-        		    
-        		 if (!file_exists($fileCompressed)) {
-            		    $ada = false;
-            		    for($x = 0 ; $x < count($kurir) ; $x++)
-            		    {
-            		        if($kurir[$x] == $item["KURIR"])
-            		        {
-            		            $ada = true;
-            		        }
-            		    }
-            		    
-            		    if(!$ada)
-            		    {
-            		       array_push($kurir,$item["KURIR"]) ;
-            		    }
-            		    $index = count($invoice);
-                        $invoice[$index]['order_sn'] = $item["KODEPENJUALANMARKETPLACE"];
-                        $invoice[$index]['package_number'] = $item["KODEPACKAGING"];
-                        $invoice[$index]['kurir'] = $item["KURIR"];
-                        $invoice[$index]['tracking_number'] = $item["RESI"];
-                        $invoice[$index]['shipping_document_type'] = "";
-        		}
-		    }
-    		else
-    		{
-    		    //KALAU DALAM PENGIRIMAN, HAPUS AJA PDF SISA
-    		   if(strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "DALAM PENGIRIMAN")
-               {
-                 unlink($file);
-                 unlink($fileCompressed);
-               }
-    		}
-		}
-		
-		
-		for($a = 0 ; $a < count($kurir); $a++)
-		{
-		    $invoiceKirim = [];
-    		for($f = 0 ; $f < count($invoice);$f++){
-    		    if($kurir[$a] == $invoice[$f]['kurir'])
-    		    {
-    		        array_push($invoiceKirim, $invoice[$f]);
-    		    }
-    		}
-    		
-        	$params=[];
-        	for($f = 0 ; $f < count($invoiceKirim);$f++){
-        	    
-        	    array_push($params,$invoiceKirim[$f]);
-                if(($f % 49 == 0 && $f != 0) || $f == count($invoiceKirim)-1)
-                {
-            		$parameter = [];
-            		$parameter['order_list'] = $params;
-            		
-            		  //GET RESI
-                    $curl = curl_init();
-                    
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS =>  array(
-                      'endpoint' => 'logistics/get_shipping_document_parameter',
-                      'parameter' => json_encode($parameter)),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                      
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-		            $data = [];
-                    if($ret['error'] != "")
-                    {
-                        $data['success'] = false;
-                        $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
-                        $data['ret'] = $ret;
-                        die(json_encode($data));
-                    }
-                    else
-                    {
-                        
-                        $dataDocumentType = $ret['response']['result_list'];
-                    
-                        $indexCetak = 0;
-                        foreach($parameter['order_list'] as $item)
-                    	{
-                            foreach($dataDocumentType as $itemDocumentType)
+                           $kodepackaging =  $itemPackageDetail['package_id'];
+                           $kurir = $itemPackageDetail["shipment_provider"];
+                            foreach($history as $itemHistory)
                             {
-                        	    if($item['order_sn'] == $itemDocumentType['order_sn'])
-                        	    {
-                        	        $parameter['order_list'][$indexCetak]['shipping_document_type'] =  $itemDocumentType['suggest_shipping_document_type']??"NORMAL_AIR_WAYBILL";
-                        	        $indexCetak++;
-                        	    }
+                                if($itemHistory['order_number'] == $itemPackage['order_id'])
+                                {
+                                    $kurir .= (" - ".$itemHistory['warehouse_code']);
+                                }
                             }
-                    	}
-                    	
-                    	//BUAT LABEL PESANAN
-                    	
-                        $curl = curl_init();
+                           $resi = $itemPackageDetail['tracking_number'];
+                        }
                         
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'logistics/create_shipping_document',
-                          'parameter' => json_encode($parameter)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
+                        $CI->db->where("KODEPENJUALANMARKETPLACE", $itemPackage['order_id'])
+                        ->where('MARKETPLACE',"LAZADA")
+                        ->updateRaw("TPENJUALANMARKETPLACE", array(
+                            'KURIR'                 => $kurir,
+                            'RESI'                  => $resi,
+                            'KODEPACKAGING'         => $kodepackaging,
+                            "LASTUPDATED"           =>  date("Y-m-d H:i:s")
                         ));
-                          
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-		                $data = [];
-                        if($ret['error'] != "")
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  "2 ".$ret['error']." : ".$ret['message'];
-                            $data['ret'] = $ret;
-                            die(json_encode($data));
-                        }
-                        else
-                        {
-                            // DAPATKAN HASIL LABEL PESANAN
-                            $curl = curl_init();
-                            curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                              CURLOPT_RETURNTRANSFER => true,
-                              CURLOPT_ENCODING => '',
-                              CURLOPT_MAXREDIRS => 10,
-                              CURLOPT_TIMEOUT => 30,
-                              CURLOPT_FOLLOWLOCATION => true,
-                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                              CURLOPT_CUSTOMREQUEST => 'POST',
-                              CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'logistics/get_shipping_document_result',
-                              'parameter' => json_encode($parameter)),
-                              CURLOPT_HTTPHEADER => array(
-                                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                              ),
-                            ));
-                                  
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $ret =  json_decode($response,true);
-                                
-                            if($ret['error'] != "")
-                            {
-                                $data['success'] = false;
-                                $data['msg'] =   "3 ".$ret['error']." : ".$ret['message'];
-                                $data['ret'] = $ret;
-                                die(json_encode($data));
-                            }
-                            else
-                            {
-                                $dataDocumentDownload = $ret['response']['result_list'];
-                                
-                                
-                                foreach($dataDocumentDownload as $itemDocumentDownload)
-                                {
-                                    $invoiceKirim = [];
-                                    $index = count($invoiceKirim);
-                                	$invoiceKirim[$index]['order_sn'] = $itemDocumentDownload['order_sn'];
-                                	$invoiceKirim[$index]['package_number'] = $itemDocumentDownload['package_number'];
-                                	$parameter = [];
-                                    $parameter['order_list'] = $invoiceKirim;
-                                    	//DAPATKAN HASIL LABEL PESANAN
-                                    $curl = curl_init();
-                                    curl_setopt_array($curl, array(
-                                      CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                                      CURLOPT_RETURNTRANSFER => true,
-                                      CURLOPT_ENCODING => '',
-                                      CURLOPT_MAXREDIRS => 10,
-                                      CURLOPT_TIMEOUT => 30,
-                                      CURLOPT_FOLLOWLOCATION => true,
-                                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                      CURLOPT_CUSTOMREQUEST => 'POST',
-                                      CURLOPT_POSTFIELDS =>  array(
-                                      'endpoint' => 'logistics/download_shipping_document',
-                                      'parameter' => json_encode($parameter)),
-                                      CURLOPT_HTTPHEADER => array(
-                                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                      ),
-                                    ));
-                                      
-                                    $response = curl_exec($curl);
-                                    $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                                    $content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-                                    
-                                    curl_close($curl);
-                                    $ret =  json_decode($response,true);
-                                    if($ret['error'] != "")
-                                    {
-                                        $data['success'] = false;
-                                        $data['msg'] =   "4 ".$ret['error']." : ".$ret['message'];
-                                        $data['ret'] = $ret;
-                                         die(json_encode($data));
-                                    }
-                                    else
-                                    {
-                                        // Save the file if request is successful
-                                        if ($http_code == 200) {
-                                            file_put_contents("assets/label/waybill_".$invoiceKirim[0]['order_sn'].".pdf", $response);
-                                            
-                                            $input = FCPATH . "assets/label/waybill_".$invoiceKirim[0]['order_sn'].".pdf";
-                                            $output = FCPATH . "assets/label/waybill_".$invoiceKirim[0]['order_sn']."_compressed.pdf";
-                                            
-                                            $cmd = "gs -sDEVICE=pdfwrite \
-                                                  -dDEVICEWIDTHPOINTS=283 \
-                                                  -dDEVICEHEIGHTPOINTS=425 \
-                                                  -dPDFFitPage \
-                                                  -dNOPAUSE -dQUIET -dBATCH \ -sOutputFile='$output' '$input'";
-                                            
-                                            exec($cmd, $outputLines, $status);
-                                            $data['success'] = true;
-                                            $data['order_sn'] = $invoiceKirim[0]['order_sn'];
-                                        } else {
-                                            $data['success'] = false;
-                                            $data['msg'] =  "Failed to download file. HTTP Status: $http_code\n";
-                                            die(json_encode($data));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                
+                        
+                        //UPDATE STATUS
+                         $CI->db->where("KODEPENJUALANMARKETPLACE", $itemPackage['order_id'])
+                        ->where('MARKETPLACE',"LAZADA")
+                        ->where('STATUSMARKETPLACE',"PENDING")
+                        ->updateRaw("TPENJUALANMARKETPLACE", array(
+                            'STATUSMARKETPLACE'     => 'PACKED',
+                            "LASTUPDATED"           =>  date("Y-m-d H:i:s")
+                        ));
                     }
-                    
-        	        $params=[];
                 }
-        	}
-		}
-		
-		//TOTALPENDAPATANPENJUAL
-		$params=[];
-        for($f = 0 ; $f < count($finalData);$f++){
-            
-            array_push($params,$finalData[$f]['KODEPENJUALANMARKETPLACE']);
-              if(($f % 49 == 0 && $f != 0) || $f == count($finalData)-1)
-              {
-          		$parameter = [];
-          		$parameter['order_sn_list'] = $params;
-          		
-          		  //GET RESI
-                  $curl = curl_init();
-                  
-                  curl_setopt_array($curl, array(
-                    CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_ENCODING => '',
-                    CURLOPT_MAXREDIRS => 10,
-                    CURLOPT_TIMEOUT => 30,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                    CURLOPT_CUSTOMREQUEST => 'POST',
-                    CURLOPT_POSTFIELDS =>  array(
-                    'endpoint' => 'payment/get_escrow_detail_batch',
-                    'parameter' => json_encode($parameter)),
-                    CURLOPT_HTTPHEADER => array(
-                      'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                    ),
-                  ));
-                    
-                  $response = curl_exec($curl);
-                  curl_close($curl);
-                  $ret =  json_decode($response,true);
-		          $data = [];
-                  if($ret['error'] != "")
-                  {
-                      $data['success'] = false;
-                      $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
-                      $data['ret'] = $ret;
-                      die(json_encode($data));
-                  }
-                  else
-                  {
-                      
-                      $dataPendapatan = $ret['response'];
-                      
-                      foreach($dataPendapatan as $itemPendapatan)
-                      {
-                          $CI->db->where("KODEPENJUALANMARKETPLACE",$itemPendapatan['escrow_detail']['order_sn'])
-    		              ->where('MARKETPLACE','LAZADA')
-    		              ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		                  'TOTALHARGA'               =>  $itemPendapatan['escrow_detail']['buyer_payment_info']['merchant_subtotal'], 
-    		                  'TOTALPENDAPATANPENJUAL'   =>  $itemPendapatan['escrow_detail']['order_income']['escrow_amount'],
-    		                ));
-                      }
-              
-                  }
-                  
-                $params=[];
-              }
-        }
-		
-		
-		//RETURN 
-        $bigger = false;
-        $cursor = 0;
-        $more = true;
-        $statusok = true; 
-        $tglTemp = $tgl_aw." 00:00:00"; 
-        $dateAk = new DateTime($tgl_ak." 23:59:59");
-        $tglcobaAW;
-        $tglcobaAK;
-        $returnhistory = [];
-        while(!$bigger && $statusok)
-        {
-            $dateAw = new DateTime($tglTemp);
-            $dateTemp = new DateTime($tglTemp);
-            $tglTempAdd = $dateTemp->modify('+14 days')->format('Y-m-d')." 23:59:59"; // Add 15 days
-            $dateTemp = new DateTime($tglTempAdd);    
-            if($dateTemp >= $dateAk)
-            {
-                $tglcobaAW = $tglTemp;
-                $tglcobaAK = $tgl_ak." 23:59:59";
                 
-                $bigger = true;
-                $tglAw = $dateAw->getTimestamp();
-                $tglAk = $dateAk->getTimestamp();
+            }
+        }
+        
+        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
+        $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
+        
+        //INSERT KARTUSTOK
+        $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
+        for($f = 0 ; $f < count($history) ; $f++)
+        {
+            if($this->getStatus($history[$f]['statuses'])['state'] != 1 && $this->getStatus($history[$f]['statuses'])['statusLabel'] != "CANCELLED" )
+            {
+                $createDate = new DateTime($history[$f]['created_at']);
+                $this->insertKartuStokPesanan($history[$f]['order_number'],$createDate->format('Y-m-d'),$tglStokMulai,$idlokasiset);
+            }
+        }
+        //INSERT KARTUSTOK
+        
+        //RETUR
+        $count = 1;
+        $countTotal = 2;
+        
+        if($jenis == "update")
+	    {
+	        //DIKURANGI 15 HARI
+	        $date = new DateTime($tgl_aw);
+            $date->sub(new DateInterval("P15D")); 
+            $tgl_aw = $date->format("Y-m-d");
+            $start = $tgl_aw . " 00:00:00";
+            $end   = $tgl_ak . " 23:59:59";
+            
+            $startMs = strtotime($start) * 1000;
+            $endMs   = strtotime($end) * 1000;
+	        
+	        $paramgrid = "&ReverseOrderLineModifiedTimeRangeStart=".$startMs."&ReverseOrderLineModifiedTimeRangeEnd=".$endMs;
+	    }
+	    else
+	    {
+	        
+            $start = $tgl_aw . " 00:00:00";
+            $end   = $tgl_ak . " 23:59:59";
+            
+            $startMs = strtotime($start) * 1000;
+            $endMs   = strtotime($end) * 1000;
+        
+	        $paramgrid = "&ReverseOrderLineTimeRangeStart=".$startMs."&ReverseOrderLineTimeRangeEnd=".$endMs;
+	    }
+	    
+
+        $paramgrid .= "&request_type_list=['RETURN','ONLY_REFUND']";
+        while($count < $countTotal)
+        {
+            $curl = curl_init();
+        
+            $parameter = $paramgrid."&page_size=100&page_no=".$count;
+
+            array_push($parameterreturnhistory,$parameter);
+           
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS => array('endpoint' => '/reverse/getreverseordersforseller','parameter' => $parameter),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+            
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            if($ret['code'] != 0)
+            {
+                $ret['success'] = false;
+                $ret['msg'] = $ret['message'];
+                die(json_encode($ret));
             }
             else
             {
-                $tglcobaAW = $tglTemp;
-                $tglcobaAK = $tglTempAdd;
-                
-                $tglAw = $dateAw->getTimestamp();
-                $tglAk = $dateTemp->getTimestamp();
-            }
-                 
-            while($more  && $statusok)
-            {
-                 $parameter = "&create_time_from=".$tglAw."&create_time_to=".$tglAk."&page_size=100&page_no=".$cursor;
-                 array_push($returnhistory, $parameter);
-                 $curl = curl_init();
-                //GET ORDER LIST
-                 curl_setopt_array($curl, array(
-                   CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                   CURLOPT_RETURNTRANSFER => true,
-                   CURLOPT_ENCODING => '',
-                   CURLOPT_MAXREDIRS => 10,
-                   CURLOPT_TIMEOUT => 30,
-                   CURLOPT_FOLLOWLOCATION => true,
-                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                   CURLOPT_CUSTOMREQUEST => 'POST',
-                   CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_list','parameter' => $parameter),
-                   CURLOPT_HTTPHEADER => array(
-                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                   ),
-                 ));
-                 
-                 $response = curl_exec($curl);
-                 curl_close($curl);
-                 $ret =  json_decode($response,true);
-                 if($ret['error'] != "")
-                 {
-                     echo $ret['error']." : ".$ret['message'];
-                     $statusok = false;
-                 }
-                 else
-                 {
-                     $return = $ret['response']['return'];
-                     for($x = 0  ; $x < count($return); $x++)
-                     {
-                		//JIKA BARANG SAMPAI, HARUS RETUR STOK BARANG
-                	    $parameter = "&return_sn=".$return[$x]['return_sn'];
-                        
-                        $curl = curl_init();
-                        $logisticStatus = "";
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_detail','parameter' => $parameter),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                        
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-                        if($ret['error'] != "")
-                        {
-                            echo $ret['error']." : ".$ret['message'];
-                        }
-                        else
-                        {
-                            $logisticStatus = $ret['response']['logistics_status'];
-                        }
-                        //JIKA BARANG SAMPAI, HARUS RETUR
-            
-                        $dataDetail = $return[$x]['item'];
-                        
-                        //URUTKAN BERDASARKAN NAMA BARANG
-                        usort($dataDetail, function($a, $b) {
-                            return strcmp($a['name'], $b['name']);
-                        });
-                        
-                        $allsku = "";
-                        $jml = 0;
-                        for($d = 0 ; $d < count($dataDetail);$d++)
-                        {
-                            //KHUSUS SKU YANG KOSONG
-                            $sku = $dataDetail[$d]['variation_sku'];
-                            if(strpos(strtoupper($dataDetail[$d]['name']),"BIRTHDAY CARD") !== false){
-                                $sku = "LTWS";
-                            }
-                            else if(strpos(strtoupper($dataDetail[$d]['name']),"NEWBORN CARD") !== false){
-                                $sku = "CARD-BOX-OTHER";
-                            }
-                            $jml += $dataDetail[$d]['amount'];
-                            $allsku .= $dataDetail[$d]['amount']."*".$sku."|";
-                        }
-                        
-                        $allsku = substr($allsku, 0, -1);
-                        
-                         $CI->db->where("KODEPENJUALANMARKETPLACE",$return[$x]['order_sn'])
-		                    ->where('MARKETPLACE','LAZADA')
-		                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-		                        'KODEPENGEMBALIANMARKETPLACE'   =>  $return[$x]['return_sn'],
-		                        'SKUPRODUKPENGEMBALIAN'         =>  $allsku,
-		                        'TOTALBARANGPENGEMBALIAN'       =>  $jml,
-		                        'STATUSPENGEMBALIANMARKETPLACE' =>  $return[$x]['status'],
-		                        'CATATANPENGEMBALIAN'           =>  $return[$x]['text_reason'],
-		                        'TOTALPENGEMBALIANDANA'         =>  $return[$x]['refund_amount'],
-		                        'TIPEPENGEMBALIAN'              =>  $return[$x]['return_refund_type'],
-		                        'TGLPENGEMBALIAN'               =>  date("Y-m-d H:i:s", $return[$x]['create_time']),
-		                        'MINTGLPENGEMBALIAN'            =>  date("Y-m-d H:i:s", $return[$x]['due_date']),
-		                        'MINTGLKIRIMPENGEMBALIAN'       =>  date("Y-m-d H:i:s", $return[$x]['return_ship_due_date']),
-		                        'RESIPENGEMBALIAN'              =>  $return[$x]['tracking_number'],
-		                        'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0)
-		                      ));
-                     }
-                     $cursor++;
-                     $more = $ret['response']['more'];
-                 }
-            }
-            $cursor = 0;
-            $more = false;
-            $statusok = true;
-            
-            $dateAddOne = new DateTime($tglTempAdd);
-            $tglTempAddOne = $dateAddOne->modify('+1 days')->format('Y-m-d')." 00:00:00"; // Add 1 days
-            $tglTemp = $tglTempAddOne;
-        }
-        
-        
-        //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
-        $lokasi = "0";
-        $parameter="";
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
-        {
-            echo $ret['error']." : ".$ret['message'];
-        }
-        else
-        {
-            $dataAddress = $ret['response']['address_list'];
-            $data['rows'] = [];
-            for($x = 0 ; $x < count($dataAddress);$x++)
-            {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                
-                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
+                $count += $ret['result']['page_size'];
+                $countTotal = $ret['result']['total'];
+               
+                for($x = 0 ; $x < count($ret['result']['items']); $x++)
                 {
-                    if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
-                    {
-                        $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                    }
+                     $return = $ret['result']['items'];
+                     $statusRetur = "";
+                     $reasonText = "";
+                     $refundAmount = 0;
+                     $statusOfc = "";
+                     $trackingNumber = "";
+                     $tglPengembalian = "";
+                     $minTglPengembalian = "";
+                     $minTglKirimPengembalian = "";
+                     //JIKA BARANG SAMPAI, HARUS RETUR
+            
+                     $dataDetail = $return[$x]['reverse_order_lines'];
+                     
+                     $allsku = "";
+                     $jml = 0;
+                     $reason = [];
+                     $reverseComplete = true;
+                     $batalRetur = true;
+                     $returBarang = false;
+                     for($d = 0 ; $d < count($dataDetail);$d++)
+                     {
+                         $statusRetur = $dataDetail[$d]['reverse_status'];
+                         if($dataDetail[$d]['is_dispute'])
+                         {
+                             $statusRetur = "DISPUTE";
+                         }
+                         
+                         if($statusRetur != "REQUEST_CANCEL")
+                         {
+                             $batalRetur = false;
+                             if($statusRetur != "REFUND_SUCCESS" && $reverseComplete)
+                             {
+                                 $reverseComplete = false;
+                             }
+                             
+                             $adaReason = false;
+                             for($r = 0 ; $r < count($reason); $r++)
+                             {
+                                 if($dataDetail[$d]['reason_text'] == $reason[$r])
+                                 {
+                                     $adaReason = true;
+                                 }
+                             }
+                             if(!$adaReason)
+                             {
+                                 if(count($reason) > 0)
+                                 {
+                                     $reasonText .= ", ";
+                                 }
+                                 array_push($reason,$dataDetail[$d]['reason_text']);
+                                $reasonText .= $dataDetail[$d]['reason_text'];
+                             }
+                                
+                             if($statusOfc == 'RETURN_RTM_DELIVERED' || $statusOfc == 'RETURN_LOGISTIC_CLOSURE_return_to_warehouse')
+                             {
+                                $returBarang = true;
+                                $statusOfc = $dataDetail[$d]['ofc_status'];
+                             }
+                             //JIKA ADA YANG SUDAH KEMBALI DIANGGEP RETUR
+                             if(!$returBarang)
+                             {
+                                 $statusOfc = $dataDetail[$d]['ofc_status'];
+                             }
+                             
+                             if($dataDetail[$d]['tracking_number'] != "")
+                             {
+                                $trackingNumber = $dataDetail[$d]['tracking_number'];
+                             }
+                             $tglPengembalian = $dataDetail[$d]['return_order_line_gmt_create'];
+                             
+                             $timestamp_ms = $dataDetail[$d]['sla'];
+                             $minTglPengembalian = $timestamp_ms / 1000;
+                             $sku = $dataDetail[$d]['seller_sku_id'];
+                         }
+                         else if($reverseComplete)
+                         {
+                             $reverseComplete = false;
+                         }
+                         
+                         //CARI URUTAN
+                         $sqlUrutan = "SELECT KODEBARANGPENGEMBALIANMARKETPLACE,URUTAN FROM TPENJUALANMARKETPLACEDTL 
+                                        WHERE KODEPENJUALANMARKETPLACE = '".$return[$x]['trade_order_id']."' 
+                                        AND MARKETPLACE = 'LAZADA' 
+                                        AND SKU = '".$sku."' 
+                                        ";
+                         $queryUrutan = $CI->db->query($sqlUrutan)->result();
+                         $urutan = 0;
+                         
+                         //CEK SUDAH PERNAH ADA ATAU BELUM
+                         foreach($queryUrutan as $itemUrutan)
+                         {
+                             if($itemUrutan->KODEBARANGPENGEMBALIANMARKETPLACE == $dataDetail[$x]['reverse_order_line_id'])
+                             {
+                                 $urutan = $itemUrutan->URUTAN;
+                             }
+                             else if($itemUrutan->KODEBARANGPENGEMBALIANMARKETPLACE == "" && $urutan == 0)
+                             {
+                                 $urutan = $itemUrutan->URUTAN;
+                             }
+                         }
+                        
+                        if($urutan != null)
+                        {
+                           $CI->db->where("KODEPENJUALANMARKETPLACE",$return[$x]['trade_order_id'])
+                           ->where('SKU',$sku)
+                           ->where('URUTAN',$urutan)
+    		              ->where('MARKETPLACE','LAZADA')
+    		              ->updateRaw("TPENJUALANMARKETPLACEDTL", array(
+    		                  'KODEPENGEMBALIANMARKETPLACE'   =>  $statusRetur == "REQUEST_CANCEL"?null:$return[$x]['reverse_order_id'],
+    		                  'KODEBARANGPENGEMBALIANMARKETPLACE'=> $statusRetur == "REQUEST_CANCEL"?null:$dataDetail[$d]['reverse_order_line_id'],
+    		                  'SKUPRODUKPENGEMBALIAN'         =>  $statusRetur == "REQUEST_CANCEL"?null:("1*".$sku),
+    		                  'STATUSPENGEMBALIANMARKETPLACE' =>  $statusRetur == "REQUEST_CANCEL"?null:$statusRetur,
+    		                  'CATATANPENGEMBALIAN'           =>  $statusRetur == "REQUEST_CANCEL"?null:$dataDetail[$d]['reason_text'],
+    		                  'TOTALPENGEMBALIANDANA'         =>  $statusRetur == "REQUEST_CANCEL"?null:(float)($dataDetail[$d]['refund_amount'] / 100),
+    		                  'TIPEPENGEMBALIAN'              =>  $statusRetur == "REQUEST_CANCEL"?null:$statusOfc,
+    		                  'TGLPENGEMBALIAN'               =>  $statusRetur == "REQUEST_CANCEL"?null:date("Y-m-d H:i:s", $tglPengembalian),
+    		                  'MINTGLPENGEMBALIAN'            =>  $statusRetur == "REQUEST_CANCEL"?null:($minTglPengembalian == "" ?"0000-00-00 00:00:00":date("Y-m-d H:i:s", $minTglPengembalian)),
+    		                  'STATUS'                        =>  ($statusRetur == "REQUEST_CANCEL" || $statusRetur == "REFUND_SUCCESS" ?'3':'4'),
+    		                  'STATUSMARKETPLACE'             =>  ($statusRetur == "REQUEST_CANCEL" || $statusRetur == "REFUND_SUCCESS" ?'COMPLETED':'RETURNED'),
+    		                  'RESIPENGEMBALIAN'              =>  $statusRetur == "REQUEST_CANCEL"?null:$trackingNumber,
+    		                  'BARANGSAMPAI'                  =>  ($statusOfc == 'RETURN_RTM_DELIVERED' || $statusOfc == 'RETURN_LOGISTIC_CLOSURE_return_to_warehouse' ? 1 : 0)
+    		                ));
+                        }
+                     }
+                     
+                     //JIKA ADA KURANG RETUR NYA, INPUT STOK LAGI
+            		 if(!$reverseComplete || !$returBarang){
+            		     $CI->db->where('KODETRANS',$return[$x]['reverse_order_id'])
+            		          ->where('JENISTRANS','RETUR JUAL LAZADA')
+            		          ->delete('KARTUSTOK');
+            		 }
                 }
             }
         }
         
-	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
+        
 	    
-	    if(count($finalData) > 0)
+	    if(count($history) > 0)
 	    {
     	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
-            for($f = 0 ; $f < count($finalData) ; $f++)
+            for($f = 0 ; $f < count($history) ; $f++)
             {
-                $wherePesanan .= "'".$finalData[$f]['KODEPENJUALANMARKETPLACE']."'";
+                $wherePesanan .= "'".$history[$f]['order_number']."'";
                 
-                if($f != count($finalData)-1)
+                if($f != count($history)-1)
                 {
                      $wherePesanan .= ",";
                 }
             }
             $wherePesanan .= ")";
 	    }
+	    
+	    
         
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'LAZADA' and BARANGSAMPAI = 1 and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY KODEPENJUALANMARKETPLACE";
         $dataRetur = $CI->db->query($sqlRetur)->result();
-
+		   
         foreach($dataRetur as $itemRetur)
         {
-           $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
+            $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$idlokasiset);
         }
-        //CEK LOKASI RETURN
         
-        
-        //SET BOOST
-        
-        //CEK COOLDOWN HABIS APA TIDAK
-        $waktu = 0;
-        $curl = curl_init();
-	    
-	    curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_boosted_list','parameter' => $parameter),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        //TOTAL RETUR HEADER
+        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,KODEPENGEMBALIANMARKETPLACE, group_concat(SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
+                                sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI
+                                FROM TPENJUALANMARKETPLACEDTL 
+                                WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  
+                                GROUP BY KODEPENJUALANMARKETPLACE 
+                                ORDER BY KODEPENJUALANMARKETPLACE";
+        $dataReturHeader = $CI->db->query($sqlReturHeader)->result();
+		   
+        foreach($dataReturHeader as $itemReturHeader)
         {
-            echo $ret['error']." : ".$ret['message'];
-        }
-        else
-        {
-            $itemList = $ret['response']['item_list'];
-            for($i = 0 ; $i < count($itemList) ; $i++)
-            {
-              $waktu = $itemList[$i]['cool_down_second'];
-            }
-        }
-        
-        if($waktu == 0)
-        {
-            
-    		$parameter = [];
-    		$parameter['item_id_list'] = [];
-    		
-            $sql = "SELECT IDINDUKBARANGLAZADA FROM MBARANG WHERE BOOSTLAZADA = 2 GROUP BY KATEGORI LIMIT 5";
-            $dataBarangPermanent = $CI->db->query($sql)->result();
-            
-            foreach($dataBarangPermanent as $itemBarangPermanent)
-    		{
-    		    array_push($parameter['item_id_list'],(int)$itemBarangPermanent->IDINDUKBARANGLAZADA);
-    		}
-            
-            $sql = "SELECT IDINDUKBARANGLAZADA FROM MBARANG WHERE BOOSTLAZADA = 1 GROUP BY KATEGORI ORDER BY RAND() LIMIT ".(5-count($dataBarangPermanent));
-            $dataBarang = $CI->db->query($sql)->result();
-    		
-    		foreach($dataBarang as $itemBarang)
-    		{
-    		    array_push($parameter['item_id_list'],(int)$itemBarang->IDINDUKBARANGLAZADA);
-    		}
-    		
-    		print_r($parameter);
-    	    $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => 'product/boost_item',
-              'parameter' => json_encode($parameter)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-         
-            if($ret['error'] != "")
-            {
-                echo $ret['error']." BOOST : ".$ret['message'];
-            }
+          
+          $skukembalidata = explode("|",$itemReturHeader->SKUPRODUKPENGEMBALIAN);
+          $totalBarang = 0;
+          for($j = 0 ; $j < count($skukembalidata); $j++)
+          {
+             $totalBarang += (int)(explode("*",$skukembalidata[$j])[0]);
+          }
+          
+          $CI->db->where("KODEPENJUALANMARKETPLACE",$itemReturHeader->KODEPENJUALANMARKETPLACE)
+		 ->where('MARKETPLACE','LAZADA')
+		 ->updateRaw("TPENJUALANMARKETPLACE", array(
+		     'SKUPRODUKPENGEMBALIAN'         =>  $itemReturHeader->SKUPRODUKPENGEMBALIAN, 
+		     'TOTALBARANGPENGEMBALIAN'       =>  $totalBarang, 
+		     'TOTALPENGEMBALIANDANA'         =>  $itemReturHeader->TOTALPENGEMBALIANDANA, 
+		     'STATUSMARKETPLACE'             =>  ($itemReturHeader->STATUS > 0 ? 'RETURNED' : 'COMPLETED'),  
+		     'STATUS'                        =>  ($itemReturHeader->STATUS > 0 ? '4' : '3'),
+		     "LASTUPDATED"                   =>  date("Y-m-d H:i:s"),
+		     'BARANGSAMPAI'                  =>  ($itemReturHeader->BARANGSAMPAI > 0 ? 1 : 0), 
+		   ));
         }
         
-        //SET BOOST
-        
+        //RETUR
         
         //SET STOK
-        $dataBarang = [];
-        //SET STOK
-        $curl = curl_init();
-        $parameter = "";
+
+        $sql = "select IDPERUSAHAAN, IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG,SKULAZADA
+        			from MBARANG
+        			where (1=1) and (IDBARANGLAZADA is not null and IDBARANGLAZADA <> 0)
+        			order by IDINDUKBARANGLAZADA
+        			";	
+        	
+        $dataHeader = $this->db->query($sql)->result();
         
+        $parameter = [];
+        $detailParameter = [];
+        
+        for($x = 0; $x < count($dataHeader) ; $x++)
+        {
+            
+        	$result   = get_saldo_stok_new($dataHeader[$x]->IDPERUSAHAAN,$dataHeader[$x]->IDBARANG, $idlokasiset, date('Y-m-d'));
+            $saldoQty = $result->QTY??0;
+  
+        	 array_push($detailParameter,
+        	       ['Sku' => [
+        	            'ItemId' => $dataHeader[$x]->IDINDUKBARANGLAZADA,
+        	            'SkuId' => $dataHeader[$x]->IDBARANGLAZADA,
+        		        'SellerSku' => $dataHeader[$x]->SKULAZADA,
+        		        'Quantity' => (int)$saldoQty
+        		      //  'Price' => (int)$dataHeader[$x]->HARGAJUAL
+        		    ]]);
+        		    
+            if(($x % 19 == 0 && $x != 0) || $x == count($dataHeader)-1)
+            {
+                
+                $parameter = [[
+        		    'xml' => 1,
+        		    'parameterKey' => 'payload',
+        		    'parameter' => [
+                          'Request' => [
+                              'Product' => [
+                                    'Skus' => $detailParameter
+                              ]
+                          ]
+                    ]
+                ]];
+                $curl = curl_init();
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS =>  array(
+                  'endpoint' => '/product/price_quantity/update',
+                  'parameter' => json_encode($parameter),
+                //   'debug' => 1
+                  ),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                  
+                $response = curl_exec($curl);
+                curl_close($curl);
+                $ret =  json_decode($response,true);
+                
+                if($ret['code'] != 0)
+                { 
+                    $ret['success'] = false;
+                    $ret['msg'] = $ret['message'];
+                    die(json_encode($ret));
+                }
+                else
+                {
+                  $parameter = [];
+                  $detailParameter = [];
+                }
+            }
+        }
+        //SET STOK
+        
+        
+        //UPDATE TOTAL PENJUALAN
+        
+
+        $date30DaysBefore = (new DateTime($tgl_aw))->modify('-30 day')->format('Y-m-d');
+        
+        $parameter = "&start_time=".$date30DaysBefore."&end_time=".date('Y-m-d');
+        
+        $curl = curl_init();
+    
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
@@ -8193,7 +6570,7 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/finance/transaction/details/get','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -8202,148 +6579,58 @@ class Lazada extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        $lokasi = 0;
-        $countSuccess = 0 ;
-        if($ret['error'] != "")
+ 
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." LOKASI : ".$ret['message'];
+            echo $ret['error']." : ".$ret['message'];
         }
         else
-        {
-            $dataAddress = $ret['response']['address_list'];
-            for($x = 0 ; $x < count($dataAddress);$x++)
+        {    
+            $dataPaymentSeller = $ret['data'];
+            $transaction = [];
+            foreach($dataPaymentSeller as $itemPaymentSeller)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                $pickup = false;
-                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
+                $itemPaymentSeller['amount'] = str_replace(",","",$itemPaymentSeller['amount']);
+                $adaNo = false;
+                for($ps = 0 ; $ps < count($transaction);$ps++)
                 {
-                    if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
+                    if($transaction[$ps]['orderno'] == $itemPaymentSeller['order_no'])
                     {
-                        $pickup = true;
+                        $adaNo = true;
+                        $transaction[$ps]['amount'] +=  $itemPaymentSeller['amount'];
                     }
-                    // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                    // {
-                    //     $default = true;
-                    // }
                 }
-                
-                if($pickup)
+                if(!$adaNo)
                 {
-                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                    array_push($transaction,array(
+                        'orderno' => $itemPaymentSeller['order_no'],
+                        'amount' => $itemPaymentSeller['amount'],
+                    ));
                 }
             }
-                
-            $sql = "select IDBARANGLAZADA, IDINDUKBARANGLAZADA, IDBARANG
-            				from MBARANG
-            				WHERE IDINDUKBARANGLAZADA is not null AND
-            				IDINDUKBARANGLAZADA <> '' AND
-            				IDINDUKBARANGLAZADA <> 0
-            				order by IDINDUKBARANGLAZADA
-            				";	
-            		
-            	$dataHeader = $this->db->query($sql)->result();
-            		
-             $idHeader = 0;
-             $parameter = [];
-            	 foreach($dataHeader as $itemHeader)
-            	 {
-            	     if($itemHeader->IDINDUKBARANGLAZADA != $idHeader)
-            	     {
-            	         if(count($parameter) > 0)
-            	         {
-            	            $curl = curl_init();
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'product/update_stock',
-                          'parameter' => json_encode($parameter)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                          
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-                        
-                        if($ret['error'] != "")
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                            die(json_encode($data));
-                            print_r($ret);
-                        }
-            	         }
-            	         $idHeader = $itemHeader->IDINDUKBARANGLAZADA;
-            	         
-            	         //UPDATE KE LAZADANYA
-                    $parameter = [];
-                 	$parameter['item_id'] = (int)$itemHeader->IDINDUKBARANGLAZADA;
-                 	$parameter['stock_list'] = [];
-            	     }
-            	     
-                 $result   = get_saldo_stok_new($_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
-                 $saldoQty = $result->QTY??0;
-                
-                $modelId = 0;
-                
-                if($itemHeader->IDBARANGLAZADA != $itemHeader->IDINDUKBARANGLAZADA)
-                {
-                    $modelId = $itemHeader->IDBARANGLAZADA;
-                }
-                
-                 array_push($parameter['stock_list'],array(
-                    'model_id'      => (int)$modelId,
-                    'seller_stock'  => array(
-                         array('stock' => (int)$saldoQty)
-                    ))
-                );
-            	}
-            	
-            	$curl = curl_init();
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => 'product/update_stock',
-              'parameter' => json_encode($parameter)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
             
-            if($ret['error'] != "")
+            foreach($transaction as $itemTrans)
             {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                die(json_encode($data));
+                $CI->db->where("KODEPENJUALANMARKETPLACE",$itemTrans['orderno'])
+    		        ->where('MARKETPLACE','LAZADA')
+    		        ->updateRaw("TPENJUALANMARKETPLACE", array(
+    		            'TOTALPENDAPATANPENJUAL'   =>  $itemTrans['amount'],
+    		            "LASTUPDATED"              =>  date("Y-m-d H:i:s")
+    		          ));
             }
+            
         }
-        //SET STOK
+        
+        //UPDATE TOTAL PENJUALAN
         	
         
-        $finalResult["history"] = $history;
-        $finalResult["return_history"] = $returnhistory;
+        $finalResult["history"] = $parameterhistory;
+        $finalResult["return_history"] = $parameterreturnhistory;
 		$finalResult["total"] = $newOrder;
-		
-		echo json_encode($finalResult); 
+		if($showResponse)
+		{
+		    echo json_encode($finalResult); 
+		}
 	}
 	
 }

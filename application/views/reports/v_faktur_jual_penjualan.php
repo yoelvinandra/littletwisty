@@ -43,7 +43,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 
 $transaksi = $CI->model_master_config->getConfig('TPENJUALAN','TRANSAKSIBBK');
 
-$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP
+$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP,a.PPNRP,a.DPPLAINRP
 				,d.USERNAME
 				from TPENJUALAN a
 				left join MLOKASI b on a.IDLOKASI = b.IDLOKASI
@@ -99,11 +99,18 @@ if(floatval($r->POTONGANRP) > 0)
 					<td valign="top"class="font-body rp right" >'.number(-$r->POTONGANRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
 		}
 		
-if(floatval($PPNRP) > 0)
+if(floatval($r->PPNRP) > 0)
 		{						
 		$ppn ='<td colspan="2" valign="top"class="font-header right">PPN</td>
-			<td valign="top"class="font-body rp right" >'.number($PPNRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
-		}	
+			<td valign="top"class="font-body rp right" >'.number($r->PPNRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
+			
+		}
+		
+if(floatval($r->DPPLAINRP) > 0)
+		{						
+		$dpp ='<td colspan="2" valign="top"class="font-header right">DPP Lain</td>
+			<td valign="top"class="font-body rp right" >'.number($r->DPPLAINRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
+		}
 		
 $NPWP=''.$r->NPWP;
 if($cetakNPWP == 'no')
@@ -194,14 +201,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 				order by a.URUTAN";		
 		$rows = $CI->db->query($sql, [$idtrans])->result(); 
 		
-		
-		
-		
-		$DPP = 0;
-		$PPNRP = 0;
-		$Subtotal = 0;
-		$Pembulatan = 0;
-		$Tax = 0;
+        $Subtotal = 0;
 		$halaman =1;
 		$max_item = 10;
 		$i = 0;
@@ -245,28 +245,22 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 			if($rs->SATUANREF != ""){
 						if($rs->PAKAIPPN == 0){
 							$pakaippn = "TIDAK";
-							$dpp = $rs->JMLREF * $rs->HARGAREF;
 						}
 						else if($rs->PAKAIPPN == 1){
 							$pakaippn = "EXCL";
-							$dpp = $rs->JMLREF * $rs->HARGAREF;
 						}
 						else if($rs->PAKAIPPN == 2){
 							$pakaippn = "INCL";
-							$dpp = ($rs->JMLREF * $rs->HARGAREF) - $rs->PPNRP;
 						}
 					}else{
 						if($rs->PAKAIPPN == 0){
 							$pakaippn = "TIDAK";
-							$dpp = $rs->SUBTOTALKURS;
 						}
 						else if($rs->PAKAIPPN == 1){
 							$pakaippn = "EXCL";
-							$dpp = $rs->SUBTOTALKURS;
 						}
 						else if($rs->PAKAIPPN == 2){
 							$pakaippn = "INCL";
-							$dpp = $rs->SUBTOTALKURS - $rs->PPNRP;
 						}
 					}
 			
@@ -277,23 +271,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 			{
 				$SUBTOTAL = ($rs->SUBTOTALKURS);
 			}
-			$DPP += $dpp;
-			$PPNRP += $rs->PPNRP;
-			$Tax += $rs->PPH22RP;
 			$Subtotal += $SUBTOTAL;
-			
-			
-			
-		
-		//PPH
-		$pph22='';
-
-			if($Tax != 0)
-			{
-				$pph22='<tr><td colspan="2" valign="top"class="font-header right">PPH22</td>
-					<td valign="top"class="font-body right">'.number($Tax, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td></tr>';
-			}
-			
 			
 				
 		}
@@ -313,10 +291,16 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 					<td valign="top"class="font-body rp right" >'.number(-$r->POTONGANRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
 		}
 		
-		if(floatval($PPNRP) > 0)
+		if(floatval($r->PPNRP) > 0)
 		{						
 		$ppn ='<td colspan="2" valign="top"class="font-header right">PPN</td>
-			<td valign="top"class="font-body rp right" >'.number($PPNRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
+			<td valign="top"class="font-body rp right" >'.number($r->PPNRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
+		}
+		
+		if(floatval($r->DPPLAINRP) > 0)
+		{						
+		    $dpp ='<td colspan="2" valign="top"class="font-header right">DPP Lain</td>
+			<td valign="top"class="font-body rp right" >'.number($r->DPPLAINRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
 		}
 	
 		if($cetakNPWP == 'no')
@@ -405,7 +389,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 								<tr valign="top">
 								<td class="font-header " width="68">Terbilang</td>
 								<td class="font-body ">: </td>
-								<td class="font-body ">'.terbilang($DPP + $PPNRP - $r->POTONGANRP).'</td>
+								<td class="font-body ">'.terbilang($Subtotal - $r->POTONGANRP + $r->PPNRP).'</td>
 								</tr>
 								<tr valign="top">
     							<td class="font-header">Total Barang</td>
@@ -478,18 +462,17 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 								<td valign="top"class="font-body rp right">'.number($Subtotal, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>
 							</tr>
 							<tr>
-								<td colspan="2" valign="top"class="font-header  right">DPP</td>
-								<td valign="top"class="font-body rp right" >'.number($DPP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>
+							    '.$diskon.'
 							</tr>
 							<tr>
-							    '.$diskon.'
+								'.$dpp.'
 							</tr>
 							<tr>
 								'.$ppn.'
 							</tr>
 							<tr>
 								<td colspan="2" valign="top"class="font-header right">Grand Total</td>
-								<td valign="top"class="font-body rp right border-atas" >'.number($DPP + $PPNRP - $r->POTONGANRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>
+								<td valign="top"class="font-body rp right border-atas" >'.number($Subtotal - $r->POTONGANRP + $r->PPNRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>
 							</tr>
 						
 						</table>

@@ -125,14 +125,18 @@ if ($tampil=='REGISTER') {
     	        $this->html_table->set_tr(array('bgcolor'=>'#B3E0FF'));
             	$this->html_table->set_td(array(
             		array('align'=>'right', 'colspan'=> 3, 'id'=>'tabelket', 'values'=>'Total'),
-            		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotalharian'],true,0):'X'),
+            		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['totalharian'],true,0):'X'),
             		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potonganharian'],true,0):'X'),	
+            		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['dpplainharian'],true,0):'X'),	
+            		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['ppnharian'],true,0):'X'),	
             		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotaldiskonharian'],true,0):'X'),
             		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['pembayaranharian'],true,0):'X'),
             		array('align'=>'right', 'colspan'=>6, 'id'=>'tabelket', 'values'=>''),
             	));
-    	        $total['grandtotalharian'] = 0;
+    	        $total['totalharian'] = 0;
     	        $total['potonganharian'] = 0;
+    	        $total['dpplainharian'] = 0;
+    	        $total['ppnharian'] = 0;
     	        $total['grandtotaldiskonharian'] = 0;
     	        $total['pembayaranharian'] = 0;
 		    }
@@ -161,8 +165,10 @@ if ($tampil=='REGISTER') {
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>30,  'values'=>'No.'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>60, 'values'=>'J. Trans'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>120, 'values'=>'No. Trans'),
-        		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Grand Total ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
+        		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Total ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Potongan ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
+        		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'DPP Lain ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
+        		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'PPN ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
         	    array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Grand Total * ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Pembayaran ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
         		array('align'=>'center', 'id'=>'tabelket', 'width'=>300, 'values'=>'Customer'),
@@ -181,16 +187,18 @@ if ($tampil=='REGISTER') {
 			$urutan2 = 0;
 			if ($r->STATUS == 'I' || $r->STATUS == 1) $warna2 = '#FFFFFF';
 			else if ($r->STATUS == 'S' || $r->STATUS == 2) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];
-			else if ($r->STATUS == 'P' || ($r->STATUS == 3  && $r->STATUSMARKETPLACE == 'COMPLETED')) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
-			else if ($r->STATUS == 'D'|| ($r->STATUS == 3 && $r->STATUSMARKETPLACE == 'CANCELLED') || $r->STATUS == 4) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
+			else if ($r->STATUS == 'P' || ($r->STATUS == 3  && ($r->STATUSMARKETPLACE == 'COMPLETED' || $r->STATUSMARKETPLACE == 'CONFIRMED'))) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
+			else if ($r->STATUS == 'D'|| ($r->STATUS == 3 && ($r->STATUSMARKETPLACE == 'CANCELLED' || $r->STATUSMARKETPLACE == 'CANCELED')) || $r->STATUS == 4) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
 
 
 				$a_merge = array(
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$urutan),
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->JENISTRANSAKSI),
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->KODETRANS),
-					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTAL,true,0):'X'),
+					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->TOTAL,true,0):'X'),
 					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->POTONGANRP,true,0):'X'),
+					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->DPPLAINRP,true,0):'X'),
+					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->PPNRP,true,0):'X'),
 				    array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTALDISKON,true,0):'X'),
 					array('valign'=>'top',  'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->PEMBAYARAN,true,0):'X'),
 					array('valign'=>'top',  'class'=>'det',     'bgcolor'=>$warna2, 'values'=>$r->NAMACUSTOMER."<br>".$r->KOTA."<br>".$r->CATATANCUSTOMER),
@@ -198,12 +206,16 @@ if ($tampil=='REGISTER') {
 				$a_merge2 = array(
 					array('valign'=>'top',  'align'=>'center',   'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->CATATAN),
 				);
-            $total['grandtotalharian'] += $LIHATHARGA?$r->GRANDTOTAL:0;
+            $total['totalharian'] += $LIHATHARGA?$r->TOTAL:0;
             $total['potonganharian'] += $LIHATHARGA?$r->POTONGANRP:0;
+    	    $total['dpplainharian'] +=  $LIHATHARGA?$r->DPPLAINRP:0;
+    	    $total['ppnharian'] +=  $LIHATHARGA?$r->PPNRP:0;
 			$total['grandtotaldiskonharian'] += $LIHATHARGA?$r->GRANDTOTALDISKON:0;
             $total['pembayaranharian'] += $LIHATHARGA?$r->PEMBAYARAN:0;
-			$total['grandtotal'] += $LIHATHARGA?$r->GRANDTOTAL:0;
+			$total['total'] += $LIHATHARGA?$r->GRANDTOTAL:0;
 			$total['potongan'] += $LIHATHARGA?$r->POTONGANRP:0;
+			$total['dpplain'] +=  $LIHATHARGA?$r->DPPLAINRP:0;
+    	    $total['ppn'] +=  $LIHATHARGA?$r->PPNRP:0;
 			$total['grandtotaldiskon'] += $LIHATHARGA?$r->GRANDTOTALDISKON:0;
 			$total['pembayaran'] += $LIHATHARGA?$r->PEMBAYARAN:0;
 		}
@@ -213,7 +225,9 @@ if ($tampil=='REGISTER') {
 				$a_merge = array(
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det_kosong', 'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'center', 'class'=>'det_kosong', 'bgcolor'=>$warna2),
-					array('valign'=>'top',  'align'=>'left', 'class'=>'det_kosong',   'bgcolor'=>$warna2),
+					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong',   'bgcolor'=>$warna2),
+					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong',   'bgcolor'=>$warna2),
+					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong',   'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong', 'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong', 'bgcolor'=>$warna2),
 					array('valign'=>'top',  'align'=>'left',   'class'=>'det_kosong', 'bgcolor'=>$warna2),
@@ -257,8 +271,10 @@ if ($tampil=='REGISTER') {
 	$this->html_table->set_tr(array('bgcolor'=>'#B3E0FF'));
     $this->html_table->set_td(array(
     	array('align'=>'right', 'colspan'=> 3, 'id'=>'tabelket', 'values'=>'Total'),
-    	array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotalharian'],true,0):'X'),
+    	array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['totalharian'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potonganharian'],true,0):'X'),
+        array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['dpplainharian'],true,0):'X'),
+        array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['ppnharian'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotaldiskonharian'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['pembayaranharian'],true,0):'X'),
     	array('align'=>'right', 'colspan'=>6, 'id'=>'tabelket', 'values'=>''),
@@ -267,8 +283,10 @@ if ($tampil=='REGISTER') {
     $this->html_table->set_tr(array('bgcolor'=>'#B3E0FF'));
 	$this->html_table->set_td(array(
 		array('align'=>'right', 'colspan'=> 3, 'id'=>'tabelket', 'values'=>'Grand Total'),
-		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotal'],true,0):'X'),
+		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['total'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potongan'],true,0):'X'),
+        array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['dpplain'],true,0):'X'),
+        array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['ppn'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotaldiskon'],true,0):'X'),
         array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['pembayaran'],true,0):'X'),
 		array('align'=>'right', 'colspan'=>6, 'id'=>'tabelket', 'values'=>''),
@@ -289,8 +307,10 @@ if ($tampil=='REGISTER') {
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>60,  'values'=>'J. Trans'),	
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>120,  'values'=>'No. Trans'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Total Barang'),
-		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Grand Total ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
+		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Total ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Potongan ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
+		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'DPP Lain ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
+		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'PPN ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Grand Total * ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>100,  'values'=>'Pembayaran ('.$_SESSION[NAMAPROGRAM]['SIMBOLCURRENCY'].')'),
 		array('align'=>'center', 'id'=>'tabelket', 'width'=>300, 'values'=>'Customer'),	
@@ -308,8 +328,8 @@ if ($tampil=='REGISTER') {
 	
 		if ($r->STATUS == 'I' || $r->STATUS == 1) $warna2 = '#FFFFFF';
 		else if ($r->STATUS == 'S' || $r->STATUS == 2) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_S'];
-		else if ($r->STATUS == 'P' || ($r->STATUS == 3  && $r->STATUSMARKETPLACE == 'COMPLETED')) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
-		else if ($r->STATUS == 'D'|| ($r->STATUS == 3 && $r->STATUSMARKETPLACE == 'CANCELLED') || $r->STATUS == 4) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
+		else if ($r->STATUS == 'P' || ($r->STATUS == 3  && ($r->STATUSMARKETPLACE == 'COMPLETED' || $r->STATUSMARKETPLACE == 'CONFIRMED'))) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_P'];
+		else if ($r->STATUS == 'D'|| ($r->STATUS == 3 && ($r->STATUSMARKETPLACE == 'CANCELLED' || $r->STATUSMARKETPLACE == 'CANCELED')) || $r->STATUS == 4) $warna2 = $_SESSION[NAMAPROGRAM]['WARNA_STATUS_D'];
 
 		$tgltrans = $r->TGLTRANS;
 	    
@@ -325,8 +345,10 @@ if ($tampil=='REGISTER') {
     	
     	$hari = $dataHari[date('l', strtotime($tgltrans))];
 		$total['qty'] += $r->QTY;
-		$total['grandtotal'] += $LIHATHARGA?$r->GRANDTOTAL:0;
+		$total['total'] += $LIHATHARGA?$r->TOTAL:0;
 		$total['potonganrp'] += $LIHATHARGA?$r->POTONGANRP:0;
+		$total['dpplainrp'] += $LIHATHARGA?$r->DPPLAINRP:0;
+		$total['ppnrp'] += $LIHATHARGA?$r->PPNRP:0;
 		$total['grandtotaldiskon'] += $LIHATHARGA?$r->GRANDTOTALDISKON:0;
 		$total['pembayaran'] += $LIHATHARGA?$r->PEMBAYARAN:0;
 		
@@ -338,8 +360,10 @@ if ($tampil=='REGISTER') {
 			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->JENISTRANSAKSI),
 			array('valign'=>'top', 'align'=>'center', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->KODETRANS),
 			array('valign'=>'top', 'align'=>'center',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>number($r->QTY,true,0)),
-			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTAL,true,0):'X'),
+			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->TOTAL,true,0):'X'),
 			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->POTONGANRP,true,0):'X'),
+			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->DPPLAINRP,true,0):'X'),
+			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->PPNRP,true,0):'X'),
 			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->GRANDTOTALDISKON,true,0):'X'),
 			array('valign'=>'top', 'align'=>'right',  'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$LIHATHARGA?number($r->PEMBAYARAN,true,0):'X'),
 			array('valign'=>'top', 'class'=>'det', 'bgcolor'=>$warna2, 'values'=>$r->NAMACUSTOMER."<br>".$r->KOTA."<br>".$r->CATATANCUSTOMER),
@@ -351,8 +375,10 @@ if ($tampil=='REGISTER') {
 	$this->html_table->set_td(array(
 		array('align'=>'right', 'id'=>'tabelket', 'colspan'=>5, 'values'=>'Grand Total'),
 		array('align'=>'center', 'id'=>'tabelket', 'values'=> number($total['qty'],true,0)),
-		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotal'],true,0):'X'),
+		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['total'],true,0):'X'),
 		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['potonganrp'],true,0):'X'),
+		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['dpplainrp'],true,0):'X'),
+		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['ppnrp'],true,0):'X'),
 		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['grandtotaldiskon'],true,0):'X'),
 		array('align'=>'right', 'id'=>'tabelket', 'values'=>$LIHATHARGA?number($total['pembayaran'],true,0):'X'),
 		array(),
