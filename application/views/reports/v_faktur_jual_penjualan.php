@@ -465,9 +465,6 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 							    '.$diskon.'
 							</tr>
 							<tr>
-								'.$dpp.'
-							</tr>
-							<tr>
 								'.$ppn.'
 							</tr>
 							<tr>
@@ -483,6 +480,11 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 			</div>
 			
 		';
+		
+		
+				// 			<tr>
+				// 				'.$dpp.'
+				// 			</tr>
 		
 		echo $footer;
 		
