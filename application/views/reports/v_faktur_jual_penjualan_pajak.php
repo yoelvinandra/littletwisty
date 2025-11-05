@@ -478,6 +478,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 				</tr>
 				</table>
 			<div class="font-body" style="margin-top:0px; float:left;">Tgl Cetak : '.date("Y-m-d").'</div>	
+	    	<img src="'.base_url().'assets/'.$_SESSION[NAMAPROGRAM]['KODEPERUSAHAAN'].'/TT.png" width="150" style="float:right;">
 			</div>
 			
 		';
