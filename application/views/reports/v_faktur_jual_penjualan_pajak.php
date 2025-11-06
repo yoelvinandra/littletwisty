@@ -15,7 +15,7 @@
 }
 
 .tabel_perusahaan tr td{
-	width:65%;	
+	width:85%;	
 }
 
 .rp{
@@ -43,7 +43,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 
 $transaksi = $CI->model_master_config->getConfig('TPENJUALAN','TRANSAKSIBBK');
 
-$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP,a.PPNRP
+$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP,a.PPNRP,c.NPWP
 				,d.USERNAME
 				from TPENJUALAN a
 				left join MLOKASI b on a.IDLOKASI = b.IDLOKASI
@@ -111,7 +111,7 @@ if(floatval($r->DPPLAINRP) > 0)
 			<td valign="top"class="font-body rp right" >'.number($r->DPPLAINRP, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>';
 		}
 		
-$NPWP=''.$r->NPWP;
+$NPWP='NPWP : '.$r->NPWP;
 if($cetakNPWP == 'no')
 {
 	 $NPWP = ''; 
@@ -128,7 +128,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 			<tr>
 				
 				<td valign="top" class="font-header"> <img src="'.base_url().'assets/'.$_SESSION[NAMAPROGRAM]['KODEPERUSAHAAN'].'/logo-perusahaan.jpeg" class="user-image" alt="User Image" height="26"></td>
-				<td valign="top" class="title"> NOTA PENJUALAN</td>
+				<td valign="top" class="title"> INVOICES</td>
 
 			</tr>
 			<tr>
@@ -167,11 +167,11 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 							<table>
 
 								<tr>
-									<td valign="top"class="font-header" width="55px">No. Jual</td>
+									<td valign="top"class="font-header" width="62px">No. Invoice</td>
 									<td valign="top"class="font-body">: '.$r->KODEPENJUALAN.'</td>
 								</tr>
 								<tr>
-									<td valign="top"class="font-header">Tgl. Trans</td>
+									<td valign="top"class="font-header">Tgl. Invoice</td>
 									<td valign="top"class="font-body">: '.$r->TGLTRANS.'</td>
 								</tr>
 								<tr>

@@ -83,6 +83,7 @@ class CUSTOMER extends MY_Controller {
 			'EMAIL'           => $this->input->post('EMAIL'),
 			'NAMABANK'        => $this->input->post('NAMABANK'),
 			'NOREKENING'      => $this->input->post('NOREKENING'),
+			'NPWP'            => $this->input->post('NPWP')??"",   
 			'CATATAN'         => $this->input->post('CATATAN'),
 			'USERENTRY'       => $_SESSION[NAMAPROGRAM]['USERID'],
 			'TGLENTRY'        => date("Y-m-d"),

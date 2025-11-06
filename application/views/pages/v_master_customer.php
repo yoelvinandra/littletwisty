@@ -120,6 +120,7 @@
                                                     <th>Kota</th>
                                                     <th>Provinsi</th>
                                                     <th>Negara</th>
+                                                    <th>NPWP</th>
                                                     <th>Telp</th>
                                                     <th>Email</th>
                                                     <th>Bank</th>
@@ -179,6 +180,13 @@
                                                              <div class="col-md-4">
                                                                 <label>Negara</label>
                                                                 <input type="text" class="form-control" id="NEGARA" name="NEGARA" placeholder="Negara">
+                                                             </div>
+                                                         </div>
+                                                         <br>
+                                                         <div class="row">
+                                                            <div class="col-md-6">
+                                                                <label>NPWP</label>
+                                                                <input type="text" class="form-control" id="NPWP" name="NPWP" placeholder="NPWP">
                                                              </div>
                                                          </div>
                                                          <br>
@@ -304,6 +312,7 @@ $(document).ready(function() {
                     tr.append('<td>' + (row.PROVINSI== null?"": row.PROVINSI) + '</td>');
                     tr.append('<td>' + (row.NEGARA== null?"":row.NEGARA) + '</td>');
                     tr.append('<td>' + (row.TELP== null?"":row.TELP) + '</td>');
+                    tr.append('<td>' + (row.NPWP== null?"":row.NPWP) + '</td>');
                     tr.append('<td>' + (row.EMAIL== null?"":row.EMAIL) + '</td>');
                     tr.append('<td>' + (row.NAMABANK== null?"":row.NAMABANK) + '</td>');
                     tr.append('<td>' + (row.NOREKENING== null?"":row.NOREKENING) + '</td>');
@@ -335,6 +344,7 @@ $(document).ready(function() {
             {data: 'KOTA'},
             {data: 'PROVINSI'},
             {data: 'NEGARA'},
+            {data: 'NPWP'},
             {data: 'TELP'},
             {data: 'EMAIL'},
             {data: 'NAMABANK'},
@@ -505,6 +515,7 @@ function exportTableToExcel() {
     { wpx: 100 },  // Column C width in pixels
     { wpx: 100 },  // Column C width in pixels
     { wpx: 100 },  // Column C width in pixels
+    { wpx: 100 },  // Column C width in pixels
     { wpx: 120 },  // Column C width in pixels
     { wpx: 60 },  // Column C width in pixels
     { wpx: 150 },  // Column C width in pixels
@@ -545,6 +556,7 @@ function tambah(){
 				$("#IDCUSTOMER").val("");
 				$("#KODECUSTOMER").val("");
 				$("#NAMACUSTOMER").val("");
+				$("#NPWP").val("");
 				$("#ALAMAT").val("");
 				$("#KOTA").val("");
 				$("#PROVINSI").val("");
@@ -596,6 +608,7 @@ function ubah(row){
 				$("#IDCUSTOMER").val(row.IDCUSTOMER);
 				$("#KODECUSTOMER").val(row.KODECUSTOMER);
 				$("#NAMACUSTOMER").val(row.NAMACUSTOMER);
+				$("#NPWP").val(row.NPWP);
 				$("#ALAMAT").val(row.ALAMAT);
 				$("#KOTA").val(row.KOTA);
 				$("#PROVINSI").val(row.PROVINSI);
