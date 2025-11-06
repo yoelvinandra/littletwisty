@@ -279,11 +279,11 @@
                                 									</div>
                             									</div>
                             								</div>
-                            								<div class="col-md-6  col-sm-6 col-xs-12 "  style="padding: 0px 100px 5px 15px;  margin-top:15px; text-align:right; " >
-                            								    <div class="input-group margin" style="padding:0; margin:0; width:300px; float:right;">
+                            								<div class="col-md-5  col-sm-5 col-xs-12 "  style="padding: 0px 0px 5px 15px;  margin-top:15px; text-align:right; " >
+                            								    <div class="input-group margin" style="padding:0; margin:0; width:240px; float:right;">
                                         						    <input type="text"  class="form-control" id="DISKONMASSAL" style="border:1px solid #B5B4B4; border-radius:1px;" placeholder="Diskon % Per Barang">
                                         						    <div class="input-group-btn">
-                                        								<button type="button" id="btn_diskon_massal" class="btn btn-primary btn-flat" data-id="7">Atur Diskon Langsung</button>
+                                        								<button type="button" id="btn_diskon_massal" class="btn btn-primary btn-flat" data-id="7">Atur Diskon</button>
                                         							</div>
                                     							</div>
                             								</div>
@@ -2349,6 +2349,8 @@ function reset(){
 	$("#IDCUSTOMER").val(1);
 	$("#INPUTBARCODE").val("");
 	$("#DETAILBARANG").val("");
+	$("#DISKONMASSAL").val("");
+	
 
 	$('#TOTAL').val(0);
 	$('#PPN').val(0);
