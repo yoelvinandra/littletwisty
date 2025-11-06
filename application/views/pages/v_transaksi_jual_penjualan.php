@@ -272,13 +272,24 @@
                             									<label >Salin dari </label>
                             								</div>
                             								<div class="col-md-4  col-sm-4 col-xs-12 SALINDETAILBARANG"  style="padding: 0px 0px 5px 0px;  margin-top:15px;" >
-                            								    <div class="input-group margin" style="padding:0; margin:0">
+                            								    <div class="input-group margin" style="padding:0; margin:0;">
                                 							        <input type="text"  class="form-control" id="DETAILBARANG" style="border:1px solid #B5B4B4; border-radius:1px;" placeholder="Kode Transaksi">
                                 							        <div class="input-group-btn">
                                 										<button type="button" id="btn_salin" class="btn btn-primary btn-flat" data-id="7">Salin</button>
                                 									</div>
                             									</div>
                             								</div>
+                            								<div class="col-md-6  col-sm-6 col-xs-12 "  style="padding: 0px 100px 5px 15px;  margin-top:15px; text-align:right; " >
+                            								    <div class="input-group margin" style="padding:0; margin:0; width:300px; float:right;">
+                                        						    <input type="text"  class="form-control" id="DISKONMASSAL" style="border:1px solid #B5B4B4; border-radius:1px;" placeholder="Diskon % Per Barang">
+                                        						    <div class="input-group-btn">
+                                        								<button type="button" id="btn_diskon_massal" class="btn btn-primary btn-flat" data-id="7">Atur Diskon Langsung</button>
+                                        							</div>
+                                    							</div>
+                            								</div>
+                            								
+                            									
+                            									
                             							</div>
                             							<div class="form-group col-md-4">
                             								<div class="col-md-4 col-sm-4 col-xs-12" style="padding: 0px">
@@ -302,7 +313,7 @@
                             									<div role="tabpanel" data-example-id="togglable-tabs" >
                             
                             										<div class="col-md-6 col-sm-6 col-xs-6">
-                            											<button type="button" id="btn_tambah" class="btn btn-success" onclick="tambahDetail()" data-toggle="modal" data-target="#modal-barang"  style="margin-right:35%">Barang/F4</button>
+                            											<button type="button" id="btn_tambah" class="btn btn-success" onclick="tambahDetail()" data-toggle="modal" data-target="#modal-barang" >Barang/F4</button>
                             										</div>
                             										<div class="col-md-6 col-sm-6 col-xs-6" align="right" style="margin-left:0px;  margin-bottom:5px;">
                             											<button id="btn_simpan" style="padding:6px 10px 6px 10px;" onclick="simpan()" >Bayar/F9</button>	
@@ -731,6 +742,19 @@ $(document).ready(function(){
     		});
         }
 	});
+	
+	$("#btn_diskon_massal").click(function(){
+	    if($("#DISKONMASSAL").val() != "")
+        {
+           for(var x = 0 ; x < countdetail;x++)
+           {
+               $("#DISKON"+x+" input").val($("#DISKONMASSAL").val());
+               hitung_diskon($("#DISKON"+x+" input").val(),parseInt($("#HARGA"+x+" input").val()),x);
+           }
+           
+    	   hitung_semua(countdetail);
+        }
+	});
 	//-------
 	
 	$("#TGLTRANS").change(function() {
@@ -830,7 +854,7 @@ $(document).ready(function(){
 			{
                 "targets": 0,
                 "data": null,
-                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash'></i></button> <button id='btn_cetak' class='btn btn-warning'><i class='fa fa-print' ></i></button>&nbsp;&nbsp;<button id='btn_cetak_pajak' class='btn' style='background:white; color:black'><i class='fa fa-print' ></i></button>"	
+                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash'></i></button> <button id='btn_cetak' class='btn btn-warning'>Nota Little</button>&nbsp;&nbsp;<button id='btn_cetak_karatu' class='btn btn-success' >Nota Karatu</button>&nbsp;&nbsp;<button id='btn_cetak_pajak' class='btn' style='background:white; color:black'>Nota Pajak</button>"	
 			},
 		]
     });
@@ -844,6 +868,7 @@ $(document).ready(function(){
 		if(mode == "btn_ubah"){ ubah(row);}
 		else if(mode == "btn_hapus"){ before_batal(row);}
 		else if(mode == "btn_cetak"){ cetak(row,'NON');}
+		else if(mode == "btn_cetak_karatu"){ cetak(row,'KARATU');}
 		else if(mode == "btn_cetak_pajak"){ cetak(row,'PAJAK');}
 
 	} );
@@ -1774,6 +1799,10 @@ function cetak(row,type){
 								{
 								    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakPajak/"+row.IDPENJUALAN, '_blank');
 								}
+								else if(type == 'KARATU')
+								{
+								    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakKaratu/"+row.IDPENJUALAN, '_blank');
+								}
 								else
 								{
 								    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetak/"+row.IDPENJUALAN, '_blank');
@@ -1793,6 +1822,10 @@ function cetak(row,type){
 					if(type == 'PAJAK')
 					{
 					    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakPajak/"+row.IDPENJUALAN, '_blank');
+					}
+					else if(type == 'KARATU')
+					{
+					    window.open(base_url+"Penjualan/Transaksi/Penjualan/cetakKaratu/"+row.IDPENJUALAN, '_blank');
 					}
 					else
 					{

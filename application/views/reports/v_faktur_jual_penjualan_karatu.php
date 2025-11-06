@@ -15,7 +15,7 @@
 }
 
 .tabel_perusahaan tr td{
-	width:85%;	
+	width:65%;	
 }
 
 .rp{
@@ -128,7 +128,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 			<tr>
 				
 				<td valign="top" class="font-header"> <img src="'.base_url().'assets/'.$_SESSION[NAMAPROGRAM]['KODEPERUSAHAAN'].'/logo-perusahaan.jpeg" class="user-image" alt="User Image" height="26"></td>
-				<td valign="top" class="title"> INVOICES</td>
+				<td valign="top" class="title"> NOTA PENJUALAN</td>
 
 			</tr>
 			<tr>
@@ -167,11 +167,11 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 							<table>
 
 								<tr>
-									<td valign="top"class="font-header" width="62px">No. Invoice</td>
+									<td valign="top"class="font-header" width="62px">No. Jual</td>
 									<td valign="top"class="font-body">: '.$r->KODEPENJUALAN.'</td>
 								</tr>
 								<tr>
-									<td valign="top"class="font-header">Tgl. Invoice</td>
+									<td valign="top"class="font-header">Tgl. Jual</td>
 									<td valign="top"class="font-body">: '.$r->TGLTRANS.'</td>
 								</tr>
 								<tr>
@@ -223,10 +223,11 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 				'.$DetailH.'
 		
 				<th class="center tbl-header border-atas border-kanan border-bawah" width="48%">Nama Barang </th>
-				<th class="center tbl-header border-atas border-kanan border-bawah" width="9%">Jml </th>
-				<th class="center tbl-header border-atas border-kanan border-bawah" width="13%">Sat</th>
-				<th class="center tbl-header border-atas border-kanan border-bawah" width="14%">Harga</th>
-				<th class="center tbl-header border-atas border-bawah border-kanan" width="16%">Subtotal</th>
+				<th class="center tbl-header border-atas border-kanan border-bawah" width="5%">Jml </th>
+				<th class="center tbl-header border-atas border-kanan border-bawah" width="5%">Sat</th>
+				<th class="center tbl-header border-atas border-kanan border-bawah" width="10%">Harga</th>
+				<th class="center tbl-header border-atas border-kanan border-bawah" width="11%">Disc</th>
+				<th class="center tbl-header border-atas border-bawah border-kanan" width="14%">Subtotal</th>
 			</tr>';
 		?>
 
@@ -243,16 +244,37 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 		$totalBarang = 0;
 		foreach ($rows as $rs) {
 			$countBonus = $rs->COUNTBONUS;
-			if($rs->PAKAIPPN == 0){
-				$pakaippn = "TIDAK";
+			if($rs->SATUANREF != ""){
+						if($rs->PAKAIPPN == 0){
+							$pakaippn = "TIDAK";
+						}
+						else if($rs->PAKAIPPN == 1){
+							$pakaippn = "EXCL";
+						}
+						else if($rs->PAKAIPPN == 2){
+							$pakaippn = "INCL";
+						}
+					}else{
+						if($rs->PAKAIPPN == 0){
+							$pakaippn = "TIDAK";
+						}
+						else if($rs->PAKAIPPN == 1){
+							$pakaippn = "EXCL";
+						}
+						else if($rs->PAKAIPPN == 2){
+							$pakaippn = "INCL";
+						}
+					}
+			
+			if($rs->SATUANREF != ""){			
+				$SUBTOTAL = ($rs->JMLREF * $rs->HARGAREF);
 			}
-			else if($rs->PAKAIPPN == 1){
-				$pakaippn = "EXCL";
+			else
+			{
+				$SUBTOTAL = ($rs->SUBTOTALKURS);
 			}
-			else if($rs->PAKAIPPN == 2){
-				$pakaippn = "INCL";
-			}
-			$Subtotal += ($rs->SUBTOTALKURS);
+			$Subtotal += $SUBTOTAL;
+			
 		}
 		
 		if(floatval($r->POTONGANRP) > 0)
@@ -302,11 +324,24 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 				
 				<td valign="top"class="font-body border-kanan" valign="top"><?=$rs->NAMABARANG?></td>
 
-				<td valign="top"class="font-body border-kanan center" valign="top"><?=number($rs->JML, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITQTY'])?></td>
-				<td valign="top"class="center font-body border-kanan" valign="top"><?=$rs->SATUAN?></td>
-				<td valign="top"class="right font-body border-kanan" valign="top"><?=number(($rs->HARGAKURS-$rs->DISCKURS), true,  $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
-				<td valign="top"class="right font-body border-kanan" valign="top"><?=number($rs->SUBTOTALKURS, true,  $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
-			
+				
+				<?php if($rs->SATUANREF != ""){?>
+					<td valign="top"class="font-body border-kanan center" valign="top"><?=number($rs->JMLREF, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITQTY'])?> </td></td>
+					<td valign="top"class="center font-body border-kanan" valign="top"><?=$rs->SATUANREF?></td>
+					<td valign="top"class="right font-body border-kanan" valign="top"><?=number($rs->HARGAREF, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
+					<td valign="top"class="right font-body border-kanan" valign="top"><?=number($rs->DISCKURS, true,  $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
+					<td valign="top"class="right font-body border-kanan" valign="top"><?=number(($rs->JMLREF * $rs->HARGAREF), true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
+				<?php
+				
+				}else{?>
+					<td valign="top"class="font-body border-kanan center" valign="top"><?=number($rs->JML, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITQTY'])?></td>
+					<td valign="top"class="center font-body border-kanan" valign="top"><?=$rs->SATUAN?></td>
+					<td valign="top"class="right font-body border-kanan" valign="top"><?=number($rs->HARGAKURS, true,  $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
+					<td valign="top"class="right font-body border-kanan" valign="top"><?=number($rs->DISCKURS, true,  $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
+					<td valign="top"class="right font-body border-kanan" valign="top"><?=number($rs->SUBTOTALKURS, true,  $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT'])?></td>
+				
+				<?php 
+				}?>
 				
 			</tr>
 			<?php 
@@ -316,6 +351,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 				echo '<td valign="top"class="font-body border-kiri border-kanan" valign="top"></td>';
 				echo '<td valign="top"class="font-body border-kanan" valign="top">**Bonus</td>';
 				echo '<td valign="top"class="font-body border-kanan center" valign="top">'.number($rs->JMLBONUS, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITQTY']).'</td>';
+				echo '<td valign="top"class="center font-body border-kanan" valign="top">-</td>';
 				echo '<td valign="top"class="center font-body border-kanan" valign="top">-</td>';
 				echo '<td valign="top"class="center font-body border-kanan" valign="top">-</td>';
 				echo '<td valign="top"class="center font-body border-kanan" valign="top"></td>';
@@ -337,6 +373,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 		$footer='
 			<tr>
 				<td valign="top"class="font-body border-kiri border-bawah border-kanan"></td>
+				<td valign="top"class="font-body border-bawah border-kanan"></td>
 				<td valign="top"class="font-body border-bawah border-kanan"></td>
 				<td valign="top"class="font-body border-bawah border-kanan"></td>
 				<td valign="top"class="font-body border-bawah border-kanan"></td>
@@ -410,7 +447,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 					</table>
 					</td>
 					
-    				<td valign="top" colspan="2" >
+    				<td valign="top" colspan="3" >
     				
         				<table width="100%" style="margin-top:2px;">
         					<tr valign="top">
@@ -422,7 +459,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 					<td valign="top"colspan="2" valign="top">
 						<table width="100%" style="margin-top:2px;">
 							<tr>
-								<td colspan="2" width="50%" valign="top" class="font-header right">Total</td>
+								<td colspan="2" width="44%" valign="top" class="font-header right">Total</td>
 								<td valign="top"class="font-body rp right">'.number($Subtotal, true, $_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']).'</td>
 							</tr>
 							<tr>

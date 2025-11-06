@@ -350,6 +350,13 @@ class Penjualan extends MY_Controller {
 		$this->load->view('reports/v_faktur_jual_penjualan.php', $data);
 	}
 	
+	function cetakKaratu($idTrans){
+		$data['idtrans'] = $idTrans;
+		$data['cetakNPWP'] = "yes";
+		//$data['namasubcustomer'] = $namaSubcustomer;
+		$this->load->view('reports/v_faktur_jual_penjualan_karatu.php', $data);
+	}
+	
 	function cetakPajak($idTrans){
 		$data['idtrans'] = $idTrans;
 		$data['cetakNPWP'] = "yes";
