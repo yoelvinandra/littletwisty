@@ -59,6 +59,9 @@ $sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.NAMAFAKTURPAJAK,c.
 			
 $r = $CI->db->query($sql, [$idtrans])->row();
 
+$date = new DateTime($r->TGLTRANS);
+$r->TGLTRANS = $date->format('Y-m-t');
+
 $namacustomer = $r->NAMAFAKTURPAJAK;
 $catatancustomer = format_remark($r->CATATANCUSTOMER);
 
