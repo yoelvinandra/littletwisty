@@ -114,6 +114,7 @@
                                                     <th>ID</th>
                                                     <th>Kode</th>
                                                     <th>Nama</th>
+                                                    <th>Nama Faktur Pajak</th>
                                                     <th width="25px">Member</th>          
                                                     <th width="25px">Konsinyasi</th>          
                                                     <th>Alamat</th>
@@ -152,6 +153,9 @@
                                                                 <br>
                                                                 <label>Nama Customer <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
                                                                 <input type="text" class="form-control" id="NAMACUSTOMER" name="NAMACUSTOMER" placeholder="Nama Customer">
+                                                                <br>
+                                                                <label>Nama Faktur Pajak <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
+                                                                <input type="text" class="form-control" id="NAMAFAKTURPAJAK" name="NAMAFAKTURPAJAK" placeholder="Nama Faktur Pajak">
                             									<div id="diskon_member">
                             									<br>
                             									<label>Potongan Member(%) <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
@@ -305,6 +309,7 @@ $(document).ready(function() {
             
                     tr.append('<td>' + row.KODECUSTOMER + '</td>');
                     tr.append('<td>' + row.NAMACUSTOMER + '</td>');
+                    tr.append('<td>' + row.NAMAFAKTURPAJAK + '</td>');
                     tr.append('<td class="text-center">' + (row.MEMBER == 1 ? 'YA' : 'TIDAK') + '</td>');
                     tr.append('<td class="text-center">' + (row.KONSINYASI == 1 ? 'YA' : 'TIDAK') + '</td>');
                     tr.append('<td>' + (row.ALAMAT== null?"":row.ALAMAT) + '</td>');
@@ -338,6 +343,7 @@ $(document).ready(function() {
             {data: 'IDCUSTOMER', visible:false},
             {data: 'KODECUSTOMER'},
             {data: 'NAMACUSTOMER'},
+            {data: 'NAMAFAKTURPAJAK'},
             {data: 'MEMBER', className:"text-center"},    
             {data: 'KONSINYASI', className:"text-center"},    
             {data: 'ALAMAT'},
@@ -361,7 +367,7 @@ $(document).ready(function() {
                 "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash' aria-hidden='true' ></button>"	
 			},
 			{
-                "targets": 4,
+                "targets": 5,
                 "render" :function (data) 
                             {
                                 if (data == 1) return '<input type="checkbox" class="flat-blue" checked disabled></input>';
@@ -369,7 +375,7 @@ $(document).ready(function() {
                             },	
 			},
 			{
-                "targets": 5,
+                "targets": 6,
                 "render" :function (data) 
                             {
                                 if (data == 1) return '<input type="checkbox" class="flat-blue" checked disabled></input>';
@@ -508,6 +514,7 @@ function exportTableToExcel() {
   ws['!cols'] = [
     { wpx: 70 }, // Column A width in pixels
     { wpx: 200 }, // Column B width in pixels
+    { wpx: 200 }, // Column B width in pixels
     { wpx: 60 },  // Column C width in pixels
     { wpx: 60 },  // Column C width in pixels
     { wpx: 300 },  // Column C width in pixels
@@ -548,6 +555,7 @@ function tambah(){
 				$('.nav-tabs a[href="#tab_form"]').tab('show');
 				$('.nav-tabs a[href="#tab_form"]').html('Tambah');
 				$("#NAMACUSTOMER").removeAttr('readonly');
+				$("#NAMAFAKTURPAJAK").removeAttr('readonly');
 				//clear form input
 				$("#STATUS").prop('checked',true).iCheck('update');
 				$("#MEMBER").prop('checked',false).iCheck('update');
@@ -556,6 +564,7 @@ function tambah(){
 				$("#IDCUSTOMER").val("");
 				$("#KODECUSTOMER").val("");
 				$("#NAMACUSTOMER").val("");
+				$("#NAMAFAKTURPAJAK").val("");
 				$("#NPWP").val("");
 				$("#ALAMAT").val("");
 				$("#KOTA").val("");
@@ -608,6 +617,7 @@ function ubah(row){
 				$("#IDCUSTOMER").val(row.IDCUSTOMER);
 				$("#KODECUSTOMER").val(row.KODECUSTOMER);
 				$("#NAMACUSTOMER").val(row.NAMACUSTOMER);
+				$("#NAMAFAKTURPAJAK").val(row.NAMAFAKTURPAJAK);
 				$("#NPWP").val(row.NPWP);
 				$("#ALAMAT").val(row.ALAMAT);
 				$("#KOTA").val(row.KOTA);
@@ -629,10 +639,12 @@ function ubah(row){
 				if(row.KODECUSTOMER == "XUMUM" || row.KODECUSTOMER == "XGOJEK" || row.KODECUSTOMER == "XGRAB" || row.KODECUSTOMER == "XSHOPEE" || row.KODECUSTOMER == "XTIKTOK" || row.KODECUSTOMER == "XTOKPED")
 				{
 					$("#NAMACUSTOMER").attr('readonly','readonly');
+					$("#NAMAFAKTURPAJAK").attr('readonly','readonly');
 				}
 				else
 				{
 					$("#NAMACUSTOMER").removeAttr('readonly');
+					$("#NAMAFAKTURPAJAK").removeAttr('readonly');
 				}
 			} else {
 				Swal.fire({

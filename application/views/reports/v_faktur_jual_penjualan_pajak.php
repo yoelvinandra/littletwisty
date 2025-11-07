@@ -43,7 +43,7 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 
 $transaksi = $CI->model_master_config->getConfig('TPENJUALAN','TRANSAKSIBBK');
 
-$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP,a.PPNRP,c.NPWP
+$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.NAMAFAKTURPAJAK,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP,a.PPNRP,c.NPWP
 				,d.USERNAME
 				from TPENJUALAN a
 				left join MLOKASI b on a.IDLOKASI = b.IDLOKASI
@@ -59,7 +59,7 @@ $sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCU
 			
 $r = $CI->db->query($sql, [$idtrans])->row();
 
-$namacustomer = $r->NAMACUSTOMER;
+$namacustomer = $r->NAMAFAKTURPAJAK;
 $catatancustomer = format_remark($r->CATATANCUSTOMER);
 
 //ALAMAT CUSTOMER
@@ -128,7 +128,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 			<tr>
 				
 				<td valign="top" class="font-header"> <img src="'.base_url().'assets/'.$_SESSION[NAMAPROGRAM]['KODEPERUSAHAAN'].'/logo-perusahaan.jpeg" class="user-image" alt="User Image" height="26"></td>
-				<td valign="top" class="title"> INVOICES</td>
+				<td valign="top" class="title"> INVOICE</td>
 
 			</tr>
 			<tr>
@@ -176,7 +176,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 								</tr>
 								<tr>
 									<td valign="top"class="font-header">Lokasi</td>
-									<td valign="top"class="font-body">: '.$r->NAMALOKASI.'</td>
+									<td valign="top"class="font-body">: '.$r->NAMACUSTOMER.'</td>
 								</tr>
 							</table>
 							</td></tr>

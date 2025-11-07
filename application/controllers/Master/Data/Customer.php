@@ -75,6 +75,7 @@ class CUSTOMER extends MY_Controller {
 			'IDPERUSAHAAN'    => $_SESSION[NAMAPROGRAM]['IDPERUSAHAAN'],
 			'KODECUSTOMER'    => $kode,
 			'NAMACUSTOMER'    => $this->input->post('NAMACUSTOMER'),
+			'NAMAFAKTURPAJAK' => $this->input->post('NAMAFAKTURPAJAK')??"",
 			'ALAMAT'          => $this->input->post('ALAMAT'),
 			'KOTA'            => $this->input->post('KOTA')??"",
 			'PROVINSI'        => $this->input->post('PROVINSI')??"",
