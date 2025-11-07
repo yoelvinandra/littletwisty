@@ -176,7 +176,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
 								</tr>
 								<tr>
 									<td valign="top"class="font-header">Lokasi</td>
-									<td valign="top"class="font-body">: '.$r->NAMACUSTOMER.'</td>
+									<td valign="top"class="font-body">: '.$r->NAMALOKASI.'</td>
 								</tr>
 							</table>
 							</td></tr>
