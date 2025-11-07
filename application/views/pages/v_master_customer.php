@@ -114,7 +114,6 @@
                                                     <th>ID</th>
                                                     <th>Kode</th>
                                                     <th>Nama</th>
-                                                    <th>Nama Faktur Pajak</th>
                                                     <th width="25px">Member</th>          
                                                     <th width="25px">Konsinyasi</th>          
                                                     <th>Alamat</th>
@@ -122,6 +121,11 @@
                                                     <th>Provinsi</th>
                                                     <th>Negara</th>
                                                     <th>NPWP</th>
+                                                    <th>Nama Faktur Pajak</th>
+                                                    <th>Alamat Faktur Pajak</th>
+                                                    <th>Kota Faktur Pajak</th>
+                                                    <th>Provinsi Faktur Pajak</th>
+                                                    <th>Negara Faktur Pajak</th>
                                                     <th>Telp</th>
                                                     <th>Email</th>
                                                     <th>Bank</th>
@@ -153,9 +157,6 @@
                                                                 <br>
                                                                 <label>Nama Customer <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
                                                                 <input type="text" class="form-control" id="NAMACUSTOMER" name="NAMACUSTOMER" placeholder="Nama Customer">
-                                                                <br>
-                                                                <label>Nama Faktur Pajak <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
-                                                                <input type="text" class="form-control" id="NAMAFAKTURPAJAK" name="NAMAFAKTURPAJAK" placeholder="Nama Faktur Pajak">
                             									<div id="diskon_member">
                             									<br>
                             									<label>Potongan Member(%) <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
@@ -194,6 +195,30 @@
                                                              </div>
                                                          </div>
                                                          <br>
+                                                         <div class="row">
+                                                            <div class="col-md-12"> 
+                                                                <label>Nama Faktur Pajak</label>
+                                                                <input type="text" class="form-control" id="NAMAFAKTURPAJAK" name="NAMAFAKTURPAJAK" placeholder="Nama Faktur Pajak">
+                                                                <br>
+                                                                <label>Alamat Faktur Pajak</label>
+                                                                <input type="text" class="form-control" id="ALAMATFAKTURPAJAK" name="ALAMATFAKTURPAJAK" placeholder="Alamat Faktur Pajak">
+                            								</div>
+                                                         </div>
+                                                         <br>
+                                                         <div class="row">
+                                                             <div class="col-md-4">
+                                                                <label>Kota Faktur Pajak</label>
+                                                                <input type="text" class="form-control" id="KOTAFAKTURPAJAK" name="KOTAFAKTURPAJAK" placeholder="Kota Faktur Pajak">
+                                                             </div>
+                                                             <div class="col-md-4">
+                                                                <label>Provinsi Faktur Pajak</label>
+                                                                <input type="text" class="form-control" id="PROVINSIFAKTURPAJAK" name="PROVINSIFAKTURPAJAK" placeholder="Provinsi Faktur Pajak">
+                                                             </div>
+                                                             <div class="col-md-4">
+                                                                <label>Negara Faktur Pajak</label>
+                                                                <input type="text" class="form-control" id="NEGARAFAKTURPAJAK" name="NEGARAFAKTURPAJAK" placeholder="Negara Faktur Pajak">
+                                                             </div>
+                                                         </div>
                                                          <div class="row">
                                                              <div class="col-md-6">
                                                                 <label>Telp</label>
@@ -309,7 +334,6 @@ $(document).ready(function() {
             
                     tr.append('<td>' + row.KODECUSTOMER + '</td>');
                     tr.append('<td>' + row.NAMACUSTOMER + '</td>');
-                    tr.append('<td>' + row.NAMAFAKTURPAJAK + '</td>');
                     tr.append('<td class="text-center">' + (row.MEMBER == 1 ? 'YA' : 'TIDAK') + '</td>');
                     tr.append('<td class="text-center">' + (row.KONSINYASI == 1 ? 'YA' : 'TIDAK') + '</td>');
                     tr.append('<td>' + (row.ALAMAT== null?"":row.ALAMAT) + '</td>');
@@ -318,6 +342,11 @@ $(document).ready(function() {
                     tr.append('<td>' + (row.NEGARA== null?"":row.NEGARA) + '</td>');
                     tr.append('<td>' + (row.TELP== null?"":row.TELP) + '</td>');
                     tr.append('<td>' + (row.NPWP== null?"":row.NPWP) + '</td>');
+                    tr.append('<td>' + (row.NAMAFAKTURPAJAK == null ? "" : row.NAMAFAKTURPAJAK) + '</td>');
+                    tr.append('<td>' + (row.ALAMATFAKTURPAJAK == null ? "" : row.ALAMATFAKTURPAJAK) + '</td>');
+                    tr.append('<td>' + (row.KOTAFAKTURPAJAK == null ? "" : row.KOTAFAKTURPAJAK) + '</td>');
+                    tr.append('<td>' + (row.PROVINSIFAKTURPAJAK == null ? "" : row.PROVINSIFAKTURPAJAK) + '</td>');
+                    tr.append('<td>' + (row.NEGARAFAKTURPAJAK == null ? "" : row.NEGARAFAKTURPAJAK) + '</td>');
                     tr.append('<td>' + (row.EMAIL== null?"":row.EMAIL) + '</td>');
                     tr.append('<td>' + (row.NAMABANK== null?"":row.NAMABANK) + '</td>');
                     tr.append('<td>' + (row.NOREKENING== null?"":row.NOREKENING) + '</td>');
@@ -343,7 +372,6 @@ $(document).ready(function() {
             {data: 'IDCUSTOMER', visible:false},
             {data: 'KODECUSTOMER'},
             {data: 'NAMACUSTOMER'},
-            {data: 'NAMAFAKTURPAJAK'},
             {data: 'MEMBER', className:"text-center"},    
             {data: 'KONSINYASI', className:"text-center"},    
             {data: 'ALAMAT'},
@@ -351,6 +379,11 @@ $(document).ready(function() {
             {data: 'PROVINSI'},
             {data: 'NEGARA'},
             {data: 'NPWP'},
+            {data: 'NAMAFAKTURPAJAK'}, 
+            {data: 'ALAMATFAKTURPAJAK'},
+            {data: 'KOTAFAKTURPAJAK'},
+            {data: 'PROVINSIFAKTURPAJAK'},
+            {data: 'NEGARAFAKTURPAJAK'},
             {data: 'TELP'},
             {data: 'EMAIL'},
             {data: 'NAMABANK'},
@@ -367,7 +400,7 @@ $(document).ready(function() {
                 "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash' aria-hidden='true' ></button>"	
 			},
 			{
-                "targets": 5,
+                "targets": 4,
                 "render" :function (data) 
                             {
                                 if (data == 1) return '<input type="checkbox" class="flat-blue" checked disabled></input>';
@@ -375,7 +408,7 @@ $(document).ready(function() {
                             },	
 			},
 			{
-                "targets": 6,
+                "targets": 5,
                 "render" :function (data) 
                             {
                                 if (data == 1) return '<input type="checkbox" class="flat-blue" checked disabled></input>';
@@ -514,7 +547,6 @@ function exportTableToExcel() {
   ws['!cols'] = [
     { wpx: 70 }, // Column A width in pixels
     { wpx: 200 }, // Column B width in pixels
-    { wpx: 200 }, // Column B width in pixels
     { wpx: 60 },  // Column C width in pixels
     { wpx: 60 },  // Column C width in pixels
     { wpx: 300 },  // Column C width in pixels
@@ -524,6 +556,11 @@ function exportTableToExcel() {
     { wpx: 100 },  // Column C width in pixels
     { wpx: 100 },  // Column C width in pixels
     { wpx: 120 },  // Column C width in pixels
+    { wpx: 200 }, // Column B width in pixels
+    { wpx: 300 },  // Column C width in pixels
+    { wpx: 100 },  // Column C width in pixels
+    { wpx: 100 },  // Column C width in pixels
+    { wpx: 100 },  // Column C width in pixels
     { wpx: 60 },  // Column C width in pixels
     { wpx: 150 },  // Column C width in pixels
     { wpx: 150 },  // Column C width in pixels
@@ -570,6 +607,10 @@ function tambah(){
 				$("#KOTA").val("");
 				$("#PROVINSI").val("");
 				$("#NEGARA").val("");
+				$("#ALAMATFAKTURPAJAK").val("");
+				$("#KOTAFAKTURPAJAK").val("");
+				$("#PROVINSIFAKTURPAJAK").val("");
+				$("#NEGARAFAKTURPAJAK").val("");
 				$("#TELP").val("");
 				$("#EMAIL").val("");
 				$("#WEBSITE").val("");
@@ -623,6 +664,10 @@ function ubah(row){
 				$("#KOTA").val(row.KOTA);
 				$("#PROVINSI").val(row.PROVINSI);
 				$("#NEGARA").val(row.NEGARA);
+				$("#ALAMATFAKTURPAJAK").val(row.ALAMATFAKTURPAJAK);
+				$("#KOTAFAKTURPAJAK").val(row.KOTAFAKTURPAJAK);
+				$("#PROVINSIFAKTURPAJAK").val(row.PROVINSIFAKTURPAJAK);
+				$("#NEGARAFAKTURPAJAK").val(row.NEGARAFAKTURPAJAK);
 				$("#TELP").val(row.TELP);
 				$("#EMAIL").val(row.EMAIL);
 				$("#NAMABANK").val(row.NAMABANK);

@@ -43,8 +43,9 @@ $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 
 $transaksi = $CI->model_master_config->getConfig('TPENJUALAN','TRANSAKSIBBK');
 
-$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.NAMAFAKTURPAJAK,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP,a.PPNRP,c.NPWP
-				,d.USERNAME
+$sql = "select a.*,b.KODELOKASI,b.NAMALOKASI,c.NAMACUSTOMER,c.ALAMAT as ALAMATCUSTOMER,c.KOTA as KOTACUSTOMER,c.PROVINSI as PROPINSICUSTOMER,c.NEGARA as NEGARACUSTOMER,a.POTONGANPERSEN,a.POTONGANRP,a.PPNRP,c.NPWP,
+                c.NAMAFAKTURPAJAK,c.ALAMATFAKTURPAJAK,c.KOTAFAKTURPAJAK,c.PROVINSIFAKTURPAJAK,c.NEGARAFAKTURPAJAK,
+				d.USERNAME
 				from TPENJUALAN a
 				left join MLOKASI b on a.IDLOKASI = b.IDLOKASI
 				left join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
@@ -65,14 +66,23 @@ $r->TGLTRANS = $date->format('Y-m-t');
 $namacustomer = $r->NAMAFAKTURPAJAK;
 $catatancustomer = format_remark($r->CATATANCUSTOMER);
 
-//ALAMAT CUSTOMER
-		$alamat = alamat_length($r->ALAMATCUSTOMER);
-		if($r->KOTACUSTOMER != null  && alamat_length($r->ALAMATCUSTOMER) != null){$kota = "-"; } 
-		$kota.=$r->KOTACUSTOMER;
+// //ALAMAT CUSTOMER
+// 		$alamat = alamat_length($r->ALAMATCUSTOMER);
+// 		if($r->KOTACUSTOMER != null  && alamat_length($r->ALAMATCUSTOMER) != null){$kota = "-"; } 
+// 		$kota.=$r->KOTACUSTOMER;
+// 		if($alamat != "" ||$kota != "") $propinsi = "<br>";
+// 		$propinsi .= $r->PROPINSICUSTOMER;
+// 		if($r->NEGARACUSTOMER != null && $r->PROPINSICUSTOMER != null){$negara = "-"; }
+// 		$negara.=$r->NEGARACUSTOMER;
+		
+//ALAMAT FAKTUR PAJAK
+		$alamat = alamat_length($r->ALAMATFAKTURPAJAK);
+		if($r->KOTAFAKTURPAJAK != null  && alamat_length($r->ALAMATFAKTURPAJAK) != null){$kota = "-"; } 
+		$kota.=$r->KOTAFAKTURPAJAK;
 		if($alamat != "" ||$kota != "") $propinsi = "<br>";
-		$propinsi .= $r->PROPINSICUSTOMER;
-		if($r->NEGARACUSTOMER != null && $r->PROPINSICUSTOMER != null){$negara = "-"; }
-		$negara.=$r->NEGARACUSTOMER;
+		$propinsi .= $r->PROPINSIFAKTURPAJAK;
+		if($r->NEGARAFAKTURPAJAK != null && $r->PROPINSIFAKTURPAJAK != null){$negara = "-"; }
+		$negara.=$r->NEGARAFAKTURPAJAK;
 
 //PEMBULATAN
 if( $r->PEMBULATAN != 0){ 
