@@ -2436,12 +2436,12 @@ class Lazada extends MY_Controller {
                      $item->TOTALBARANGPENGEMBALIAN += (int)(explode("*",$skukembalidata[$j])[0]);
                   }
             }
-            else
-            {
-                $sqlDetail = "SELECT GROUP_CONCAT(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACEDTL WHERE KODEPENJUALANMARKETPLACE = '$item->KODEPESANAN' and (KODEPENGEMBALIANMARKETPLACE != '' AND KODEPENGEMBALIANMARKETPLACE IS NOT NULL)";
-                $item->KODEPENGEMBALIAN = $CI->db->query($sqlDetail)->row()->KODEPENGEMBALIANMARKETPLACE;
+            // else
+            // {
+            //     $sqlDetail = "SELECT GROUP_CONCAT(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACEDTL WHERE KODEPENJUALANMARKETPLACE = '$item->KODEPESANAN' and (KODEPENGEMBALIANMARKETPLACE != '' AND KODEPENGEMBALIANMARKETPLACE IS NOT NULL)";
+            //     $item->KODEPENGEMBALIAN = $CI->db->query($sqlDetail)->row()->KODEPENGEMBALIANMARKETPLACE;
                 
-            }
+            // }
           
             $produk = explode("|",$item->SKUPRODUK);
             $produkOld = explode("|",$item->SKUPRODUKOLD);
@@ -6437,7 +6437,7 @@ class Lazada extends MY_Controller {
         }
         
         //TOTAL RETUR HEADER
-        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,KODEPENGEMBALIANMARKETPLACE, group_concat(SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
+        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
                                 sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI
                                 FROM TPENJUALANMARKETPLACEDTL 
                                 WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  
@@ -6458,6 +6458,7 @@ class Lazada extends MY_Controller {
           $CI->db->where("KODEPENJUALANMARKETPLACE",$itemReturHeader->KODEPENJUALANMARKETPLACE)
 		 ->where('MARKETPLACE','LAZADA')
 		 ->updateRaw("TPENJUALANMARKETPLACE", array(
+		     'KODEPENGEMBALIANMARKETPLACE'   =>  $itemReturHeader->KODEPENGEMBALIANMARKETPLACE,
 		     'SKUPRODUKPENGEMBALIAN'         =>  $itemReturHeader->SKUPRODUKPENGEMBALIAN, 
 		     'TOTALBARANGPENGEMBALIAN'       =>  $totalBarang, 
 		     'TOTALPENGEMBALIANDANA'         =>  $itemReturHeader->TOTALPENGEMBALIANDANA, 
