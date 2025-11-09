@@ -3709,13 +3709,20 @@ class Shopee extends MY_Controller {
             }
         }
         
+        $whereTgltrans = "and TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' ".$whereStatus ;
+        if($state == 4)
+        {
+           $whereTgltrans = "and TGLPENGEMBALIAN BETWEEN '".$tgl_aw."' and '".$tgl_ak."' ".$whereStatus ;
+        }
+    
+        
         $sql = "SELECT KODEPENJUALANMARKETPLACE as KODEPESANAN, TGLTRANS as TGLPESANAN, MINTGLKIRIM, $statusVar AS STATUS,KODEPENGAMBILAN,
                         SKUPRODUK, '' as BARANG, TOTALBARANG, TOTALHARGA, TOTALBAYAR,  '' as ALAMAT,SKUPRODUKOLD,USERNAME,
                         NAME as BUYERNAME, TELP as BUYERPHONE, ALAMAT as BUYERALAMAT, KOTA,
                         METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
                         KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
                         TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI
-                        FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
+                        FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' ".$whereTgltrans."
                         order by TGLTRANS DESC";
         $result = $CI->db->query($sql)->result();
         

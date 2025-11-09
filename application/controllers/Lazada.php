@@ -2417,7 +2417,7 @@ class Lazada extends MY_Controller {
                             SUM(b.TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, group_concat(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, b.TIPEPENGEMBALIAN, a.SELLERMENUNGGUBARANGDATANG,SUM(IF(b.BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,b.STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
                             FROM TPENJUALANMARKETPLACEDTL b
                             INNER JOIN TPENJUALANMARKETPLACE a ON b.IDPENJUALANMARKETPLACE = a.IDPENJUALANMARKETPLACE
-                            WHERE a.MARKETPLACE = 'LAZADA' and a.TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
+                            WHERE a.MARKETPLACE = 'LAZADA' and b.TGLPENGEMBALIAN BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
                             group by b.KODEPENGEMBALIANMARKETPLACE
                             order by a.TGLTRANS DESC";
         }
