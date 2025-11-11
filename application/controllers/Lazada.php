@@ -3809,7 +3809,6 @@ class Lazada extends MY_Controller {
 
     		//REFUND
             $curl = curl_init();
-           
             curl_setopt_array($curl, array(
                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                  CURLOPT_RETURNTRANSFER => true,
@@ -3837,7 +3836,6 @@ class Lazada extends MY_Controller {
             }
             else
             {
-                print_r($ret);
                 sleep(5);
                 $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
             }  
