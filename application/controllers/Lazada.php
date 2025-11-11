@@ -3392,8 +3392,9 @@ class Lazada extends MY_Controller {
             for($d = 0 ; $d < count($dataDetail);$d++)
             {
                 $statusRetur = $dataDetail[$d]['reverse_status'];
-            
-                if($statusRetur == "REQUEST_INITIATE")
+                $statusOFC = $dataDetail[$d]['ofc_status'];
+          
+                if($statusRetur == "REQUEST_INITIATE" || $statusOFC == "RETURN_DELIVERED")
                 {
                     array_push($idbaranglist,(int)$dataDetail[$d]['reverse_order_line_id']);
                 }
@@ -3440,12 +3441,15 @@ class Lazada extends MY_Controller {
         }
         else if($requestType == "RETURN")
         {
-        
+            $action = "instantRefund";
+            if($statusOFC == "RETURN_DELIVERED"){
+                $action = "agreeRefund";
+            }
             $parameter = '';
-    		$parameter = '&action=instantRefund&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist);
+    		$parameter = '&action='.$action.'&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist);
     		//REFUND
+    // 		echo $parameter;
             $curl = curl_init();
-            
             curl_setopt_array($curl, array(
                  CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
                  CURLOPT_RETURNTRANSFER => true,
@@ -3588,21 +3592,21 @@ class Lazada extends MY_Controller {
 
 	}
 	
-	public function finalReturnRefund(){
+	public function getDispute(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$nopesanan = $this->input->post('kodepesanan')??"";
 		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		//HAPUS PESANAN
+		$idbaranglist = [];
+		$parameter = '';
 		
+	    $parameter = "&reverse_order_id=".$nopengembalian;
+        
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -3610,34 +3614,42 @@ class Lazada extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/accept_offer',
-          'parameter' => json_encode($parameter)),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/detail/list','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
         ));
-          
+        
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-     
         if($ret['code'] != 0)
         {
-            $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
-            die(json_encode($data));
+            echo $ret['error']." : ".$ret['message'];
         }
         else
         {
-            //GET ORDER DETAIL
-           $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-           // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-           // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-           $curl = curl_init();
-           
-           curl_setopt_array($curl, array(
+            $dataDetail = $ret['data']['reverseOrderLineDTOList'];
+            $requestType = $ret['data']['request_type'];
+            for($d = 0 ; $d < count($dataDetail);$d++)
+            {
+                $statusRetur = $dataDetail[$d]['reverse_status'];
+                $statusOFC = $dataDetail[$d]['ofc_status'];
+                
+                if($statusOFC == "RETURN_DELIVERED")
+                {
+                    array_push($idbaranglist,(int)$dataDetail[$d]['reverse_order_line_id']);
+                }
+            }
+        }
+        
+		
+	    $parameter = '';
+    	$parameter = '&reverse_order_line_id='.$idbaranglist[0];
+    	//REFUND
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
@@ -3646,95 +3658,26 @@ class Lazada extends MY_Controller {
              CURLOPT_FOLLOWLOCATION => true,
              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
              CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
+             CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/reason/list','parameter' => $parameter),
              CURLOPT_HTTPHEADER => array(
                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
              ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['code'] != 0)
-           {
-               echo $ret['error']." : ".$ret['message'];
-               $statusok = false;
-           }
-           else
-           {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                {
-                   $dataDetail = $ret['response']['order_list'][$y];
-                   $data;
-                   //DAPATKAN RESI
-                   $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                   $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                   $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                   $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                   $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                   $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = $dataDetail['recipient_address']['city'];
-                   $data['STATUS']                     = $this->getStatus([$dataDetail['order_status']])['state'];
-                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                   $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"LAZADA")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                       'NAME'                       => $data['NAME'],  
-                       'TELP'                       => $data['TELP'],  
-                       'ALAMAT'                     => $data['ALAMAT'],
-                       'KOTA'                       => $data['KOTA'],  
-                       'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                       'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                       'STATUS'                     => $data['STATUS'],
-                       'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                    ));    
-                }
-           }
-           
-           
-            //UPDATE TOTAL PENDAPATAN DANA
-            $parameter = "";
-    	    $parameter = "&order_sn=".$nopesanan;
-            
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'payment/get_escrow_detail','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['code'] != 0)
-            {
-                echo $ret['error']." : ".$ret['message'];
-            }
-            else
-            {
-    		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','LAZADA')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
-    		    ));
-            }
-            
-           
-            $data['success'] = true;
-            $data['msg'] = "Pengembalian Dana #".$nopengembalian." Berhasil Dilakukan";
-            echo(json_encode($data));
+        ));
+          
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        
+        if($ret['code'] != 0)
+        {
+            $data['success'] = false;
+            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            die(json_encode($data));
         }
+        else
+        {
+            echo(json_encode($ret['data']));
+        }  
 
 	}
 	
@@ -3745,6 +3688,7 @@ class Lazada extends MY_Controller {
 		$nopengembalian = $this->input->post('kodepengembalian')??"";
 		$nopesanan = $this->input->post('kodepesanan')??"";
 		$alasandispute = $this->input->post('alasandispute')??"";
+		$pilihandispute = $this->input->post('pilihandispute')??"";
 		$disputeproof = json_decode($this->input->post('disputeproof')??[],true);
 		$requestType = '';
 		$idbaranglist = [];
@@ -3783,8 +3727,9 @@ class Lazada extends MY_Controller {
             for($d = 0 ; $d < count($dataDetail);$d++)
             {
                 $statusRetur = $dataDetail[$d]['reverse_status'];
-            
-                if($statusRetur == "REQUEST_INITIATE")
+                $statusOFC = $dataDetail[$d]['ofc_status'];
+                
+                if($statusRetur == "REQUEST_INITIATE" || $statusOFC == "RETURN_DELIVERED")
                 {
                     array_push($idbaranglist,(int)$dataDetail[$d]['reverse_order_line_id']);
                 }
@@ -3854,41 +3799,48 @@ class Lazada extends MY_Controller {
         }
         else if($requestType == "RETURN")
         {
-    //         $parameter = '';
-    // 		$parameter = '&action=instantRefund&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist).'&comment='.$alasandispute.'&image_info='.json_encode($imageProof);
-    // 		//REFUND
-    //         $curl = curl_init();
+            $action = "refuseReturn";
+            if($statusOFC == "RETURN_DELIVERED"){
+                $action = "refuseRefund";
+            }
             
-    //         curl_setopt_array($curl, array(
-    //              CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
-    //              CURLOPT_RETURNTRANSFER => true,
-    //              CURLOPT_ENCODING => '',
-    //              CURLOPT_MAXREDIRS => 10,
-    //              CURLOPT_TIMEOUT => 30,
-    //              CURLOPT_FOLLOWLOCATION => true,
-    //              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    //              CURLOPT_CUSTOMREQUEST => 'POST',
-    //              CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/update','parameter' => $parameter),
-    //              CURLOPT_HTTPHEADER => array(
-    //               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-    //              ),
-    //         ));
+            $parameter = '';
+    		$parameter = '&action='.$action.'&reason_id='.(int)$pilihandispute.'&reverse_order_id='.(int)$nopengembalian.'&reverse_order_item_ids='.json_encode($idbaranglist).'&comment='.$alasandispute.'&image_info='.json_encode($imageProof);
+
+    		//REFUND
+            $curl = curl_init();
+           
+            curl_setopt_array($curl, array(
+                 CURLOPT_URL => $this->config->item('base_url')."/Lazada/getAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS => array('endpoint' => '/order/reverse/return/update','parameter' => $parameter),
+                 CURLOPT_HTTPHEADER => array(
+                  'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
+            ));
               
-    //         $response = curl_exec($curl);
-    //         curl_close($curl);
-    //         $ret =  json_decode($response,true);
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
          
-    //         if($ret['code'] != 0)
-    //         {
-    //             $data['success'] = false;
-    //             $data['msg'] =  $ret['error']." : ".$ret['message'];
-    //             die(json_encode($data));
-    //         }
-    //         else
-    //         {
-    //             sleep(5);
-    //             $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
-    //         }  
+            if($ret['code'] != 0)
+            {
+                $data['success'] = false;
+                $data['msg'] =  $ret['error']." : ".$ret['message'];
+                die(json_encode($data));
+            }
+            else
+            {
+                print_r($ret);
+                sleep(5);
+                $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+            }  
         }
      
         
@@ -5009,7 +4961,7 @@ class Lazada extends MY_Controller {
 	
 	public function getStatus($arrOrderStatus){
 	    
-	    $urutanStatus = ['UNPAID','PENDING','TOPACK','PACKED','TOSHIP','READY_TO_SHIP','SHIPPED','FAILED','DELIVERED','CONFIRMED','COMPLETED','CANCELED','CANCELLED','RETURNED|REQUEST_INITIATE','RETURNED|RETURN_PICKUP_PENDING','RETURNED|BUYER_RETURN_ITEM','RETURNED|DISPUTE'];
+	    $urutanStatus = ['UNPAID','PENDING','TOPACK','PACKED','TOSHIP','READY_TO_SHIP','SHIPPED','FAILED','DELIVERED','CONFIRMED','COMPLETED','CANCELED','CANCELLED','RETURNED|REQUEST_INITIATE','RETURNED|RETURN_PICKUP_PENDING','RETURNED|BUYER_RETURN_ITEM', 'RETURNED|REFUND_PENDING', 'RETURNED|DISPUTE'];
 	    $urutanTertinggi = -1;
 	    //ARRAY ORDER STATUS
 	    for($o = 0 ; $o < count($arrOrderStatus); $o++)
@@ -5123,7 +5075,7 @@ class Lazada extends MY_Controller {
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "RETURNED|RETURN_PICKUP_PENDING" || $orderStatus == "RETURNED|BUYER_RETURN_ITEM")
+	    else if($orderStatus == "RETURNED|RETURN_PICKUP_PENDING" || $orderStatus == "RETURNED|BUYER_RETURN_ITEM" || $orderStatus == "RETURNED|REFUND_PENDING")
 	    {
 	        return [
 	            "status" => "Pengembalian<br>Diproses",
@@ -6327,7 +6279,7 @@ class Lazada extends MY_Controller {
                                 $reasonText .= $dataDetail[$d]['reason_text'];
                              }
                                 
-                             if($statusOfc == 'RETURN_RTM_DELIVERED' || $statusOfc == 'RETURN_LOGISTIC_CLOSURE_return_to_warehouse')
+                             if($statusOfc == 'RETURN_DELIVERED' || $statusOfc == 'RETURN_RTM_DELIVERED' || $statusOfc == 'RETURN_LOGISTIC_CLOSURE_return_to_warehouse')
                              {
                                 $returBarang = true;
                                 $statusOfc = $dataDetail[$d]['ofc_status'];
@@ -6354,13 +6306,14 @@ class Lazada extends MY_Controller {
                          }
                          
                          //CARI URUTAN
-                         $sqlUrutan = "SELECT KODEBARANGPENGEMBALIANMARKETPLACE,URUTAN FROM TPENJUALANMARKETPLACEDTL 
+                         $sqlUrutan = "SELECT KODEBARANGPENGEMBALIANMARKETPLACE,URUTAN,BARANGSAMPAI FROM TPENJUALANMARKETPLACEDTL 
                                         WHERE KODEPENJUALANMARKETPLACE = '".$return[$x]['trade_order_id']."' 
                                         AND MARKETPLACE = 'LAZADA' 
                                         AND SKU = '".$sku."' 
                                         ";
                          $queryUrutan = $CI->db->query($sqlUrutan)->result();
                          $urutan = 0;
+                         $barangSampai = 0;
                          
                          //CEK SUDAH PERNAH ADA ATAU BELUM
                          foreach($queryUrutan as $itemUrutan)
@@ -6368,10 +6321,12 @@ class Lazada extends MY_Controller {
                              if($itemUrutan->KODEBARANGPENGEMBALIANMARKETPLACE == $dataDetail[$x]['reverse_order_line_id'])
                              {
                                  $urutan = $itemUrutan->URUTAN;
+                                 $barangSampai =  $itemUrutan->BARANGSAMPAI;
                              }
                              else if($itemUrutan->KODEBARANGPENGEMBALIANMARKETPLACE == "" && $urutan == 0)
                              {
                                  $urutan = $itemUrutan->URUTAN;
+                                 $barangSampai =  $itemUrutan->BARANGSAMPAI;
                              }
                          }
                         
@@ -6394,7 +6349,7 @@ class Lazada extends MY_Controller {
     		                  'STATUS'                        =>  ($statusRetur == "REQUEST_CANCEL" || $statusRetur == "REFUND_SUCCESS" ?'3':'4'),
     		                  'STATUSMARKETPLACE'             =>  ($statusRetur == "REQUEST_CANCEL" || $statusRetur == "REFUND_SUCCESS" ?'COMPLETED':'RETURNED'),
     		                  'RESIPENGEMBALIAN'              =>  $statusRetur == "REQUEST_CANCEL"?null:$trackingNumber,
-    		                  'BARANGSAMPAI'                  =>  ($statusOfc == 'RETURN_RTM_DELIVERED' || $statusOfc == 'RETURN_LOGISTIC_CLOSURE_return_to_warehouse' ? 1 : 0)
+    		                  'BARANGSAMPAI'                  =>  ($barangSampai == 1 || $statusOfc == 'RETURN_DELIVERED' || $statusOfc == 'RETURN_RTM_DELIVERED' || $statusOfc == 'RETURN_LOGISTIC_CLOSURE_return_to_warehouse' ? 1 : 0)
     		                ));
                         }
                      }

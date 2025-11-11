@@ -261,7 +261,7 @@
       					  <select id="cb_trans_status_lazada_4" name="cb_trans_status_lazada_4" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
       					  	<option value="RETURNED|REQUEST_INITIATE">Pengembalian Diajukan</option>
-      					  	<option value="RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING">Pengembalian Diproses</option>
+      					  	<option value="RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING">Pengembalian Diproses</option>
       					  	<option value="RETURNED|DISPUTE">Pengembalian dalam Sengketa</option>
       					  </select>
       					</div>
@@ -1003,32 +1003,41 @@
                     <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANLAZADA_1">
                      <!--<div style="width:100%; margin-top:10px; text-align:center;"><button id='btn_max_kembali_lazada' onclick="setMaksRefundLazada()" style='border:1px solid #CECECE; margin:auto;' class='btn' >Maks Pengembalian</button></div><br><br>-->
                      <br><br><br>
-                     <button onclick="refundLazada(11)" id='returAcceptNegotiationLazada' class='btn btn-success' style='width:100%; font-weight:bold;'>Setuju&nbsp;&nbsp;dan&nbsp;&nbsp;Kembalikan&nbsp;&nbsp;Dana</button>
                      <button onclick="refundLazada(1)" id='returNegotiationLazada' class='btn btn-warning' style='width:100%; font-weight:bold;'>Pengembalian&nbsp;&nbsp;Barang&nbsp;&nbsp;dan&nbsp;&nbsp;Dana</button>
                      <button id='returLazadaWaitResponse' class='btn' style='width:100%; background:#888888; color:white; font-weight:bold;'>Menunggu&nbsp;&nbsp;Respon&nbsp;&nbsp;Pembeli</button>
                 </div>
                 <div class="tab-pane" id="tab_retur_detail_lazada_2" style="padding:5px 0px 5px 0px;">
-                    <div id="DETAILRETURLAZADA_2">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).</div>
-        		    <br>
-            		<div>
-                  	    <label>Penjelasan Banding</label>
-            		    <textarea id="deskripsi_sengketa_lazada" maxlines="2" style="width:100%; height:80px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>
-            		</div>
-            		<br>
-                  	<div id="uploadBuktiLazada">
-                  	    <label>Upload Bukti</label>
-                  	    <div id="penjelasan_bukti_lazada"></div>
-            			<div id="proof_sengketa_lazada" style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:10px;">
-            			    
-            			</div>
-            		 </div>
-                     <div style="width:100%; text-align:center;"><input type="hidden" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANLAZADA_2" onkeyup="return numberInputTrans(event,3)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
-                     <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANLAZADA_2">
-                     <input type="hidden" id="dataDisputeLazada">
-                     <input type="hidden" id="pilihanDisputeLazada">
-                     <input type="hidden" id="pilihDisputeLazada">
-                     <br>
-                     <button onclick="refundLazada(2)" id='returDisputeLazada' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>
+                    <div id="DISPUTESEBELUMBARANGDATANG">
+                        <div id="DETAILRETURLAZADA_2">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).</div>
+            		    <div id="ALASANBANDING">
+            		        <br>
+                      	    <label>Alasan Banding</label>
+                			<select id="cb_alasan_sengketa_lazada" name="cb_alasan_sengketa_lazada" class="form-control "  panelHeight="auto" required="true">
+                      		
+                      		</select>
+                      	</div>
+            		    <br>
+                		<div>
+                      	    <label>Penjelasan Banding</label>
+                		    <textarea id="deskripsi_sengketa_lazada" maxlines="2" style="width:100%; height:80px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>
+                		</div>
+                		<br>
+                      	<div id="uploadBuktiLazada">
+                      	    <label>Upload Bukti</label>
+                      	    <div id="penjelasan_bukti_lazada"></div>
+                			<div id="proof_sengketa_lazada" style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:10px;">
+                			    
+                			</div>
+                		 </div>
+                         <div style="width:100%; text-align:center;"><input type="hidden" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANLAZADA_2" onkeyup="return numberInputTrans(event,3)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
+                         <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANLAZADA_2">
+                         <input type="hidden" id="dataDisputeLazada">
+                         <input type="hidden" id="pilihanDisputeLazada">
+                         <input type="hidden" id="pilihDisputeLazada">
+                         <br>
+                         <button onclick="refundLazada(2)" id='returDisputeLazada' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>
+                    </div>
+                    <div id="DISPUTESESUDAHBARANGDATANG">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).<br><br>Untuk transaksi hanya dapat dilakukan pada aplikasi lazada. Status transaksi dan stok akan terupdate, melalui sinkronisasi otomatis maupun sinkronisasi manual.</div>
                 </div>
             </div>  
         </div>
@@ -1079,7 +1088,7 @@ $(document).ready(function(){
 	$("#STATUSLAZADA1").val('UNPAID,PENDING,PACKED,READY_TO_SHIP');
 	$("#STATUSLAZADA2").val('SHIPPED,DELIVERED,FAILED');
 	$("#STATUSLAZADA3").val('COMPLETED,CANCELLED');
-	$("#STATUSLAZADA4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING,RETURNED|DISPUTE');
+	$("#STATUSLAZADA4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
 	
 	$('body').keyup(function(e){
 		hotkey(e);
@@ -1208,7 +1217,7 @@ $("#cb_trans_status_lazada_4").change(function(event){
     loading();
 	if($(this).val()  == 'SEMUA' )
 	{
-		$("#STATUSLAZADA4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING,RETURNED|DISPUTE');
+		$("#STATUSLAZADA4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
 	}	
 	else
 	{
@@ -1457,8 +1466,11 @@ function changeTabLazada(index){
                         render: function (data, type, row) {
                             let html = "<div style='height:150px; display: flex; flex-direction: column; justify-content: space-between;'>";
                                 html += "<button id='btn_kembali_lazada' style='border:1px solid #CECECE;' class='btn' >Detail Pengembalian</button>";
+                                if(row.TIPEPENGEMBALIAN == "RETURN_DELIVERED")
+                                {
+                                    html += "<i style='color:red;'>Barang Telah Diterima Penjual</i>";
+                                }
                                 html += "<div style='margin-top:5px; width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word;'>*Cek Status / Jawab bisa melalui<br>Detail Pengembalian</div><div style='margin:auto;'></div>";
-                          
                             html += "</div>";
                             return html;
                         }
@@ -1776,15 +1788,24 @@ function kembaliLazada(){
             $("#returLazadaDetail").hide();
             $("#returLazadaWait").show();
             
-            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIAJUKAN") {
+            if(row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED")
+            {
+                $("#STATUSLAZADAPENGEMBALIAN").html($("#STATUSLAZADAPENGEMBALIAN").html()+"<br>&nbsp;<i style='color:red;'>(Barang Telah Diterima Penjual)</i>");
+            }
+            
+            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIAJUKAN" || row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED") {
                 $("#returLazadaDetail").show();
                 $("#returLazadaWait").hide();
             }
-            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DALAM SENGKETA") {
-                $("#returLazadaWait").html("Menunggu Respon Lazada");
-            }
-            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIPROSES") {
+            
+            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIPROSES" &&  row.TIPEPENGEMBALIAN.toUpperCase() != "RETURN_DELIVERED") {
                 $("#returLazadaWait").html("Menunggu Barang Tiba");
+            }
+            
+            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DALAM SENGKETA" || row.STATUSPENGEMBALIAN.toUpperCase() == "REFUND_PENDING") {
+                $("#returLazadaDetail").hide();
+                $("#returLazadaWait").show();
+                $("#returLazadaWait").html("Menunggu Respon Lazada");
             }
             
             var totalCurr = 0;
@@ -3001,8 +3022,6 @@ function returLazada(){
                 
                 $("#deskripsi_sengketa_lazada").val("");
                 $("#returLazadaWaitResponse").hide();
-                $("#returAcceptNegotiationLazada").hide();
-                $("#returAcceptNegotiationLazada").css("width","100%");
                 $("#returNegotiationLazada").css("width","100%");
                 $("#btn_max_kembali_lazada").show();
                 // $("#DANADIKEMBALIKANLAZADA_1").removeAttr("readonly");
@@ -3022,10 +3041,36 @@ function returLazada(){
                     $("#MAXDANADIKEMBALIKANLAZADA_"+x).val(rowDetail.TOTALREFUND);
                 }
                 
-                if(rowDetail.REFUNDTYPE == 'ONLY_REFUND')
+                
+                if(rowDetail.REFUNDTYPE == 'ONLY_REFUND' || row.TIPEPENGEMBALIAN == 'RETURN_DELIVERED' )
                 {
                     $("#tab_retur_header_lazada_1").hide();
                     $("#tab_retur_detail_lazada_1").hide();
+                }
+                
+                $("#ALASANBANDING").hide();
+                var select = '<option value="-">-Pilih Alasan-</option>';
+                $("#DISPUTESEBELUMBARANGDATANG").show();
+                $("#DISPUTESESUDAHBARANGDATANG").hide();
+                
+                if(rowDetail.REFUNDTYPE == 'RETURN' &&  row.TIPEPENGEMBALIAN == 'RETURN_DELIVERED' ){
+                    $("#DISPUTESEBELUMBARANGDATANG").hide();
+                    $("#DISPUTESESUDAHBARANGDATANG").show();
+                    // $("#ALASANBANDING").show();
+                    // $.ajax({
+                    // 	type    : 'POST',
+                    // 	url     : base_url+'Lazada/getDispute/',
+                    // 	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
+                    // 	dataType: 'json',
+                    // 	success : function(msg){
+                    // 	    var dataDispute = msg;
+                    // 	    for(var x = 0 ; x < dataDispute.length;x++)
+                    // 	    {
+                    // 	        select +=  '<option value="'+dataDispute[x].reason_id+'">'+dataDispute[x].muti_language_text+'</option>';
+                    // 	    }
+                    // 	    $("#cb_alasan_sengketa_lazada").html(select);
+                    // 	}
+                    // });
                 }
                 
                 $("#penjelasan_bukti_lazada").html("Kamu dapat menambahkan 8 Foto, ukuran file tidak bisa lebih dari 10MB.");
@@ -3302,9 +3347,18 @@ function refundLazada(x){
    
    }
         
-    if(x == 2 && ($("#deskripsi_sengketa_lazada").val() == "" || !gambarada))
+    if(x == 2 && ($("#deskripsi_sengketa_lazada").val() == "" || !gambarada || $("#cb_alasan_sengketa_lazada").val() == "-"))
     {
-        if($("#deskripsi_sengketa_lazada").val() == "")
+        if($("#cb_alasan_sengketa_lazada").val() == "-")
+        {
+             Swal.fire({
+                 	title            : 'Alasan Banding harus dipilih',
+                 	type             : 'warning',
+                 	showConfirmButton: false,
+                 	timer            : 2000
+             });
+        }
+        else if($("#deskripsi_sengketa_lazada").val() == "")
         {
              Swal.fire({
                  	title            : 'Penjelasan Banding wajib diisi',
@@ -3398,33 +3452,6 @@ function setRefundLazada(x)
         	}
         });
     }
-    else if(x == 11)
-    {
-        $.ajax({
-            	type    : 'POST',
-            	url     : base_url+'Lazada/finalReturnRefund/',
-            	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
-            	dataType: 'json',
-            	success : function(msg){
-                   
-                    Swal.close();	
-                    Swal.fire({
-                    	title            :  msg.msg,
-                    	type             : (msg.success?'success':'error'),
-                    	showConfirmButton: false,
-                    	timer            : 2000
-                    });
-                    if(msg.success)
-                    {
-                        $("#modal-retur-lazada").modal("hide");
-                    
-                        setTimeout(() => {
-                          reloadLazada();
-                        }, "2000");
-                    }
-            	}
-        });
-    }
     if(x == -1){
         
     }
@@ -3464,7 +3491,7 @@ function setRefundLazada(x)
                     $.ajax({
                     	type    : 'POST',
                     	url     : base_url+'Lazada/dispute/',
-                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN,alasandispute:$("#deskripsi_sengketa_lazada").val(),disputeproof:JSON.stringify(dataDisputeProof)},
+                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN,pilihandispute:$("#cb_alasan_sengketa_lazada").val(),alasandispute:$("#deskripsi_sengketa_lazada").val(),disputeproof:JSON.stringify(dataDisputeProof)},
                     	dataType: 'json',
                     	success : function(msg){
                            
