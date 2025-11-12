@@ -1403,7 +1403,7 @@ function changeTabLazada(index){
                         render: function (data, type, row) {
                             let html = row.KODEPESANAN;
                             if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
-                                html += "<div style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>"+row.KODEPENGEMBALIAN+"</div>";
+                                html += "<div style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center;'>"+row.KODEPENGEMBALIAN+"</div>";
                             } 
                             return html;
                         }

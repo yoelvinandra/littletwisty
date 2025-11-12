@@ -2803,7 +2803,7 @@ class Lazada extends MY_Controller {
             }
         }
         
-        
+        $countFindRetur = 0;
         if($resultPesanan->SKUPRODUKPENGEMBALIAN != "")
         {
             $indexPengganti;
@@ -2815,33 +2815,33 @@ class Lazada extends MY_Controller {
                 $dataProduk[$s]->WARNAKEMBALI =  "";
                 $dataProduk[$s]->SIZEKEMBALI =  "";
                 $dataProduk[$s]->SKUKEMBALI =  "";
-            
+                
+                if($countFindRetur < count($produkDataKembali) )
                 for($t = 0 ; $t < count($produkDataKembali);$t++)
                 {
                     if(explode("*",$produkDataKembali[$t])[1] == $dataProduk[$s]->SKUOLD)
                     {
-                       
                          //JIKA ADA YANG BEDA UPDATE LAGI
                         $sql = "SELECT NAMABARANG, WARNA, SIZE,SKULAZADA as SKU
                                     FROM MBARANG WHERE SKULAZADA = '".explode("*",$produkDataKembali[$t])[1]."'";
                         $dataBarangKembali = $CI->db->query($sql)->row();
                     
+                        $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
                         if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
                         {
-                            
-                            $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
-                            if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
-                            {
-                                $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
-                            }
-                            
-                            
-                            $dataProduk[$s]->JMLKEMBALI = explode("*",$produkDataKembali[$t])[0];
-                            $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
-                            $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
-                            $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
-                            
+                            $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
                         }
+                        else
+                        {
+                            $dataProduk[$s]->BARANGKEMBALI  = $dataBarangKembali->NAMABARANG;
+                        }
+                        
+                            
+                        $dataProduk[$s]->JMLKEMBALI = explode("*", $produkDataKembali[$t])[0];
+                        $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
+                        $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
+                        $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
+                        $countFindRetur++;
                     }
                 }
             }
@@ -6390,7 +6390,7 @@ class Lazada extends MY_Controller {
         }
         
         //TOTAL RETUR HEADER
-        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
+        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(IF(BARANGSAMPAI = 1,SKUPRODUKPENGEMBALIAN,null) SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
                                 sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI
                                 FROM TPENJUALANMARKETPLACEDTL 
                                 WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  
@@ -6401,19 +6401,12 @@ class Lazada extends MY_Controller {
         foreach($dataReturHeader as $itemReturHeader)
         {
           
-          $skukembalidata = explode("|",$itemReturHeader->SKUPRODUKPENGEMBALIAN);
-          $totalBarang = 0;
-          for($j = 0 ; $j < count($skukembalidata); $j++)
-          {
-             $totalBarang += (int)(explode("*",$skukembalidata[$j])[0]);
-          }
-          
           $CI->db->where("KODEPENJUALANMARKETPLACE",$itemReturHeader->KODEPENJUALANMARKETPLACE)
 		 ->where('MARKETPLACE','LAZADA')
 		 ->updateRaw("TPENJUALANMARKETPLACE", array(
 		     'KODEPENGEMBALIANMARKETPLACE'   =>  $itemReturHeader->KODEPENGEMBALIANMARKETPLACE,
 		     'SKUPRODUKPENGEMBALIAN'         =>  $itemReturHeader->SKUPRODUKPENGEMBALIAN, 
-		     'TOTALBARANGPENGEMBALIAN'       =>  $totalBarang, 
+		     'TOTALBARANGPENGEMBALIAN'       =>  $itemReturHeader->BARANGSAMPAI, 
 		     'TOTALPENGEMBALIANDANA'         =>  $itemReturHeader->TOTALPENGEMBALIANDANA, 
 		     'STATUSMARKETPLACE'             =>  ($itemReturHeader->STATUS > 0 ? 'RETURNED' : 'COMPLETED'),  
 		     'STATUS'                        =>  ($itemReturHeader->STATUS > 0 ? '4' : '3'),
