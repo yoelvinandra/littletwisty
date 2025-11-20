@@ -427,7 +427,7 @@ if($rp->NPWP != null){ $npwp_perusahaan = 'NPWP. '.$rp->NPWP;}
     				
         				<table width="100%" style="margin-top:2px;">
         					<tr valign="top">
-        					<td class="font-body " colspan="3"><b>Bank Transfer</b><br>UOB 303-303-590-8<br>KARATU ABADI JAYA,CV</td>
+        					<td class="font-body " colspan="3"><b>Bank Transfer</b><br>BCA 8290883106<br>KARATU ABADI JAYA CV</td>
         					</tr>
         				</table>
     				</td>
