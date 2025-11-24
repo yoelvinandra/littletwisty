@@ -2808,7 +2808,7 @@ function setGambarProduk(){
     
     //GAMBAR PRODUK
     var htmlGambarProduk = "<tr>";
-    var utama = "Gambar Utama";
+    var label = "Gambar Utama";
     
     for(var y = 0 ; y < 9 ;y++)
     {
@@ -2824,6 +2824,11 @@ function setGambarProduk(){
             htmlGambarProduk +="</tr><tr>";
         }
         
+        if(y > 0)
+        {
+            label = "Gambar "+(y+1);
+        }
+        
         htmlGambarProduk += `
                         <td>
                             <input type="file" id="file-input-shopee-`+y+`" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
@@ -2835,7 +2840,7 @@ function setGambarProduk(){
                             
                             <div style="margin-bottom:20px;">
                                 <img id="preview-image-shopee-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
-                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+utama+`</b><br>
+                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+label+`</b><br>
                                 <span id="ubahGambarProdukShopee-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
                                 &nbsp;
                                 <span id="hapusGambarProdukShopee-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>

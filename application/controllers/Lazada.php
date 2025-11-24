@@ -1526,6 +1526,8 @@ class Lazada extends MY_Controller {
 	            'Image' => $itemGambarProduk
 	        ));
 	    }
+	    
+	    
 
 		$parameter = [[
 		    'xml' => 1,
@@ -1538,13 +1540,18 @@ class Lazada extends MY_Controller {
                             'Attributes' => [
                                 'name' => $this->input->post("NAMA"),
                                 'description' => trim($this->input->post("DESKRIPSI")),
-                                'brand' => "No Brand"
+                                'brand' => "No Brand",
                             ],
                             'Skus' => $detailParameter
                        ]
                    ]
             ]
         ]];
+        
+        //KHUSUS SEPATU BAYI
+        if($kategoriBarang == 14010){
+            $parameter[0]['parameter']['Request']['Product']['Attributes']['material_filter'] = "PU Leather";
+        }
         
         if(count($dataVarian) > 0)
         {
@@ -1689,10 +1696,11 @@ class Lazada extends MY_Controller {
 		    }
 		    $endPoint = "/product/update";
 		}
+		
 		$itemid = 0;
 		//TAMBAH BARANG
         $curl = curl_init();
-        
+        // print_r($parameter);
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",
           CURLOPT_RETURNTRANSFER => true,

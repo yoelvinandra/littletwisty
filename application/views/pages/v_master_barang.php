@@ -352,7 +352,7 @@
                                                             </div>
                                                             <div class ="form-group col-md-12">
                                                                 <br>
-                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2), Jika perlu tabel ukuran akan mengambil dari gambar terakhir</i></h3>
+                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2), Jika perlu tabel ukuran, harap upload pada Gambar 7 (untuk Lazada) dan Gambar 9 (untuk Shopee)</i></h3>
                                                                 <br>
                                                                 <table id="gambarproduk">
                                                                 </table>  
@@ -2291,7 +2291,7 @@ async function simpanHeaderLazada(){
     var arrImage = [];
     var arrImageID = [];
     var arrImageBukanLazada = [];
-    for(var y = 0 ; y < 9 ;y++)
+    for(var y = 0 ; y < 7 ;y++)
     {
         //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
         if($("#src-input-"+y).val() != "")
@@ -3501,7 +3501,7 @@ function setGambarProdukMaster(){
     
     //GAMBAR PRODUK
     var htmlGambarProduk = "<tr>";
-    var utama = "Gambar Utama";
+    var label = "Gambar Utama";
     
     for(var y = 0 ; y < 9 ;y++)
     {
@@ -3517,6 +3517,11 @@ function setGambarProdukMaster(){
             htmlGambarProduk +="</tr><tr>";
         }
         
+        if(y > 0)
+        {
+            label = "Gambar "+(y+1);
+        }
+        
         htmlGambarProduk += `
                         <td>
                             <input type="file" id="file-input-`+y+`" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
@@ -3528,7 +3533,7 @@ function setGambarProdukMaster(){
                             
                             <div style="margin-bottom:20px;">
                                 <img id="preview-image-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
-                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+utama+`</b><br>
+                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+label+`</b><br>
                                 <span id="ubahGambarProduk-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
                                 &nbsp;
                                 <span id="hapusGambarProduk-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>

@@ -1493,11 +1493,10 @@ function tambahLazada(){
 }
 
 function simpanLazada(){
-    
     var arrImage = [];
     var arrImageID = [];
     var arrImageBukanLazada = [];
-    for(var y = 0 ; y < 9 ;y++)
+    for(var y = 0 ; y < 7 ;y++)
     {
         //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
         if($("#src-input-lazada-"+y).val() != "")
@@ -1658,9 +1657,9 @@ function setGambarProduk(){
     
     //GAMBAR PRODUK
     var htmlGambarProduk = "<tr>";
-    var utama = "Gambar Utama";
+    var label = "Gambar Utama";
     
-    for(var y = 0 ; y < 9 ;y++)
+    for(var y = 0 ; y < 7 ;y++)
     {
         var marginRight = "30px";
         
@@ -1674,6 +1673,11 @@ function setGambarProduk(){
             htmlGambarProduk +="</tr><tr>";
         }
         
+        if(y > 0)
+        {
+            label = "Gambar "+(y+1);
+        }
+        
         htmlGambarProduk += `
                         <td>
                             <input type="file" id="file-input-lazada-`+y+`" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
@@ -1685,7 +1689,7 @@ function setGambarProduk(){
                             
                             <div style="margin-bottom:20px;">
                                 <img id="preview-image-lazada-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
-                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+utama+`</b><br>
+                                <div style="text-align:center; margin-right:`+marginRight+`"><b>`+label+`</b><br>
                                 <span id="ubahGambarProdukLazada-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
                                 &nbsp;
                                 <span id="hapusGambarProdukLazada-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
@@ -1700,7 +1704,7 @@ function setGambarProduk(){
     $("#gambarProdukLazada").html(htmlGambarProduk);
     $("#gambarProdukLazada").css('margin-bottom','-40px');
     
-    for(var y = 0 ; y < 9 ;y++)
+    for(var y = 0 ; y < 7 ;y++)
     {
         const fileInput = document.getElementById('file-input-lazada-'+y);
         const previewImage = document.getElementById('preview-image-lazada-'+y);

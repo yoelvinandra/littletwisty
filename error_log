@@ -614,3 +614,5 @@
 [13-Oct-2025 17:18:10 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979
 [13-Oct-2025 17:18:10 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979
 [13-Oct-2025 17:18:10 Asia/Jakarta] PHP Fatal error:  Cannot redeclare Lazada::initA() in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 6979
+[24-Nov-2025 22:58:14 Asia/Jakarta] PHP Fatal error:  Only variables can be passed by reference in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 1552
+[24-Nov-2025 22:58:55 Asia/Jakarta] PHP Fatal error:  Only variables can be passed by reference in /home/lits4589/public_html/devpos/application/controllers/Lazada.php on line 1552
