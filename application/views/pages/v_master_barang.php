@@ -352,7 +352,12 @@
                                                             </div>
                                                             <div class ="form-group col-md-12">
                                                                 <br>
-                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2), Jika perlu tabel ukuran, harap upload pada Gambar 7 (untuk Lazada) dan Gambar 9 (untuk Shopee)</i></h3>
+                                                                <h3 style="font-weight:bold; margin-bottom:-5px;">Gambar Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib (Min 2), Jika perlu tabel ukuran, harap upload pada Gambar Terakhir.</i></h3>
+                                                                <ul style="padding-left:15px; padding-top:10px;">
+                                                    		        <li>Untuk Shopee, maksimal gambar yang tersedia adalah 9 Gambar.</li>
+                                                                    <li>Untuk Lazada, maksimal gambar yang tersedia adalah 8 Gambar.</li>
+                                                                    <li>Jika jumlah gambar yang diupload melewati jumlah maksimal gambar pada marketplace, maka gambar tidak akan muncul.</li>
+                                                                </ul>
                                                                 <br>
                                                                 <table id="gambarproduk">
                                                                 </table>  
