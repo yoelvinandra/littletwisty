@@ -1437,6 +1437,9 @@ class Lazada extends MY_Controller {
         $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
         $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
         
+        $sql = "SELECT IDCUSTOMER,KONSINYASI FROM MCUSTOMER WHERE KODECUSTOMER like '%LAZADA%'";
+        $dataCustomer = $CI->db->query($sql)->row();
+        
 		if(count($dataVarian) > 0)
 		{
 		    $indexVarian = 0;
@@ -1473,7 +1476,7 @@ class Lazada extends MY_Controller {
                     $itemHeader = $CI->db->query($sql)->row();
                     $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                     $saldoQty = $result->QTY??0;
-                                   
+                    
     		       array_push($detailParameter,
     		       ['Sku' => [
     		            'Status' => 'active',
@@ -1481,7 +1484,7 @@ class Lazada extends MY_Controller {
         		        'quantity' => (int)$saldoQty,
         		        'price' => (int)$itemVarian->HARGAJUAL,
         		        'saleProp' => $dataSaleProp,
-        		      //  'special_price' => (int)$itemVarian->HARGAJUAL,
+        		      //  'special_price' => (int)$hargaPromo,
         		      //  'special_from_date' => "2025-06-20 17:18:31",
         		      //  'special_to_date' => "2026-06-20 17:18:31",
         		        'package_height' => (float)$this->input->post("TINGGI"),
@@ -1492,6 +1495,14 @@ class Lazada extends MY_Controller {
                           'Image' => $dataGambarVarian[$indexWarna]
                         ]
         		    ]]);
+        		    
+        		    $sql = "SELECT IF($dataCustomer->KONSINYASI = 1,HARGAKONSINYASI,HARGACORET) as HARGAPROMO FROM MHARGA WHERE IDBARANG = $itemHeader->IDBARANG AND IDCUSTOMER = $dataCustomer->IDCUSTOMER";
+         
+                    $hargaPromo = $CI->db->query($sql)->row()->HARGAPROMO;  
+                    if($hargaPromo > 0)
+                    {
+                        $detailParameter[count($detailParameter)-1]['Sku']['special_price'] =  (int)$hargaPromo;
+                    }
     		   }
 		    }
 		}
@@ -1502,13 +1513,13 @@ class Lazada extends MY_Controller {
             $itemHeader = $CI->db->query($sql)->row();
             $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
             $saldoQty = $result->QTY??0;
-                    
+            
 		    $detailParameter = ['Sku' => [[
 		        'Status' => 'active',
 		        'SellerSku' => $skuInduk,
 		        'quantity' => (int)$saldoQty,
 		        'price' => (int)$hargaInduk,
-		      //  'special_price' => (int)$hargaInduk,
+		      //  'special_price' => (int)$hargaPromo,
 		      //  'special_from_date' => "2025-06-20 17:18:31",
 		      //  'special_to_date' => "2026-06-20 17:18:31",
 		        'package_height' => (float)$this->input->post("TINGGI"),
@@ -1516,8 +1527,16 @@ class Lazada extends MY_Controller {
 		        'package_width' => (float)$this->input->post("LEBAR"),
 		        'package_weight' => ((float)$this->input->post("BERAT")/1000),
 		    ]]];
+		    
+            
+            $sql = "SELECT IF($dataCustomer->KONSINYASI = 1,HARGAKONSINYASI,HARGACORET) as HARGAPROMO FROM MHARGA WHERE IDBARANG = $itemHeader->IDBARANG AND IDCUSTOMER = $dataCustomer->IDCUSTOMER";
+         
+            $hargaPromo = $CI->db->query($sql)->row()->HARGAPROMO;  
+            if($hargaPromo > 0)
+            {
+                $detailParameter['Sku'][0]['special_price'] =  (int)$hargaPromo;
+            }
 		}
-		
 		
 	    $arrayImageProduk = [];
 	    foreach($dataGambarProduk as $itemGambarProduk)
@@ -3959,15 +3978,12 @@ class Lazada extends MY_Controller {
              $appKey = $this->model_master_config->getConfigMarketplace('LAZADA','APP_KEY');
              $accessToken = $this->model_master_config->getConfigMarketplace('LAZADA','ACCESS_TOKEN');
              $appSecret = $this->model_master_config->getConfigMarketplace('LAZADA','APP_SECRET');
-             $endpoint = "/images/migrate";
          
              $this->load->library('Lazop', [
                  'appKey'    => $appKey,
                  'appSecret' => $appSecret
              ]);
-    
-             $client = $this->lazop->getClient();
-             $request = new LazopRequest($endpoint);
+             
              
              $linkUrl = [];
              $counterUrl = 0;
@@ -3978,13 +3994,17 @@ class Lazada extends MY_Controller {
                  
                  if(($f % 7 == 0 && $f != 0) || $f == count($dataUrl)-1)
                  {
-                 
+                     $array = [];
                      // Prepare POST data
                      $array = [
                         'Request' => [
                             'Images' => $linkUrl
                         ]
                      ];
+                     
+                     $endpoint = "/images/migrate";
+                     $client = $this->lazop->getClient();
+                     $request = new LazopRequest($endpoint);
                    
                      $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><root/>');
                      $this->arrayToXml($array, $xml);
@@ -3994,7 +4014,7 @@ class Lazada extends MY_Controller {
                      $request->addApiParam('payload',$payload);
                      $response = $client->execute($request, $accessToken);
                      $ret = json_decode($response,true);
-            
+           
                      if($ret['code'] == 0)
                      {
                          $batchID = $ret['batch_id'];
@@ -4011,13 +4031,18 @@ class Lazada extends MY_Controller {
                          $request->addApiParam('batch_id',$batchID);
                          $response = $client->execute($request, $accessToken);
                          $retResp = json_decode($response,true);
-                        
+              
                          if($retResp['code'] == 0)
                          {
-                             for($x = (7*$counterUrl) ; $x < ($f+1) ; $x++)
+                             $indexGambarAdd = 0;
+                             for($x = (7*$counterUrl) ; $x <= $f ; $x++)
                              {
-                                 $dataUrl[$x]['url-baru'] = $retResp['data']['images'][$x]['url'];
-                                 $dataUrl[$x]['id-baru'] = $retResp['data']['images'][$x]['hash_code'];
+                                 if($dataUrl[$x]['url-baru'] == "")
+                                 {
+                                     $dataUrl[$x]['url-baru'] = $retResp['data']['images'][$indexGambarAdd]['url'];
+                                     $dataUrl[$x]['id-baru'] = $retResp['data']['images'][$indexGambarAdd]['hash_code'];
+                                     $indexGambarAdd++;
+                                 }
                              }
                             $linkUrl = [];
                             $counterUrl++;
@@ -4030,6 +4055,7 @@ class Lazada extends MY_Controller {
                                  "message" => "RESPONSE : ".$retResp['code']." : ".$retResp['message'],
                                  "msg" => "Terjadi kesalahan di respon, mohon lakukan simpan ulang"
                              ));
+                             break;
                          }
                      }
                      else
@@ -4040,6 +4066,7 @@ class Lazada extends MY_Controller {
                              "message" => "MIGRATES : ".$ret['code']." : ".$ret['message'],
                              "msg" => "Terjadi kesalahan di migrasi url, mohon lakukan simpan ulang"
                          ));
+                         break;
                      }
                  }
             }
@@ -4436,8 +4463,6 @@ class Lazada extends MY_Controller {
     	$parameter['photo'] = $dataProof;
     	$parameter['description'] = $description;
         $curl = curl_init();
-        
-        print_r($parameter);
         
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Lazada/postAPI/",

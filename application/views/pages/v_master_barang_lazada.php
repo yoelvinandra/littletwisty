@@ -1496,7 +1496,7 @@ function simpanLazada(){
     var arrImage = [];
     var arrImageID = [];
     var arrImageBukanLazada = [];
-    for(var y = 0 ; y < 7 ;y++)
+    for(var y = 0 ; y < 8 ;y++)
     {
         //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
         if($("#src-input-lazada-"+y).val() != "")
@@ -1659,7 +1659,7 @@ function setGambarProduk(){
     var htmlGambarProduk = "<tr>";
     var label = "Gambar Utama";
     
-    for(var y = 0 ; y < 7 ;y++)
+    for(var y = 0 ; y < 8 ;y++)
     {
         var marginRight = "30px";
         
@@ -1704,7 +1704,7 @@ function setGambarProduk(){
     $("#gambarProdukLazada").html(htmlGambarProduk);
     $("#gambarProdukLazada").css('margin-bottom','-40px');
     
-    for(var y = 0 ; y < 7 ;y++)
+    for(var y = 0 ; y < 8 ;y++)
     {
         const fileInput = document.getElementById('file-input-lazada-'+y);
         const previewImage = document.getElementById('preview-image-lazada-'+y);

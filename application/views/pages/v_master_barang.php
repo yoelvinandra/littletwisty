@@ -2291,7 +2291,7 @@ async function simpanHeaderLazada(){
     var arrImage = [];
     var arrImageID = [];
     var arrImageBukanLazada = [];
-    for(var y = 0 ; y < 7 ;y++)
+    for(var y = 0 ; y < 8 ;y++)
     {
         //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
         if($("#src-input-"+y).val() != "")
@@ -2393,7 +2393,7 @@ async function simpanHeaderLazada(){
              var dataVarianSimpan = [];
              var dataVarianMaster = [];
              
-             const resMaster = await ajaxPost(base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()));
+             let resMaster = await ajaxPost(base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()));
              dataVarianMaster = resMaster.rows;
              dataVarianSimpan = [...dataVarianMaster];
              
@@ -2401,7 +2401,7 @@ async function simpanHeaderLazada(){
              
              if(indukBarangLazada != 0)
              {
-                 const msg = await ajaxPost(base_url + 'Lazada/getDataBarang/', { idindukbaranglazada: indukBarangLazada });
+                 let msg = await ajaxPost(base_url + 'Lazada/getDataBarang/', { idindukbaranglazada: indukBarangLazada });
                
                  for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
                  {
@@ -2491,28 +2491,22 @@ async function simpanHeaderLazada(){
                  }
              }
              
-             $.ajax({
-                type      : 'POST',
-                url       : base_url + 'Lazada/getDataBarangdanVarian',
-                data      : {idindukbaranglazada : indukBarangLazada},
-                dataType  : 'json',
-                beforeSend: function (){
-                    //$.messager.progress();
-                },
-                success: function(msg){
-                    if(indukBarangLazada != 0)
+             let msg = await ajaxPost(base_url + 'Lazada/getDataBarangdanVarian/', { idindukbaranglazada: indukBarangLazada });
+             
+             if(indukBarangLazada != 0)
+              {
+                    if(msg.status == 'Active')
                     {
-                        if(msg.status == 'Active')
-                        {
-                            aktif = 1;
-                        }
-                        else
-                        {
-                            aktif = 0;
-                        }
+                        aktif = 1;
                     }
-                    
-                     $.ajax({
+                    else
+                    {
+                        aktif = 0;
+                    }
+             }
+             
+         
+                $.ajax({
                      	type    : 'POST',
                      	url     : base_url+'Lazada/setBarang/',
                      	data    : {
@@ -2551,8 +2545,6 @@ async function simpanHeaderLazada(){
                              }
                      	}
                      }); 
-                }
-             });
          }
     });
 }
