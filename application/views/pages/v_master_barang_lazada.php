@@ -1594,7 +1594,7 @@ function simpanLazada(){
                 else
                 {
                     error = true;
-                    Swal.close();	
+                    // Swal.close();	
                     // Swal.fire({
                     //     title            : msg.msg,
                     //     type             : (msg.success?'success':'error'),
