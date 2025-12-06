@@ -1160,16 +1160,21 @@ function batal(){
 						timer            : 1500
 					});
 					
-					var doneStok = [true,true,true,true];     
+					var doneStok = [true,true,true,true,true,true];     
 					if('<?=$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] == 'YES'?>')
                     {
                        doneStok[0] = false;
                        doneStok[1] = false;
                     }
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
                     {
                         doneStok[2] = false;
                         doneStok[3] = false;
+                    }
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    {
+                        doneStok[4] = false;
+                        doneStok[5] = false;
                     }
                     
                     if(doneStok.length > 0)
@@ -1287,11 +1292,11 @@ function batal(){
                         });
                     }
                     
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
                     {
                         $.ajax({
                             type      : 'POST',
-                            url       : base_url+'Lazada/setStokBarang',
+                            url       : base_url+'Tiktok/setStokBarang',
                             data      : {
                                 'idtrans' : row.IDTRANSFER, 
                                 'jenistrans' : 'TRANSFER_ASAL',
@@ -1339,7 +1344,7 @@ function batal(){
                         
                         $.ajax({
                             type      : 'POST',
-                            url       : base_url+'Lazada/setStokBarang',
+                            url       : base_url+'Tiktok/setStokBarang',
                             data      : {
                                 'idtrans' : row.IDTRANSFER, 
                                 'jenistrans' : 'TRANSFER_TUJUAN',
@@ -1350,6 +1355,105 @@ function batal(){
                             },
                             success: function(msg){
                                 doneStok[3] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        Swal.fire({
+                                            title            : msg.msg,
+                                            type             : 'success',
+                                            showConfirmButton: false,
+                                            timer            : 1500
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'error',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            },
+                            
+                        });
+                    }
+                    
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    {
+                        $.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Lazada/setStokBarang',
+                            data      : {
+                                'idtrans' : row.IDTRANSFER, 
+                                'jenistrans' : 'TRANSFER_ASAL',
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[4] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        Swal.fire({
+                                            title            : msg.msg,
+                                            type             : 'success',
+                                            showConfirmButton: false,
+                                            timer            : 1500
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'error',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            },
+                            
+                        });
+                        
+                        $.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Lazada/setStokBarang',
+                            data      : {
+                                'idtrans' : row.IDTRANSFER, 
+                                'jenistrans' : 'TRANSFER_TUJUAN',
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[5] = true;
                                 cekDone = true;
                                 for(var d = 0 ; d < doneStok.length;d++)
                                 {
@@ -1593,16 +1697,21 @@ function simpan(){
 					    dataBarang.push(row[x].idbarang);
 					}
 					
-                    var doneStok = [true,true,true,true];     
+                    var doneStok = [true,true,true,true,true,true];     
 					if('<?=$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] == 'YES'?>')
                     {
                        doneStok[0] = false;
                        doneStok[1] = false;
                     }
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
                     {
                         doneStok[2] = false;
                         doneStok[3] = false;
+                    }
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    {
+                        doneStok[4] = false;
+                        doneStok[5] = false;
                     }
                     
                     if(doneStok.length > 0)
@@ -1723,11 +1832,11 @@ function simpan(){
                     
                     }
                     
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
                     {
                     	$.ajax({
                             type      : 'POST',
-                            url       : base_url+'Lazada/setStokBarang',
+                            url       : base_url+'Tiktok/setStokBarang',
                             data      : {
                                 'idlokasi' : $("#LOKASIASAL").val(), 
                                 'databarang' : JSON.stringify(dataBarang),
@@ -1777,7 +1886,7 @@ function simpan(){
                   
                         $.ajax({
                             type      : 'POST',
-                            url       : base_url+'Lazada/setStokBarang',
+                            url       : base_url+'Tiktok/setStokBarang',
                             data      : {
                                 'idlokasi' : $("#LOKASITUJUAN").val(), 
                                 'databarang' : JSON.stringify(dataBarang),
@@ -1788,6 +1897,108 @@ function simpan(){
                             },
                             success: function(msg){
                                 doneStok[3] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
+                                
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        Swal.fire({
+                                            title            : msg.msg,
+                                            type             : 'success',
+                                            showConfirmButton: false,
+                                            timer            : 1500
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'error',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            },
+                            
+                        });
+                    }
+                    
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    {
+                    	$.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Lazada/setStokBarang',
+                            data      : {
+                                'idlokasi' : $("#LOKASIASAL").val(), 
+                                'databarang' : JSON.stringify(dataBarang),
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[4] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
+                                
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        Swal.fire({
+                                            title            : msg.msg,
+                                            type             : 'success',
+                                            showConfirmButton: false,
+                                            timer            : 1500
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'error',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            },
+                            
+                        });
+                        
+                  
+                        $.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Lazada/setStokBarang',
+                            data      : {
+                                'idlokasi' : $("#LOKASITUJUAN").val(), 
+                                'databarang' : JSON.stringify(dataBarang),
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[5] = true;
                                 cekDone = true;
                                 for(var d = 0 ; d < doneStok.length;d++)
                                 {

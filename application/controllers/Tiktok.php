@@ -71,6 +71,34 @@ class Tiktok extends MY_Controller {
             {
                 $this->model_master_config->setConfigMarketplace('TIKTOK','ACCESS_TOKEN',$accessToken);
                 $this->model_master_config->setConfigMarketplace('TIKTOK','REFRESH_TOKEN',$newRefreshToken);
+		         
+		        $curl = curl_init($url);
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS => array('endpoint' => '/authorization/202309/shops','parameter' => $parameter),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                
+                $response = curl_exec($curl);
+                curl_close($curl);
+                if($ret['code'] != 0)
+                {
+                   echo $ret['code']." : ".$ret['message'];
+                }
+                else
+                {
+                    $this->model_master_config->setConfigMarketplace('TIKTOK','SHOP',json_encode($ret['data']['shops'][0]));
+                    $this->getCipher();
+                }
             }
             
             echo "Access Token : ".($accessToken)."<br>Refresh Token : ".($newRefreshToken)."<br><br>Berhasil disimpan di database";
@@ -123,6 +151,37 @@ class Tiktok extends MY_Controller {
 
 	}
 	
+	public function getCipher(){
+	   $curl = curl_init();
+       curl_setopt_array($curl, array(
+         CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+         CURLOPT_RETURNTRANSFER => true,
+         CURLOPT_ENCODING => '',
+         CURLOPT_MAXREDIRS => 10,
+         CURLOPT_TIMEOUT => 30,
+         CURLOPT_FOLLOWLOCATION => true,
+         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+         CURLOPT_CUSTOMREQUEST => 'POST',
+         CURLOPT_POSTFIELDS => array('endpoint' => '/authorization/202309/shops','parameter' => $parameter),
+         CURLOPT_HTTPHEADER => array(
+           'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+         ),
+       ));
+       
+       $resp = curl_exec($curl);
+       $reta = json_decode($resp, true);
+       curl_close($curl);
+       if($reta['code'] != 0)
+       {
+          echo $reta['code']." : ".$reta['message'];
+       }
+       else
+       {
+          $this->model_master_config->setConfigMarketplace('TIKTOK','SHOP',json_encode($reta['data']['shops'][0]));
+          echo "SHOPS : ".(json_encode($reta['data']['shops'][0]))."<br><br>Berhasil disimpan di database";
+       }
+	}
+	
 	public function getAPI()
 	{
 	    $this->output->set_content_type('application/json');
@@ -131,23 +190,57 @@ class Tiktok extends MY_Controller {
 	    {
     	    $endpoint = $this->input->post("endpoint");
     	    $parameter = $this->input->post("parameter");
-    	    
-    	    $code = $this->model_master_config->getConfigMarketplace('TIKTOK','CODE');
-    	    $shopId = $this->model_master_config->getConfigMarketplace('TIKTOK','SHOP_ID');
-    	    $partnerId = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_ID');
-    	    $partnerKey = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_KEY');
     	    $accessToken = $this->model_master_config->getConfigMarketplace('TIKTOK','ACCESS_TOKEN');
     	    
-            $path = "/api/v2/";
+    	    
+    	    //BUAT SIGN
+    	    // 1
+            $host = 'https://open-api.tiktokglobalshop.com'.$endpoint;
+    	    
+    	    $app_key = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_KEY');
+    	    $timest = strtotime(date("Y-m-d H:i:s", time()));
+    	    
+    	    $allparameter = "app_key=$app_key&timestamp=$timest".$parameter;
+    	    
+    	    $shopCipher = $this->input->post("shop_cipher")??"true";
+    	    if($shopCipher == "true")
+    	    {
+    	        $shop_cipher = json_decode($this->model_master_config->getConfigMarketplace('TIKTOK','SHOP'))->cipher;
+    	        $allparameter .= "&shop_cipher=".$shop_cipher;
+    	    }
             
-            $timest = time();
-            $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest.$accessToken.$shopId,$partnerKey);
+            $arrParam = explode("&",$allparameter);
             
-            $host = 'https://partner.TIKTOKmobile.com'.$path.$endpoint;
+            $paramMap = [];
+            foreach ($arrParam as $itemParam) {
+                list($key, $value) = explode("=", $itemParam, 2);
+                $paramMap[$key] = $value;       // assign directly
+            }
             
+            ksort($paramMap);
+            
+            // 2
+            $stringParam = "";
+            
+            foreach ($paramMap as $key => $value) {
+               $stringParam .= $key.$value;
+            }
+            
+            // 3
+            $stringParam = $endpoint.$stringParam;
+            
+            // 4
+            $app_secret = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_SECRET');
+            $stringParam = $app_secret.$stringParam.$app_secret;
+            
+            // 5
+            $sign = hash_hmac('sha256', $stringParam,$app_secret);
+            
+            //BUAT SIGN
+            $allparameter = $allparameter."&sign=".$sign;
             $curl = curl_init();
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $host.'?access_token='.$accessToken.'&timestamp='.$timest.'&sign='.$sign.'&shop_id='.$shopId.'&partner_id='.$partnerId.$parameter,
+              CURLOPT_URL => $host."?".$allparameter,
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -156,6 +249,7 @@ class Tiktok extends MY_Controller {
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'GET',
               CURLOPT_HTTPHEADER => array(
+                'x-tts-access-token: '.$accessToken,
                 'Cookie: SPC_SEC_SI=v1-UHAwR1pMemVVcnVNWk0yOAmAUDORs28JVn6OsCvGiwjQgIgi70oQOziTBqSXWyDZViEAeIWx3hwddNsCKaZ6iPdS4KmbbymAcw3YAhkMr6I=; SPC_SI=P7sdaAAAAABzUmtoeEtWN8sBwggAAAAATEVRUWR2b0Y='
               ),
             ));
@@ -180,32 +274,71 @@ class Tiktok extends MY_Controller {
 	    if($response)
 	    {
     	    $endpoint = $this->input->post("endpoint");
-    	    $parameter = $this->input->post("parameter");
-    	    
-    	    $code = $this->model_master_config->getConfigMarketplace('TIKTOK','CODE');
-    	    $shopId = $this->model_master_config->getConfigMarketplace('TIKTOK','SHOP_ID');
-    	    $partnerId = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_ID');
-    	    $partnerKey = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_KEY');
+    	    $urlparameter = $this->input->post("urlparameter")??"";
+    	    $parameter = json_decode($this->input->post("parameter"),true)??[];
     	    $accessToken = $this->model_master_config->getConfigMarketplace('TIKTOK','ACCESS_TOKEN');
-            $path = "/api/v2/";
+    	    
+    	    //BUAT SIGN
+    	    // 1
+            $host = 'https://open-api.tiktokglobalshop.com'.$endpoint;
+    	    
+    	    $app_key = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_KEY');
+    	    $timest = strtotime(date("Y-m-d H:i:s", time()));
+
+    	    $urlparameter = "app_key=$app_key&timestamp=".$timest.$urlparameter;
+    	    
+    	    $shopCipher = $this->input->post("shop_cipher")??"true";
+    	 
+    	    if($shopCipher == "true")
+    	    {
+    	        $shop_cipher = json_decode($this->model_master_config->getConfigMarketplace('TIKTOK','SHOP'))->cipher;
+    	        $urlparameter .= "&shop_cipher=".$shop_cipher;
+    	    }
+    	    
+    	    $allparameter = $urlparameter;
+         
+            $arrParam = explode("&",$allparameter);
+
+            $paramMap = [];
             
-            $timest = time();
-            $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest.$accessToken.$shopId,$partnerKey);
+            foreach ($arrParam as $itemParam) {
+                list($key, $value) = explode("=", $itemParam, 2);
+                $paramMap[$key] = $value;       // assign directly
+            }
+            ksort($paramMap);
             
-            $host = 'https://partner.TIKTOKmobile.com'.$path.$endpoint;
+            // 2
+            $stringParam = "";
+            
+            foreach ($paramMap as $key => $value) {
+               $stringParam .= $key.$value;
+            }
+     
+            // 3
+            $stringParam = $endpoint.$stringParam.json_encode($parameter);
+            
+            // 4
+            $app_secret = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_SECRET');
+            $stringParam = $app_secret.$stringParam.$app_secret;
+            // 5
+            $sign = hash_hmac('sha256', $stringParam,$app_secret);
+            //BUAT SIGN
+            
+            $urlparameter = $urlparameter."&sign=".$sign;
+   
             $curl = curl_init();
-            
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $host.'?access_token='.$accessToken.'&timestamp='.$timest.'&sign='.$sign.'&shop_id='.$shopId.'&partner_id='.$partnerId,
+              CURLOPT_URL => $host.'?'.$urlparameter,
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
               CURLOPT_TIMEOUT => 0,
               CURLOPT_FOLLOWLOCATION => true,
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_POSTFIELDS => ($parameter),
+              CURLOPT_POSTFIELDS => json_encode($parameter),
               CURLOPT_CUSTOMREQUEST => 'POST',
               CURLOPT_HTTPHEADER => array(
+                 'x-tts-access-token: '.$accessToken,
                 'Content-Type: application/json',
                 'Cookie: SPC_SEC_SI=v1-UHAwR1pMemVVcnVNWk0yOAmAUDORs28JVn6OsCvGiwjQgIgi70oQOziTBqSXWyDZViEAeIWx3hwddNsCKaZ6iPdS4KmbbymAcw3YAhkMr6I=; SPC_SI=P7sdaAAAAABzUmtoeEtWN8sBwggAAAAATEVRUWR2b0Y='
               ),
@@ -251,7 +384,7 @@ class Tiktok extends MY_Controller {
 		    $parameter = "&offset=".$offset."&page_size=".$pageSize.$statusParam;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -268,9 +401,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -287,7 +420,7 @@ class Tiktok extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -304,9 +437,9 @@ class Tiktok extends MY_Controller {
                     $response = curl_exec($curl);
                     curl_close($curl);
                     $ret =  json_decode($response,true);
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
-                        echo $ret['error']." : ".$ret['message'];
+                        echo $ret['code']." : ".$ret['message'];
                         $statusok = false;
                     }
                     else
@@ -565,7 +698,7 @@ class Tiktok extends MY_Controller {
             $curl = curl_init();
                   
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -585,7 +718,7 @@ class Tiktok extends MY_Controller {
             curl_close($curl);
             $ret =  json_decode($response,true);
             
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 $data['success'] = false;
                 $data['msg'] =  $ret['error']." UBAH HARGA TIKTOK : ".$ret['message'];
@@ -614,7 +747,7 @@ class Tiktok extends MY_Controller {
     		    $parameter = "&discount_status=".$status[$x]."&page_no=".$pageno."&page_size=".$pageSize;
 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -631,9 +764,9 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                 }
                 else
                 {
@@ -677,7 +810,7 @@ class Tiktok extends MY_Controller {
     		  //  echo $parameter;
     		    
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -694,9 +827,9 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                 }
                 else
                 {
@@ -784,7 +917,7 @@ class Tiktok extends MY_Controller {
                         $curl = curl_init();
                 
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -804,7 +937,7 @@ class Tiktok extends MY_Controller {
                         curl_close($curl);
                         $ret =  json_decode($response,true);
                      
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
                             $data['msg'] =  $ret['error']."PROMO BARANG UBAH : ".$ret['message'];
@@ -839,7 +972,7 @@ class Tiktok extends MY_Controller {
     	    $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -859,7 +992,7 @@ class Tiktok extends MY_Controller {
             curl_close($curl);
             $ret =  json_decode($response,true);
          
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 $data['success'] = false;
                 $data['msg'] =  $ret['error']." BUAT PROMO : ".$ret['message'];
@@ -906,7 +1039,7 @@ class Tiktok extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -926,7 +1059,7 @@ class Tiktok extends MY_Controller {
                 curl_close($curl);
                 $ret =  json_decode($response,true);
                 
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
                     $data['success'] = false;
                     $data['msg'] =  $ret['error']."PROMO BARANG TAMBAH : ".$ret['message'];
@@ -995,7 +1128,7 @@ class Tiktok extends MY_Controller {
         $parameter = "";
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1014,7 +1147,7 @@ class Tiktok extends MY_Controller {
         $ret =  json_decode($response,true);
         $lokasi = 0;
         $countSuccess = 0 ;
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." LOKASI : ".$ret['message'];
         }
@@ -1079,7 +1212,7 @@ class Tiktok extends MY_Controller {
             	        
             	            $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -1099,7 +1232,7 @@ class Tiktok extends MY_Controller {
                             curl_close($curl);
                             $ret =  json_decode($response,true);
                             
-                            if($ret['error'] != "")
+                            if($ret['code'] != 0)
                             {
                                 $data['success'] = false;
                                 $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
@@ -1137,7 +1270,7 @@ class Tiktok extends MY_Controller {
             	{
                 	$curl = curl_init();
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -1157,7 +1290,7 @@ class Tiktok extends MY_Controller {
                     curl_close($curl);
                     $ret =  json_decode($response,true);
                     
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
                         $data['success'] = false;
                         $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
@@ -1195,10 +1328,10 @@ class Tiktok extends MY_Controller {
 		
         $curl = curl_init();
         
-        $parameter = "&language=ID";
+        $parameter = "&locale=id-ID";
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1206,7 +1339,7 @@ class Tiktok extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_category','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/product/202309/categories','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -1215,25 +1348,25 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
-            $dataKategori = $ret['response']['category_list'];
+            $dataKategori = $ret['data']['categories'];
             $responseKategori = [];
             
             foreach($dataKategori as $itemKategori)
             {
-                if($itemKategori['parent_category_id'] == 0)
+                if($itemKategori['parent_id'] == 0)
                 {
                     
-                    if(!$itemKategori['has_children'])
+                    if($itemKategori['is_leaf'])
                     {
                         array_push($responseKategori,array(
-                            'VALUE' =>  $itemKategori['category_id'],
-                            'TEXT' => $itemKategori['display_category_name']
+                            'VALUE' =>  $itemKategori['id'],
+                            'TEXT' => $itemKategori['local_name']
                         ));
                     }
                     else
@@ -1241,65 +1374,65 @@ class Tiktok extends MY_Controller {
                         foreach($dataKategori as $itemSubKategori)
                         {
                         
-                           if($itemKategori['category_id'] == $itemSubKategori['parent_category_id'])
-                           {
+                          if($itemKategori['id'] == $itemSubKategori['parent_id'])
+                          {
                                  
-                               if(!$itemSubKategori['has_children'])
-                               {
-                                   array_push($responseKategori,array(
-                                       'VALUE' =>  $itemSubKategori['category_id'],
-                                       'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']
-                                   ));
-                               }
-                               else
-                               {
-                                   foreach($dataKategori as $itemSubKategori2)
-                                   {
-                                       if($itemSubKategori['category_id'] == $itemSubKategori2['parent_category_id'])
-                                       {
-                                           if(!$itemSubKategori2['has_children'])
-                                           {
-                                               array_push($responseKategori,array(
-                                                   'VALUE' =>  $itemSubKategori2['category_id'],
-                                                   'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']." / ".$itemSubKategori2['display_category_name']
-                                               ));
-                                           }
-                                           else
-                                           {
-                                               foreach($dataKategori as $itemSubKategori3)
-                                               {
-                                                   if($itemSubKategori2['category_id'] == $itemSubKategori3['parent_category_id'])
-                                                   {
-                                                       if(!$itemSubKategori3['has_children'])
-                                                       {
-                                                           array_push($responseKategori,array(
-                                                               'VALUE' =>  $itemSubKategori3['category_id'],
-                                                               'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']." / ".$itemSubKategori2['display_category_name']." / ".$itemSubKategori3['display_category_name']
-                                                           ));
+                              if($itemSubKategori['is_leaf'])
+                              {
+                                  array_push($responseKategori,array(
+                                      'VALUE' =>  $itemSubKategori['id'],
+                                      'TEXT' => $itemKategori['local_name']." / ".$itemSubKategori['local_name']
+                                  ));
+                              }
+                              else
+                              {
+                                  foreach($dataKategori as $itemSubKategori2)
+                                  {
+                                      if($itemSubKategori['id'] == $itemSubKategori2['parent_id'])
+                                      {
+                                          if($itemSubKategori2['is_leaf'])
+                                          {
+                                              array_push($responseKategori,array(
+                                                  'VALUE' =>  $itemSubKategori2['id'],
+                                                  'TEXT' => $itemKategori['local_name']." / ".$itemSubKategori['local_name']." / ".$itemSubKategori2['local_name']
+                                              ));
+                                          }
+                                          else
+                                          {
+                                              foreach($dataKategori as $itemSubKategori3)
+                                              {
+                                                  if($itemSubKategori2['id'] == $itemSubKategori3['parent_id'])
+                                                  {
+                                                      if($itemSubKategori3['is_leaf'])
+                                                      {
+                                                          array_push($responseKategori,array(
+                                                              'VALUE' =>  $itemSubKategori3['id'],
+                                                              'TEXT' => $itemKategori['local_name']." / ".$itemSubKategori['local_name']." / ".$itemSubKategori2['local_name']." / ".$itemSubKategori3['local_name']
+                                                          ));
                                                            
-                                                       }
-                                                       else
-                                                       {
-                                                           foreach($dataKategori as $itemSubKategori4)
-                                                           {
-                                                               if($itemSubKategori3['category_id'] == $itemSubKategori4['parent_category_id'])
-                                                               {
-                                                                   if(!$itemSubKategori4['has_children'])
-                                                                   {
-                                                                       array_push($responseKategori,array(
-                                                                           'VALUE' =>  $itemSubKategori4['category_id'],
-                                                                           'TEXT' => $itemKategori['display_category_name']." / ".$itemSubKategori['display_category_name']." / ".$itemSubKategori2['display_category_name']." / ".$itemSubKategori3['display_category_name']." / ".$itemSubKategori4['display_category_name']
-                                                                       ));
-                                                                   }
-                                                               }
-                                                           }
-                                                       }
-                                                   }
-                                               }
-                                           }
+                                                      }
+                                                      else
+                                                      {
+                                                          foreach($dataKategori as $itemSubKategori4)
+                                                          {
+                                                              if($itemSubKategori3['id'] == $itemSubKategori4['parent_id'])
+                                                              {
+                                                                  if($itemSubKategori4['is_leaf'])
+                                                                  {
+                                                                      array_push($responseKategori,array(
+                                                                          'VALUE' =>  $itemSubKategori4['id'],
+                                                                          'TEXT' => $itemKategori['local_name']." / ".$itemSubKategori['local_name']." / ".$itemSubKategori2['local_name']." / ".$itemSubKategori3['local_name']." / ".$itemSubKategori4['local_name']
+                                                                      ));
+                                                                  }
+                                                              }
+                                                          }
+                                                      }
+                                                  }
+                                              }
+                                          }
                                            
-                                       }
-                                   }
+                                      }
+                                  }
                                 }
                             }
                         }
@@ -1327,7 +1460,7 @@ class Tiktok extends MY_Controller {
         $parameter = "&language=ID";
         $data['rows'] = [];
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1344,9 +1477,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -1403,7 +1536,7 @@ class Tiktok extends MY_Controller {
             $parameter = "&category_id_list=$idkategori&language=ID";
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -1420,9 +1553,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -1503,7 +1636,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1520,9 +1653,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -1536,7 +1669,7 @@ class Tiktok extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -1553,9 +1686,9 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                 }
                 else
                 {
@@ -1566,7 +1699,7 @@ class Tiktok extends MY_Controller {
                         $curl = curl_init();
                         $parameter = "&size_chart_id=".$dataSizeChart[$x]['size_chart_id'];
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -1583,9 +1716,9 @@ class Tiktok extends MY_Controller {
                         $response = curl_exec($curl);
                         curl_close($curl);
                         $ret =  json_decode($response,true);
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
-                            echo $ret['error']." : ".$ret['message'];
+                            echo $ret['code']." : ".$ret['message'];
                         }
                         else
                         {
@@ -1606,31 +1739,26 @@ class Tiktok extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-		$status = explode(",",$this->input->post('status'));
+		$status = $this->input->post('status')??'ALL';
 		
-		$statusok = true;
-		$statusParam = "";
+		$nextPageToken = "";
 		$data['rows'] = [];
-		$data["total"] = 0;
-		$offset = 0;
+		$data["total"] = 999;
 		$pageSize = 100;
-		for($x = 0 ;$x < count($status); $x++)
-		{
-		    $statusParam .= "&item_status=".$status[$x];
-		}
 		
+        $parameter = array(
+            'status' =>    $status 
+        );
+        
 		//LOGISTIC
 		$curl = curl_init();
 		
-		while(!$bigger && $statusok)
+		while(count($data['rows']) < $data["total"])
         {
-            
-		    $parameter = "&offset=".$offset."&page_size=".$pageSize.$statusParam;
-		    
-		  //  echo $parameter;
+		    $urlparameter = "&page_token=".$nextPageToken."&page_size=".$pageSize;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -1638,7 +1766,7 @@ class Tiktok extends MY_Controller {
               CURLOPT_FOLLOWLOCATION => true,
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_list','parameter' => $parameter),
+              CURLOPT_POSTFIELDS => array('endpoint' => '/product/202502/products/search','urlparameter' => $urlparameter,'parameter'=>json_encode($parameter)),
               CURLOPT_HTTPHEADER => array(
                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
               ),
@@ -1647,123 +1775,41 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
-                $response = $ret['response'];
-                $statusok = $response['has_next_page'];
-                $offset = $response['next_offset'];
-                $idbarang = $response['item'];
-                $paramId = "";
-                for($x = 0 ; $x < count($idbarang);$x++)
+                $response = $ret['data'];
+                $nextPageToken = $response['next_page_token'];
+                $data["total"] = $response['total_count'];
+                $dataBarang = $response['products'];
+                
+                $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGTIKTOK from MBARANG where IDINDUKBARANGTIKTOK != 0 and IDINDUKBARANGTIKTOK != '' and IDINDUKBARANGTIKTOK is not null";
+                $dataBarangMaster = $CI->db->query($sqlBarangMaster)->result();
+                  
+                foreach($dataBarang as $itemBarang)
                 {
-                    $paramId.= (int)$idbarang[$x]['item_id'];
-                    
-                    if(($x % 49 == 0 && $x != 0) || $x == count($idbarang)-1)
+                    $itemBarang['MASTERCONNECTED'] = "TIDAK";
+                    $itemBarang['IDMASTERBARANG'] = 0;
+                    $itemBarang['KATEGORIMASTERBARANG'] = '';
+                    foreach($dataBarangMaster as $itemBarangMaster)
                     {
-                        //GET ORDER DETAIL
-                        $parameter = "&item_id_list=".$paramId;
-                        $curl = curl_init();
-                    
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_base_info','parameter' => $parameter),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                        
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-                        if($ret['error'] != "")
+                        if($itemBarangMaster->IDINDUKBARANGTIKTOK == $itemBarang['id'])
                         {
-                            echo $ret['error']." : ".$ret['message'];
-                            $statusok = false;
+                          $itemBarang['MASTERCONNECTED'] ="YA";  
+                          $itemBarang['IDMASTERBARANG'] = $itemBarangMaster->IDBARANG;
+                          $itemBarang['KATEGORIMASTERBARANG'] = $itemBarangMaster->KATEGORI;
                         }
-                        else
-                        {
-                            $dataBarang = $ret['response']['item_list'];
-                            
-                            $sqlBarangMaster = "select IDBARANG, KATEGORI, IDINDUKBARANGTIKTOK from MBARANG where IDINDUKBARANGTIKTOK != 0 and IDINDUKBARANGTIKTOK != '' and IDINDUKBARANGTIKTOK is not null";
-                            $dataBarangMaster = $CI->db->query($sqlBarangMaster)->result();
-                            
-                            foreach($dataBarang as $itemBarang)
-                            {
-                                // $dataModel = [];
-                                // if($itemBarang['has_model'] == 1)
-                                // {
-                                //     //GET MODEL
-                                //     $parameter = "&item_id=".$itemBarang['item_id'];
-                                //     $curl = curl_init();
-                                
-                                //     curl_setopt_array($curl, array(
-                                //       CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
-                                //       CURLOPT_RETURNTRANSFER => true,
-                                //       CURLOPT_ENCODING => '',
-                                //       CURLOPT_MAXREDIRS => 10,
-                                //       CURLOPT_TIMEOUT => 30,
-                                //       CURLOPT_FOLLOWLOCATION => true,
-                                //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                //       CURLOPT_CUSTOMREQUEST => 'POST',
-                                //       CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
-                                //       CURLOPT_HTTPHEADER => array(
-                                //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                //       ),
-                                //     ));
-                                    
-                                //     $response = curl_exec($curl);
-                                //     curl_close($curl);
-                                //     $ret =  json_decode($response,true);
-                                //     if($ret['error'] != "")
-                                //     {
-                                //         echo $ret['error']." : ".$ret['message'];
-                                //         $statusok = false;
-                                //     }
-                                //     else
-                                //     {
-                                //         $dataModel = $ret['response']['tier_variation'];
-                                        
-                                //     }
-                                // }
-                              $itemBarang['MASTERCONNECTED'] = "TIDAK";
-                              $itemBarang['IDMASTERBARANG'] = 0;
-                              $itemBarang['KATEGORIMASTERBARANG'] = '';
-                              foreach($dataBarangMaster as $itemBarangMaster)
-                              {
-                                  if($itemBarangMaster->IDINDUKBARANGTIKTOK == $itemBarang['item_id'])
-                                  {
-                                     $itemBarang['MASTERCONNECTED'] ="YA";  
-                                     $itemBarang['IDMASTERBARANG'] = $itemBarangMaster->IDBARANG;
-                                     $itemBarang['KATEGORIMASTERBARANG'] = $itemBarangMaster->KATEGORI;
-                                  }
-                              }
-                              
-                              $itemBarang['NAMABARANG'] = $itemBarang['item_name'];    
-                              $itemBarang['VARIAN'] = $itemBarang['has_model'] == 1 ? "YA" : "TIDAK";     
-                              $itemBarang['TGLENTRY'] = date("Y-m-d H:i:s", $itemBarang['update_time']??$itemBarang['create_time']);    
-                              $itemBarang['STATUS'] = $itemBarang['item_status'];    
-                              
-                              array_push($data['rows'],$itemBarang);
-                          }
-                      }
-                        
-                        $paramId = "";
                     }
-                    else
-                    {
-                        $paramId .= ",";
-                    }
+                    
+                    $itemBarang['NAMABARANG'] = $itemBarang['title'];    
+                    $itemBarang['VARIAN'] = count($itemBarang['skus']) > 0 ? "YA" : "TIDAK";     
+                    $itemBarang['TGLENTRY'] = date("Y-m-d H:i:s", $itemBarang['update_time']??$itemBarang['create_time']);    
+                    $itemBarang['STATUS'] = $itemBarang['status'];    
+                    
+                    array_push($data['rows'],$itemBarang);
                 }
             }
         }
@@ -1773,7 +1819,6 @@ class Tiktok extends MY_Controller {
             return strcmp($a['NAMABARANG'], $b['NAMABARANG']);
         });
                         
-        $data["total"] = count($data['rows']);
         echo json_encode($data);
 	}
 	
@@ -1792,7 +1837,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1809,9 +1854,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
             $statusok = false;
         }
         else
@@ -1825,7 +1870,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1842,9 +1887,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
             $statusok = false;
         }
         else
@@ -1894,7 +1939,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -1911,9 +1956,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
             $statusok = false;
         }
         else
@@ -1981,7 +2026,7 @@ class Tiktok extends MY_Controller {
         $parameter = "";
         $idlokasiset = "";
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2000,7 +2045,7 @@ class Tiktok extends MY_Controller {
         $ret =  json_decode($response,true);
         $lokasi = 0;
         $countSuccess = 0 ;
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." LOKASI : ".$ret['message'];
         }
@@ -2108,7 +2153,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2128,7 +2173,7 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         { 
             $data['success'] = false;
             $data['msg'] =  $ret['error']." ITEM : ".$ret['message'];
@@ -2273,7 +2318,7 @@ class Tiktok extends MY_Controller {
                          $curl = curl_init();
                          
                          curl_setopt_array($curl, array(
-                           CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                            CURLOPT_RETURNTRANSFER => true,
                            CURLOPT_ENCODING => '',
                            CURLOPT_MAXREDIRS => 10,
@@ -2293,7 +2338,7 @@ class Tiktok extends MY_Controller {
                          curl_close($curl);
                          $ret =  json_decode($response,true);
                       
-                         if($ret['error'] != "")
+                         if($ret['code'] != 0)
                          {
                              $data['success'] = false;
                              $data['msg'] =  $ret['error']." MODEL HAPUS : ".$ret['message'];
@@ -2312,7 +2357,7 @@ class Tiktok extends MY_Controller {
             	    $endpointModel = "product/update_tier_variation";
             	}
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -2332,7 +2377,7 @@ class Tiktok extends MY_Controller {
                 curl_close($curl);
                 $ret =  json_decode($response,true);
                 
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
                     $data['success'] = false;
                     $data['msg'] =  $ret['error']." MODEL : ".$ret['message'];
@@ -2352,7 +2397,7 @@ class Tiktok extends MY_Controller {
                 
                         $curl = curl_init();
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -2372,7 +2417,7 @@ class Tiktok extends MY_Controller {
                         curl_close($curl);
                         $ret =  json_decode($response,true);
                      
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
                             $data['msg'] =  $ret['error']." MODEL BARU : ".$ret['message'];
@@ -2398,7 +2443,7 @@ class Tiktok extends MY_Controller {
                       $curl = curl_init();
                             
                       curl_setopt_array($curl, array(
-                        CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                        CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                         CURLOPT_RETURNTRANSFER => true,
                         CURLOPT_ENCODING => '',
                         CURLOPT_MAXREDIRS => 10,
@@ -2418,7 +2463,7 @@ class Tiktok extends MY_Controller {
                       curl_close($curl);
                       $ret =  json_decode($response,true);
                       
-                      if($ret['error'] != "")
+                      if($ret['code'] != 0)
                       {
                           $data['success'] = false;
                           $data['msg'] =  $ret['error']." MODEL UBAH HARGA : ".$ret['message'];
@@ -2441,7 +2486,7 @@ class Tiktok extends MY_Controller {
                       
                       $curl = curl_init();
                       curl_setopt_array($curl, array(
-                        CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                        CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                         CURLOPT_RETURNTRANSFER => true,
                         CURLOPT_ENCODING => '',
                         CURLOPT_MAXREDIRS => 10,
@@ -2461,7 +2506,7 @@ class Tiktok extends MY_Controller {
                       curl_close($curl);
                       $ret =  json_decode($response,true);
                       
-                      if($ret['error'] != "")
+                      if($ret['code'] != 0)
                       {
                           $data['success'] = false;
                           $data['msg'] =  $ret['error']." MODEL UBAH SKU : ".$ret['message'];
@@ -2477,7 +2522,7 @@ class Tiktok extends MY_Controller {
                   $curl = curl_init();
                   
                   curl_setopt_array($curl, array(
-                    CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                    CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_ENCODING => '',
                     CURLOPT_MAXREDIRS => 10,
@@ -2494,9 +2539,9 @@ class Tiktok extends MY_Controller {
                   $response = curl_exec($curl);
                   curl_close($curl);
                   $ret =  json_decode($response,true);
-                  if($ret['error'] != "")
+                  if($ret['code'] != 0)
                   {
-                      echo $ret['error']." : ".$ret['message'];
+                      echo $ret['code']." : ".$ret['message'];
                       $statusok = false;
                   }
                   else
@@ -2541,7 +2586,7 @@ class Tiktok extends MY_Controller {
                 $curl = curl_init();
                       
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -2561,7 +2606,7 @@ class Tiktok extends MY_Controller {
                 curl_close($curl);
                 $ret =  json_decode($response,true);
                 
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
                     $data['success'] = false;
                     $data['msg'] =  $ret['error']." PRODUK UBAH HARGA : ".$ret['message'];
@@ -2593,7 +2638,7 @@ class Tiktok extends MY_Controller {
 	    $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2613,10 +2658,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         sleep(3);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -2679,7 +2724,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2696,9 +2741,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -2812,7 +2857,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2832,10 +2877,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -2854,7 +2899,7 @@ class Tiktok extends MY_Controller {
 		$curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -2871,9 +2916,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -2920,7 +2965,7 @@ class Tiktok extends MY_Controller {
 		  //  echo $parameter;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -2937,9 +2982,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -2994,7 +3039,7 @@ class Tiktok extends MY_Controller {
                 
                 $curl = curl_init();
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -3011,7 +3056,7 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
                     echo $ret['error']." ITEM PROMO : ".$ret['message'];
                     $statusok = false;
@@ -3085,7 +3130,7 @@ class Tiktok extends MY_Controller {
 		  //  echo $parameter;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3102,9 +3147,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -3216,7 +3261,7 @@ class Tiktok extends MY_Controller {
     	    $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3236,7 +3281,7 @@ class Tiktok extends MY_Controller {
             curl_close($curl);
             $ret =  json_decode($response,true);
          
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 $data['success'] = false;
                 $data['msg'] =  $ret['error']." BUAT PROMO : ".$ret['message'];
@@ -3342,7 +3387,7 @@ class Tiktok extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3362,7 +3407,7 @@ class Tiktok extends MY_Controller {
             curl_close($curl);
             $ret =  json_decode($response,true);
          
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 $data['success'] = false;
                 $data['msg'] =  $ret['error']."PROMO BARANG TAMBAH : ".$ret['message'];
@@ -3375,7 +3420,7 @@ class Tiktok extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -3395,7 +3440,7 @@ class Tiktok extends MY_Controller {
             curl_close($curl);
             $ret =  json_decode($response,true);
          
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 $data['success'] = false;
                 $data['msg'] =  $ret['error']."PROMO BARANG UBAH : ".$ret['message'];
@@ -3415,7 +3460,7 @@ class Tiktok extends MY_Controller {
             	    $parameter['item_id']       = (int)$parameterHapus['item_list'][$h]['item_id'];
 
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -3435,7 +3480,7 @@ class Tiktok extends MY_Controller {
                     curl_close($curl);
                     $ret =  json_decode($response,true);
                  
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
                         $data['success'] = false;
                         $data['msg'] =  $ret['error']."PROMO BARANG HAPUS : ".$ret['message'];
@@ -3454,7 +3499,7 @@ class Tiktok extends MY_Controller {
                 	    $parameter['model_id']      = (int)$parameterHapus['item_list'][$h]['model_list'][$v]['model_id'];
 
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -3474,7 +3519,7 @@ class Tiktok extends MY_Controller {
                         curl_close($curl);
                         $ret =  json_decode($response,true);
                      
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
                             $data['msg'] =  $ret['error']."PROMO BARANG HAPUS : ".$ret['message'];
@@ -3511,7 +3556,7 @@ class Tiktok extends MY_Controller {
 	    $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -3531,10 +3576,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         sleep(3);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -3584,7 +3629,7 @@ class Tiktok extends MY_Controller {
 	   $curl = curl_init();
 	    
 	   curl_setopt_array($curl, array(
-         CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+         CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
          CURLOPT_RETURNTRANSFER => true,
          CURLOPT_ENCODING => '',
          CURLOPT_MAXREDIRS => 10,
@@ -3601,9 +3646,9 @@ class Tiktok extends MY_Controller {
        $response = curl_exec($curl);
        curl_close($curl);
        $ret =  json_decode($response,true);
-       if($ret['error'] != "")
+       if($ret['code'] != 0)
        {
-           echo $ret['error']." : ".$ret['message'];
+           echo $ret['code']." : ".$ret['message'];
        }
        else
        {
@@ -3836,7 +3881,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -3853,9 +3898,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -4025,7 +4070,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4042,9 +4087,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -4267,7 +4312,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4287,10 +4332,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -4303,7 +4348,7 @@ class Tiktok extends MY_Controller {
           $curl = curl_init();
            
           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4320,9 +4365,9 @@ class Tiktok extends MY_Controller {
           $response = curl_exec($curl);
           curl_close($curl);
           $ret =  json_decode($response,true);
-          if($ret['error'] != "")
+          if($ret['code'] != 0)
           {
-              echo $ret['error']." : ".$ret['message'];
+              echo $ret['code']." : ".$ret['message'];
               $statusok = false;
           }
           else
@@ -4364,7 +4409,7 @@ class Tiktok extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4381,9 +4426,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -4400,7 +4445,7 @@ class Tiktok extends MY_Controller {
            $curl = curl_init();
            $logisticStatus = "";
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4417,9 +4462,9 @@ class Tiktok extends MY_Controller {
            $response = curl_exec($curl);
            curl_close($curl);
            $ret =  json_decode($response,true);
-           if($ret['error'] != "")
+           if($ret['code'] != 0)
            {
-               echo $ret['error']." : ".$ret['message'];
+               echo $ret['code']." : ".$ret['message'];
            }
            else
            {
@@ -4439,7 +4484,7 @@ class Tiktok extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -4456,9 +4501,9 @@ class Tiktok extends MY_Controller {
                     $response = curl_exec($curl);
                     curl_close($curl);
                     $ret =  json_decode($response,true);
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
-                        echo $ret['error']." : ".$ret['message'];
+                        echo $ret['code']." : ".$ret['message'];
                     }
                     else
                     {
@@ -4528,7 +4573,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4548,10 +4593,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -4577,7 +4622,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4597,10 +4642,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -4613,7 +4658,7 @@ class Tiktok extends MY_Controller {
            $curl = curl_init();
            
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4630,9 +4675,9 @@ class Tiktok extends MY_Controller {
            $response = curl_exec($curl);
            curl_close($curl);
            $ret =  json_decode($response,true);
-           if($ret['error'] != "")
+           if($ret['code'] != 0)
            {
-               echo $ret['error']." : ".$ret['message'];
+               echo $ret['code']." : ".$ret['message'];
                $statusok = false;
            }
            else
@@ -4675,7 +4720,7 @@ class Tiktok extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4692,9 +4737,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -4746,7 +4791,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4766,10 +4811,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -4782,7 +4827,7 @@ class Tiktok extends MY_Controller {
            $curl = curl_init();
            
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -4799,9 +4844,9 @@ class Tiktok extends MY_Controller {
            $response = curl_exec($curl);
            curl_close($curl);
            $ret =  json_decode($response,true);
-           if($ret['error'] != "")
+           if($ret['code'] != 0)
            {
-               echo $ret['error']." : ".$ret['message'];
+               echo $ret['code']." : ".$ret['message'];
                $statusok = false;
            }
            else
@@ -4844,7 +4889,7 @@ class Tiktok extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4861,9 +4906,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -4887,7 +4932,7 @@ class Tiktok extends MY_Controller {
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -4904,9 +4949,9 @@ class Tiktok extends MY_Controller {
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
-                echo $ret['error']." : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
             }
             else
             {
@@ -4956,7 +5001,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -4973,9 +5018,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -5007,7 +5052,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5027,10 +5072,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
      
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -5117,11 +5162,11 @@ class Tiktok extends MY_Controller {
                     $response = curl_exec($ch);
                     curl_close($ch);
                     $ret =  json_decode($response,true);
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
                         $data['success'] = false;
                         print_r($ret);
-                        echo json_encode($postData).$ret['error']." : ".$ret['message'];
+                        echo json_encode($postData).$ret['code']." : ".$ret['message'];
                     }
                     else
                     {
@@ -5239,10 +5284,10 @@ class Tiktok extends MY_Controller {
                     curl_close($ch);
                     $ret =  json_decode($response,true);
                     
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
                         $data['success'] = false;
-                        echo $ret['error']." : ".$ret['message'];
+                        echo $ret['code']." : ".$ret['message'];
                     }
                     else
                     {
@@ -5328,7 +5373,7 @@ class Tiktok extends MY_Controller {
               // Initialize cURL
               $curl = curl_init();
               curl_setopt_array($curl, array(
-                 CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                 CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                  CURLOPT_RETURNTRANSFER => true,
                  CURLOPT_ENCODING => '',
                  CURLOPT_MAXREDIRS => 10,
@@ -5348,7 +5393,7 @@ class Tiktok extends MY_Controller {
               curl_close($curl);
               $ret =  json_decode($response,true);
                
-              if($ret['error'] != "")
+              if($ret['code'] != 0)
               {
                   $data['success'] = false;
                   $data['msg'] =  $ret['error']." init : ".$ret['message'];
@@ -5412,7 +5457,7 @@ class Tiktok extends MY_Controller {
                         curl_close($ch);
                         $ret =  json_decode($response,true);
                         
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
                             echo $ret['error']." part : ".$ret['message'];
@@ -5439,7 +5484,7 @@ class Tiktok extends MY_Controller {
                           // Initialize cURL
                           $curl = curl_init();
                           curl_setopt_array($curl, array(
-                             CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                              CURLOPT_RETURNTRANSFER => true,
                              CURLOPT_ENCODING => '',
                              CURLOPT_MAXREDIRS => 10,
@@ -5459,7 +5504,7 @@ class Tiktok extends MY_Controller {
                           curl_close($curl);
                           $ret =  json_decode($response,true);
                            
-                          if($ret['error'] != "")
+                          if($ret['code'] != 0)
                           {
                               $data['success'] = false;
                               $data['msg'] =  $ret['error']." complete : ".$ret['message'];
@@ -5476,7 +5521,7 @@ class Tiktok extends MY_Controller {
                                     $curl = curl_init();
                                     
                                     curl_setopt_array($curl, array(
-                                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                                       CURLOPT_RETURNTRANSFER => true,
                                       CURLOPT_ENCODING => '',
                                       CURLOPT_MAXREDIRS => 10,
@@ -5493,9 +5538,9 @@ class Tiktok extends MY_Controller {
                                     $response = curl_exec($curl);
                                     curl_close($curl);
                                     $ret =  json_decode($response,true);
-                                    if($ret['error'] != "")
+                                    if($ret['code'] != 0)
                                     {
-                                        echo $ret['error']." : ".$ret['message'];
+                                        echo $ret['code']." : ".$ret['message'];
                                     }
                                     else
                                     {
@@ -5576,7 +5621,7 @@ class Tiktok extends MY_Controller {
         print_r($parameter);
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5596,10 +5641,10 @@ class Tiktok extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -5623,7 +5668,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5640,9 +5685,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -5739,7 +5784,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -5758,10 +5803,10 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -5796,7 +5841,7 @@ class Tiktok extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -5815,9 +5860,9 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                     $statusok = false;
                 }
                 else
@@ -5926,7 +5971,7 @@ class Tiktok extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -5946,9 +5991,9 @@ class Tiktok extends MY_Controller {
                 curl_close($curl);
                 $ret =  json_decode($response,true);
                 
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                     $statusok = false;
                 }
                 else
@@ -5964,7 +6009,7 @@ class Tiktok extends MY_Controller {
                             $parameter['package_list'] =  $packaging;
                             $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -5983,9 +6028,9 @@ class Tiktok extends MY_Controller {
                             $response = curl_exec($curl);
                             curl_close($curl);
                             $ret =  json_decode($response,true);
-                            if($ret['error'] != "")
+                            if($ret['code'] != 0)
                             {
-                                echo $ret['error']." : ".$ret['message'];
+                                echo $ret['code']." : ".$ret['message'];
                                 $statusok = false;
                             }
                             else
@@ -6038,7 +6083,7 @@ class Tiktok extends MY_Controller {
                 
                 $curl = curl_init();
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -6055,9 +6100,9 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                     $statusok = false;
                 }
                 else
@@ -6109,7 +6154,7 @@ class Tiktok extends MY_Controller {
     //     $curl = curl_init();
         
     //     curl_setopt_array($curl, array(
-    //       CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+    //       CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
     //       CURLOPT_RETURNTRANSFER => true,
     //       CURLOPT_ENCODING => '',
     //       CURLOPT_MAXREDIRS => 10,
@@ -6126,9 +6171,9 @@ class Tiktok extends MY_Controller {
     //     $response = curl_exec($curl);
     //     curl_close($curl);
     //     $ret =  json_decode($response,true);
-    //     if($ret['error'] != "")
+    //     if($ret['code'] != 0)
     //     {
-    //         echo $ret['error']." : ".$ret['message'];
+    //         echo $ret['code']." : ".$ret['message'];
     //     }
     //     else
     //     {
@@ -6200,7 +6245,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -6217,9 +6262,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
             $statusok = false;
         }
         else
@@ -6277,7 +6322,7 @@ class Tiktok extends MY_Controller {
             }
         }
     
-        $output_file = "assets/label/TIKTOK/waybill_merge.pdf";
+        $output_file = "assets/label/Tiktok/waybill_merge.pdf";
         $this->pdf_merger->Output('F', $output_file); // Simpan ke file
         
         // Kembalikan URL hasil merge sebagai JSON
@@ -6356,7 +6401,7 @@ class Tiktok extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -6376,10 +6421,10 @@ class Tiktok extends MY_Controller {
                     curl_close($curl);
                     $ret =  json_decode($response,true);
     		        $data = [];
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
                         $data['success'] = false;
-                        $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
+                        $data['msg'] =   "1 ".$ret['code']." : ".$ret['message'];
                         $data['ret'] = $ret;
                     }
                     else
@@ -6405,7 +6450,7 @@ class Tiktok extends MY_Controller {
                         $curl = curl_init();
                         
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -6425,10 +6470,10 @@ class Tiktok extends MY_Controller {
                         curl_close($curl);
                         $ret =  json_decode($response,true);
     		            $data = [];
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
-                            $data['msg'] =  "2 ".$ret['error']." : ".$ret['message'];
+                            $data['msg'] =  "2 ".$ret['code']." : ".$ret['message'];
                             $data['ret'] = $ret;
                         }
                         else
@@ -6437,7 +6482,7 @@ class Tiktok extends MY_Controller {
                             //DAPATKAN HASIL LABEL PESANAN
                             $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -6457,10 +6502,10 @@ class Tiktok extends MY_Controller {
                             curl_close($curl);
                             $ret =  json_decode($response,true);
                                 
-                            if($ret['error'] != "")
+                            if($ret['code'] != 0)
                             {
                                 $data['success'] = false;
-                                $data['msg'] =   "3 ".$ret['error']." : ".$ret['message'];
+                                $data['msg'] =   "3 ".$ret['code']." : ".$ret['message'];
                                 $data['ret'] = $ret;
                             }
                             else
@@ -6479,7 +6524,7 @@ class Tiktok extends MY_Controller {
                                 	//DAPATKAN HASIL LABEL PESANAN
                                 $curl = curl_init();
                                 curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                                   CURLOPT_RETURNTRANSFER => true,
                                   CURLOPT_ENCODING => '',
                                   CURLOPT_MAXREDIRS => 10,
@@ -6501,10 +6546,10 @@ class Tiktok extends MY_Controller {
                                 
                                 curl_close($curl);
                                 $ret =  json_decode($response,true);
-                                if($ret['error'] != "")
+                                if($ret['code'] != 0)
                                 {
                                     $data['success'] = false;
-                                    $data['msg'] =   "4 ".$ret['error']." : ".$ret['message'];
+                                    $data['msg'] =   "4 ".$ret['code']." : ".$ret['message'];
                                     $data['ret'] = $ret;
                                 }
                                 else
@@ -6575,11 +6620,11 @@ class Tiktok extends MY_Controller {
                 }
             }
     
-            $output_file = "assets/label/TIKTOK/waybill_merge.pdf";
+            $output_file = "assets/label/Tiktok/waybill_merge.pdf";
             $this->pdf_merger->Output('F', $output_file); // Simpan ke file
         
             // Kembalikan URL hasil merge sebagai JSON
-            echo json_encode(['pdf_url' => base_url('assets/label/TIKTOK/waybill_merge.pdf')]);
+            echo json_encode(['pdf_url' => base_url('assets/label/Tiktok/waybill_merge.pdf')]);
         } else {
             echo "Gagal convert PDF. Cek Ghostscript terinstall atau tidak.";
         }
@@ -6609,7 +6654,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -6628,10 +6673,10 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             $data['success'] = false;
-            $data['msg'] =  $ret['error']." : ".$ret['message'];
+            $data['msg'] =  $ret['code']." : ".$ret['message'];
             die(json_encode($data));
         }
         else
@@ -6644,7 +6689,7 @@ class Tiktok extends MY_Controller {
            $curl = curl_init();
            
            curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
              CURLOPT_RETURNTRANSFER => true,
              CURLOPT_ENCODING => '',
              CURLOPT_MAXREDIRS => 10,
@@ -6661,9 +6706,9 @@ class Tiktok extends MY_Controller {
            $response = curl_exec($curl);
            curl_close($curl);
            $ret =  json_decode($response,true);
-           if($ret['error'] != "")
+           if($ret['code'] != 0)
            {
-               echo $ret['error']." : ".$ret['message'];
+               echo $ret['code']." : ".$ret['message'];
                $statusok = false;
            }
            else
@@ -7249,7 +7294,7 @@ class Tiktok extends MY_Controller {
                                 $parameter = "";
                                 
                                 curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                                   CURLOPT_RETURNTRANSFER => true,
                                   CURLOPT_ENCODING => '',
                                   CURLOPT_MAXREDIRS => 10,
@@ -7268,7 +7313,7 @@ class Tiktok extends MY_Controller {
                                 $ret =  json_decode($response,true);
                                 $lokasi = 0;
                                 $countSuccess = 0 ;
-                                if($ret['error'] != "")
+                                if($ret['code'] != 0)
                                 {
                                     echo $ret['error']." LOKASI : ".$ret['message'];
                                 }
@@ -7332,7 +7377,7 @@ class Tiktok extends MY_Controller {
                                     	         {
                                     	            $curl = curl_init();
                                                     curl_setopt_array($curl, array(
-                                                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                                                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                                                       CURLOPT_RETURNTRANSFER => true,
                                                       CURLOPT_ENCODING => '',
                                                       CURLOPT_MAXREDIRS => 10,
@@ -7352,7 +7397,7 @@ class Tiktok extends MY_Controller {
                                                     curl_close($curl);
                                                     $ret =  json_decode($response,true);
                                                     
-                                                    if($ret['error'] != "")
+                                                    if($ret['code'] != 0)
                                                     {
                                                         $data['success'] = false;
                                                         $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
@@ -7389,7 +7434,7 @@ class Tiktok extends MY_Controller {
                                     	  
                                     	$curl = curl_init();
                                         curl_setopt_array($curl, array(
-                                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                                           CURLOPT_RETURNTRANSFER => true,
                                           CURLOPT_ENCODING => '',
                                           CURLOPT_MAXREDIRS => 10,
@@ -7409,7 +7454,7 @@ class Tiktok extends MY_Controller {
                                         curl_close($curl);
                                         $ret =  json_decode($response,true);
                                         
-                                        if($ret['error'] != "")
+                                        if($ret['code'] != 0)
                                         {
                                             $data['success'] = false;
                                             $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
@@ -7487,7 +7532,7 @@ class Tiktok extends MY_Controller {
                  $curl = curl_init();
                 //GET ORDER LIST
                  curl_setopt_array($curl, array(
-                   CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                    CURLOPT_RETURNTRANSFER => true,
                    CURLOPT_ENCODING => '',
                    CURLOPT_MAXREDIRS => 10,
@@ -7504,9 +7549,9 @@ class Tiktok extends MY_Controller {
                  $response = curl_exec($curl);
                  curl_close($curl);
                  $ret =  json_decode($response,true);
-                 if($ret['error'] != "")
+                 if($ret['code'] != 0)
                  {
-                     echo $ret['error']." : ".$ret['message'];
+                     echo $ret['code']." : ".$ret['message'];
                      $statusok = false;
                  }
                  else
@@ -7552,7 +7597,7 @@ class Tiktok extends MY_Controller {
                 $curl = curl_init();
             
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -7569,9 +7614,9 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                     $statusok = false;
                 }
                 else
@@ -7676,7 +7721,7 @@ class Tiktok extends MY_Controller {
                 $curl = curl_init();
                 
                 curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                   CURLOPT_RETURNTRANSFER => true,
                   CURLOPT_ENCODING => '',
                   CURLOPT_MAXREDIRS => 10,
@@ -7695,9 +7740,9 @@ class Tiktok extends MY_Controller {
                 $response = curl_exec($curl);
                 curl_close($curl);
                 $ret =  json_decode($response,true);
-                if($ret['error'] != "")
+                if($ret['code'] != 0)
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    echo $ret['code']." : ".$ret['message'];
                     $statusok = false;
                 }
                 else
@@ -7805,7 +7850,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -7822,9 +7867,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -7937,7 +7982,7 @@ class Tiktok extends MY_Controller {
                     $curl = curl_init();
                     
                     curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                       CURLOPT_RETURNTRANSFER => true,
                       CURLOPT_ENCODING => '',
                       CURLOPT_MAXREDIRS => 10,
@@ -7957,10 +8002,10 @@ class Tiktok extends MY_Controller {
                     curl_close($curl);
                     $ret =  json_decode($response,true);
 		            $data = [];
-                    if($ret['error'] != "")
+                    if($ret['code'] != 0)
                     {
                         $data['success'] = false;
-                        $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
+                        $data['msg'] =   "1 ".$ret['code']." : ".$ret['message'];
                         $data['ret'] = $ret;
                         die(json_encode($data));
                     }
@@ -7987,7 +8032,7 @@ class Tiktok extends MY_Controller {
                         $curl = curl_init();
                         
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -8007,10 +8052,10 @@ class Tiktok extends MY_Controller {
                         curl_close($curl);
                         $ret =  json_decode($response,true);
 		                $data = [];
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
-                            $data['msg'] =  "2 ".$ret['error']." : ".$ret['message'];
+                            $data['msg'] =  "2 ".$ret['code']." : ".$ret['message'];
                             $data['ret'] = $ret;
                             die(json_encode($data));
                         }
@@ -8019,7 +8064,7 @@ class Tiktok extends MY_Controller {
                             // DAPATKAN HASIL LABEL PESANAN
                             $curl = curl_init();
                             curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
                               CURLOPT_ENCODING => '',
                               CURLOPT_MAXREDIRS => 10,
@@ -8039,10 +8084,10 @@ class Tiktok extends MY_Controller {
                             curl_close($curl);
                             $ret =  json_decode($response,true);
                                 
-                            if($ret['error'] != "")
+                            if($ret['code'] != 0)
                             {
                                 $data['success'] = false;
-                                $data['msg'] =   "3 ".$ret['error']." : ".$ret['message'];
+                                $data['msg'] =   "3 ".$ret['code']." : ".$ret['message'];
                                 $data['ret'] = $ret;
                                 die(json_encode($data));
                             }
@@ -8062,7 +8107,7 @@ class Tiktok extends MY_Controller {
                                     	//DAPATKAN HASIL LABEL PESANAN
                                     $curl = curl_init();
                                     curl_setopt_array($curl, array(
-                                      CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                                       CURLOPT_RETURNTRANSFER => true,
                                       CURLOPT_ENCODING => '',
                                       CURLOPT_MAXREDIRS => 10,
@@ -8084,10 +8129,10 @@ class Tiktok extends MY_Controller {
                                     
                                     curl_close($curl);
                                     $ret =  json_decode($response,true);
-                                    if($ret['error'] != "")
+                                    if($ret['code'] != 0)
                                     {
                                         $data['success'] = false;
-                                        $data['msg'] =   "4 ".$ret['error']." : ".$ret['message'];
+                                        $data['msg'] =   "4 ".$ret['code']." : ".$ret['message'];
                                         $data['ret'] = $ret;
                                          die(json_encode($data));
                                     }
@@ -8140,7 +8185,7 @@ class Tiktok extends MY_Controller {
                   $curl = curl_init();
                   
                   curl_setopt_array($curl, array(
-                    CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                    CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_ENCODING => '',
                     CURLOPT_MAXREDIRS => 10,
@@ -8160,10 +8205,10 @@ class Tiktok extends MY_Controller {
                   curl_close($curl);
                   $ret =  json_decode($response,true);
 		          $data = [];
-                  if($ret['error'] != "")
+                  if($ret['code'] != 0)
                   {
                       $data['success'] = false;
-                      $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
+                      $data['msg'] =   "1 ".$ret['code']." : ".$ret['message'];
                       $data['ret'] = $ret;
                       die(json_encode($data));
                   }
@@ -8231,7 +8276,7 @@ class Tiktok extends MY_Controller {
                  $curl = curl_init();
                 //GET ORDER LIST
                  curl_setopt_array($curl, array(
-                   CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                    CURLOPT_RETURNTRANSFER => true,
                    CURLOPT_ENCODING => '',
                    CURLOPT_MAXREDIRS => 10,
@@ -8248,9 +8293,9 @@ class Tiktok extends MY_Controller {
                  $response = curl_exec($curl);
                  curl_close($curl);
                  $ret =  json_decode($response,true);
-                 if($ret['error'] != "")
+                 if($ret['code'] != 0)
                  {
-                     echo $ret['error']." : ".$ret['message'];
+                     echo $ret['code']." : ".$ret['message'];
                      $statusok = false;
                  }
                  else
@@ -8264,7 +8309,7 @@ class Tiktok extends MY_Controller {
                         $curl = curl_init();
                         $logisticStatus = "";
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -8281,9 +8326,9 @@ class Tiktok extends MY_Controller {
                         $response = curl_exec($curl);
                         curl_close($curl);
                         $ret =  json_decode($response,true);
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
-                            echo $ret['error']." : ".$ret['message'];
+                            echo $ret['code']." : ".$ret['message'];
                         }
                         else
                         {
@@ -8354,7 +8399,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -8371,9 +8416,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -8427,7 +8472,7 @@ class Tiktok extends MY_Controller {
         $curl = curl_init();
 	    
 	    curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -8444,9 +8489,9 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -8483,7 +8528,7 @@ class Tiktok extends MY_Controller {
     	    $curl = curl_init();
             
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -8503,7 +8548,7 @@ class Tiktok extends MY_Controller {
             curl_close($curl);
             $ret =  json_decode($response,true);
          
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 echo $ret['error']." BOOST : ".$ret['message'];
             }
@@ -8519,7 +8564,7 @@ class Tiktok extends MY_Controller {
         $parameter = "";
         
         curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/getAPI/",
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -8538,7 +8583,7 @@ class Tiktok extends MY_Controller {
         $ret =  json_decode($response,true);
         $lokasi = 0;
         $countSuccess = 0 ;
-        if($ret['error'] != "")
+        if($ret['code'] != 0)
         {
             echo $ret['error']." LOKASI : ".$ret['message'];
         }
@@ -8587,7 +8632,7 @@ class Tiktok extends MY_Controller {
             	         {
             	            $curl = curl_init();
                         curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                           CURLOPT_RETURNTRANSFER => true,
                           CURLOPT_ENCODING => '',
                           CURLOPT_MAXREDIRS => 10,
@@ -8607,7 +8652,7 @@ class Tiktok extends MY_Controller {
                         curl_close($curl);
                         $ret =  json_decode($response,true);
                         
-                        if($ret['error'] != "")
+                        if($ret['code'] != 0)
                         {
                             $data['success'] = false;
                             $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
@@ -8643,7 +8688,7 @@ class Tiktok extends MY_Controller {
             	
             	$curl = curl_init();
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/TIKTOK/postAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -8663,7 +8708,7 @@ class Tiktok extends MY_Controller {
             curl_close($curl);
             $ret =  json_decode($response,true);
             
-            if($ret['error'] != "")
+            if($ret['code'] != 0)
             {
                 $data['success'] = false;
                 $data['msg'] =  $ret['error']." STOK : ".$ret['message'];

@@ -1030,7 +1030,7 @@ class Shopee extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        $lokasi = 0;
+        $lokasi = "1";
         $countSuccess = 0 ;
         if($ret['error'] != "")
         {
@@ -2016,7 +2016,7 @@ class Shopee extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        $lokasi = 0;
+        $lokasi = "1";
         $countSuccess = 0 ;
         if($ret['error'] != "")
         {
@@ -4452,7 +4452,7 @@ class Shopee extends MY_Controller {
 		        if($logisticStatus == "LOGISTICS_DELIVERY_DONE")
 		        {
     		        //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
-                    $lokasi = "0";
+                    $lokasi = "1";
                     $parameter="";
                     $curl = curl_init();
                     
@@ -4900,7 +4900,7 @@ class Shopee extends MY_Controller {
     		 ));
         
             //CEK LOKASI RETURN
-            $lokasi = "0";
+            $lokasi = "1";
             $parameter="";
             $curl = curl_init();
             
@@ -7284,7 +7284,7 @@ class Shopee extends MY_Controller {
                                 $response = curl_exec($curl);
                                 curl_close($curl);
                                 $ret =  json_decode($response,true);
-                                $lokasi = 0;
+                                $lokasi = "1";
                                 $countSuccess = 0 ;
                                 if($ret['error'] != "")
                                 {
@@ -7818,7 +7818,7 @@ class Shopee extends MY_Controller {
         }
         
         //CEK LOKASI PICKUP
-        $lokasi = "0";
+        $lokasi = "1";
         $parameter="";
         $curl = curl_init();
         
@@ -8367,7 +8367,7 @@ class Shopee extends MY_Controller {
         
         
         //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
-        $lokasi = "0";
+        $lokasi = "1";
         $parameter="";
         $curl = curl_init();
         
@@ -8554,7 +8554,7 @@ class Shopee extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        $lokasi = 0;
+        $lokasi = "1";
         $countSuccess = 0 ;
         if($ret['error'] != "")
         {

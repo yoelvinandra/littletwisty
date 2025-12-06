@@ -1558,14 +1558,18 @@ function batal(){
 						timer            : 1500
 					});
 				
-					var doneStok = [true,true];     
+					var doneStok = [true,true,true];     
 					if('<?=$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] == 'YES'?>')
                     {
                        doneStok[0] = false;
                     }
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
                     {
                          doneStok[1] = false;
+                    }
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    {
+                         doneStok[2] = false;
                     }
                     
                     if(doneStok.length > 0)
@@ -1636,6 +1640,57 @@ function batal(){
                         });
                     }
                     
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
+                    {    
+        				$.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Tiktok/setStokBarang',
+                            data      : {
+                                'idtrans' : row.IDBELI, 
+                                'jenistrans' : 'BELI',
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[1] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        Swal.fire({
+                                            title            : msg.msg,
+                                            type             : 'success',
+                                            showConfirmButton: false,
+                                            timer            : 1500
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'error',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            },
+                            
+                        });
+                    }
+                    
                     if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
                     {    
         				$.ajax({
@@ -1650,7 +1705,7 @@ function batal(){
                                 //$.messager.progress();
                             },
                             success: function(msg){
-                                doneStok[1] = true;
+                                doneStok[2] = true;
                                 cekDone = true;
                                 for(var d = 0 ; d < doneStok.length;d++)
                                 {
@@ -1878,14 +1933,18 @@ function simpan(){
 					    dataBarang.push(row[x].idbarang);
 					}
 					
-					var doneStok = [true,true];     
+					var doneStok = [true,true,true];     
 					if('<?=$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] == 'YES'?>')
                     {
                        doneStok[0] = false;
                     }
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
+                    {
+                        doneStok[1] = false;
+                    }
                     if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
                     {
-                         doneStok[1] = false;
+                        doneStok[2] = false;
                     }
                     
                     if(doneStok.length > 0)
@@ -1954,6 +2013,57 @@ function simpan(){
                             
                         });
                     }
+                    
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
+                    {
+    					$.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Tiktok/setStokBarang',
+                            data      : {
+                                'idlokasi' : $("#LOKASI").val(), 
+                                'databarang' : JSON.stringify(dataBarang),
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[1] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        Swal.fire({
+                                            title            : msg.msg,
+                                            type             : 'success',
+                                            showConfirmButton: false,
+                                            timer            : 1500
+                                        });
+                                    }
+                                } else {
+                                    Swal.fire({
+                                        title            : msg.msg,
+                                        type             : 'error',
+                                        showConfirmButton: false,
+                                        timer            : 1500
+                                    });
+                                }
+                            },
+                            
+                        });
+                    }
 					
 					if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
                     {
@@ -1969,7 +2079,7 @@ function simpan(){
                                 //$.messager.progress();
                             },
                             success: function(msg){
-                                doneStok[1] = true;
+                                doneStok[2] = true;
                                 cekDone = true;
                                 for(var d = 0 ; d < doneStok.length;d++)
                                 {
