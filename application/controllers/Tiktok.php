@@ -5216,7 +5216,8 @@ class Tiktok extends MY_Controller {
 		$index = $this->input->post('index')??0;
 		$tipe = $this->input->post('tipe')??0;
 		$size = $this->input->post('size')??0;
-		
+		$reason =  $this->input->post('reason')??"";
+	
 		if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
             die(json_encode([
                 'success' => false,
@@ -5225,33 +5226,19 @@ class Tiktok extends MY_Controller {
         }
         
         // Destination folder (make sure this folder exists and is writable)
-        $uploadDir = FCPATH . 'assets/'.$this->input->post('reason').'/'; 
+        $uploadDir = FCPATH . 'assets/produk/'; 
         
         // Create filename and move the file
         $type = ".".explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
         $destination = $uploadDir . $kode . "_" . $index.$type;
 
         if (move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
-            
+           
             if($tipe == "GAMBAR")
             {
                 $response =  $this->getRefreshToken();
         	    if($response)
         	    {
-                
-            	    $endpoint = "media_space/upload_image";
-            	    
-            	    $code = $this->model_master_config->getConfigMarketplace('TIKTOK','CODE');
-            	    $shopId = $this->model_master_config->getConfigMarketplace('TIKTOK','SHOP_ID');
-            	    $partnerId = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_ID');
-            	    $partnerKey = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_KEY');
-            	    $accessToken = $this->model_master_config->getConfigMarketplace('TIKTOK','ACCESS_TOKEN');
-                    $path = "/api/v2/";
-                    
-                    $timest = time();
-                    $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest,$partnerKey);
-                    
-                    $host = 'https://partner.TIKTOKmobile.com'.$path.$endpoint;
                     // Path to the local file
                     $filePath = $destination;
                     
@@ -5262,66 +5249,92 @@ class Tiktok extends MY_Controller {
                     
                     // Prepare the CURLFile object
                     $cfile = new CURLFile($filePath, mime_content_type($filePath), basename($filePath));
+                 
+                	$endpoint = "/product/202309/images/upload";
+                	$urlparameter = $this->input->post("urlparameter")??"";
+                	$parameter = array(
+                	    'data' => $cfile,
+                	    'use_case' => $reason
+                	);
+                	
+                	$accessToken = $this->model_master_config->getConfigMarketplace('TIKTOK','ACCESS_TOKEN');
+                	
+                	//BUAT SIGN
+                	// 1
+                    $host = 'https://open-api.tiktokglobalshop.com'.$endpoint;
+                	
+                	$app_key = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_KEY');
+                	$timest = strtotime(date("Y-m-d H:i:s", time()));
+            
+                	$urlparameter = "app_key=$app_key&timestamp=".$timest.$urlparameter;
+                	
+                	$allparameter = $urlparameter;
                     
-                    // Prepare POST data
-                    $postData = [
-                    'image' => $cfile
-                    ];
+                    $arrParam = explode("&",$allparameter);
+            
+                    $paramMap = [];
                     
-                    // Initialize cURL
-                    $ch = curl_init();
-                    // Set cURL options
-                    curl_setopt($ch, CURLOPT_URL,  $host.'?timestamp='.$timest.'&sign='.$sign.'&partner_id='.$partnerId); // destination URL
-                    curl_setopt($ch, CURLOPT_POST, true);
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        'Content-Type: multipart/form-data'
-                    ]);
+                    foreach ($arrParam as $itemParam) {
+                        list($key, $value) = explode("=", $itemParam, 2);
+                        $paramMap[$key] = $value;       // assign directly
+                    }
+                    ksort($paramMap);
                     
-                    // Execute the request
-                    $response = curl_exec($ch);
-                    curl_close($ch);
+                    // 2
+                    $stringParam = "";
+                    
+                    foreach ($paramMap as $key => $value) {
+                       $stringParam .= $key.$value;
+                    }
+                    
+                    // 3
+                    $stringParam = $endpoint.$stringParam;
+                    
+                    // 4
+                    $app_secret = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_SECRET');
+                    $stringParam = $app_secret.$stringParam.$app_secret;
+                    // 5
+                    $sign = hash_hmac('sha256', $stringParam,$app_secret);
+                    //BUAT SIGN
+                    
+                    $urlparameter = $urlparameter."&sign=".$sign;
+               
+                    $curl = curl_init();
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => $host.'?'.$urlparameter,
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => '',
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 0,
+                      CURLOPT_FOLLOWLOCATION => true,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_POSTFIELDS => ($parameter),
+                      CURLOPT_CUSTOMREQUEST => 'POST',
+                      CURLOPT_HTTPHEADER => array(
+                         'x-tts-access-token: '.$accessToken,
+                        // 'Content-Type: multipart/form-data',
+                        'Cookie: SPC_SEC_SI=v1-UHAwR1pMemVVcnVNWk0yOAmAUDORs28JVn6OsCvGiwjQgIgi70oQOziTBqSXWyDZViEAeIWx3hwddNsCKaZ6iPdS4KmbbymAcw3YAhkMr6I=; SPC_SI=P7sdaAAAAABzUmtoeEtWN8sBwggAAAAATEVRUWR2b0Y='
+                      ),
+                    ));
+                    
+                    $response = curl_exec($curl);
+                    curl_close($curl);
                     $ret =  json_decode($response,true);
                     
                     if($ret['code'] != 0)
                     {
                         $data['success'] = false;
-                        echo $ret['code']." : ".$ret['message'];
+                        $data['msg'] =  $ret['code']." : ".$ret['message'];
+                        die(json_encode($data));
                     }
                     else
                     {
-                      $data['success'] = true;
-                      $dataUrl = $ret['response']['image_info']['image_url_list'];
-                      //GET URL
-                      for($u = 0 ; $u < count($dataUrl);$u++)
-                      {
-                          if($dataUrl[$u]['image_url_region'] == "ID")
-                          {
-                             $data['url'] = $dataUrl[$u]['image_url'];
-                          }
-                      }
-                      $data['id'] = $ret['response']['image_info']['image_id'];
-                       
-                      //HAPUS DLU
-                      $folder = FCPATH . '/assets/'.$this->input->post('reason').'/'; // Use FCPATH . 'assets/proof/' in CodeIgniter
-                
-                      if (!is_dir($folder)) {
-                          die('Folder does not exist.');
-                      }
-                       
-                      $files = glob($folder . '*'); // Get all files in the folder
-                       
-                      foreach ($files as $file) {
-                          if (is_file($file) && strpos(basename($file), $kode . "_" . $index) !== false) {
-                              unlink($file); // Delete file if name contains "a"
-                          }
-                      }
-        
-                      $data['urlLocal'] = $this->config->item('base_url')."/assets/".$this->input->post('reason')."/". $kode . "_" . $index.$type;
-            		   echo(json_encode($data));
+                        $data['success'] = true;
+                        $data['url'] = $ret['data']['url'];
+                        $data['id'] =  $ret['data']['uri'];
+                        echo(json_encode($data));
                     }
-    
+                    
         	    }
                 else
         	    {
@@ -5332,272 +5345,179 @@ class Tiktok extends MY_Controller {
         	        ));
         	    }
            }
-           else if($tipe == "VIDEO")
-           {
-               // Path to the local file
-               $filePath = $destination;
-               
-               // Check if file exists
-               if (!file_exists($filePath)) {
-                   die('File not found.');
-               }
-               
-                // $input = $filePath;
-                // $output = $uploadDir . $kode . "_" . $index."_NEW".$type;
-                
-                // echo "Input path: " . $input . "\n";
-                // echo "Output path: " . $output . "\n";
+        }
+	}
+	
+	public function changeAllLocalUrl(){
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		
+		$urlData = json_decode($this->input->post('url'))??[];
+		foreach($urlData as $itemUrl)
+		{
+		    $resp_url = $this->changeLocalUrl($itemUrl->url,$itemUrl->reason,false);
 
-                // // Escape filenames to avoid shell injection
-                // $inputEscaped = escapeshellarg($input);
-                // $outputEscaped = escapeshellarg($output);
-                
-                // $command = "avconv -i $input -c:v libx264 -c:a mp3 -b:a 128k -r 24 -vf \"scale=512:-1,crop=512:288:0:0\" $output";
-                
-                // // Execute the command
-                // $output = shell_exec($command);
-                // print_r($command);
-                // // Optional: check if output file exists
-                // if (file_exists($output)) {
-                //     echo "Compression successful.";
-                // } else {
-                //     echo "Compression failed.";
-                // }
-               
-              // Prepare POST data
-              $parameter = [
-                  'file_md5' => md5_file($filePath),
-                  'file_size' => (int)$size,
-              ];
-               
-              // Initialize cURL
-              $curl = curl_init();
-              curl_setopt_array($curl, array(
-                 CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                 CURLOPT_RETURNTRANSFER => true,
-                 CURLOPT_ENCODING => '',
-                 CURLOPT_MAXREDIRS => 10,
-                 CURLOPT_TIMEOUT => 30,
-                 CURLOPT_FOLLOWLOCATION => true,
-                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                 CURLOPT_CUSTOMREQUEST => 'POST',
-                 CURLOPT_POSTFIELDS =>  array(
-                 'endpoint' => 'media_space/init_video_upload',
-                 'parameter' => json_encode($parameter)),
-                 CURLOPT_HTTPHEADER => array(
-                  'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                 ),
-              ));
-                 
-              $response = curl_exec($curl);
-              curl_close($curl);
-              $ret =  json_decode($response,true);
-               
-              if($ret['code'] != 0)
-              {
-                  $data['success'] = false;
-                  $data['msg'] =  $ret['error']." init : ".$ret['message'];
-                  die(json_encode($data));
-              }
-              else
-              {
-                  $parameter = [];
-                   
-                  $uploadID = $ret['response']['video_upload_id'];
-                   
-                    $response =  $this->getRefreshToken();
-            	    if($response)
-            	    {
-                	    $endpoint = "media_space/upload_video_part";
-                	    
-                	    $code = $this->model_master_config->getConfigMarketplace('TIKTOK','CODE');
-                	    $shopId = $this->model_master_config->getConfigMarketplace('TIKTOK','SHOP_ID');
-                	    $partnerId = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_ID');
-                	    $partnerKey = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_KEY');
-                	    $accessToken = $this->model_master_config->getConfigMarketplace('TIKTOK','ACCESS_TOKEN');
-                        $path = "/api/v2/";
-                        
-                        $timest = time();
-                        $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest,$partnerKey);
-                        
-                        $host = 'https://partner.TIKTOKmobile.com'.$path.$endpoint;
-                        // Path to the local file
-                        $filePath = $destination;
-                        
-                        // Check if file exists
-                        if (!file_exists($filePath)) {
-                        die('File not found.');
-                        }
-                        
-                        // Prepare the CURLFile object
-                        $cfile = new CURLFile($filePath, mime_content_type($filePath), basename($filePath));
-                        
-                        // Prepare POST data
-                        $postData = [
-                          'video_upload_id'=> $uploadID,
-                          'part_seq'       => 0,
-                          'content_md5'    => md5_file($filePath),
-                          'part_content'   => $cfile
-                        ];
-                        
-                        $starTimeUpload = new DateTime();
-                        // Initialize cURL
-                        $ch = curl_init();
-                        // Set cURL options
-                        curl_setopt($ch, CURLOPT_URL,  $host.'?timestamp='.$timest.'&sign='.$sign.'&partner_id='.$partnerId); // destination URL
-                        curl_setopt($ch, CURLOPT_POST, true);
-                        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                            'Content-Type: multipart/form-data'
-                        ]);
-                        
-                        // Execute the request
-                        $response = curl_exec($ch);
-                        curl_close($ch);
-                        $ret =  json_decode($response,true);
-                        
-                        if($ret['code'] != 0)
-                        {
-                            $data['success'] = false;
-                            echo $ret['error']." part : ".$ret['message'];
-                        }
-                        else
-                        { 
-                            $endTimeUpload = new DateTime();
-                            $startMs = (float)$starTimeUpload->format('U.u') * 1000;
-                            $endMs = (float)$endTimeUpload->format('U.u') * 1000;
-                            
-                            $diffMs = $endMs - $startMs;
-    
-                            $parameter = [];
-                            $partPath = $filePath;
-                            //UPLOAD PART VIDEO
-                            $parameter = [
-                              'video_upload_id'=> $uploadID,
-                              'part_seq_list'  => [0],
-                              'report_data'    => array(
-                                    'upload_cost' => (int)$diffMs
-                              )
-                            ];
-                        
-                          // Initialize cURL
-                          $curl = curl_init();
-                          curl_setopt_array($curl, array(
-                             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                             CURLOPT_RETURNTRANSFER => true,
-                             CURLOPT_ENCODING => '',
-                             CURLOPT_MAXREDIRS => 10,
-                             CURLOPT_TIMEOUT => 30,
-                             CURLOPT_FOLLOWLOCATION => true,
-                             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                             CURLOPT_CUSTOMREQUEST => 'POST',
-                             CURLOPT_POSTFIELDS =>  array(
-                             'endpoint' => 'media_space/complete_video_upload',
-                             'parameter' => json_encode($parameter)),
-                             CURLOPT_HTTPHEADER => array(
-                              'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                             ),
-                          ));
-                             
-                          $response = curl_exec($curl);
-                          curl_close($curl);
-                          $ret =  json_decode($response,true);
-                           
-                          if($ret['code'] != 0)
-                          {
-                              $data['success'] = false;
-                              $data['msg'] =  $ret['error']." complete : ".$ret['message'];
-                              die(json_encode($data));
-                          }
-                          else
-                          {
-                              $success = false;
-                               while(!$success)
-                               {
-                                  	//COMPLETE VIDEO
-                            	    $parameter = "&video_upload_id=".$uploadID;
-    
-                                    $curl = curl_init();
-                                    
-                                    curl_setopt_array($curl, array(
-                                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                                      CURLOPT_RETURNTRANSFER => true,
-                                      CURLOPT_ENCODING => '',
-                                      CURLOPT_MAXREDIRS => 10,
-                                      CURLOPT_TIMEOUT => 30,
-                                      CURLOPT_FOLLOWLOCATION => true,
-                                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                      CURLOPT_CUSTOMREQUEST => 'POST',
-                                      CURLOPT_POSTFIELDS => array('endpoint' => 'media_space/get_video_upload_result','parameter' => $parameter),
-                                      CURLOPT_HTTPHEADER => array(
-                                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                      ),
-                                    ));
-                                    
-                                    $response = curl_exec($curl);
-                                    curl_close($curl);
-                                    $ret =  json_decode($response,true);
-                                    if($ret['code'] != 0)
-                                    {
-                                        echo $ret['code']." : ".$ret['message'];
-                                    }
-                                    else
-                                    {
-                                        if($ret['response']['status'] == "SUCCEEDED")
-                                        { 
-                                          $success = true;
-                                          $data['success'] = true;
-                                          $dataUrl = $ret['response']['video_info']['video_url_list'];
-                                          //GET URL
-                                          for($u = 0 ; $u < count($dataUrl);$u++)
-                                          {
-                                              if($dataUrl[$u]['video_url_region'] == "ID")
-                                              {
-                                                 $data['url'] = $dataUrl[$u]['video_url'];
-                                              }
-                                          }
-                                          $data['id'] = $uploadID;
-                                           
-                                          //HAPUS DLU
-                                          $folder = FCPATH . '/assets/'.$this->input->post('reason').'/'; // Use FCPATH . 'assets/proof/' in CodeIgniter
-                                    
-                                          if (!is_dir($folder)) {
-                                              die('Folder does not exist.');
-                                          }
-                                           
-                                          $files = glob($folder . '*'); // Get all files in the folder
-                                           
-                                          foreach ($files as $file) {
-                                              if (is_file($file) && strpos(basename($file), $kode . "_" . $index) !== false) {
-                                                  unlink($file); // Delete file if name contains "a"
-                                              }
-                                          }
-                            
-                                          $data['urlLocal'] = $this->config->item('base_url')."/assets/".$this->input->post('reason')."/". $kode . "_" . $index.$type;
-                                		   echo(json_encode($data));
-                                        }
-                                    }
-                               }
-                          }
-                        }
+		    if($resp_url['success'])
+		    {
+    		    $itemUrl->{'id-baru'} = $resp_url['id'];
+    		    $itemUrl->{'url-baru'} = $resp_url['url'];
+		    }
+		    else
+		    {
+                die(json_encode($resp_url));
+		    }
+		}
+		
+	   $data['success'] = true;
+       $data['data'] = $urlData;
+       echo(json_encode($data));
+	}
+	
+	public function changeLocalUrl($url="",$reason="", $output=true){
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		
+		if($url == "")
+		{
+		    $url =  $this->input->post('url');
+		}
+		if($reason == "")
+		{
+		    $reason =  $this->input->post('reason');
+		}
+		
+        $uploadDir = FCPATH . 'assets/produk/TIKTOK/image_'.$reason.'_'.date('Ymdhms').'.jpg'; 
         
-            	    }
-                    else
-            	    {
-            	       // echo "Token gagal diperbaharui";
-            	        echo json_encode(array(
-            	            "success" => false,
-            	            "error" => "failed refresh token"
-            	        ));
-            	    }
-              }
-           }
+        file_put_contents($uploadDir, file_get_contents($url));
+        $destination = $uploadDir;
+
+        $response =  $this->getRefreshToken();
+        if($response)
+        {
+            // Path to the local file
+            $filePath = $destination;
             
-        } else {
-            $data['success'] = false;
-            $data['msg'] = "Failed to save the uploaded file";
-            echo(json_encode($data));
+            // Check if file exists
+            if (!file_exists($filePath)) {
+            die('File not found.');
+            }
+            
+            // Prepare the CURLFile object
+            $cfile = new CURLFile($filePath, mime_content_type($filePath), basename($filePath));
+         
+        	$endpoint = "/product/202309/images/upload";
+        	$urlparameter = $this->input->post("urlparameter")??"";
+        	$parameter = array(
+        	    'data' => $cfile,
+        	    'use_case' => $reason
+        	);
+        	
+        	$accessToken = $this->model_master_config->getConfigMarketplace('TIKTOK','ACCESS_TOKEN');
+        	
+        	//BUAT SIGN
+        	// 1
+            $host = 'https://open-api.tiktokglobalshop.com'.$endpoint;
+        	
+        	$app_key = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_KEY');
+        	$timest = strtotime(date("Y-m-d H:i:s", time()));
+        
+        	$urlparameter = "app_key=$app_key&timestamp=".$timest.$urlparameter;
+        	
+        	$allparameter = $urlparameter;
+            
+            $arrParam = explode("&",$allparameter);
+        
+            $paramMap = [];
+            
+            foreach ($arrParam as $itemParam) {
+                list($key, $value) = explode("=", $itemParam, 2);
+                $paramMap[$key] = $value;       // assign directly
+            }
+            ksort($paramMap);
+            
+            // 2
+            $stringParam = "";
+            
+            foreach ($paramMap as $key => $value) {
+               $stringParam .= $key.$value;
+            }
+            
+            // 3
+            $stringParam = $endpoint.$stringParam;
+            
+            // 4
+            $app_secret = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_SECRET');
+            $stringParam = $app_secret.$stringParam.$app_secret;
+            // 5
+            $sign = hash_hmac('sha256', $stringParam,$app_secret);
+            //BUAT SIGN
+            
+            $urlparameter = $urlparameter."&sign=".$sign;
+        
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $host.'?'.$urlparameter,
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 0,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_POSTFIELDS => ($parameter),
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_HTTPHEADER => array(
+                 'x-tts-access-token: '.$accessToken,
+                // 'Content-Type: multipart/form-data',
+                'Cookie: SPC_SEC_SI=v1-UHAwR1pMemVVcnVNWk0yOAmAUDORs28JVn6OsCvGiwjQgIgi70oQOziTBqSXWyDZViEAeIWx3hwddNsCKaZ6iPdS4KmbbymAcw3YAhkMr6I=; SPC_SI=P7sdaAAAAABzUmtoeEtWN8sBwggAAAAATEVRUWR2b0Y='
+              ),
+            ));
+            
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            
+            unlink($destination);
+                      
+            if($ret['code'] != 0)
+            {
+                $data['success'] = false;
+                $data['msg'] =  $ret['code']." : ".$ret['message'];
+                
+                if($output)
+                {
+                    die(json_encode($data));
+                }
+                else
+                {
+                    return $data;
+                }
+            }
+            else
+            {
+                $data['success'] = true;
+                $data['url'] = $ret['data']['url'];
+                $data['id'] =  $ret['data']['uri'];
+                
+                if($output)
+                {
+                    echo(json_encode($data));
+                }
+                else
+                {
+                    return $data;
+                }
+            }
+            
+        }
+        else
+        {
+           // echo "Token gagal diperbaharui";
+            echo json_encode(array(
+                "success" => false,
+                "error" => "failed refresh token"
+            ));
         }
 	}
 	

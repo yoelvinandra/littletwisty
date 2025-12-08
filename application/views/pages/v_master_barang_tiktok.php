@@ -132,19 +132,19 @@
     }
     
     
-    #historyPerubahantiktok {
+    #historyPerubahanTiktok {
       width: 100%;
       border-collapse: collapse;
       border-radius: 10px;
       overflow: hidden;
     }
 
-    #historyPerubahantiktok thead {
+    #historyPerubahanTiktok thead {
       background-color: #2c3e50;
       color: #ecf0f1;
     }
 
-    #historyPerubahantiktok th, #historyPerubahantiktok td {
+    #historyPerubahanTiktok th, #historyPerubahanTiktok td {
       padding: 16px 20px;
       text-align: left;
     }
@@ -206,13 +206,13 @@
   	<div class="modal-content">
   		<div class="modal-body">
               <div class="box-body">
-                  <input type="hidden" id="IDBARANGtiktok" name="IDBARANGtiktok">
+                  <input type="hidden" id="IDBARANGTIKTOK" name="IDBARANGTIKTOK">
                   <div class="row">
                       <div class="form-group col-md-12">
                           <h3 style="font-weight:bold;" class="form-group" id="titletiktok">Tambah Produk</h3>
                           <span id="checktiktok" style="font-size:12pt; float:right; margin-top:-40px; font-style:italic;">*Terdapat perubahan data pada master,&nbsp;&nbsp;<span style="text-decoration:underline; cursor:pointer;" onclick="checktiktokDetail()">Lihat Perubahan</span></span>
                           <label>Hubungkan Master Barang <i style="color:grey;">&nbsp;&nbsp;&nbsp;Wajib</i></label>
-                          <select id="BARANGtiktok" name="BARANGtiktok" class="form-control select2" style="border:1px solid #B5B4B4; border-radius:1px; width:100%; height:32px; padding-left:12px; padding-right:12px;">
+                          <select id="BARANGTIKTOK" name="BARANGTIKTOK" class="form-control select2" style="border:1px solid #B5B4B4; border-radius:1px; width:100%; height:32px; padding-left:12px; padding-right:12px;">
         
                           </select>
                       </div>
@@ -242,7 +242,7 @@
                                   <br>
                                   <label style="font-weight:bold; margin-bottom:-5px;">Varian Produk<i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
                                   <div style="margin-top:-28px !important;" >
-                                      <table id="dataGridVariantiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                                      <table id="dataGridVarianTiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                           <!-- class="table-hover"> -->
                                           <thead>
                                           <tr>
@@ -260,12 +260,12 @@
                                    <div class="form-group col-md-6" >
                                       <br>
                                       <label style="font-weight:bold; margin-bottom:-5px;">Harga Jual Tampil <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
-                                      <input type="text" class="form-control" id="HARGAJUALMASTERtiktok" name="HARGAJUALMASTERtiktok" placeholder="Harga Jual Tampil" readonly>
+                                      <input type="text" class="form-control" id="HARGAJUALMASTERTIKTOK" name="HARGAJUALMASTERTIKTOK" placeholder="Harga Jual Tampil" readonly>
                                    </div>
                                     <div class="form-group col-md-6" >
                                       <br>
                                       <label style="font-weight:bold; margin-bottom:-5px;">SKU <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
-                                      <input type="text" class="form-control" id="SKUMASTERtiktok" name="SKUMASTERtiktok" placeholder="SKU tiktok" readonly>
+                                      <input type="text" class="form-control" id="SKUMASTERTIKTOK" name="SKUMASTERTIKTOK" placeholder="SKU tiktok" readonly>
                                    </div>
                                 </div>
                           </div>
@@ -277,10 +277,10 @@
                                  <table id="gambarProduktiktok">
                                  </table>  
                              </div>
-                             <div class ="form-group col-md-12" id="DIVGAMBARVARIANtiktok">
+                             <div class ="form-group col-md-12" id="DIVGAMBARVarianTiktok">
                                  <h4 style="font-weight:bold; margin-bottom:-5px;">Gambar Varian<i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></h4>
                                  <br>
-                                 <table id="gambarVariantiktok">
+                                 <table id="gambarVarianTiktok">
                                  </table>    
                              </div>
                            </div>
@@ -290,22 +290,22 @@
                           <div class="row" style="margin-top:10px;">
                               <div class="col-md-12">
                           	    <label>Berat (gram) <i style="color:grey;">&nbsp;&nbsp;&nbsp;mengikuti master</i></label>
-                                  <input type="text" class="form-control" id="BERATMASTERtiktok" name="BERATMASTERtiktok" placeholder="Dalam Gram" readonly>
+                                  <input type="text" class="form-control" id="BERATMASTERTIKTOK" name="BERATMASTERTIKTOK" placeholder="Dalam Gram" readonly>
                               </div>
                           </div>
                           <div class="row">
                               <br>
                               <div class="col-md-4">
                                   <label>Panjang</label>
-                                  <input type="text" class="form-control" id="PANJANGMASTERtiktok" name="PANJANGMASTERtiktok" placeholder="Cm" readonly>
+                                  <input type="text" class="form-control" id="PANJANGMASTERTIKTOK" name="PANJANGMASTERTIKTOK" placeholder="Cm" readonly>
                               </div>
                               <div class="col-md-4">
                                   <label>Lebar</label>
-                                  <input type="text" class="form-control" id="LEBARMASTERtiktok" name="LEBARMASTERtiktok" placeholder="Cm" readonly>
+                                  <input type="text" class="form-control" id="LEBARMASTERTIKTOK" name="LEBARMASTERTIKTOK" placeholder="Cm" readonly>
                               </div>
                               <div class="col-md-4">
                                   <label>Tinggi</label>
-                                  <input type="text" class="form-control" id="TINGGIMASTERtiktok" name="TINGGIMASTERtiktok" placeholder="Cm" readonly>
+                                  <input type="text" class="form-control" id="TINGGIMASTERTIKTOK" name="TINGGIMASTERTIKTOK" placeholder="Cm" readonly>
                               </div>
                           </div>
                           <!--<div class="row" style="height:200px;">-->
@@ -362,11 +362,11 @@
                     <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                         <i class='fa fa-arrow-left' ></i>
                     </button>
-                    <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; <span id="titleLebihJelastiktok" style="font-size:14pt;"></span></h4>
+                    <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; <span id="titleLebihJelasTiktok" style="font-size:14pt;"></span></h4>
                     <!--<button id='btn_cetak_konfirm_tiktok'  style="float:right;" class='btn btn-warning' onclick="noteKonfirmtiktok()">Cetak</button>-->
             </div>
     		<div class="modal-body">
-    		    <div id="previewLebihJelastiktok">
+    		    <div id="previewLebihJelasTiktok">
     		        
     		    </div>
     		</div>
@@ -386,7 +386,7 @@
 		<div class="modal-body">
       	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
       	        <div class="col-md-12 col-sm-12 col-xs-12" style="padding:0px;">
-                   <table id="historyPerubahantiktok" width="100%" style="border:0.5px solid #cccccc">
+                   <table id="historyPerubahanTiktok" width="100%" style="border:0.5px solid #cccccc">
                       
                    </table>
                 </div>
@@ -407,13 +407,13 @@
 var pengirimantiktok = [];
 var attributtiktok = [];
 var attributtiktokOld = [];
-var dataMastertiktok = [];
+var datamastertiktok = [];
 var warna = [];
 var ukuran = [];
-var historyPerubahantiktok = [];
+var historyPerubahanTiktok = [];
 $(document).ready(function() {
     
-    $("#HARGAJUALMASTERtiktok").number(true, 0);
+    $("#HARGAJUALMASTERTIKTOK").number(true, 0);
     const modal = document.getElementById('modal-detail-attribut-tiktok');
 
     window.addEventListener('click', function(event) {
@@ -526,7 +526,7 @@ $(document).ready(function() {
         $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
     });
     
-   $('#dataGridVariantiktok').DataTable({
+   $('#dataGridVarianTiktok').DataTable({
       paging: false,
       lengthChange: false,
       searching: true,
@@ -542,7 +542,7 @@ $(document).ready(function() {
         { data: 'IDBARANG', visible: false },
         { data: 'NAMABARANG' },
         { data: 'HARGAJUAL', render: format_number, className: "text-right" },
-        { data: 'SKUtiktok', className: "text-center" },
+        { data: 'SKUTIKTOK', className: "text-center" },
         { data: 'STATUS', className: "text-center" } // <-- changed from 'AKTIF'
       ],
       columnDefs: [
@@ -569,7 +569,7 @@ $(document).ready(function() {
         $('.status-checkbox').on('change', function () {
           var id = $(this).data('id');
           var checked = $(this).is(':checked') ? 1 : 0;
-          var table = $('#dataGridVariantiktok').DataTable();
+          var table = $('#dataGridVarianTiktok').DataTable();
     
           var rowIndex = table.rows().eq(0).filter(function (rowIdx) {
             return table.cell(rowIdx, 0).data() == id;
@@ -582,13 +582,13 @@ $(document).ready(function() {
       }
     });
     
-    $('#dataGridVariantiktok').DataTable().on('xhr.dt', function () {
-        if($("#BARANGtiktok").val() != 0)
+    $('#dataGridVarianTiktok').DataTable().on('xhr.dt', function () {
+        if($("#BARANGTIKTOK").val() != 0)
         {
             setTimeout(() => {
                	
                	//GAMBAR VARIAN
-               	var varian = $('#dataGridVariantiktok').DataTable().rows().data().toArray();
+               	var varian = $('#dataGridVarianTiktok').DataTable().rows().data().toArray();
               
                	warna = [];
                	ukuran = [];
@@ -654,9 +654,9 @@ $(document).ready(function() {
                                             <div style="margin-bottom:20px;">
                                                 <img id="preview-image-varian-tiktok-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; margin-right:`+marginRight+`; cursor:pointer; border:2px solid #dddddd;'>
                                                 <div style="text-align:center; margin-right:`+marginRight+`"><b>`+warna[y]+`</b><br>
-                                                <span id="ubahGambarVariantiktok-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
+                                                <span id="ubahGambarVarianTiktok-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
                                                 &nbsp;
-                                                <span id="hapusGambarVariantiktok-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
+                                                <span id="hapusGambarVarianTiktok-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
                                                 </div>
                                             </div>
                                         </td>`;  
@@ -666,8 +666,8 @@ $(document).ready(function() {
                    }
                    
                    htmlGambarVarian += "</tr>";
-                   $("#gambarVariantiktok").html(htmlGambarVarian);
-                   $("#gambarVariantiktok").css('margin-bottom','-20px');
+                   $("#gambarVarianTiktok").html(htmlGambarVarian);
+                   $("#gambarVarianTiktok").css('margin-bottom','-20px');
                
                	    for(var y = 0 ; y < warna.length ;y++)
                    {
@@ -680,13 +680,13 @@ $(document).ready(function() {
                        const url =  document.getElementById('src-input-varian-tiktok-'+y);
                        const id =  document.getElementById('id-input-varian-tiktok-'+y);
                        
-                       const ubahImage = document.getElementById('ubahGambarVariantiktok-'+y);
-                       const hapusImage = document.getElementById('hapusGambarVariantiktok-'+y);
+                       const ubahImage = document.getElementById('ubahGambarVarianTiktok-'+y);
+                       const hapusImage = document.getElementById('hapusGambarVarianTiktok-'+y);
                        
                        previewImage.addEventListener('click', () => {
                          if(url.value != '')
                          {
-                             lihatLebihJelastiktok(format.value,title.value,url.value);
+                             lihatLebihJelasTiktok(format.value,title.value,url.value);
                          }
                          else
                          {
@@ -754,11 +754,11 @@ $(document).ready(function() {
                                     // Upload file asli ke server
                                    const formData = new FormData();
                                    formData.append('index', index.value);
-                                   formData.append('kode', $("#BARANGtiktok").val()+"_"+warna[index.value]);
+                                   formData.append('kode', $("#BARANGTIKTOK").val()+"_"+warna[index.value]);
                                    formData.append('file', file);
                                    formData.append('tipe', 'GAMBAR');
                                    formData.append('size', file.size);
-                                   formData.append("reason","produk");
+                                   formData.append("reason","ATTRIBUTE_IMAGE");
                                
                                    loading();
                                    
@@ -940,36 +940,36 @@ function getMasterBarang(jenis){
         success: function(msg){
            var msg = msg.rows;
            var selectBarang = "<option value='0'>-Pilih Master Barang-</option>";
-           dataMastertiktok = msg;
-           $("#BARANGtiktok").html(selectBarang);
+           datamastertiktok = msg;
+           $("#BARANGTIKTOK").html(selectBarang);
            for(var x = 0 ; x < msg.length ; x++)
            {
               selectBarang += "<option value='"+msg[x].KATEGORI+"'>"+msg[x].KATEGORI+"</option>"; 
            }
-           $("#BARANGtiktok").html(selectBarang);
-           $("#BARANGtiktok").select2();
+           $("#BARANGTIKTOK").html(selectBarang);
+           $("#BARANGTIKTOK").select2();
         }
     });
 }
 
 function checktiktokDetail(){
     $("#modal-check-tiktok").modal('show');
-    $("#historyPerubahantiktok").html("<tr><th width='6%'>No</th><th width='60%'>Keterangan</th><th width='17.5%'>Saat Ini</th><th width='17.5%'>Sebelumnya</th></tr>");
-    for(var x = 0 ; x < historyPerubahantiktok.length; x++)
+    $("#historyPerubahanTiktok").html("<tr><th width='6%'>No</th><th width='60%'>Keterangan</th><th width='17.5%'>Saat Ini</th><th width='17.5%'>Sebelumnya</th></tr>");
+    for(var x = 0 ; x < historyPerubahanTiktok.length; x++)
     {
-        $("#historyPerubahantiktok").append("<tr valign='top'><td>"+(x+1)+". </td><td>"+historyPerubahantiktok[x].label+"</td><td>"+historyPerubahantiktok[x].baru+"</td><td>"+historyPerubahantiktok[x].lama+"</td></tr>");
+        $("#historyPerubahanTiktok").append("<tr valign='top'><td>"+(x+1)+". </td><td>"+historyPerubahanTiktok[x].label+"</td><td>"+historyPerubahanTiktok[x].baru+"</td><td>"+historyPerubahanTiktok[x].lama+"</td></tr>");
     }
 }
 
 
 function ubahtiktok(row){
     reset();
-    historyPerubahantiktok = [];
+    historyPerubahanTiktok = [];
     setGambarProduk();
     $("#checktiktok").hide();
     $("#DIVDATAVARIAN").hide();
     $("#DIVDATANONVARIAN").hide();
-    $("#DIVGAMBARVARIANtiktok").hide();
+    $("#DIVGAMBARVarianTiktok").hide();
     $("#titletiktok").html("Ubah Produk");
     loading();
     $("#modetiktok").val("UBAH");
@@ -996,102 +996,102 @@ function ubahtiktok(row){
             $("#btn_simpan_detail_tiktok").hide();
         }
         
-        $("#IDBARANGtiktok").val(row.item_id);
+        $("#IDBARANGTIKTOK").val(row.item_id);
     	
         $("#modal-barang-tiktok").modal("show");
         $("#KATEGORItiktok").val(row.primary_category);
-        $("#BARANGtiktok").val(row.KATEGORIMASTERBARANG);
+        $("#BARANGTIKTOK").val(row.KATEGORIMASTERBARANG);
         $(".select2").trigger('change');
         
         $("#KATEGORItiktok").attr('disabled','disabled');
         if(row.KATEGORIMASTERBARANG != "")
         {
-            $("#BARANGtiktok").attr('disabled','disabled');
+            $("#BARANGTIKTOK").attr('disabled','disabled');
         }
         else
         {
-            $("#BARANGtiktok").removeAttr('disabled');
+            $("#BARANGTIKTOK").removeAttr('disabled');
         }
     	
-        var table = $('#dataGridVariantiktok').DataTable();
+        var table = $('#dataGridVarianTiktok').DataTable();
         table.ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent(row.KATEGORIMASTERBARANG));
     	table.ajax.reload();
     	
         $.ajax({
         	type    : 'POST',
         	url     : base_url+'Tiktok/getDataBarang/',
-        	data    : {idindukbarangtiktok: row.item_id},
+        	data    : {idindukBARANGTIKTOK: row.item_id},
         	dataType: 'json',
         	success : function(msg){
         	    if(msg.dataVarian.length == 0 )
         	    {
         	        var price = row.skus[0].price;
         	        
-        	        if(price != $("#HARGAJUALMASTERtiktok").val())
+        	        if(price != $("#HARGAJUALMASTERTIKTOK").val())
         	        {
-        	            historyPerubahantiktok.push({
+        	            historyPerubahanTiktok.push({
         	                'label' : 'Harga Produk',
         	                'lama'  : "Rp"+currency(price.toString()),
-        	                'baru'  : "Rp"+currency($("#HARGAJUALMASTERtiktok").val().toString())
+        	                'baru'  : "Rp"+currency($("#HARGAJUALMASTERTIKTOK").val().toString())
         	            });
         	            $("#checktiktok").show();
         	        }
-        	        if(row.skus[0].SellerSku != $("#SKUMASTERtiktok").val())
+        	        if(row.skus[0].SellerSku != $("#SKUMASTERTIKTOK").val())
         	        {
-        	            historyPerubahantiktok.push({
+        	            historyPerubahanTiktok.push({
         	                'label' : 'SKU Produk',
         	                'lama'  : (row.skus[0].SellerSku.toString()),
-        	                'baru'  : ($("#SKUMASTERtiktok").val().toString())
+        	                'baru'  : ($("#SKUMASTERTIKTOK").val().toString())
         	            });
         	            $("#checktiktok").show();
         	        }
-        	        if((row.skus[0].package_weight * 1000) != $("#BERATMASTERtiktok").val())
+        	        if((row.skus[0].package_weight * 1000) != $("#BERATMASTERTIKTOK").val())
         	        {
-        	            historyPerubahantiktok.push({
+        	            historyPerubahanTiktok.push({
         	                'label' : 'Berat Produk',
         	                'lama'  : currency((row.skus[0].package_weight * 1000).toString())+" gram",
-        	                'baru'  : currency($("#BERATMASTERtiktok").val().toString())+" gram"
+        	                'baru'  : currency($("#BERATMASTERTIKTOK").val().toString())+" gram"
         	            });
         	            $("#checktiktok").show();
         	        }
-        	        if(row.skus[0].package_length != $("#PANJANGMASTERtiktok").val())
+        	        if(row.skus[0].package_length != $("#PANJANGMASTERTIKTOK").val())
         	        {
-        	            historyPerubahantiktok.push({
+        	            historyPerubahanTiktok.push({
         	                'label' : 'Panjang Produk',
         	                'lama'  : currency(row.skus[0].package_length.toString())+" cm",
-        	                'baru'  : currency($("#PANJANGMASTERtiktok").val().toString())+" cm"
+        	                'baru'  : currency($("#PANJANGMASTERTIKTOK").val().toString())+" cm"
         	            });
         	            $("#checktiktok").show();
         	        }
-        	        if(row.skus[0].package_width != $("#LEBARMASTERtiktok").val())
+        	        if(row.skus[0].package_width != $("#LEBARMASTERTIKTOK").val())
         	        {
-        	            historyPerubahantiktok.push({
+        	            historyPerubahanTiktok.push({
         	                'label' : 'Lebar Produk',
         	                'lama'  : currency(row.skus[0].package_width.toString())+" cm",
-        	                'baru'  : currency($("#LEBARMASTERtiktok").val().toString())+" cm"
+        	                'baru'  : currency($("#LEBARMASTERTIKTOK").val().toString())+" cm"
         	            });
         	            
         	            $("#checktiktok").show();
         	        }
-        	        if(row.skus[0].package_height != $("#TINGGIMASTERtiktok").val())
+        	        if(row.skus[0].package_height != $("#TINGGIMASTERTIKTOK").val())
         	        {
-        	            historyPerubahantiktok.push({
+        	            historyPerubahanTiktok.push({
         	                'label' : 'Lebar Produk',
         	                'lama'  : currency(row.skus[0].package_height.toString())+" cm",
-        	                'baru'  : currency($("#TINGGIMASTERtiktok").val().toString())+" cm"
+        	                'baru'  : currency($("#TINGGIMASTERTIKTOK").val().toString())+" cm"
         	            });
         	            $("#checktiktok").show();
         	        }
         	        
         	        $("#DIVDATAVARIAN").hide();
                     $("#DIVDATANONVARIAN").show();
-                    $("#DIVGAMBARVARIANtiktok").hide();
+                    $("#DIVGAMBARVarianTiktok").hide();
         	    }
         	    else
         	    {
         	        $("#DIVDATAVARIAN").show();
                     $("#DIVDATANONVARIAN").hide();
-                    $("#DIVGAMBARVARIANtiktok").show();
+                    $("#DIVGAMBARVarianTiktok").show();
         	    }
         	    
                 loading();
@@ -1103,14 +1103,14 @@ function ubahtiktok(row){
                             var ada = false;
                     	    for(var x = 0 ; x < msg.dataVarian.length; x++)
                     	    {
-                                if (rowData.IDBARANGtiktok == msg.dataVarian[x].ID) {
+                                if (rowData.IDBARANGTIKTOK == msg.dataVarian[x].ID) {
                                     ada = true;
                                 }
                     	    }
                     	    
                     	    if(!ada)
                     	    {  
-                    	        historyPerubahantiktok.push({
+                    	        historyPerubahanTiktok.push({
                 	                'label' : 'Varian '+rowData.NAMABARANG,
                 	                'lama'  : '-',
                 	                'baru'  : 'Baru'
@@ -1132,12 +1132,12 @@ function ubahtiktok(row){
                             var perubahan = false;
                     	    for(var x = 0 ; x < msg.dataVarian.length; x++)
                     	    {
-                                if (rowData.IDBARANGtiktok == msg.dataVarian[x].ID) {
+                                if (rowData.IDBARANGTIKTOK == msg.dataVarian[x].ID) {
                                     rowData.MODE = "";
                                     if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
                                     {
                                         perubahan = true;
-                                        historyPerubahantiktok.push({
+                                        historyPerubahanTiktok.push({
                         	                'label' : 'Harga Varian '+rowData.NAMABARANG,
                         	                'lama'  : "Rp"+currency(msg.dataVarian[x].HARGA.toString()),
                         	                'baru'  : "Rp"+currency(rowData.HARGAJUAL.toString())
@@ -1150,7 +1150,7 @@ function ubahtiktok(row){
                                        // Set the updated data back into the row
                                        this.data(rowData).draw(false); // draw(false) avoids full table redraw
                                     }
-                                    if(rowData.SKUtiktok != msg.dataVarian[x].SKU)
+                                    if(rowData.SKUTIKTOK != msg.dataVarian[x].SKU)
                                     {
                                         perubahan = true;
                                         if(rowData.MODE != "")
@@ -1158,10 +1158,10 @@ function ubahtiktok(row){
                                             rowData.MODE += "|";
                                         }
                                         
-                                        historyPerubahantiktok.push({
+                                        historyPerubahanTiktok.push({
                         	                'label' : 'SKU Varian '+rowData.NAMABARANG,
                         	                'lama'  : (msg.dataVarian[x].SKU.toString()),
-                        	                'baru'  : (rowData.SKUtiktok.toString())
+                        	                'baru'  : (rowData.SKUTIKTOK.toString())
                         	            });
                         	            
                                         $("#checktiktok").show();
@@ -1186,14 +1186,14 @@ function ubahtiktok(row){
                             ada = false;
                             table.rows().every(function () {
                                 var rowData = this.data();
-                                if (rowData.IDBARANGtiktok == msg.dataVarian[x].ID) {
+                                if (rowData.IDBARANGTIKTOK == msg.dataVarian[x].ID) {
                                     ada = true;
                                 }
                             });
                             
                             if(!ada)
                             {
-                                historyPerubahantiktok.push({
+                                historyPerubahanTiktok.push({
                         	        'label' : 'Varian '+msg.dataVarian[x].NAMA,
                         	        'lama'  : 'Dihapus',
                         	        'baru'  : '-'
@@ -1210,7 +1210,7 @@ function ubahtiktok(row){
                                   SIZE : msg.dataVarian[x].SIZE,
                                   WARNA : msg.dataVarian[x].WARNA,
                                   HARGAJUAL : msg.dataVarian[x].HARGA,
-                                  SKUtiktok : msg.dataVarian[x].SKU,
+                                  SKUTIKTOK : msg.dataVarian[x].SKU,
                                   MODE : 'HAPUS'
                                };
                                
@@ -1251,8 +1251,8 @@ function ubahtiktok(row){
                             	    $("#id-input-varian-tiktok-"+y).val(msg.dataGambarVarian[z].IMAGEID);
                             	    $("#preview-image-varian-tiktok-"+y).attr("src",msg.dataGambarVarian[z].IMAGEURL);
                   
-                                // 	    $("#ubahGambarVariantiktok-"+y).show();
-                        	       //     $("#hapusGambarVariantiktok-"+y).show();
+                                // 	    $("#ubahGambarVarianTiktok-"+y).show();
+                        	       //     $("#hapusGambarVarianTiktok-"+y).show();
                       
                         	    }
                     	    }
@@ -1282,7 +1282,7 @@ function hapustiktok(row){
         	     $.ajax({
                 	type    : 'POST',
                 	url     : base_url+'Tiktok/removeBarang/',
-                	data    : {idindukbarangtiktok: row.item_id, skulisttiktok : JSON.stringify(row.skus)},
+                	data    : {idindukBARANGTIKTOK: row.item_id, skulisttiktok : JSON.stringify(row.skus)},
                 	dataType: 'json',
                 	success : function(msg){
                 	    Swal.close();	
@@ -1308,39 +1308,39 @@ function hapustiktok(row){
 }
 
 function reset() {
-    $("#dataGridVariantiktok").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian');
-    $("#dataGridVariantiktok").DataTable().ajax.reload();
+    $("#dataGridVarianTiktok").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian');
+    $("#dataGridVarianTiktok").DataTable().ajax.reload();
     
     $("#NAMAtiktok").val("");
     $("#DESKRIPSItiktok").val("");
-    $("#BERATMASTERtiktok").val("");
-    $("#PANJANGMASTERtiktok").val("");
-    $("#LEBARMASTERtiktok").val("");
-    $("#TINGGIMASTERtiktok").val("");
-    $("#IDBARANGtiktok").val(0);
-    $("#HARGAJUALMASTERtiktok").val(0);
-    $("#SKUMASTERtiktok").val("");
+    $("#BERATMASTERTIKTOK").val("");
+    $("#PANJANGMASTERTIKTOK").val("");
+    $("#LEBARMASTERTIKTOK").val("");
+    $("#TINGGIMASTERTIKTOK").val("");
+    $("#IDBARANGTIKTOK").val(0);
+    $("#HARGAJUALMASTERTIKTOK").val(0);
+    $("#SKUMASTERTIKTOK").val("");
     
     $("#AKTIF").prop('checked',true).iCheck('update');
     
     $("#KATEGORItiktok").removeAttr('disabled');
-    $("#BARANGtiktok").removeAttr('disabled');
+    $("#BARANGTIKTOK").removeAttr('disabled');
     
     $("#NAMAtiktok").prop('readonly',true);
     $("#DESKRIPSItiktok").prop('readonly',true);
     
 	$("#gambarProduktiktok").html("");
 	$("#gambarProduktiktok").css('margin-bottom','0px');
-	$("#gambarVariantiktok").html("");
-	$("#gambarVariantiktok").css('margin-bottom','0px');
+	$("#gambarVarianTiktok").html("");
+	$("#gambarVarianTiktok").css('margin-bottom','0px');
 	warna = [];
     ukuran = [];
     attributtiktok = [];
     attributtiktokOld = [];
-    historyPerubahantiktok = [];
+    historyPerubahanTiktok = [];
 }
 
-$("#BARANGtiktok").change(function(){
+$("#BARANGTIKTOK").change(function(){
     if($(this).val() == 0 && $(this).val() != null)
     {
         reset();
@@ -1348,43 +1348,43 @@ $("#BARANGtiktok").change(function(){
     else
     {
         var idbarangdarimaster = 0;
-		for(var x = 0 ; x < dataMastertiktok.length; x++)
+		for(var x = 0 ; x < datamastertiktok.length; x++)
 		{
-		    if(dataMastertiktok[x].KATEGORI == $(this).val())
+		    if(datamastertiktok[x].KATEGORI == $(this).val())
 		    {
-		        $("#NAMAtiktok").val(dataMastertiktok[x].KATEGORI);
-		        $("#DESKRIPSItiktok").val(dataMastertiktok[x].DESKRIPSI.replaceAll("\\R\\N","\\r\\n").replaceAll("???? ",""));
-		        $("#BERATMASTERtiktok").val(dataMastertiktok[x].BERAT);
-		        $("#PANJANGMASTERtiktok").val(dataMastertiktok[x].PANJANG);
-		        $("#LEBARMASTERtiktok").val(dataMastertiktok[x].LEBAR);
-		        $("#TINGGIMASTERtiktok").val(dataMastertiktok[x].TINGGI);
+		        $("#NAMAtiktok").val(datamastertiktok[x].KATEGORI);
+		        $("#DESKRIPSItiktok").val(datamastertiktok[x].DESKRIPSI.replaceAll("\\R\\N","\\r\\n").replaceAll("???? ",""));
+		        $("#BERATMASTERTIKTOK").val(datamastertiktok[x].BERAT);
+		        $("#PANJANGMASTERTIKTOK").val(datamastertiktok[x].PANJANG);
+		        $("#LEBARMASTERTIKTOK").val(datamastertiktok[x].LEBAR);
+		        $("#TINGGIMASTERTIKTOK").val(datamastertiktok[x].TINGGI);
 		        
-		        if(dataMastertiktok[x].JMLVARIAN > 0)
+		        if(datamastertiktok[x].JMLVARIAN > 0)
 		        {
 		            $("#DIVDATAVARIAN").show();
 		            $("#DIVDATANONVARIAN").hide();
-		            $("#DIVGAMBARVARIANtiktok").show();
-                    $("#dataGridVariantiktok").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent($(this).val()));
-            		$("#dataGridVariantiktok").DataTable().ajax.reload();
-            		$("#HARGAJUALMASTERtiktok").val(0);
-                    $("#SKUMASTERtiktok").val('');
+		            $("#DIVGAMBARVarianTiktok").show();
+                    $("#dataGridVarianTiktok").DataTable().ajax.url(base_url+'Master/Data/Barang/getDataVarian/'+encodeURIComponent($(this).val()));
+            		$("#dataGridVarianTiktok").DataTable().ajax.reload();
+            		$("#HARGAJUALMASTERTIKTOK").val(0);
+                    $("#SKUMASTERTIKTOK").val('');
 		        }
 		        else
 		        {
 		            $("#DIVDATAVARIAN").hide();
 		            $("#DIVDATANONVARIAN").show();
-		            $("#DIVGAMBARVARIANtiktok").hide();
+		            $("#DIVGAMBARVarianTiktok").hide();
 		            
-		            $("#HARGAJUALMASTERtiktok").val(dataMastertiktok[x].HARGAJUAL);
-                    $("#SKUMASTERtiktok").val(dataMastertiktok[x].SKUtiktok);
-                    $("#dataGridVariantiktok").DataTable().clear().draw();
+		            $("#HARGAJUALMASTERTIKTOK").val(datamastertiktok[x].HARGAJUAL);
+                    $("#SKUMASTERTIKTOK").val(datamastertiktok[x].SKUTIKTOK);
+                    $("#dataGridVarianTiktok").DataTable().clear().draw();
                     warna = [];
                     ukuran = [];
 
 		        }
 		        
 		        setGambarProduk();
-		        idbarangdarimaster = dataMastertiktok[x].IDBARANG;
+		        idbarangdarimaster = datamastertiktok[x].IDBARANG;
 
     	        setTimeout(function() {
 		         if(idbarangdarimaster != 0)
@@ -1442,8 +1442,8 @@ $("#BARANGtiktok").change(function(){
                                             $("#preview-image-varian-tiktok-"+y).attr("src",imageVarian[z].URL);
                                             
                                           
-                                            //     $("#ubahGambarVariantiktok-"+y).show();
-                                        	   // $("#hapusGambarVariantiktok-"+y).show();
+                                            //     $("#ubahGambarVarianTiktok-"+y).show();
+                                        	   // $("#hapusGambarVarianTiktok-"+y).show();
                                         
                                     	    
                                     	    dataGambarVarian[y] = {
@@ -1468,21 +1468,21 @@ function getStatustiktok(){
 	return $("#statustiktok").val();
 }
 
-function lihatLebihJelastiktok(jenis,title,url){
+function lihatLebihJelasTiktok(jenis,title,url){
 
     $("#modal-lebih-jelas-tiktok").modal("show");
-    $("#titleLebihJelastiktok").html(title);
-    $("#previewLebihJelastiktok").css("color","#3296ff");
-    $("#previewLebihJelastiktok").css("cursor","pointer");
-    $("#previewLebihJelastiktok").css("text-align","center");
-    $("#previewLebihJelastiktok").css("background","#d4d4d7");
+    $("#titleLebihJelasTiktok").html(title);
+    $("#previewLebihJelasTiktok").css("color","#3296ff");
+    $("#previewLebihJelasTiktok").css("cursor","pointer");
+    $("#previewLebihJelasTiktok").css("text-align","center");
+    $("#previewLebihJelasTiktok").css("background","#d4d4d7");
     if(jenis == "GAMBAR")
     {
-        $("#previewLebihJelastiktok").html("<img src='"+url+"' max-width=100%; height=600px;>");
+        $("#previewLebihJelasTiktok").html("<img src='"+url+"' max-width=100%; height=600px;>");
     }
     else
     {
-        $("#previewLebihJelastiktok").html("<iframe src='"+url+"' max-width=100%; height=600px;>");
+        $("#previewLebihJelasTiktok").html("<iframe src='"+url+"' max-width=100%; height=600px;>");
     }
 }
 
@@ -1495,14 +1495,14 @@ function tambahtiktok(){
     $("#checktiktok").hide();
     $("#DIVDATAVARIAN").hide();
     $("#DIVDATANONVARIAN").hide();
-    $("#DIVGAMBARVARIANtiktok").hide();
+    $("#DIVGAMBARVarianTiktok").hide();
     $("#titletiktok").html("Tambah Produk");
     $("#modetiktok").val("TAMBAH");
     reset();
     getMasterBarang('tiktok');
     $("#modal-barang-tiktok").modal("show");
     $("#KATEGORItiktok").val(0);
-    $("#BARANGtiktok").val(0);
+    $("#BARANGTIKTOK").val(0);
     $(".select2").trigger('change');
     setGambarProduk();
 }
@@ -1511,19 +1511,21 @@ function simpantiktok(){
     var arrImage = [];
     var arrImageID = [];
     var arrImageBukantiktok = [];
-    for(var y = 0 ; y < 8 ;y++)
+    for(var y = 0 ; y < 9 ;y++)
     {
         //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
         if($("#src-input-tiktok-"+y).val() != "")
         {
             arrImageID.push($('#id-input-tiktok-'+y).val());
             arrImage.push($('#src-input-tiktok-'+y).val());
-            if(!$("#src-input-tiktok-"+y).val().includes('https://sg-test-11.slatic.net')){
+            if(!$("#src-input-tiktok-"+y).val().includes('https://p16-oec-va.ibyteimg.com/')){
                 arrImageBukantiktok.push(
                     {
                         "id" : $("#id-input-tiktok-"+y).val(),
                         "url" : $("#src-input-tiktok-"+y).val(),
-                        "url-baru" : ""
+                        "reason": "MAIN_IMAGE",
+                        "url-baru" : "",
+                        "id-baru" : ""
                     }
                 )
             }
@@ -1539,19 +1541,21 @@ function simpantiktok(){
         {
             arrImageIDVarian.push($('#id-input-varian-tiktok-'+y).val());
             arrImageVarian.push($('#src-input-varian-tiktok-'+y).val());
-            if(!$("#src-input-tiktok-"+y).val().includes('https://sg-test-11.slatic.net')){
+            if(!$("#src-input-tiktok-"+y).val().includes('https://p16-oec-va.ibyteimg.com/')){
                 arrImageBukantiktok.push(
                     {
                         "id" : $('#id-input-varian-tiktok-'+y).val(),
                         "url" :$("#src-input-varian-tiktok-"+y).val(),
-                        "url-baru" : ""
+                        "reason": "ATTRIBUTE_IMAGE",
+                        "url-baru" : "",
+                        "id-baru" : ""
                     }
                 )
             }
         }
     }
     
-    if(($("#KATEGORItiktok").val() == 0 || $("#KATEGORItiktok").val() == null) || ($("#BARANGtiktok").val() == 0 || $("#BARANGtiktok").val() == null) || arrImage.length < 2 || arrImageVarian.length != warna.length) // || base64Images.length == 0
+    if(($("#KATEGORItiktok").val() == 0 || $("#KATEGORItiktok").val() == null) || ($("#BARANGTIKTOK").val() == 0 || $("#BARANGTIKTOK").val() == null) || arrImage.length < 2 || arrImageVarian.length != warna.length) // || base64Images.length == 0
     {
         Swal.fire({ 
         	title            : "Terdapat Data Produk yang belum diisi",
@@ -1569,7 +1573,7 @@ function simpantiktok(){
         if (arrImageBukantiktok.length > 0) {
             ajax1 = $.ajax({
                 type    : 'POST',
-                url     : base_url+'Tiktok/changeLocalUrl/',
+                url     : base_url+'Tiktok/changeAllLocalUrl/',
                 data    : {
                     "url" : JSON.stringify(arrImageBukantiktok),
                 },
@@ -1591,7 +1595,7 @@ function simpantiktok(){
                         {
                             if(arrImageID[x] == msg.data[y]['id'])
                             {
-                                arrImage[x] = msg.data[y]['url-baru']
+                                arrImage[x] = msg.data[y]['id-baru']
                             }
                         }
                     }
@@ -1601,7 +1605,7 @@ function simpantiktok(){
                         {
                             if(arrImageIDVarian[x] == msg.data[y]['id'])
                             {
-                                arrImageVarian[x] = msg.data[y]['url-baru']
+                                arrImageVarian[x] = msg.data[y]['id-baru']
                             } 
                         }
                     }
@@ -1627,18 +1631,18 @@ function simpantiktok(){
                     type    : 'POST',
                     url     : base_url+'Tiktok/setBarang/',
                     data    : {
-                        "IDBARANG"       : $("#IDBARANGtiktok").val(),
+                        "IDBARANG"       : $("#IDBARANGTIKTOK").val(),
                         "KATEGORI"       : $("#KATEGORItiktok").val(), 
                         "NAMA"           : $("#NAMAtiktok").val(), 
                         "DESKRIPSI"      : $("#DESKRIPSItiktok").val(), 
-                        "BERAT"          : $("#BERATMASTERtiktok").val(), 
-                        "PANJANG"        : $("#PANJANGMASTERtiktok").val(), 
-                        "LEBAR"          : $("#LEBARMASTERtiktok").val(), 
-                        "TINGGI"         : $("#TINGGIMASTERtiktok").val(), 
-                        "HARGA"          : $("#HARGAJUALMASTERtiktok").val(),      
-                        "SKU"            : $("#SKUMASTERtiktok").val(), 
+                        "BERAT"          : $("#BERATMASTERTIKTOK").val(), 
+                        "PANJANG"        : $("#PANJANGMASTERTIKTOK").val(), 
+                        "LEBAR"          : $("#LEBARMASTERTIKTOK").val(), 
+                        "TINGGI"         : $("#TINGGIMASTERTIKTOK").val(), 
+                        "HARGA"          : $("#HARGAJUALMASTERTIKTOK").val(),      
+                        "SKU"            : $("#SKUMASTERTIKTOK").val(), 
                         "AKTIF"          : $("#AKTIF").prop("checked")? 1 : 0,
-                        "VARIAN"         : JSON.stringify($('#dataGridVariantiktok').DataTable().rows().data().toArray()),
+                        "VARIAN"         : JSON.stringify($('#dataGridVarianTiktok').DataTable().rows().data().toArray()),
                         "WARNA"          : JSON.stringify(warna),
                         "UKURAN"         : JSON.stringify(ukuran),
                         "GAMBARPRODUK"   : JSON.stringify(arrImage),
@@ -1674,7 +1678,7 @@ function setGambarProduk(){
     var htmlGambarProduk = "<tr>";
     var label = "Gambar Utama";
     
-    for(var y = 0 ; y < 8 ;y++)
+    for(var y = 0 ; y < 9 ;y++)
     {
         var marginRight = "30px";
         
@@ -1718,8 +1722,8 @@ function setGambarProduk(){
     htmlGambarProduk += "</tr>";
     $("#gambarProduktiktok").html(htmlGambarProduk);
     $("#gambarProduktiktok").css('margin-bottom','-40px');
-    
-    for(var y = 0 ; y < 8 ;y++)
+   
+    for(var y = 0 ; y < 9 ;y++)
     {
         const fileInput = document.getElementById('file-input-tiktok-'+y);
         const previewImage = document.getElementById('preview-image-tiktok-'+y);
@@ -1735,11 +1739,11 @@ function setGambarProduk(){
         previewImage.addEventListener('click', () => {
           if(url.value != '')
           {
-              lihatLebihJelastiktok(format.value,title.value,url.value);
+              lihatLebihJelasTiktok(format.value,title.value,url.value);
           }
           else
           {
-            // fileInput.click();
+            //fileInput.click();
           }
         });
         
@@ -1804,17 +1808,17 @@ function setGambarProduk(){
                       // Upload file asli ke server
                     const formData = new FormData();
                     formData.append('index', index.value);
-                    formData.append('kode', $("#BARANGtiktok").val()+"_"+index.value);
+                    formData.append('kode', $("#BARANGTIKTOK").val()+"_"+index.value);
                     formData.append('file', file);
                     formData.append('tipe', 'GAMBAR');
                     formData.append('size', file.size);
-                    formData.append("reason","produk");
+                    formData.append("reason","MAIN_IMAGE");
                 
                     loading();
                     
                     $.ajax({
                       type: 'POST',
-                      url: base_url + 'Tiktok/uploadLocalUrl/',
+                      url: base_url + 'Tiktok/convertLocalUrl/',
                       data: formData,
                       contentType: false,
                       processData: false,
@@ -1886,7 +1890,7 @@ function setGambarProduk(){
          //      // Upload file asli ke server
          //       const formData = new FormData();
          //       formData.append('index', index.value);
-         //       formData.append('kode', $("#BARANGtiktok").val()+"_"+y);
+         //       formData.append('kode', $("#BARANGTIKTOK").val()+"_"+y);
          //       formData.append('file', file);
          //       formData.append('tipe', 'VIDEO');
          //       formData.append('size', file.size);

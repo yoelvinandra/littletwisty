@@ -55,6 +55,7 @@ function login($user){
 	$_SESSION[NAMAPROGRAM]['MULTICURRENCY'] = $CI->model_master_config->getConfig('GLOBAL','MULTICURRENCY');
 	
 	$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] = $CI->model_master_config->getConfig('SHOPEE','ACTIVE');
+	$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] = $CI->model_master_config->getConfig('TIKTOK','ACTIVE');
 	$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] = $CI->model_master_config->getConfig('LAZADA','ACTIVE');
 	
 	/*$items = array();
