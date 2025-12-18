@@ -7884,15 +7884,16 @@ class Shopee extends MY_Controller {
         //CEK LOKASI PICKUP
         
         //DELETE KARTUSTOK YANG STATUSNYA CANCELLED
-        $sql = "
-            DELETE FROM KARTUSTOK
-            WHERE KARTUSTOK.KODETRANS IN (
-                SELECT KODEPENJUALANMARKETPLACE FROM TPENJUALANMARKETPLACE 
-                WHERE MARKETPLACE = 'SHOPEE'
-                    AND TPENJUALANMARKETPLACE.STATUSMARKETPLACE = 'CANCELLED')
+        $sqlDeleteStok = "
+            DELETE ks
+                FROM KARTUSTOK ks
+                JOIN TPENJUALANMARKETPLACE tp
+                  ON tp.KODEPENJUALANMARKETPLACE = ks.KODETRANS
+                WHERE tp.MARKETPLACE = 'SHOPEE'
+                  AND tp.STATUSMARKETPLACE = 'CANCELLED';
         ";
         
-        $CI->db->query($sql);
+        $CI->db->query($sqlDeleteStok);
         
         //PRINT
         $invoice = [];

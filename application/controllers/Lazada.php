@@ -6423,15 +6423,16 @@ class Lazada extends MY_Controller {
         }
         
         //DELETE KARTUSTOK YANG STATUSNYA CANCELLED
-        $sql = "
-            DELETE FROM KARTUSTOK
-            WHERE KARTUSTOK.KODETRANS IN (
-                SELECT KODEPENJUALANMARKETPLACE FROM TPENJUALANMARKETPLACE 
-                WHERE MARKETPLACE = 'LAZADA'
-                    AND TPENJUALANMARKETPLACE.STATUSMARKETPLACE = 'CANCELLED')
+        $sqlDeleteStok = "
+            DELETE ks
+            FROM KARTUSTOK ks
+            JOIN TPENJUALANMARKETPLACE tp
+              ON tp.KODEPENJUALANMARKETPLACE = ks.KODETRANS
+            WHERE tp.MARKETPLACE = 'LAZADA'
+              AND tp.STATUSMARKETPLACE = 'CANCELLED';
         ";
         
-        $CI->db->query($sql);
+        $CI->db->query($sqlDeleteStok);
         
         
         //TOTAL RETUR HEADER
