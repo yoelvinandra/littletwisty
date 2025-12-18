@@ -1813,9 +1813,9 @@ function simpanHeader(jenis = '') {
         	timer            : 1500
         });
     }
-    else if($("#KATEGORI").val().length < 5){
+    else if($("#KATEGORI").val().length < 25){
          Swal.fire({ 
-        	title            : "Panjang Nama Produk min 5",
+        	title            : "Panjang Nama Produk min 25 Karakter",
         	type             : 'warning',
         	showConfirmButton: false,
         	timer            : 1500

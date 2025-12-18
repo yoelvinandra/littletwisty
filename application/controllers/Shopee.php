@@ -1031,7 +1031,7 @@ class Shopee extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         $lokasi = "1";
-        $countSuccess = 0 ;
+        
         if($ret['error'] != "")
         {
             echo $ret['error']." LOKASI : ".$ret['message'];
@@ -2017,7 +2017,7 @@ class Shopee extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         $lokasi = "1";
-        $countSuccess = 0 ;
+        
         if($ret['error'] != "")
         {
             echo $ret['error']." LOKASI : ".$ret['message'];
@@ -7285,7 +7285,7 @@ class Shopee extends MY_Controller {
                                 curl_close($curl);
                                 $ret =  json_decode($response,true);
                                 $lokasi = "1";
-                                $countSuccess = 0 ;
+                                
                                 if($ret['error'] != "")
                                 {
                                     echo $ret['error']." LOKASI : ".$ret['message'];
@@ -7882,6 +7882,17 @@ class Shopee extends MY_Controller {
             }
         }
         //CEK LOKASI PICKUP
+        
+        //DELETE KARTUSTOK YANG STATUSNYA CANCELLED
+        $sql = "
+            DELETE FROM KARTUSTOK
+            WHERE KARTUSTOK.KODETRANS IN (
+                SELECT KODEPENJUALANMARKETPLACE FROM TPENJUALANMARKETPLACE 
+                WHERE MARKETPLACE = 'SHOPEE'
+                    AND TPENJUALANMARKETPLACE.STATUSMARKETPLACE = 'CANCELLED')
+        ";
+        
+        $CI->db->query($sql);
         
         //PRINT
         $invoice = [];
@@ -8555,7 +8566,7 @@ class Shopee extends MY_Controller {
         curl_close($curl);
         $ret =  json_decode($response,true);
         $lokasi = "1";
-        $countSuccess = 0 ;
+        
         if($ret['error'] != "")
         {
             echo $ret['error']." LOKASI : ".$ret['message'];

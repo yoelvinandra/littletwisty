@@ -6422,6 +6422,18 @@ class Lazada extends MY_Controller {
             $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$idlokasiset);
         }
         
+        //DELETE KARTUSTOK YANG STATUSNYA CANCELLED
+        $sql = "
+            DELETE FROM KARTUSTOK
+            WHERE KARTUSTOK.KODETRANS IN (
+                SELECT KODEPENJUALANMARKETPLACE FROM TPENJUALANMARKETPLACE 
+                WHERE MARKETPLACE = 'LAZADA'
+                    AND TPENJUALANMARKETPLACE.STATUSMARKETPLACE = 'CANCELLED')
+        ";
+        
+        $CI->db->query($sql);
+        
+        
         //TOTAL RETUR HEADER
         $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(IF(BARANGSAMPAI = 1,SKUPRODUKPENGEMBALIAN,null) SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
                                 sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI

@@ -2099,6 +2099,7 @@ function reset() {
 	$("#gambarvarianshopee").css('margin-bottom','0px');
 	$("#gambarukuranprodukshopee").html("");
 	$("#TABELUKURANSETTINGSHOPEE").hide();
+	$("#btn_simpan_detail_shopee").show();
 	warna = [];
     ukuran = [];
     attributShopee = [];
@@ -2112,7 +2113,7 @@ $("#KATEGORISHOPEE").change(function(){
        loading();
        $("#dataGridAttributShopee").DataTable().ajax.url(base_url+'Shopee/getAttribut/'+$(this).val());
        $("#dataGridAttributShopee").DataTable().ajax.reload();
-    
+       var sizeChartAvailable = false;
        $.ajax({
            type      : 'POST',
            url       : base_url+'Shopee/getSizeChart',
@@ -2130,6 +2131,7 @@ $("#KATEGORISHOPEE").change(function(){
                        
               if(msg.available_image_size_chart || msg.available_template_size_chart)
               {
+                  sizeChartAvailable = true;
                   $("#TABELUKURANSETTINGSHOPEE").show();
                   
                   if(msg.available_image_size_chart && msg.available_template_size_chart)
@@ -2141,10 +2143,12 @@ $("#KATEGORISHOPEE").change(function(){
                   else if(msg.available_image_size_chart)
                   {
                       $("#gambarukuranprodukshopee").show();
+                      $("#SIZETEMPLATETIKTOK").prop('checked',false).iCheck('update');
                   }
                   else if(msg.available_template_size_chart)
                   {
                       $("#TEMPLATESHOPEE").show();
+                      $("#SIZETEMPLATETIKTOK").prop('checked',true).iCheck('update');
                   }
               }
               
@@ -2412,20 +2416,20 @@ $("#KATEGORISHOPEE").change(function(){
                     });
                   }
                 });
-              
-                let isChecked = $('#SIZETEMPLATESHOPEE').prop('checked');
-    
-                if (isChecked) {
-                    $("#TEMPLATESHOPEE").removeAttr("disabled");
-                    $("#gambarukuranprodukshopee").hide();
-                } else {
-                    $("#TEMPLATESHOPEE").attr("disabled", "disabled");
-                    $("#gambarukuranprodukshopee").show();
-                }
                 
-                if(isChecked)
+                if(sizeChartAvailable)
                 {
-                    if(dataGambar.length > 0)
+                    let isChecked = $('#SIZETEMPLATESHOPEE').prop('checked');
+        
+                    if (isChecked) {
+                        $("#TEMPLATESHOPEE").removeAttr("disabled");
+                        $("#gambarukuranprodukshopee").hide();
+                    } else {
+                        $("#TEMPLATESHOPEE").attr("disabled", "disabled");
+                        $("#gambarukuranprodukshopee").show();
+                    }
+                    
+                    if(!isChecked)
                     {
                         for(var x = 0 ; x < dataGambar.length ; x++)
                         {
@@ -2746,6 +2750,14 @@ function simpanShopee(){
     {
         Swal.fire({ 
         	title            : "Terdapat Data Produk yang belum diisi",
+        	type             : 'warning',
+        	showConfirmButton: false,
+        	timer            : 1500
+        });
+    }
+    else if($("#BARANGSHOPEE").val().length < 25){
+         Swal.fire({ 
+        	title            : "Panjang Nama Produk min 25 Karakter, Harap Ubah Pada Master Barang",
         	type             : 'warning',
         	showConfirmButton: false,
         	timer            : 1500

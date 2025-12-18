@@ -7,6 +7,8 @@ class Model_master_config extends CI_Model{
 	}
 	
 	public function getConfigMarketplace($modul,$conf){
+	    
+        $this->maindb->reconnect();
 		return $this->maindb
 					->where('MODUL',$modul)
 					->where('CONFIG',$conf)

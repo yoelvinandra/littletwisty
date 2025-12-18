@@ -1318,6 +1318,7 @@ function reset() {
 	$("#gambarProdukLazada").css('margin-bottom','0px');
 	$("#gambarVarianLazada").html("");
 	$("#gambarVarianLazada").css('margin-bottom','0px');
+	$("#btn_simpan_detail_lazada").show();
 	warna = [];
     ukuran = [];
     attributlazada = [];
@@ -1540,6 +1541,14 @@ function simpanLazada(){
     {
         Swal.fire({ 
         	title            : "Terdapat Data Produk yang belum diisi",
+        	type             : 'warning',
+        	showConfirmButton: false,
+        	timer            : 1500
+        });
+    }
+    else if($("#BARANGLAZADA").val().length < 25){
+         Swal.fire({ 
+        	title            : "Panjang Nama Produk min 25 Karakter, Harap Ubah Pada Master Barang",
         	type             : 'warning',
         	showConfirmButton: false,
         	timer            : 1500
