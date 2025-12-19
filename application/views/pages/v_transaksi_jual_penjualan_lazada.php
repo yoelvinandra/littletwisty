@@ -3031,8 +3031,7 @@ function returBarangLazada(){
                 	}
                 });
         	}
-        });
-    }
+    });
 }
 
 function returLazada(){
