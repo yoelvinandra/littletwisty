@@ -1674,6 +1674,7 @@ function lihatShopee(){
     	    $("#ubahShopeeDetail").hide();
     	    $("#kirimShopeeDetail").hide();
     	    $("#lacakShopeeDetail").hide();
+    	    $("#returBarangShopeeDetail").hide();
     	    if(row.STATUS.toUpperCase() == "SIAP DIKIRIM")
     	    {
     	        $("#hapusShopeeDetail").show();
