@@ -1414,7 +1414,7 @@ function changeTabShopee(index){
                             } else if (row.STATUS.toUpperCase() == "DIPROSES" ) {
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                                 html += "<div style='margin-top:auto;'><button id='btn_cetak_shopee' class='btn btn-warning'  style='width:122px;'>Cetak</button></div>";
-                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && (row.BARANGSAMPAI == 0 || row.BARANGSAMPAIMANUAL == 0)){
+                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && (row.BARANGSAMPAI == 0 && row.BARANGSAMPAIMANUAL == 0)){
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                                 html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_shopee' class='btn btn-danger'  style='width:122px;' >Retur B. Manual</button>";
                             }  else {
@@ -3823,23 +3823,39 @@ function returBarangShopee(){
     $("#modal-pengembalian-shopee").modal("hide");
     var row = JSON.parse($("#rowDataShopee").val());
     
-    $.ajax({
-    	type    : 'POST',
-    	url     : base_url+'Shopee/setReturBarang/',
-    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
-    	dataType: 'json',
-    	success : function(msg){
-            if(!msg.success)
-            {
-                Swal.fire({
-                		title            :  msg.msg,
-                		type             : (msg.success?'success':'error'),
-                		showConfirmButton: false,
-                		timer            : 2000
+    Swal.fire({
+        title: 'Anda Yakin Merubah Pengembalian Dana menjadi Barang ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Shopee/setReturBarang/',
+                	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
+                	dataType: 'json',
+                	success : function(msg){
+                       
+                        Swal.fire({
+                        		title            :  msg.msg,
+                        		type             : (msg.success?'success':'error'),
+                        		showConfirmButton: false,
+                        		timer            : 2000
+                        });
+                        
+                        if(msg.success)
+                        {
+                            setTimeout(() => {
+                                reloadShopee();
+                            }, "2000");
+                        }
+                	}
                 });
-            }
-    	}
-    });
+        	}
+        });
+    }
 }
 
 function returShopee(){
