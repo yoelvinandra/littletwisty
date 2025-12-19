@@ -394,7 +394,7 @@
             <button onclick="cetakLazada()" id="cetakLazadaDetail" style="margin-left:5px;" class='btn btn-warning'>Cetak</button>
             <button onclick="kirimLazada()" id='kirimLazadaDetail' class='btn btn-success' style='float:right;'>Atur Pengiriman</button>
             <button onclick="lacakLazada()" id='lacakLazadaDetail' class='btn btn-success' style='float:right;'>Lacak Pesanan</button>
-            <button onclick="returBarangLazada()" id='returBarangLazadaDetail' class='btn btn-danger' style='float:right;'>Retur Brg Manual</button>
+            <button onclick="returBarangLazada()" id='returBarangLazadaDetail' class='btn btn-danger' style='float:right;'>Retur B. Manual</button>
         </div>
 		<div class="modal-body">
       	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
@@ -1380,7 +1380,7 @@ function changeTabLazada(index){
                                 html += "<div style='margin-top:auto;'><button id='btn_lacak_lazada' class='btn btn-success' style='width:122px;'>Lacak Pesanan</button></div>";
                             } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && (row.BARANGSAMPAI == 0 || row.BARANGSAMPAIMANUAL == 0)){
                                 html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
-                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_lazada' class='btn btn-danger'  style='width:122px;' >Retur Brg Manual</button>";
+                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_lazada' class='btn btn-danger'  style='width:122px;' >Retur B. Manual</button>";
                             } else {
                                 html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                             }
