@@ -3836,6 +3836,7 @@ function returBarangShopee(){
                 		timer            : 2000
                 });
             }
+    	}
     });
 }
 

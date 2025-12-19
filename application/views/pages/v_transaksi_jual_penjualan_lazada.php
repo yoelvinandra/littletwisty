@@ -3012,6 +3012,7 @@ function returBarangLazada(){
                 		timer            : 2000
                 });
             }
+    	}
     });
 }
 
