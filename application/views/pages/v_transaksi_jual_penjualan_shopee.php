@@ -1414,7 +1414,10 @@ function changeTabShopee(index){
                             } else if (row.STATUS.toUpperCase() == "DIPROSES" ) {
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                                 html += "<div style='margin-top:auto;'><button id='btn_cetak_shopee' class='btn btn-warning'  style='width:122px;'>Cetak</button></div>";
-                            } else {
+                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && (row.BARANGSAMPAI == 0 || row.BARANGSAMPAIMANUAL == 0)){
+                                html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
+                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_shopee' class='btn btn-danger'  style='width:122px;' >Retur Barang Manual</button>";
+                            }  else {
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                             }
                             html += "</div>";

@@ -1378,9 +1378,14 @@ function changeTabLazada(index){
                             } else if (row.STATUS.toUpperCase() == "DALAM PENGIRIMAN" || row.STATUS.toUpperCase() == "GAGAL PENGIRIMAN") {
                                 html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                                 html += "<div style='margin-top:auto;'><button id='btn_lacak_lazada' class='btn btn-success' style='width:122px;'>Lacak Pesanan</button></div>";
+                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && (row.BARANGSAMPAI == 0 || row.BARANGSAMPAIMANUAL == 0)){
+                                html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
+                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_lazada' class='btn btn-danger'  style='width:122px;' >Retur Barang Manual</button>";
                             } else {
                                 html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                             }
+                            
+                                
                             html += "</div>";
                             return html;
                         }
@@ -1394,7 +1399,6 @@ function changeTabLazada(index){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang</div><div style='margin:auto;'></div>";
                             } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Dana</div><div style='margin:auto;'></div>";
-                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_lazada' class='btn btn-danger'  style='width:122px;' >Retur Barang Manual</button>";
                             }
                             return html;
                         }
