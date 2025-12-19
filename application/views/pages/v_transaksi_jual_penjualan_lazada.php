@@ -3006,7 +3006,7 @@ function noteKonfirmLazada(){
 }
 
 function returBarangLazada(){
-    $("#modal-pengembalian-lazada").modal("hide");
+    $("#modal-form-lazada").modal("hide");
     var row = JSON.parse($("#rowDataLazada").val());
     loading();
     Swal.fire({
