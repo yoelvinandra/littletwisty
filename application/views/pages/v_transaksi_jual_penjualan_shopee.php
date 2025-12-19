@@ -3828,13 +3828,14 @@ function noteKonfirmShopee(){
 function returBarangShopee(){
     $("#modal-pengembalian-shopee").modal("hide");
     var row = JSON.parse($("#rowDataShopee").val());
-    
+    loading();
     Swal.fire({
         title: 'Anda Yakin Merubah Pengembalian Dana menjadi Barang ?',
         showCancelButton: true,
         confirmButtonText: 'Yakin',
         cancelButtonText: 'Tidak',
         }).then((result) => {
+              Swal.close();
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
                 $.ajax({

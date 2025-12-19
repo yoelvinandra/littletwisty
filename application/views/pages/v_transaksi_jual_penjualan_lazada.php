@@ -3008,13 +3008,14 @@ function noteKonfirmLazada(){
 function returBarangLazada(){
     $("#modal-pengembalian-lazada").modal("hide");
     var row = JSON.parse($("#rowDataLazada").val());
-    
+    loading();
     Swal.fire({
         title: 'Anda Yakin Merubah Pengembalian Dana menjadi Barang ?',
         showCancelButton: true,
         confirmButtonText: 'Yakin',
         cancelButtonText: 'Tidak',
         }).then((result) => {
+            Swal.close();
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
                 $.ajax({

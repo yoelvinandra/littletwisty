@@ -7148,7 +7148,7 @@ class Shopee extends MY_Controller {
                            $indexPengganti = $s;
                            
                              //GET NAMA BARANG
-                            $sql = "SELECT NAMABARANG, WARNA, SIZE, SKUSHOPEE as SKU
+                            $sql = "SELECT IDBARANG, NAMABARANG, WARNA, SIZE, SKUSHOPEE as SKU
                                         FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkData[$indexPengganti])[1]."'";
                             $dataBarang = $CI->db->query($sql)->row();
                             
@@ -7322,7 +7322,7 @@ class Shopee extends MY_Controller {
                                         $whereBarang = " and IDBARANG in (";
                                         foreach($dataBarang as $itemBarang)
                                         {
-                                    		$whereBarang .= $itemBarang;
+                                    		$whereBarang .= $itemBarang->IDBARANG;
                                     		if($countBarang < count($dataBarang)-1)
                                     		{
                                     		    $whereBarang .= ",";
