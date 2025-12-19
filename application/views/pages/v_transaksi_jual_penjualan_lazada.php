@@ -1643,6 +1643,7 @@ function lihatLazada(){
     	    $("#ubahLazadaDetail").hide();
     	    $("#kirimLazadaDetail").hide();
     	    $("#lacakLazadaDetail").hide();
+    	    $("#returBarangLazadaDetail").hide();
             $("#DETAILINFORMASIPENJUALLAZADA").hide();
             $("#ADDINFOINFORMASIPENJUAL").show();
             
@@ -1669,6 +1670,13 @@ function lihatLazada(){
     	    {
     	        $("#lacakLazadaDetail").show();
     	    }
+    	    
+    	    if(row.STATUS.toUpperCase() == "SELESAI"  && row.BARANGSAMPAI == 0 && row.BARANGSAMPAIMANUAL == 0)
+            {
+               $("#returBarangLazadaDetail").show();
+            }
+    	    
+    	    
     	    
             $("#NOLAZADA").html("#"+row.KODEPESANAN);
             $("#STATUSLAZADA").html(row.STATUS);

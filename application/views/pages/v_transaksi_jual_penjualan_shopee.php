@@ -1689,6 +1689,11 @@ function lihatShopee(){
     	        $("#cetakShopeeDetail").show();
     	    }
     	    
+    	     if(row.STATUS.toUpperCase() == "SELESAI"  && row.BARANGSAMPAI == 0 && row.BARANGSAMPAIMANUAL == 0)
+            {
+               $("#returBarangShopeeDetail").show();
+            }
+    	    
             $("#NOSHOPEE").html("#"+row.KODEPESANAN);
             $("#STATUSSHOPEE").html(row.STATUS);
             $("#TGLPESANANSHOPEE").html(row.TGLPESANAN.replaceAll("<br>"," "));
