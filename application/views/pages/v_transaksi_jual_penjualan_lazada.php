@@ -394,6 +394,7 @@
             <button onclick="cetakLazada()" id="cetakLazadaDetail" style="margin-left:5px;" class='btn btn-warning'>Cetak</button>
             <button onclick="kirimLazada()" id='kirimLazadaDetail' class='btn btn-success' style='float:right;'>Atur Pengiriman</button>
             <button onclick="lacakLazada()" id='lacakLazadaDetail' class='btn btn-success' style='float:right;'>Lacak Pesanan</button>
+            <button onclick="returBarangLazada()" id='returBarangLazadaDetail' class='btn btn-danger' style='float:right;'>Retur Barang Manual</button>
         </div>
 		<div class="modal-body">
       	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
@@ -1389,10 +1390,11 @@ function changeTabLazada(index){
                         "targets": 1,
                         render: function (data, type, row) {
                             let html = row.STATUS;
-                            if(row.STATUS.toUpperCase() == "SELESAI" && row.BARANGSAMPAI == 1){
+                            if(row.STATUS.toUpperCase() == "SELESAI" && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1)){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang</div><div style='margin:auto;'></div>";
                             } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Dana</div><div style='margin:auto;'></div>";
+                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_lazada' class='btn btn-danger'  style='width:122px;' >Retur Barang Manual</button>";
                             }
                             return html;
                         }
@@ -1495,6 +1497,8 @@ function changeTabLazada(index){
     		else if(mode == "btn_lacak_lazada"){lacakLazada();}
     		else if(mode == "btn_kembali_lazada"){kembaliLazada();}
     		else if(mode == "btn_retur_lazada"){returLazada();}
+    	    else if(mode == "btn_retur_manual_lazada"){returBarangLazada();}
+    		
     	} );
     	
     	$('#dataGridLazada'+index+' tbody').on( 'click', 'i', function () {
@@ -2987,6 +2991,28 @@ function noteKonfirmLazada(){
                  });
         	}
         });
+}
+
+function returBarangLazada(){
+    $("#modal-pengembalian-lazada").modal("hide");
+    var row = JSON.parse($("#rowDataLazada").val());
+    
+    $.ajax({
+    	type    : 'POST',
+    	url     : base_url+'Lazada/setReturBarang/',
+    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
+    	dataType: 'json',
+    	success : function(msg){
+            if(!msg.success)
+            {
+                Swal.fire({
+                		title            :  msg.msg,
+                		type             : (msg.success?'success':'error'),
+                		showConfirmButton: false,
+                		timer            : 2000
+                });
+            }
+    });
 }
 
 function returLazada(){

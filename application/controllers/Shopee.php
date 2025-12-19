@@ -3721,7 +3721,7 @@ class Shopee extends MY_Controller {
                         NAME as BUYERNAME, TELP as BUYERPHONE, ALAMAT as BUYERALAMAT, KOTA,
                         METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
                         KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
-                        TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI
+                        TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI,BARANGSAMPAIMANUAL
                         FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' ".$whereTgltrans."
                         order by TGLTRANS DESC";
         $result = $CI->db->query($sql)->result();
@@ -4510,7 +4510,7 @@ class Shopee extends MY_Controller {
                     }
                     $wherePesanan .= ")";
                     
-                    $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
+                    $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE != '' and (BARANGSAMPAI = 1 OR BARANGSAMPAIMANUAL = 1) $wherePesanan ";
                     $dataRetur = $CI->db->query($sqlRetur)->result();
             
                     foreach($dataRetur as $itemRetur)
@@ -7444,6 +7444,79 @@ class Shopee extends MY_Controller {
         
 	}
 	
+	 public function setReturBarang(){
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		$nopengembalian = $this->input->post('kodepengembalian')??"";
+		$nopesanan = $this->input->post('kodepesanan')??"";
+	    
+	    //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
+        $lokasi = "1";
+        $parameter="";
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['error'] != "")
+        {
+            echo $ret['error']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataAddress = $ret['response']['address_list'];
+            $data['rows'] = [];
+            for($x = 0 ; $x < count($dataAddress);$x++)
+            {
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASISHOPEE = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                
+                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
+                {
+                    if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
+                    {
+                        $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                    }
+                }
+            }
+        }
+        
+	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
+
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and (BARANGSAMPAI = 0 AND BARANGSAMPAIMANUAL = 0) and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."' ";
+        $dataRetur = $CI->db->query($sqlRetur)->result();
+
+        foreach($dataRetur as $itemRetur)
+        {
+             $CI->db->where("KODEPENGEMBALIANMARKETPLACE", $itemRetur->KODEPENGEMBALIANMARKETPLACE)
+              ->set('BARANGSAMPAIMANUAL',1)
+    	     ->update('TPENJUALANMARKETPLACE');
+    	     
+           $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
+        }
+     
+        
+        $data['success'] = true;
+        $data['msg'] = "Pengembalian Barang Manual Atas Pesanan #".$nopesanan." Berhasil Dilakukan";
+        echo(json_encode($data));
+
+	}
+	
 	public function init($tgl_aw,$tgl_ak,$jenis = 'create_time') {
 	    
 	    if($jenis == "update")
@@ -8440,7 +8513,7 @@ class Shopee extends MY_Controller {
             $wherePesanan .= ")";
 	    }
         
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and KODEPENGEMBALIANMARKETPLACE != '' and (BARANGSAMPAI = 1 OR BARANGSAMPAIMANUAL = 1) $wherePesanan ";
         $dataRetur = $CI->db->query($sqlRetur)->result();
 
         foreach($dataRetur as $itemRetur)

@@ -2270,6 +2270,333 @@ async function simpanHeaderShopee(){
     }); 
 }
 
+async function simpanHeaderTiktok(){
+    
+    var aktif = 1;
+    
+     // Helper: convert jQuery ajax to Promise
+    function ajaxPost(url, data = {}) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: data,
+                dataType: 'json',
+                success: resolve,
+                error: reject
+            });
+        });
+    }
+    
+    var arrImage = [];
+    var arrImageID = [];
+    var arrImageBukanTiktok = [];
+    for(var y = 0 ; y < 9 ;y++)
+    {
+        //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
+        if($("#src-input-"+y).val() != "")
+        {
+            arrImageID.push($('#id-input-'+y).val());
+            arrImage.push($('#src-input-'+y).val());
+            if(!$("#src-input-"+y).val().includes('https://p16-oec-va.ibyteimg.com/')){
+                arrImageBukanTiktok.push(
+                    {
+                        "id" : $("#id-input-"+y).val(),
+                        "url" : $("#src-input-"+y).val(),
+                        "reason": "MAIN_IMAGE",
+                        "url-baru" : "",
+                        "id-baru" : ""
+                    }
+                )
+            }
+        }
+    }
+    
+    var arrImageVarian = [];
+    var arrImageKeteranganVarian = [];
+    var arrImageIDVarian = [];
+    for(var y = 0 ; y < warna.length; y++)
+    {
+        //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
+        if($("#src-input-varian-"+y).val() != "")
+        {
+            arrImageIDVarian.push($('#id-input-varian-'+y).val());
+            arrImageVarian.push($('#src-input-varian-'+y).val());
+            arrImageKeteranganVarian.push($('#keterangan-input-varian-'+y).val().replaceAll("Gambar Varian ",""));
+            if(!$("#src-input-varian-"+y).val().includes('https://p16-oec-va.ibyteimg.com/')){
+                arrImageBukanTiktok.push(
+                    {
+                        "id" : $('#id-input-varian-'+y).val(),
+                        "url" :$("#src-input-varian-"+y).val(),
+                        "reason": "ATTRIBUTE_IMAGE",
+                        "url-baru" : "",
+                        "id-baru" : ""
+                    }
+                )
+            }
+        }
+    }
+    
+    var sizeChart = "";
+    var sizeChartID = "";
+    var sizeChartTipe = "GAMBAR";
+    
+    for(var g = 0 ; g < dataGambar.length;g++)
+    {
+        if(dataGambar[g].ID != "")
+        {
+            arrImage.push(dataGambar[g].ID);
+            sizeChartID = dataGambar[g].ID;
+            sizeChart = dataGambar[g].URL;
+        }
+    }
+    
+    if(!sizeChart.includes('https://p16-oec-va.ibyteimg.com/')){
+        arrImageBukanTiktok.push(
+            {
+                "id" : $sizeChartID,
+                "url" :sizeChart,
+                "reason": "SIZE_CHART_IMAGE",
+                "url-baru" : "",
+                "id-baru" : ""
+            }
+        )
+    }
+    
+    
+   let ajax1;
+
+        if (arrImageBukanTiktok.length > 0) {
+            ajax1 = $.ajax({
+                type    : 'POST',
+                url     : base_url+'Tiktok/changeAllLocalUrl/',
+                data    : {
+                    "url" : JSON.stringify(arrImageBukanTiktok),
+                },
+                dataType: 'json'
+            });
+        } else {
+            // kalau kosong langsung resolve dummy deferred
+            ajax1 = $.Deferred().resolve().promise();
+        }
+
+        $.when(ajax1).done(function(msg){
+            var error = false;
+            if(msg)
+            {
+                if (msg.success) {
+                    for(var x = 0 ; x < arrImageID.length ; x++)
+                    {
+                        for(var y = 0 ; y < msg.data.length ; y++)
+                        {
+                            if(arrImageID[x] == msg.data[y]['id'])
+                            {
+                                arrImageID[x] =  msg.data[y]['id-baru'];
+                                arrImage[x] = msg.data[y]['url-baru'];
+                            }
+                        }
+                    }
+                    for(var x = 0 ; x < arrImageIDVarian.length ; x++)
+                    {
+                        for(var y = 0 ; y < msg.data.length ; y++)
+                        {
+                            if(arrImageIDVarian[x] == msg.data[y]['id'])
+                            {
+                                arrImageIDVarian[x] =  msg.data[y]['id-baru'];
+                                arrImageVarian[x] = msg.data[y]['url-baru'];
+                            } 
+                        }
+                    }
+                    for(var y = 0 ; y < msg.data.length ; y++)
+                    {
+                        if(sizeChartID == msg.data[y]['id']){
+                            sizeChartID = msg.data[y]['id-baru'];
+                            sizeChart = msg.data[y]['src-baru']; 
+                        }
+                    }
+                }
+                else
+                {
+                    error = true;
+                    // Swal.close();	
+                    // Swal.fire({
+                    //     title            : msg.msg,
+                    //     type             : (msg.success?'success':'error'),
+                    //     showConfirmButton: false,
+                    //     timer            : 2000
+                    // });
+                    simpanTiktok();
+                }
+            }
+                     	   
+            
+            if(!error)
+            {
+             var dataVarianSimpan = [];
+             var dataVarianMaster = [];
+             
+             let resMaster = await ajaxPost(base_url + 'Master/Data/Barang/getDataVarian/' + encodeURIComponent($("#KATEGORI").val()));
+             dataVarianMaster = resMaster.rows;
+             dataVarianSimpan = [...dataVarianMaster];
+             
+             //DATA KLO BLM ADA PAKE YANG DIBAWAH INI GPP, TAPI KLO DAH DISIMPEN DI DB DLU. JADI KEDOBELAN
+             
+             if(indukBarangLazada != 0)
+             {
+                 let msg = await ajaxPost(base_url + 'Lazada/getDataBarang/', { idindukbaranglazada: indukBarangLazada });
+               
+                 for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+                 {
+                     var rowData = dataVarianMaster[dv];
+                     var ada = false;
+                     for(var x = 0 ; x < msg.dataVarian.length; x++)
+                     {
+                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                             ada = true;
+                         }
+                     }
+                     
+                     if(!ada)
+                     {  
+                        // Update the NAMABARANG field
+                        rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:yellow; text-align:center; padding:5px; width:100px;'>Varian Baru</i>";
+                        rowData.MODE = "BARU";
+                        dataVarianSimpan[dv] = rowData;
+                     }
+                 }
+                 
+                 //CEK ADA YANG BERUBAH
+                 for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+                 {
+                     var rowData = dataVarianMaster[dv];
+                     var ada = false;
+                     for(var x = 0 ; x < msg.dataVarian.length; x++)
+                     {
+                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                             rowData.MODE = "";
+                             if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
+                             {
+                             // Update the NAMABARANG field
+                                rowData.IDBARANG   = msg.dataVarian[x].ID,
+                                rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>Harga Diubah</i>";
+                                rowData.MODE += "UBAH HARGA";
+                                dataVarianSimpan[dv] = rowData;
+                             }
+                             if(rowData.SKULAZADA != msg.dataVarian[x].SKU)
+                             {
+                                 if(rowData.MODE != "")
+                                 {
+                                     rowData.MODE += "|";
+                                 }
+                             // Update the NAMABARANG field
+                                rowData.IDBARANG   = msg.dataVarian[x].ID,
+                                rowData.NAMABARANG = rowData.NAMABARANG+" <i class='pull-right'  style='background:lightblue; text-align:center; padding:5px; width:100px;'>SKU Diubah</i>";
+                                rowData.MODE += "UBAH SKU";
+                                // Set the updated data back into the row
+                                dataVarianSimpan[dv] = rowData;
+                             }
+                         }
+                     }
+                 }
+                 
+                 // CEK ADA YANG DIHAPUS APA NDAK
+                 for(var x = 0 ; x < msg.dataVarian.length; x++)
+                 {
+                     ada = false;
+                     for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
+                     {
+                         var rowData = dataVarianMaster[dv];
+                 	    
+                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                             ada = true;
+                         }
+                     }
+                     
+                     if(!ada)
+                     {
+                     var nama = msg.dataVarian[x].NAMA.replaceAll(' | SIZE ',' <span>|</span> SIZE ')+" <i class='pull-right' style='background:#FF5959; text-align:center; padding:5px; width:100px; color:white;'>Varian Dihapus</i>";
+                          
+                        // Update the NAMABARANG field
+                        var newRow = {
+                           IDBARANG   : msg.dataVarian[x].ID,
+                           NAMABARANG : nama,
+                           HARGAJUAL : msg.dataVarian[x].HARGA,
+                           SIZE : msg.dataVarian[x].SIZE,
+                           WARNA : msg.dataVarian[x].WARNA,
+                           HARGAJUAL : msg.dataVarian[x].HARGA,
+                           SKUSHOPEE : msg.dataVarian[x].SKU,
+                           MODE : 'HAPUS'
+                        };
+                        
+                        dataVarianSimpan.push(newRow);
+                     }
+                 }
+             }
+             
+             let msg = await ajaxPost(base_url + 'Lazada/getDataBarangdanVarian/', { idindukbaranglazada: indukBarangLazada });
+             
+             if(indukBarangLazada != 0)
+              {
+                    if(msg.status == 'Active')
+                    {
+                        aktif = 1;
+                    }
+                    else
+                    {
+                        aktif = 0;
+                    }
+             }
+             
+                // hanya sekali dipanggil di sini
+                $.ajax({
+                    type    : 'POST',
+                    url     : base_url+'Tiktok/setBarang/',
+                    data    : {
+                        "IDBARANG"                  : indukBarangTiktok,
+                        "KATEGORI"                  : kategoriBarangTiktok[document.getElementById('KATEGORIONLINE').selectedIndex], 
+                        "NAMA"                      : $("#KATEGORI").val(), 
+                        "DESKRIPSI"                 : $("#DESKRIPSI").val(), 
+                        "BERAT"                     : $("#BERAT").val(), 
+                        "PANJANG"                   : $("#PANJANG").val(), 
+                        "LEBAR"                     : $("#LEBAR").val(), 
+                        "TINGGI"                    : $("#TINGGI").val(), 
+                        "HARGA"                     : $("#HARGAJUALMASTERTIKTOK").val(),      
+                        "SKU"                       : $("#SKUMASTERTIKTOK").val(), 
+                        "AKTIF"                     : $("#AKTIF").prop("checked")? 1 : 0,
+                        "VARIAN"                    : JSON.stringify(dataVarianSimpan),
+                        "WARNA"                     : JSON.stringify(warna),
+                        "UKURAN"                    : JSON.stringify(ukuran),
+                        "GAMBARPRODUK"              : JSON.stringify(arrImageID),
+                        "GAMBARVARIAN"              : JSON.stringify(arrImageIDVarian),
+                        "KETERANGANGAMBARVARIAN"    : JSON.stringify(arrImageKeteranganVarian),
+                	    "SIZECHART"                 : sizeChart,
+                	    "SIZECHARTID"               : sizeChartID,
+                	    "SIZECHARTTIPE"             : sizeChartTipe
+                    },
+                    dataType: 'json',
+                    success : function(msg){
+                        Swal.close();	
+                        Swal.fire({
+                            title            : msg.msg,
+                            type             : (msg.success?'success':'error'),
+                            showConfirmButton: false,
+                            timer            : 2000
+                        });
+                
+                        setTimeout(() => { 
+                            if(msg.success) {
+                                $("#modal-barang-tiktok").modal("hide");
+                                $("#datagridtiktok").DataTable().ajax.reload();
+                                reset();
+                            }
+                        }, "1000");
+                    }
+                });
+            }
+        });
+    }
+}
+
 async function simpanHeaderLazada(){
     var aktif = 1;
     

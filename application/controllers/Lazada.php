@@ -2430,7 +2430,7 @@ class Lazada extends MY_Controller {
                             NAME as BUYERNAME, TELP as BUYERPHONE, ALAMAT as BUYERALAMAT, KOTA,
                             METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
                             KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
-                            TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI,STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
+                            TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI,BARANGSAMPAIMANUAL,STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
                             FROM TPENJUALANMARKETPLACE b WHERE MARKETPLACE = 'LAZADA' and TGLTRANS BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
                             order by TGLTRANS DESC";
         }
@@ -2441,7 +2441,7 @@ class Lazada extends MY_Controller {
                             a.NAME as BUYERNAME, a.TELP as BUYERPHONE, a.ALAMAT as BUYERALAMAT, a.KOTA,
                             a.METODEBAYAR, a.KURIR, a.RESI, a.CATATANPEMBELI as CATATANBELI, a.CATATANPENJUAL AS CATATANJUAL, b.CATATANPENGEMBALIAN,KODEPACKAGING,
                             b.KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, b.TGLPENGEMBALIAN, b.MINTGLPENGEMBALIAN, b.RESIPENGEMBALIAN, 0 as TOTALBARANGPENGEMBALIAN,b.MINTGLKIRIMPENGEMBALIAN,
-                            SUM(b.TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, group_concat(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, b.TIPEPENGEMBALIAN, a.SELLERMENUNGGUBARANGDATANG,SUM(IF(b.BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,b.STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
+                            SUM(b.TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, group_concat(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, b.TIPEPENGEMBALIAN, a.SELLERMENUNGGUBARANGDATANG,SUM(IF(b.BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,SUM(IF(b.BARANGSAMPAIMANUAL = 1,1,0)) as BARANGSAMPAIMANUAL,b.STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
                             FROM TPENJUALANMARKETPLACEDTL b
                             INNER JOIN TPENJUALANMARKETPLACE a ON b.IDPENJUALANMARKETPLACE = a.IDPENJUALANMARKETPLACE
                             WHERE a.MARKETPLACE = 'LAZADA' and b.TGLPENGEMBALIAN BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
@@ -5701,6 +5701,36 @@ class Lazada extends MY_Controller {
         }
         return null;
     }
+    
+    public function setReturBarang(){
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		$nopengembalian = $this->input->post('kodepengembalian')??"";
+		$nopesanan = $this->input->post('kodepesanan')??"";
+	    
+	    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASILAZADA = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
+        $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
+
+        $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN, BARANGSAMPAIMANUAL FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'LAZADA' and (BARANGSAMPAI = 0 AND BARANGSAMPAIMANUAL = 0) and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."'  ORDER BY KODEPENJUALANMARKETPLACE";
+        $dataRetur = $CI->db->query($sqlRetur)->result();
+		   
+        foreach($dataRetur as $itemRetur)
+        {
+            $CI->db->where("KODEPENGEMBALIANMARKETPLACE", $itemRetur->KODEPENGEMBALIANMARKETPLACE)
+              ->set('BARANGSAMPAIMANUAL',1)
+    	     ->update('TPENJUALANMARKETPLACEDTL');
+    	     
+            $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$idlokasiset);
+        }
+     
+        
+        $data['success'] = true;
+        $data['msg'] = "Pengembalian Barang Manual Atas Pesanan #".$nopesanan." Berhasil Dilakukan";
+        echo(json_encode($data));
+
+	}
 	
 	public function init($tgl_aw,$tgl_ak,$jenis = 'create',$showResponse = true) {
 	    
@@ -6414,7 +6444,7 @@ class Lazada extends MY_Controller {
 	    
 	    
         
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'LAZADA' and BARANGSAMPAI = 1 and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY KODEPENJUALANMARKETPLACE";
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'LAZADA' and (BARANGSAMPAI = 1 OR BARANGSAMPAIMANUAL = 1) and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY KODEPENJUALANMARKETPLACE";
         $dataRetur = $CI->db->query($sqlRetur)->result();
 		   
         foreach($dataRetur as $itemRetur)
@@ -6437,7 +6467,7 @@ class Lazada extends MY_Controller {
         
         //TOTAL RETUR HEADER
         $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(IF(BARANGSAMPAI = 1,SKUPRODUKPENGEMBALIAN,null) SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
-                                sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI
+                                sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,  SUM(IF(BARANGSAMPAIMANUAL = 1,1,0)) as BARANGSAMPAIMANUAL
                                 FROM TPENJUALANMARKETPLACEDTL 
                                 WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  
                                 GROUP BY KODEPENJUALANMARKETPLACE 
@@ -6458,6 +6488,7 @@ class Lazada extends MY_Controller {
 		     'STATUS'                        =>  ($itemReturHeader->STATUS > 0 ? '4' : '3'),
 		     "LASTUPDATED"                   =>  date("Y-m-d H:i:s"),
 		     'BARANGSAMPAI'                  =>  ($itemReturHeader->BARANGSAMPAI > 0 ? 1 : 0), 
+		     'BARANGSAMPAIMANUAL'           =>  ($itemReturHeader->BARANGSAMPAIMANUAL > 0 ? 1 : 0), 
 		   ));
         }
         
