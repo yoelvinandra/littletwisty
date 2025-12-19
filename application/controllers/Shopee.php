@@ -7133,12 +7133,10 @@ class Shopee extends MY_Controller {
                     $indexProduk++;
                 }
             }
-            
             if($resultPesanan->SKUPRODUKPENGEMBALIAN != "")
             {
                 $indexPengganti;
                 $produkDataKembali = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
-
                 for($t = 0 ; $t < count($produkDataKembali);$t++)
                 {
                     for($s = 0 ; $s < count($produkDataOld);$s++)
@@ -7319,18 +7317,7 @@ class Shopee extends MY_Controller {
                                     {
                                         $modeList = [];
                                         $countBarang = 0;
-                                        $whereBarang = " and IDBARANG in (";
-                                        foreach($dataBarang as $itemBarang)
-                                        {
-                                    		$whereBarang .= $itemBarang->IDBARANG;
-                                    		if($countBarang < count($dataBarang)-1)
-                                    		{
-                                    		    $whereBarang .= ",";
-                                    		}
-                                    		$countBarang++;
-                                        }
-                                        
-                                        $whereBarang .= ")";	
+                                        $whereBarang = " and IDBARANG in ($dataBarang->IDBARANG)";
                                         
                                         $sql = "select IDPERUSAHAAN, IDBARANGSHOPEE, IDINDUKBARANGSHOPEE, IDBARANG
                                     				from MBARANG
