@@ -394,7 +394,7 @@
             <button onclick="cetakShopee()" id="cetakShopeeDetail" style="margin-left:5px;" class='btn btn-warning'>Cetak</button>
             <button onclick="kirimShopee()" id='kirimShopeeDetail' class='btn btn-success' style='float:right;'>Atur Pengiriman</button>
             <button onclick="lacakShopee()" id='lacakShopeeDetail' class='btn btn-success' style='float:right;'>Lacak Pesanan</button>
-            <button onclick="returBarangShopee()" id='returBarangShopeeDetail' class='btn btn-danger' style='float:right;'>Retur Barang Manual</button>
+            <button onclick="returBarangShopee()" id='returBarangShopeeDetail' class='btn btn-danger' style='float:right;'>Retur Brg Manual</button>
         </div>
 		<div class="modal-body">
       	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
@@ -1416,7 +1416,7 @@ function changeTabShopee(index){
                                 html += "<div style='margin-top:auto;'><button id='btn_cetak_shopee' class='btn btn-warning'  style='width:122px;'>Cetak</button></div>";
                             } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && (row.BARANGSAMPAI == 0 || row.BARANGSAMPAIMANUAL == 0)){
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
-                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_shopee' class='btn btn-danger'  style='width:122px;' >Retur Barang Manual</button>";
+                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_shopee' class='btn btn-danger'  style='width:122px;' >Retur Brg Manual</button>";
                             }  else {
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                             }
@@ -1433,7 +1433,6 @@ function changeTabShopee(index){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang</div><div style='margin:auto;'></div>";
                             } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Dana</div><div style='margin:auto;'></div>";
-                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_shopee' class='btn btn-danger'  style='width:122px;' >Retur Barang Manual</button>";
                             }
                             return html;
                         }
