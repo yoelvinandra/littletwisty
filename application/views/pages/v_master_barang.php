@@ -2380,7 +2380,7 @@ async function simpanHeaderTiktok(){
             ajax1 = $.Deferred().resolve().promise();
         }
 
-        $.when(ajax1).done(function(msg){
+        $.when(ajax1).done(async function(msg){
             var error = false;
             if(msg)
             {
@@ -2441,9 +2441,9 @@ async function simpanHeaderTiktok(){
              
              //DATA KLO BLM ADA PAKE YANG DIBAWAH INI GPP, TAPI KLO DAH DISIMPEN DI DB DLU. JADI KEDOBELAN
              
-             if(indukBarangLazada != 0)
+             if(indukBarangTiktok != 0)
              {
-                 let msg = await ajaxPost(base_url + 'Lazada/getDataBarang/', { idindukbaranglazada: indukBarangLazada });
+                 let msg = await ajaxPost(base_url + 'Tiktok/getDataBarang/', { idindukbarangtiktok: indukBarangTiktok });
                
                  for(var dv = 0 ; dv < dataVarianMaster.length; dv++)
                  {
@@ -2451,7 +2451,7 @@ async function simpanHeaderTiktok(){
                      var ada = false;
                      for(var x = 0 ; x < msg.dataVarian.length; x++)
                      {
-                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                         if (rowData.IDBARANGTIKTOK == msg.dataVarian[x].ID) {
                              ada = true;
                          }
                      }
@@ -2472,7 +2472,7 @@ async function simpanHeaderTiktok(){
                      var ada = false;
                      for(var x = 0 ; x < msg.dataVarian.length; x++)
                      {
-                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                         if (rowData.IDBARANGTIKTOK == msg.dataVarian[x].ID) {
                              rowData.MODE = "";
                              if(rowData.HARGAJUAL != msg.dataVarian[x].HARGA)
                              {
@@ -2482,7 +2482,7 @@ async function simpanHeaderTiktok(){
                                 rowData.MODE += "UBAH HARGA";
                                 dataVarianSimpan[dv] = rowData;
                              }
-                             if(rowData.SKULAZADA != msg.dataVarian[x].SKU)
+                             if(rowData.SKUTIKTOK != msg.dataVarian[x].SKU)
                              {
                                  if(rowData.MODE != "")
                                  {
@@ -2507,7 +2507,7 @@ async function simpanHeaderTiktok(){
                      {
                          var rowData = dataVarianMaster[dv];
                  	    
-                         if (rowData.IDBARANGLAZADA == msg.dataVarian[x].ID) {
+                         if (rowData.IDBARANGTIKTOK == msg.dataVarian[x].ID) {
                              ada = true;
                          }
                      }
@@ -2524,7 +2524,7 @@ async function simpanHeaderTiktok(){
                            SIZE : msg.dataVarian[x].SIZE,
                            WARNA : msg.dataVarian[x].WARNA,
                            HARGAJUAL : msg.dataVarian[x].HARGA,
-                           SKUSHOPEE : msg.dataVarian[x].SKU,
+                           SKUTIKTOK : msg.dataVarian[x].SKU,
                            MODE : 'HAPUS'
                         };
                         
@@ -2594,7 +2594,6 @@ async function simpanHeaderTiktok(){
                 });
             }
         });
-    }
 }
 
 async function simpanHeaderLazada(){
@@ -2846,7 +2845,7 @@ async function simpanHeaderLazada(){
                            SIZE : msg.dataVarian[x].SIZE,
                            WARNA : msg.dataVarian[x].WARNA,
                            HARGAJUAL : msg.dataVarian[x].HARGA,
-                           SKUSHOPEE : msg.dataVarian[x].SKU,
+                           SKULAZADA : msg.dataVarian[x].SKU,
                            MODE : 'HAPUS'
                         };
                         
