@@ -5935,7 +5935,7 @@ class Lazada extends MY_Controller {
             $data['NAME']                           = $history[$x]['address_shipping']['first_name']." ".$history[$x]['address_shipping']['last_name'];
             $data['TELP']                           = $history[$x]['address_shipping']['phone']??"-";
             $data['ALAMAT']                         = $history[$x]['address_shipping']['address1'].($history[$x]['address_shipping']['address2'] != ""?("<br>".$history[$x]['address_shipping']['address2']):"").($history[$x]['address_shipping']['address3'] != ""?("<br>".$history[$x]['address_shipping']['address3']):"").($history[$x]['address_shipping']['address4'] != ""?("<br>".$history[$x]['address_shipping']['address4']):"");
-            $data['KOTA']                           = $history[$x]['address_shipping']['city'];
+            $data['KOTA']                           = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","",strtoupper($history[$x]['address_shipping']['city']))));
             $data['SKUPRODUK']                      = $allsku;
             $data['SKUPRODUKOLD']                   = $allsku;
             if($this->extractDateTime($data['ALLBARANG'][0]['fulfillment_sla']) != null && $dataPesananDB->MINTGLKIRIM == "-")

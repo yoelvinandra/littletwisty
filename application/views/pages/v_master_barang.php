@@ -622,11 +622,11 @@ var kategoriBarangShopee = [
     100685
 ];
 var kategoriBarangTiktok = [
-    0,
-    0,
-    0,
-    0,
-    0
+    602787,
+    805896,
+    806664,
+    888968,
+    888968
 ];
 var kategoriBarangLazada = [
     14010,
@@ -2312,6 +2312,43 @@ async function simpanHeaderTiktok(){
         }
     }
     
+    var varian = $('#dataGridVarian').DataTable().rows().data().toArray();
+    var warna = [];
+    var ukuran = [];
+    for(var y = 0 ; y < varian.length; y++)
+    {
+        var tempWarna = varian[y].WARNA;
+        var tempUk = varian[y].SIZE;
+    	
+    	adaWarna = false;
+    	for(var w = 0 ; w < warna.length; w++)
+    	{
+    	    if(warna[w] == tempWarna)
+    	    {
+    	        adaWarna = true;
+    	    }
+    	}
+    	
+    	if(!adaWarna)
+    	{
+    	    warna.push(tempWarna);
+    	}
+    	
+    	adaUkuran = false;
+    	for(var u = 0 ; u < ukuran.length; u++)
+    	{
+    	    if(ukuran[u] == tempUk)
+    	    {
+    	        adaUkuran = true;
+    	    }
+    	}
+    	
+    	if(!adaUkuran)
+    	{
+    	    ukuran.push(tempUk);
+    	}
+    }
+    
     var arrImageVarian = [];
     var arrImageKeteranganVarian = [];
     var arrImageIDVarian = [];
@@ -2354,7 +2391,7 @@ async function simpanHeaderTiktok(){
     if(!sizeChart.includes('https://p16-oec-va.ibyteimg.com/')){
         arrImageBukanTiktok.push(
             {
-                "id" : $sizeChartID,
+                "id" : sizeChartID,
                 "url" :sizeChart,
                 "reason": "SIZE_CHART_IMAGE",
                 "url-baru" : "",
@@ -2425,7 +2462,7 @@ async function simpanHeaderTiktok(){
                     //     showConfirmButton: false,
                     //     timer            : 2000
                     // });
-                    simpanTiktok();
+                    simpanHeaderTiktok();
                 }
             }
                      	   
@@ -2533,18 +2570,17 @@ async function simpanHeaderTiktok(){
                  }
              }
              
-             let msg = await ajaxPost(base_url + 'Lazada/getDataBarangdanVarian/', { idindukbaranglazada: indukBarangLazada });
-             
-             if(indukBarangLazada != 0)
-              {
-                    if(msg.status == 'Active')
-                    {
-                        aktif = 1;
-                    }
-                    else
-                    {
-                        aktif = 0;
-                    }
+             if(indukBarangTiktok != 0)
+             {
+                let msg = await ajaxPost(base_url + 'Tiktok/getDataBarangdanVarian/', { idindukbarangtiktok: indukBarangTiktok });
+                if(msg.status == 'ACTIVATE')
+                {
+                    aktif = 1;
+                }
+                else
+                {
+                    aktif = 0;
+                }
              }
              
                 // hanya sekali dipanggil di sini
@@ -2560,9 +2596,9 @@ async function simpanHeaderTiktok(){
                         "PANJANG"                   : $("#PANJANG").val(), 
                         "LEBAR"                     : $("#LEBAR").val(), 
                         "TINGGI"                    : $("#TINGGI").val(), 
-                        "HARGA"                     : $("#HARGAJUALMASTERTIKTOK").val(),      
-                        "SKU"                       : $("#SKUMASTERTIKTOK").val(), 
-                        "AKTIF"                     : $("#AKTIF").prop("checked")? 1 : 0,
+                        "HARGA"                     : $("#HARGAJUALINDUK").val(),      
+                        "SKU"                       : $("#SKUTIKTOKINDUK").val(), 
+                        "AKTIF"                     : aktif,
                         "VARIAN"                    : JSON.stringify(dataVarianSimpan),
                         "WARNA"                     : JSON.stringify(warna),
                         "UKURAN"                    : JSON.stringify(ukuran),
@@ -2582,14 +2618,13 @@ async function simpanHeaderTiktok(){
                             showConfirmButton: false,
                             timer            : 2000
                         });
-                
-                        setTimeout(() => { 
-                            if(msg.success) {
-                                $("#modal-barang-tiktok").modal("hide");
-                                $("#datagridtiktok").DataTable().ajax.reload();
-                                reset();
-                            }
-                        }, "1000");
+                       
+                        if(msg.success)
+                        {
+                            $("#dataGrid").DataTable().ajax.reload();
+                            // tambahHeader();
+                            // $('.nav-tabs a[href="#tab_grid"]').tab('show');
+                        }
                     }
                 });
             }
@@ -2854,10 +2889,9 @@ async function simpanHeaderLazada(){
                  }
              }
              
-             let msg = await ajaxPost(base_url + 'Lazada/getDataBarangdanVarian/', { idindukbaranglazada: indukBarangLazada });
-             
              if(indukBarangLazada != 0)
-              {
+             {
+                let msg = await ajaxPost(base_url + 'Lazada/getDataBarangdanVarian/', { idindukbaranglazada: indukBarangLazada });
                     if(msg.status == 'Active')
                     {
                         aktif = 1;

@@ -47,6 +47,30 @@
                         </div>
                     </div>
                     <div class="tab-pane" id="tab_tiktok">
+                         <div class="row">
+                           <div class="col-md-12">
+                                <div class="box" style="border:0px; padding:0px; margin:0px;">
+                                   <div class="col-md-7" style="margin:10px;">
+                                       <br>
+                                       <div style="font-size:12pt; font-weight:bold;">*Untuk menambahkan Lokasi yang ada di marketplace, hanya bisa dilakukan pada aplikasi marketplace. 
+                                       <br>Menu ini hanya menghubungkan stok dari lokasi yang ada pada aplikasi marketplace, dan master lokasi.
+                                       </div>
+                                       <br>
+                                        <table id="dataGridTiktokAPI" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                                               <!-- class="table-hover"> -->
+                                               <thead>
+                                                   <tr>
+                                                       <th width="10px">No</th>
+                                                       <th >Address</th>
+                                                       <th width="180px">Lokasi di Master</th>
+                                                   </tr>
+                                               </thead>
+                                        </table>
+                                        <br>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="tab-pane" id="tab_lazada">
                         <div class="row">
@@ -307,166 +331,217 @@ $(document).ready(function() {
         $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
     });
     
-	
-	//SHOPEE
-	// Step 1: Initialize the table and assign to a variable
-    var tableShopee = $('#dataGridShopeeAPI').DataTable({
-        paging      : true,
-        lengthChange: true,
-        searching   : true,
-        ordering    : true,
-        info        : true,
-        autoWidth   : false,
-        scrollX     : true,
-        ajax        : {
-            url    : base_url + 'Shopee/getStokLokasi',
-            dataSrc: "rows",
-        },
-        columns: [
-            { data: 'NO', className: "text-center" },
-            { data: 'ADDRESSAPI' },
-            { data: 'ADDRESS' },
-        ],
-        columnDefs: [
-            {
-                targets: 2,
-                render: function (data, type, row, meta) {
-                    return `
-                        <input type="hidden" id="IDADDRESSAPI_${row.NO}" value="`+row.IDADDRESSAPI+`">
-                        <select class="form-control" id="LOKASISHOPEE_${row.NO}" placeholder="Lokasi..." style="width:100%;">
-                            <option value="0">- Pilih Lokasi -</option>
-                            <?=comboGridMarketplace("model_master_lokasi")?>
-                        </select>
-                    `;
-                },
-            }
-        ],
-    });
-    
-    // Step 2: Wait until the AJAX request finishes
-    $('#dataGridShopeeAPI').on('xhr.dt', function () {
-        // Delay execution to ensure rendering completes
-        setTimeout(function () {
-            var allDataShopee = tableShopee.rows().data().toArray();
-            for (var x = 0; x < allDataShopee.length; x++) {
-                let no = allDataShopee[x].NO;
-                
-                $(`#LOKASISHOPEE_${no}`).val(allDataShopee[x].ADDRESS);
-    
-                // Delegate safely only once per element (avoid duplicate bindings)
-                $(document).off('change', `#LOKASISHOPEE_${no}`).on('change', `#LOKASISHOPEE_${no}`, function () {
-                    $.ajax({
-                		type    : 'POST',
-                		dataType: 'json',
-                		url     : base_url+"Shopee/setStokLokasi",
-                		data    : "id="+$(this).val() + "&idAPI="+$(`#IDADDRESSAPI_${no}`).val(),
-                		cache   : false,
-                		success : function(msg){
-                			if (msg.success) {
-                				Swal.fire({
-                					title            : 'Lokasi Berhasil Dihubungkan',
-                					type             : 'success',
-                					showConfirmButton: false,
-                					timer            : 1500
-                				});
-                				$("#dataGridShopeeAPI").DataTable().ajax.reload();
-                			} else {
-                					Swal.fire({
-                						title            : msg.errorMsg,
-                						type             : 'error',
-                						showConfirmButton: false,
-                						timer            : 1500
-                					});
-                			}
-                		}
-                	});
-                });
-            }
-        }, 100); // Small delay to ensure rendering is complete
-    });
-	
-// 	//TIKTOK
-// 	$('#dataGridTiktokAPI').DataTable({
-//         'paging'      : true,
-//         'lengthChange': true,
-//         'searching'   : true,
-//         'ordering'    : true,
-//         'info'        : true,
-//         'autoWidth'   : false,
-// 		"scrollX"	  : true,
-// 		ajax		  : {
-// 			url    : base_url+'Tiktok/getStokLokasi',
-// 			dataSrc: "rows",
-// 		},
-//         columns:[
-// 			{data: 'NO'},
-//             {data: 'ADDRESSAPI', visible:false},
-//             {data: 'ADDRESS', visible:false},
-//         ],
-// 		columnDefs: [ 
-// 			{
-//                 "targets": 1,
-//                 "render" :function (data) 
-//                  {
-//                      if (data == 0) return '<button class="btn" id="btn_ubah">Pilih Lokasi Master</button>';
-//                      else return data+' <button class="btn" id="btn_ubah">Ubah</button> <button class="btn" id="btn_hapus">Hapus</button>';
-//                  },		
-// 			}
-			
-// 		],
-//     });  
-
-//     //DAPATKAN INDEX
-// 	$('#dataGridTiktokAPI tbody').on( 'click', 'button', function () {
-	    
-// 	    var table = $('#dataGridTiktokAPI').DataTable();
-// 		var row = table.row( $(this).parents('tr') ).data();
-// 		var mode = $(this).attr("id");
-		
-// 		if(mode == "btn_ubah"){ ubahTiktok(row); }
-// 		else if(mode == "btn_hapus"){ hapusTiktok(row); }
-// 	});
-	
-	//LAZADA
-	// Step 1: Initialize the table and assign to a variable
-    var tableLazada = $('#dataGridLazadaAPI').DataTable({
-        paging      : true,
-        lengthChange: true,
-        searching   : true,
-        ordering    : true,
-        info        : true,
-        autoWidth   : false,
-        scrollX     : true,
-        ajax        : {
-            url    : base_url + 'Lazada/getStokLokasi',
-            dataSrc: "rows",
-        },
-        columns: [
-            { data: 'NO', className: "text-center" },
-            { data: 'ADDRESSAPI' },
-            { data: 'IDLOKASILAZADA' , className: "text-center" },
-        ],
-        columnDefs: [
-            {
-                targets: 2,
-                render: function (data, type, row, meta) {
-
-                    if(row.LABELDEFAULT)
-                    { 
+	if($("#header_shopee").css('display') != 'none')
+	{
+    	//SHOPEE
+    	// Step 1: Initialize the table and assign to a variable
+        var tableShopee = $('#dataGridShopeeAPI').DataTable({
+            paging      : true,
+            lengthChange: true,
+            searching   : true,
+            ordering    : true,
+            info        : true,
+            autoWidth   : false,
+            scrollX     : true,
+            ajax        : {
+                url    : base_url + 'Shopee/getStokLokasi',
+                dataSrc: "rows",
+            },
+            columns: [
+                { data: 'NO', className: "text-center" },
+                { data: 'ADDRESSAPI' },
+                { data: 'ADDRESS' },
+            ],
+            columnDefs: [
+                {
+                    targets: 2,
+                    render: function (data, type, row, meta) {
                         return `
-                            <input type="checkbox" id="IDADDRESSAPI_${row.NO}" value="`+row.IDADDRESSAPI+`" checked  onclick="setLokasiLazada(`+row.IDADDRESSAPI+`,`+row.IDADDRESSAPI+`,true)">
+                            <input type="hidden" id="IDADDRESSAPISHOPEE_${row.NO}" value="`+row.IDADDRESSAPI+`">
+                            <select class="form-control" id="LOKASISHOPEE_${row.NO}" placeholder="Lokasi..." style="width:100%;">
+                                <option value="0">- Pilih Lokasi -</option>
+                                <?=comboGridMarketplace("model_master_lokasi")?>
+                            </select>
                         `;
-                    }
-                    else
-                    {
-                         return `
-                            <input type="checkbox" id="IDADDRESSAPI_${row.NO}" value="`+row.IDADDRESSAPI+`" onclick="setLokasiLazada(`+row.IDADDRESSAPI+`,`+row.IDADDRESSAPI+`,false)">
+                    },
+                }
+            ],
+        });
+        
+        // Step 2: Wait until the AJAX request finishes
+        $('#dataGridShopeeAPI').on('xhr.dt', function () {
+            // Delay execution to ensure rendering completes
+            setTimeout(function () {
+                var allDataShopee = tableShopee.rows().data().toArray();
+                for (var x = 0; x < allDataShopee.length; x++) {
+                    let no = allDataShopee[x].NO;
+                    
+                    $(`#LOKASISHOPEE_${no}`).val(allDataShopee[x].ADDRESS);
+        
+                    // Delegate safely only once per element (avoid duplicate bindings)
+                    $(document).off('change', `#LOKASISHOPEE_${no}`).on('change', `#LOKASISHOPEE_${no}`, function () {
+                        $.ajax({
+                    		type    : 'POST',
+                    		dataType: 'json',
+                    		url     : base_url+"Shopee/setStokLokasi",
+                    		data    : "id="+$(this).val() + "&idAPI="+$(`#IDADDRESSAPISHOPEE_${no}`).val(),
+                    		cache   : false,
+                    		success : function(msg){
+                    			if (msg.success) {
+                    				Swal.fire({
+                    					title            : 'Lokasi Berhasil Dihubungkan',
+                    					type             : 'success',
+                    					showConfirmButton: false,
+                    					timer            : 1500
+                    				});
+                    				$("#dataGridShopeeAPI").DataTable().ajax.reload();
+                    			} else {
+                    					Swal.fire({
+                    						title            : msg.errorMsg,
+                    						type             : 'error',
+                    						showConfirmButton: false,
+                    						timer            : 1500
+                    					});
+                    			}
+                    		}
+                    	});
+                    });
+                }
+            }, 100); // Small delay to ensure rendering is complete
+        });
+	}
+	
+	if($("#header_tiktok").css('display') != 'none')
+	{
+    	//TIKTOK
+    	var tableTiktok = $('#dataGridTiktokAPI').DataTable({
+            'paging'      : true,
+            'lengthChange': true,
+            'searching'   : true,
+            'ordering'    : true,
+            'info'        : true,
+            'autoWidth'   : false,
+    		"scrollX"	  : true,
+    		ajax		  : {
+    			url    : base_url+'Tiktok/getStokLokasi',
+    			dataSrc: "rows",
+    		},
+            columns:[
+    			{data: 'NO'},
+                {data: 'ADDRESSAPI'},
+                {data: 'ADDRESS'},
+            ],
+            columnDefs: [
+                {
+                    targets: 2,
+                    render: function (data, type, row, meta) {
+                        var label = "";
+                        if(row.LABELPICKUP == 1){
+                            label = "PICKUP";
+                        }
+                        else if(row.LABELRETURN == 1){
+                            label = "RETUR";
+                        }
+                        return `
+                            <input type="hidden" id="IDADDRESSAPITIKTOK_${row.NO}" value="`+row.IDADDRESSAPI+`">
+                            <input type="hidden" id="LABELADDRESSAPITIKTOK_${row.NO}" value="`+label+`">
+                            <select class="form-control" id="LOKASITIKTOK_${row.NO}" placeholder="Lokasi..." style="width:100%;">
+                                <option value="0">- Pilih Lokasi -</option>
+                                <?=comboGridMarketplace("model_master_lokasi")?>
+                            </select>
                         `;
-                    }
-                },
-            }
-        ],
-    });
+                    },
+                }
+            ],
+        });
+        
+        // Step 2: Wait until the AJAX request finishes
+        $('#dataGridTiktokAPI').on('xhr.dt', function () {
+            // Delay execution to ensure rendering completes
+            setTimeout(function () {
+                var allDataTiktok = tableTiktok.rows().data().toArray();
+
+                for (var x = 0; x < allDataTiktok.length; x++) {
+                    let no = allDataTiktok[x].NO;
+                    
+                    $(`#LOKASITIKTOK_${no}`).val(allDataTiktok[x].ADDRESS);
+        
+                    // Delegate safely only once per element (avoid duplicate bindings)
+                    $(document).off('change', `#LOKASITIKTOK_${no}`).on('change', `#LOKASITIKTOK_${no}`, function () {
+                        $.ajax({
+                    		type    : 'POST',
+                    		dataType: 'json',
+                    		url     : base_url+"Tiktok/setStokLokasi",
+                    		data    : "id="+$(this).val() + "&idAPI="+$(`#IDADDRESSAPITIKTOK_${no}`).val()+ "&tipe="+$(`#LABELADDRESSAPITIKTOK_${no}`).val(),
+                    		cache   : false,
+                    		success : function(msg){
+                    			if (msg.success) {
+                    				Swal.fire({
+                    					title            : 'Lokasi Berhasil Dihubungkan',
+                    					type             : 'success',
+                    					showConfirmButton: false,
+                    					timer            : 1500
+                    				});
+                    				$("#dataGridTiktokAPI").DataTable().ajax.reload();
+                    			} else {
+                    					Swal.fire({
+                    						title            : msg.errorMsg,
+                    						type             : 'error',
+                    						showConfirmButton: false,
+                    						timer            : 1500
+                    					});
+                    			}
+                    		}
+                    	});
+                    });
+                }
+            }, 100); // Small delay to ensure rendering is complete
+        });
+	}
+	
+	if($("#header_lazada").css('display') != 'none')
+	{
+    	//LAZADA
+    	// Step 1: Initialize the table and assign to a variable
+        var tableLazada = $('#dataGridLazadaAPI').DataTable({
+            paging      : true,
+            lengthChange: true,
+            searching   : true,
+            ordering    : true,
+            info        : true,
+            autoWidth   : false,
+            scrollX     : true,
+            ajax        : {
+                url    : base_url + 'Lazada/getStokLokasi',
+                dataSrc: "rows",
+            },
+            columns: [
+                { data: 'NO', className: "text-center" },
+                { data: 'ADDRESSAPI' },
+                { data: 'IDLOKASILAZADA' , className: "text-center" },
+            ],
+            columnDefs: [
+                {
+                    targets: 2,
+                    render: function (data, type, row, meta) {
+    
+                        if(row.LABELDEFAULT)
+                        { 
+                            return `
+                                <input type="checkbox" id="IDADDRESSAPI_${row.NO}" value="`+row.IDADDRESSAPI+`" checked  onclick="setLokasiLazada(`+row.IDADDRESSAPI+`,`+row.IDADDRESSAPI+`,true)">
+                            `;
+                        }
+                        else
+                        {
+                             return `
+                                <input type="checkbox" id="IDADDRESSAPI_${row.NO}" value="`+row.IDADDRESSAPI+`" onclick="setLokasiLazada(`+row.IDADDRESSAPI+`,`+row.IDADDRESSAPI+`,false)">
+                            `;
+                        }
+                    },
+                }
+            ],
+        });
+	}
 });
 
 function exportTableToExcel() {

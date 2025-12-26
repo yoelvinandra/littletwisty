@@ -146,39 +146,39 @@
       color: #3296ff;
     }
     
-    #tab_kirim_lazada .active a {
+    #tab_kirim_tiktok .active a {
          color:black;
          font-weight:bold;
     }
     
-    #tab_kirim_lazada li a {
+    #tab_kirim_tiktok li a {
         color:#949494;
         font-weight:normal;
     }
     
-    #tab_retur_lazada .active a {
+    #tab_retur_tiktok .active a {
          color:black;
          font-weight:bold;
     }
     
-    #tab_retur_lazada li a {
+    #tab_retur_tiktok li a {
         color:#949494;
         font-weight:normal;
     }
     
-    #modal-retur-lazada .modal-dialog {
+    #modal-retur-tiktok .modal-dialog {
         max-width: 700px;
         margin: 30px auto;
     }
     
-    #modal-retur-lazada .modal-content {
+    #modal-retur-tiktok .modal-content {
         max-height: 90vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
     }
     
-    #modal-retur-lazada .modal-body {
+    #modal-retur-tiktok .modal-body {
         overflow-y: auto;
         flex: 1 1 auto;
     }
@@ -191,74 +191,73 @@
             <div class="col-md-12">
               <div class="box" style="border:0px; padding:0px; margin:0px;">
                   <div class="box-header form-inline">
-                    <button class="btn" style="background:#201ADC; color:white;" onclick="javascript:sinkronLazadaNow()">Sinkronisasi Hari Ini</button>&nbsp;
-      				<button class="btn" style="background:white; color:#201ADC; border:1px solid #201ADC;" onclick="javascript:sinkronLazada()">Sinkronisasi 15 Hari Terakhir</button>
-      				<div id="filter_tgl_lazada_1" style="display: inline" class="pull-right">
-      					<input type="text" class="form-control" id="tgl_awal_filter_lazada_1" style="width:100px;" name="tgl_awal_filter_lazada_1" readonly> - 
-      					<input type="text" class="form-control" id="tgl_akhir_filter_lazada_1" style="width:100px;" name="tgl_akhir_filter_lazada_1" readonly>&nbsp;
-      					<button class="btn btn-success" onclick="javascript:refreshLazada(1)">Tampilkan</button>
+                    <button class="btn" style="background:#000; color:white;" onclick="javascript:sinkronTiktokNow()">Sinkronisasi Hari Ini</button>&nbsp;
+      				<button class="btn" style="background:white; color:#000; border:1px solid #000;" onclick="javascript:sinkronTiktok()">Sinkronisasi 15 Hari Terakhir</button>
+      				<div id="filter_tgl_tiktok_1" style="display: inline" class="pull-right">
+      					<input type="text" class="form-control" id="tgl_awal_filter_tiktok_1" style="width:100px;" name="tgl_awal_filter_tiktok_1" readonly> - 
+      					<input type="text" class="form-control" id="tgl_akhir_filter_tiktok_1" style="width:100px;" name="tgl_akhir_filter_tiktok_1" readonly>&nbsp;
+      					<button class="btn btn-success" onclick="javascript:refreshTiktok(1)">Tampilkan</button>
       				</div>
-      				<div id="filter_tgl_lazada_2" style="display: inline" class="pull-right">
-      					<input type="text" class="form-control" id="tgl_awal_filter_lazada_2" style="width:100px;" name="tgl_awal_filter_lazada_2" readonly> - 
-      					<input type="text" class="form-control" id="tgl_akhir_filter_lazada_2" style="width:100px;" name="tgl_akhir_filter_lazada_2" readonly>&nbsp;
-      					<button class="btn btn-success" onclick="javascript:refreshLazada(2)">Tampilkan</button>
+      				<div id="filter_tgl_tiktok_2" style="display: inline" class="pull-right">
+      					<input type="text" class="form-control" id="tgl_awal_filter_tiktok_2" style="width:100px;" name="tgl_awal_filter_tiktok_2" readonly> - 
+      					<input type="text" class="form-control" id="tgl_akhir_filter_tiktok_2" style="width:100px;" name="tgl_akhir_filter_tiktok_2" readonly>&nbsp;
+      					<button class="btn btn-success" onclick="javascript:refreshTiktok(2)">Tampilkan</button>
       				</div>
-      				<div id="filter_tgl_lazada_3" style="display: inline" class="pull-right">
-      					<input type="text" class="form-control" id="tgl_awal_filter_lazada_3" style="width:100px;" name="tgl_awal_filter_lazada_3" readonly> - 
-      					<input type="text" class="form-control" id="tgl_akhir_filter_lazada_3" style="width:100px;" name="tgl_akhir_filter_lazada_3" readonly>&nbsp;
-      					<button class="btn btn-success" onclick="javascript:refreshLazada(3)">Tampilkan</button>
+      				<div id="filter_tgl_tiktok_3" style="display: inline" class="pull-right">
+      					<input type="text" class="form-control" id="tgl_awal_filter_tiktok_3" style="width:100px;" name="tgl_awal_filter_tiktok_3" readonly> - 
+      					<input type="text" class="form-control" id="tgl_akhir_filter_tiktok_3" style="width:100px;" name="tgl_akhir_filter_tiktok_3" readonly>&nbsp;
+      					<button class="btn btn-success" onclick="javascript:refreshTiktok(3)">Tampilkan</button>
       				</div>
-      				<div id="filter_tgl_lazada_4" style="display: inline" class="pull-right">
-      					<input type="text" class="form-control" id="tgl_awal_filter_lazada_4" style="width:100px;" name="tgl_awal_filter_lazada_4" readonly> - 
-      					<input type="text" class="form-control" id="tgl_akhir_filter_lazada_4" style="width:100px;" name="tgl_akhir_filter_lazada_4" readonly>&nbsp;
-      					<button class="btn btn-success" onclick="javascript:refreshLazada(4)">Tampilkan</button>
+      				<div id="filter_tgl_tiktok_4" style="display: inline" class="pull-right">
+      					<input type="text" class="form-control" id="tgl_awal_filter_tiktok_4" style="width:100px;" name="tgl_awal_filter_tiktok_4" readonly> - 
+      					<input type="text" class="form-control" id="tgl_akhir_filter_tiktok_4" style="width:100px;" name="tgl_akhir_filter_tiktok_4" readonly>&nbsp;
+      					<button class="btn btn-success" onclick="javascript:refreshTiktok(4)">Tampilkan</button>
       				</div>
       			</div>
       		    <div class="nav-tabs-custom" >
-                  <ul class="nav nav-tabs" id="tab_transaksi_lazada">
-      				<li class="active" onclick="javascript:changeTabLazada(1)" ><a href="#tab_1_lazada" data-toggle="tab">Persiapan Pesanan &nbsp;<span id="totalLazada1" style=" display:none; color:white; background:red; border-radius:100px; padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
-      				<li onclick="javascript:changeTabLazada(2)"><a href="#tab_2_lazada" data-toggle="tab">Proses Pengiriman &nbsp;<span id="totalLazada2" style=" display:none; color:white; background:red; border-radius:100px;  padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
-      				<li onclick="javascript:changeTabLazada(3)"><a href="#tab_3_lazada" data-toggle="tab">Selesai Pesanan &nbsp;<span id="totalLazada3" style=" display:none; color:white; background:red; border-radius:100px;  padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
-      				<li onclick="javascript:changeTabLazada(4)"><a href="#tab_4_lazada" data-toggle="tab">Pengembalian Pesanan &nbsp;<span id="totalLazada4" style=" display:none; color:white; background:red; border-radius:100px;  padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
+                  <ul class="nav nav-tabs" id="tab_transaksi_tiktok">
+      				<li class="active" onclick="javascript:changeTabTiktok(1)" ><a href="#tab_1_tiktok" data-toggle="tab">Persiapan Pesanan &nbsp;<span id="totalTiktok1" style=" display:none; color:white; background:red; border-radius:100px; padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
+      				<li onclick="javascript:changeTabTiktok(2)"><a href="#tab_2_tiktok" data-toggle="tab">Proses Pengiriman &nbsp;<span id="totalTiktok2" style=" display:none; color:white; background:red; border-radius:100px;  padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
+      				<li onclick="javascript:changeTabTiktok(3)"><a href="#tab_3_tiktok" data-toggle="tab">Selesai Pesanan &nbsp;<span id="totalTiktok3" style=" display:none; color:white; background:red; border-radius:100px;  padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
+      				<li onclick="javascript:changeTabTiktok(4)"><a href="#tab_4_tiktok" data-toggle="tab">Pengembalian Pesanan &nbsp;<span id="totalTiktok4" style=" display:none; color:white; background:red; border-radius:100px;  padding:2px 8px 2px 8px; font-weight:bold; font-size:10pt;"></span></a></li>
       				<li class="pull-right" style="width:250px">
-      					<div class="input-group " id="filter_status_lazada_1">
+      					<div class="input-group " id="filter_status_tiktok_1">
       					 <div class="input-group-addon">
       						 <i class="fa fa-filter"></i>
       					 </div>
-      					  <select id="cb_trans_status_lazada_1" name="cb_trans_status_lazada_1" class="form-control "  panelHeight="auto" required="true">
+      					  <select id="cb_trans_status_tiktok_1" name="cb_trans_status_tiktok_1" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
       					  	<option value="UNPAID">Belum Bayar</option>
-      					  	<option value="PENDING">Siap Dikemas</option>
-      					  	<option value="PACKED">Dikemas</option>
-      					  	<option value="READY_TO_SHIP">Siap Dikirim</option>
+      					  	<option value="ON_HOLD">Menunggu</option>
+      					  	<option value="AWAITING_SHIPMENT">Siap Dikirim</option>
+      					  	<option value="AWAITING_COLLECTION">Diproses</option>
       					  </select>
       					</div>
-      					<div class="input-group " id="filter_status_lazada_2">
+      					<div class="input-group " id="filter_status_tiktok_2">
       					 <div class="input-group-addon">
       						 <i class="fa fa-filter"></i>
       					 </div>
-      					  <select id="cb_trans_status_lazada_2" name="cb_trans_status_lazada_2" class="form-control "  panelHeight="auto" required="true">
+      					  <select id="cb_trans_status_tiktok_2" name="cb_trans_status_tiktok_2" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
-      					  	<option value="SHIPPED">Dalam Pengiriman</option>
+      					  	<option value="IN_TRANSIT">Dalam Pengiriman</option>
       					  	<option value="DELIVERED">Telah Dikirim</option>
-      					  	<option value="FAILED">Gagal Kirim</option>
       					  </select>
       					</div>
-      					<div class="input-group " id="filter_status_lazada_3">
+      					<div class="input-group " id="filter_status_tiktok_3">
       					 <div class="input-group-addon">
       						 <i class="fa fa-filter"></i>
       					 </div>
-      					  <select id="cb_trans_status_lazada_3" name="cb_trans_status_lazada_3" class="form-control "  panelHeight="auto" required="true">
+      					  <select id="cb_trans_status_tiktok_3" name="cb_trans_status_tiktok_3" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
       					  	<option value="COMPLETED">Selesai</option>
       					  	<option value="CANCELLED">Pembatalan</option>
       					  </select>
       					</div>
-      					<div class="input-group " id="filter_status_lazada_4">
+      					<div class="input-group " id="filter_status_tiktok_4">
       					 <div class="input-group-addon">
       						 <i class="fa fa-filter"></i>
       					 </div>
-      					  <select id="cb_trans_status_lazada_4" name="cb_trans_status_lazada_4" class="form-control "  panelHeight="auto" required="true">
+      					  <select id="cb_trans_status_tiktok_4" name="cb_trans_status_tiktok_4" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
       					  	<option value="RETURNED|REQUEST_INITIATE">Pengembalian Diajukan</option>
       					  	<option value="RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING">Pengembalian Diproses</option>
@@ -268,11 +267,11 @@
       				</li>
                   </ul>
                   <div class="tab-content">
-                      <div class="tab-pane active" id="tab_1_lazada">
+                      <div class="tab-pane active" id="tab_1_tiktok">
                           <div class="box-body ">
-                      		  <button class="btn btn-warning" id="cetakLangsungSemua" style="margin-bottom:10px; display:none;" onclick="javascript:cetakLazadaSemua(1)" >Cetak Semua Pesanan</button>
-                      		  <button class="btn btn-success" id="kirimLangsungSemua" style="margin-bottom:10px; display:none;" onclick="javascript:kirimLazadaSemua()" >Atur Semua Pengiriman</button>
-                              <table id="dataGridLazada1" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                      		  <button class="btn btn-warning" id="cetakLangsungSemua" style="margin-bottom:10px; display:none;" onclick="javascript:cetakTiktokSemua(1)" >Cetak Semua Pesanan</button>
+                      		  <button class="btn btn-success" id="kirimLangsungSemua" style="margin-bottom:10px; display:none;" onclick="javascript:kirimTiktokSemua()" >Atur Semua Pengiriman</button>
+                              <table id="dataGridTiktok1" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                   <!-- class="table-hover"> -->
                                   <thead>
                                   <tr>
@@ -295,9 +294,9 @@
                           </div>
                       </div>
                       <!-- /.tab-pane -->
-                      <div class="tab-pane" id="tab_2_lazada">
+                      <div class="tab-pane" id="tab_2_tiktok">
                           <div class="box-body ">
-                              <table id="dataGridLazada2" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                              <table id="dataGridTiktok2" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                   <!-- class="table-hover"> -->
                                   <thead>
                                   <tr>
@@ -319,9 +318,9 @@
                               </table>
                           </div>
                       </div>
-                       <div class="tab-pane" id="tab_3_lazada">
+                       <div class="tab-pane" id="tab_3_tiktok">
                           <div class="box-body ">
-                              <table id="dataGridLazada3" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                              <table id="dataGridTiktok3" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                   <!-- class="table-hover"> -->
                                   <thead>
                                   <tr>
@@ -343,9 +342,9 @@
                               </table>
                           </div>
                       </div>
-                       <div class="tab-pane" id="tab_4_lazada">
+                       <div class="tab-pane" id="tab_4_tiktok">
                           <div class="box-body ">
-                              <table id="dataGridLazada4" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                              <table id="dataGridTiktok4" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                   <!-- class="table-hover"> -->
                                   <thead>
                                   <tr>
@@ -375,67 +374,67 @@
       <!-- /.col -->
     </div>
   </div>
-<input type="hidden" id="STATUSLAZADA1">
-<input type="hidden" id="STATUSLAZADA2">
-<input type="hidden" id="STATUSLAZADA3">
-<input type="hidden" id="STATUSLAZADA4">
+<input type="hidden" id="STATUSTIKTOK1">
+<input type="hidden" id="STATUSTIKTOK2">
+<input type="hidden" id="STATUSTIKTOK3">
+<input type="hidden" id="STATUSTIKTOK4">
 <!--MODAL BATAL-->
 
-<div class="modal fade" id="modal-form-lazada">
+<div class="modal fade" id="modal-form-tiktok">
 	<div class="modal-dialog modal-lg">
 	<div class="modal-content">
 	    <div class="modal-header">
             <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                 <i class='fa fa-arrow-left' ></i>
             </button>
-            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp;Detail Pesanan&nbsp;&nbsp;<b id="NOLAZADA" style="font-size:14pt;"></b>&nbsp;&nbsp;&nbsp;-&nbsp;<i id="STATUSLAZADA"  style="font-size:12pt;"></i></h4>
-            <!--<button onclick="ubahLazada()" id="ubahLazadaDetail" style="margin-left:15px;" class='btn btn-primary'>Ubah</button> -->
-            <button onclick="hapusLazada()" id="hapusLazadaDetail" style="margin-left:5px;" class='btn btn-danger'>Batal</button>
-            <button onclick="cetakLazada()" id="cetakLazadaDetail" style="margin-left:5px;" class='btn btn-warning'>Cetak</button>
-            <button onclick="kirimLazada()" id='kirimLazadaDetail' class='btn btn-success' style='float:right;'>Atur Pengiriman</button>
-            <button onclick="lacakLazada()" id='lacakLazadaDetail' class='btn btn-success' style='float:right;'>Lacak Pesanan</button>
+            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp;Detail Pesanan&nbsp;&nbsp;<b id="NOTIKTOK" style="font-size:14pt;"></b>&nbsp;&nbsp;&nbsp;-&nbsp;<i id="STATUSTIKTOK"  style="font-size:12pt;"></i></h4>
+            <!--<button onclick="ubahTiktok()" id="ubahTiktokDetail" style="margin-left:15px;" class='btn btn-primary'>Ubah</button> -->
+            <button onclick="hapusTiktok()" id="hapusTiktokDetail" style="margin-left:5px;" class='btn btn-danger'>Batal</button>
+            <button onclick="cetakTiktok()" id="cetakTiktokDetail" style="margin-left:5px;" class='btn btn-warning'>Cetak</button>
+            <button onclick="kirimTiktok()" id='kirimTiktokDetail' class='btn btn-success' style='float:right;'>Atur Pengiriman</button>
+            <button onclick="lacakTiktok()" id='lacakTiktokDetail' class='btn btn-success' style='float:right;'>Lacak Pesanan</button>
         </div>
 		<div class="modal-body">
       	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
       	        <div class="col-md-4 col-sm-4 col-xs-4" style="padding:0px;">
                    <label>Tgl Pesanan</label>
-                   <div id="TGLPESANANLAZADA">-</div>
+                   <div id="TGLPESANANTIKTOK">-</div>
                    <br>
                    <label>Min Tgl Kirim</label>
-                   <div id="TGLKIRIMLAZADA">-</div>
+                   <div id="TGLKIRIMTIKTOK">-</div>
                    <br>
                    <label>Metode Bayar</label>
-                   <div id="PEMBAYARANLAZADA">-</div>
+                   <div id="PEMBAYARANTIKTOK">-</div>
                    <br>
                    <label>Kurir / No. Resi</label>
-                   <div id="KURIRLAZADA">-</div>
+                   <div id="KURIRTIKTOK">-</div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-xs-4">
                    <label>Pembeli </label>
-                   <div id="NAMAPEMBELILAZADA">-</div>
+                   <div id="NAMAPEMBELITIKTOK">-</div>
                    <br>
                    <label>Telp </label>
-                   <div id="TELPPEMBELILAZADA">-</div>
+                   <div id="TELPPEMBELITIKTOK">-</div>
                    <br>
                    <label>Alamat </label>
-                   <div id="ALAMATPEMBELILAZADA">-</div>
+                   <div id="ALAMATPEMBELITIKTOK">-</div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-xs-4"style="padding:0px;">
                    <label>Catatan Pembeli</label>
-                   <div id="CATATANPEMBELILAZADA">-</div>
+                   <div id="CATATANPEMBELITIKTOK">-</div>
                    <br>
-                   <label class="noKembaliLazada">No. Pengembalian</label>
-                   <div class="noKembaliLazada" id="NOPENGEMBALIANLAZADA">-</div>
+                   <label class="noKembaliTiktok">No. Pengembalian</label>
+                   <div class="noKembaliTiktok" id="NOPENGEMBALIANTIKTOK">-</div>
                    <br>
-                   <label class="alasanKembaliLazada">Alasan Batal / Kembali</label>
-                   <div class="alasanKembaliLazada" id="ALASANPENGEMBALIANLAZADA">-</div>
+                   <label class="alasanKembaliTiktok">Alasan Batal / Kembali</label>
+                   <div class="alasanKembaliTiktok" id="ALASANPENGEMBALIANTIKTOK">-</div>
                 </div>
       	    	<!--SATU TABEL-->
       	    	<div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:0px;" >
           	    	<div class="x_content" style="height:320px; overflow-y:auto; overflow-x:hidden;">
           	    		<div class="row"> 
               				<div class=" col-sm-12">
-              					<table id="dataGridDetailLazada" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+              					<table id="dataGridDetailTiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
               						<thead>
               							<tr>
               								<th style="vertical-align:middle; text-align:center;" width="400px" >Nama</th>
@@ -446,7 +445,7 @@
               								<th style="vertical-align:middle; text-align:center;" width="100px">Subtotal</th>
               							</tr>
               						</thead>
-              						<tbody class="table-responsive-lazada">
+              						<tbody class="table-responsive-tiktok">
               						</tbody>
               					</table> 
               				</div>
@@ -454,15 +453,15 @@
           	    	</div> 
           	    	<div class="row" style="margin:0px;padding:0px;"> 
               				<div class=" col-sm-12" style="margin:0px;padding:0px; height:40px;">
-              					<table id="footerLazada" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+              					<table id="footerTiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
               						<tfoot>
               							<tr>
               								<th style="vertical-align:middle; text-align:center;" width="400px" >Total</th>
-              								<th style="vertical-align:middle; text-align:center;" id="TOTALQTYLAZADA" width="50px"></th>
+              								<th style="vertical-align:middle; text-align:center;" id="TOTALQTYTIKTOK" width="50px"></th>
               								<th style="vertical-align:middle; text-align:center;" width="50px"></th>
               								<th style="vertical-align:middle; text-align:center;" width="100px"></th>
               								<th style="vertical-align:middle; text-align:center;" width="100px"></th>
-              								<th style="vertical-align:middle; text-align:right;" id="SUBTOTALLAZADA" width="100px"></th>
+              								<th style="vertical-align:middle; text-align:right;" id="SUBTOTALTIKTOK" width="100px"></th>
               							</tr>
               						</tfoot>
               					</table> 
@@ -476,48 +475,48 @@
       	    	    <div class="row">
           	    		<div class="col-md-12">
               	    	    <div class="col-md-9" align="right" style="font-weight:bold">Total</div>
-                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="TOTALPEMBELILAZADA">
+                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="TOTALPEMBELITIKTOK">
                   	    	</div>
                   	    	<div class="col-md-9" align="right" style="font-weight:bold">Diskon Pesanan</div>
-                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="DISKONPEMBELILAZADA">
+                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="DISKONPEMBELITIKTOK">
                   	    	</div>
                   	    	<div class="col-md-9" align="right" style="font-weight:bold">Biaya Pengiriman</div>
-                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="BIAYAKIRIMPEMBELILAZADA">
+                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="BIAYAKIRIMPEMBELITIKTOK">
                   	    	</div>
                   	    	<div class="col-md-9" align="right" style="font-weight:bold">Biaya Lain</div>
-                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="BIAYALAINPEMBELILAZADA">
+                  	    	<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="BIAYALAINPEMBELITIKTOK">
                   	    	</div>
                   	    	<div class="col-md-9" align="right" style="font-weight:bold; padding-top:15px;">Pembayaran Pembeli</div>
-                  	    	<div class="col-md-3 " style="text-align:right; padding-top:15px; padding-bottom:15px; padding-right:10px; border-top:1px solid #cecece; font-weight:bold" id="PEMBAYARANPEMBELILAZADA">	
+                  	    	<div class="col-md-3 " style="text-align:right; padding-top:15px; padding-bottom:15px; padding-right:10px; border-top:1px solid #cecece; font-weight:bold" id="PEMBAYARANPEMBELITIKTOK">	
                   	    	</div>
               	    	</div>
               	    </div>
       	    	</div>
       	    	<div class="col-md-6 col-sm-6 col-xs-6  "style="padding:0px 0px 0px 15px;">
           	    	    <div style="font-weight:bold; margin:auto;" ><i style="font-size:14pt;">Informasi Penjual <span id="ADDINFOINFORMASIPENJUAL" style="font-weight:500;"><br>Informasi penjual tertunda sampai pesanan diterima customer</span></i></div>
-          	    	    <div class="row" id="DETAILINFORMASIPENJUALLAZADA">
+          	    	    <div class="row" id="DETAILINFORMASIPENJUALTIKTOK">
           	    			<div class="col-md-12">
                   	    	    <div class="col-md-9" align="right" style="font-weight:bold">Total</div>
-              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="TOTALPENJUALLAZADA">
+              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="TOTALPENJUALTIKTOK">
               	    			</div>
               	    			<div class="col-md-9" align="right" style="font-weight:bold">Refund </div>
-              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="REFUNDPENJUALLAZADA">
+              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="REFUNDPENJUALTIKTOK">
               	    			</div>
               	    			<div class="col-md-9" align="right" style="font-weight:bold">Diskon Penjual</div>
-              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="DISKONPENJUALLAZADA">
+              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="DISKONPENJUALTIKTOK">
               	    			</div>
               	    			<div class="col-md-9" align="right" style="font-weight:bold">Biaya Pengiriman Final</div>
-              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="BIAYAKIRIMPENJUALLAZADA">
+              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px;" id="BIAYAKIRIMPENJUALTIKTOK">
               	    			</div>
               	    			<div class="col-md-9" align="right" style="font-weight:bold">Biaya Layanan</div>
-              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px; " id="BIAYALAYANANPENJUALLAZADA">
+              	    			<div class="col-md-3 " style="text-align:right; padding-bottom:15px; padding-right:10px; " id="BIAYALAYANANPENJUALTIKTOK">
               	    			</div>
               	    			<hr></hr>
               	    			<div class="col-md-9" align="right" style="font-weight:bold; padding-top:15px;">Total Penjualan</div>
-              	    			<div class="col-md-3 " style="text-align:right; padding-top:15px; padding-bottom:15px; padding-right:10px; border-top:1px solid #cecece;  font-weight:bold" id="GRANDTOTALPENJUALLAZADA">
+              	    			<div class="col-md-3 " style="text-align:right; padding-top:15px; padding-bottom:15px; padding-right:10px; border-top:1px solid #cecece;  font-weight:bold" id="GRANDTOTALPENJUALTIKTOK">
               	    		    </div>
-              	    			<div class="col-md-9 penyelesaianLazada"  align="right" style="font-weight:bold;">Penyelesaian Pembayaran</div>
-              	    			<div class="col-md-3 penyelesaianLazada"  style="text-align:right; padding-bottom:15px; padding-right:10px;font-weight:bold " id="PENYELESAIANPENJUALLAZADA">		
+              	    			<div class="col-md-9 penyelesaianTiktok"  align="right" style="font-weight:bold;">Penyelesaian Pembayaran</div>
+              	    			<div class="col-md-3 penyelesaianTiktok"  style="text-align:right; padding-bottom:15px; padding-right:10px;font-weight:bold " id="PENYELESAIANPENJUALTIKTOK">		
               	    			</div>
           	    		    </div>
           	    	</div>
@@ -530,22 +529,22 @@
 	</div>
 </div>
 
-<div class="modal fade" id="modal-ubah-lazada">
+<div class="modal fade" id="modal-ubah-tiktok">
 	<div class="modal-dialog modal-lg">
 	<div class="modal-content">
 	     <div class="modal-header">
             <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                 <i class='fa fa-arrow-left' ></i>
             </button>
-            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Ubah Pesanan&nbsp;&nbsp;<b id="NOLAZADAUBAH" style="font-size:14pt;"></b></h4>
-            <button id='btn_ubah_konfirm_lazada'  style="float:right;" class='btn btn-primary' onclick="ubahKonfirmLazada()">Ubah</button>
+            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Ubah Pesanan&nbsp;&nbsp;<b id="NOTIKTOKUBAH" style="font-size:14pt;"></b></h4>
+            <button id='btn_ubah_konfirm_tiktok'  style="float:right;" class='btn btn-primary' onclick="ubahKonfirmTiktok()">Ubah</button>
         </div>
 		<div class="modal-body" style="height:395px;">
       	    <div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:0px; margin-bottom:15px; padding:0px;" >
           		<div class="x_content" style="height:320px; overflow-y:auto; overflow-x:hidden;">
           			<div class="row"> 
             			<div class=" col-sm-12">
-            				<table id="dataGridDetailLazadaUbah" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+            				<table id="dataGridDetailTiktokUbah" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
             					<thead>
             						<tr>
             						    <th width="103px"></th>
@@ -557,7 +556,7 @@
             							<th style="vertical-align:middle; text-align:center;" width="100px">Subtotal</th>
             						</tr>
             					</thead>
-            					<tbody class="table-responsive-lazada-ubah">
+            					<tbody class="table-responsive-tiktok-ubah">
             					</tbody>
             				</table> 
             			</div>
@@ -565,43 +564,43 @@
           		</div> 
           		<div class="row" style="margin:0px;padding:0px;"> 
             			<div class=" col-sm-12" style="margin:0px;padding:0px; height:40px;">
-            				<table id="footerLazadaUbah" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+            				<table id="footerTiktokUbah" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
             					<tfoot>
             						<tr>
             						    <th width="103px"></th>
             							<th style="vertical-align:middle; text-align:center;" width="400px" >Total</th>
-            							<th style="vertical-align:middle; text-align:center;" id="TOTALQTYLAZADAUBAH" width="50px"></th>
+            							<th style="vertical-align:middle; text-align:center;" id="TOTALQTYTIKTOKUBAH" width="50px"></th>
             							<th style="vertical-align:middle; text-align:center;" width="50px"></th>
             							<th style="vertical-align:middle; text-align:center;" width="100px"></th>
             							<th style="vertical-align:middle; text-align:center;" width="100px"></th>
-            							<th style="vertical-align:middle; text-align:right;" id="SUBTOTALLAZADAUBAH" width="100px"></th>
+            							<th style="vertical-align:middle; text-align:right;" id="SUBTOTALTIKTOKUBAH" width="100px"></th>
             						</tr>
             					</tfoot>
             				</table> 
             			</div>
             		</div>
       	    </div>
-            <input type="hidden" id="itemUbahLazada">
+            <input type="hidden" id="itemUbahTiktok">
 			<br>
 		</div>
 	</div>
 </div>
 </div>
 
-<div class="modal fade" id="modal-alasan-lazada">
+<div class="modal fade" id="modal-alasan-tiktok">
 	<div class="modal-dialog modal-lg">
 	<div class="modal-content">
 	     <div class="modal-header">
             <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                 <i class='fa fa-arrow-left' ></i>
             </button>
-            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Pembatalan Pesanan&nbsp;&nbsp;<b id="NOLAZADABATAL" style="font-size:14pt;"></b></h4>
-            <button id='btn_hapus_konfirm_lazada'  style="float:right;" class='btn btn-danger' onclick="hapusKonfirmLazada()">Batal</button>
+            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Pembatalan Pesanan&nbsp;&nbsp;<b id="NOTIKTOKBATAL" style="font-size:14pt;"></b></h4>
+            <button id='btn_hapus_konfirm_tiktok'  style="float:right;" class='btn btn-danger' onclick="hapusKonfirmTiktok()">Batal</button>
         </div>
 		<div class="modal-body" style="height:480px;">
 		    <div>
       	    <label>Alasan Pembatalan</label>
-			<select id="cb_alasan_pembatalan_lazada" name="cb_alasan_pembatalan_lazada" class="form-control "  panelHeight="auto" required="true">
+			<select id="cb_alasan_pembatalan_tiktok" name="cb_alasan_pembatalan_tiktok" class="form-control "  panelHeight="auto" required="true">
       		</select>
       		</div>
       		<br>
@@ -609,7 +608,7 @@
           		<div class="x_content" style="height:320px; overflow-y:auto; overflow-x:hidden;">
           			<div class="row"> 
             			<div class=" col-sm-12">
-            				<table id="dataGridDetailLazadaBatal" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+            				<table id="dataGridDetailTiktokBatal" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
             					<thead>
             						<tr>
             							<th style="vertical-align:middle; text-align:center;" width="400px" >Nama</th>
@@ -620,7 +619,7 @@
             							<th style="vertical-align:middle; text-align:center;" width="100px">Subtotal</th>
             						</tr>
             					</thead>
-            					<tbody class="table-responsive-lazada-batal">
+            					<tbody class="table-responsive-tiktok-batal">
             					</tbody>
             				</table> 
             			</div>
@@ -628,29 +627,29 @@
           		</div> 
           		<div class="row" style="margin:0px;padding:0px;"> 
             			<div class=" col-sm-12" style="margin:0px;padding:0px; height:40px;">
-            				<table id="footerLazadaBatal" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+            				<table id="footerTiktokBatal" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
             					<tfoot>
             						<tr>
             							<th style="vertical-align:middle; text-align:center;" width="400px" >Total</th>
-            							<th style="vertical-align:middle; text-align:center;" id="TOTALQTYLAZADABATAL" width="50px"></th>
+            							<th style="vertical-align:middle; text-align:center;" id="TOTALQTYTIKTOKBATAL" width="50px"></th>
             							<th style="vertical-align:middle; text-align:center;" width="50px"></th>
             							<th style="vertical-align:middle; text-align:center;" width="100px"></th>
             							<th style="vertical-align:middle; text-align:center;" width="100px"></th>
-            							<th style="vertical-align:middle; text-align:right;" id="SUBTOTALLAZADABATAL" width="100px"></th>
+            							<th style="vertical-align:middle; text-align:right;" id="SUBTOTALTIKTOKBATAL" width="100px"></th>
             						</tr>
             					</tfoot>
             				</table> 
             			</div>
             		</div>
       	    </div>
-      		<input type="hidden" id="itemBatalLazada">
+      		<input type="hidden" id="itemBatalTiktok">
 			<br>
 		</div>
 	</div>
 	</div>
 </div>
 
-<div class="modal fade" id="modal-kirim-lazada">
+<div class="modal fade" id="modal-kirim-tiktok">
 	<div class="modal-dialog modal-lg">
 	<div class="modal-content">
     	<div class="modal-header">
@@ -658,14 +657,14 @@
                     <i class='fa fa-arrow-left' ></i>
                 </button>
                 <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Atur Pengiriman&nbsp;&nbsp;<span id="countAturPengiriman" style="font-size:14pt;"></span></h4>
-                <button onclick="kirimKonfirmLazada()" id='kirim_konfirm_lazada' class='btn btn-success' style='float:right;'>Kirim</button>
+                <button onclick="kirimKonfirmTiktok()" id='kirim_konfirm_tiktok' class='btn btn-success' style='float:right;'>Kirim</button>
         </div>
 		<div class="modal-body" style="height:395px;">
       	    <div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:0px; margin-bottom:15px; padding:0px;" >
           		<div class="x_content" style="height:363px; overflow-y:auto; overflow-x:hidden;">
           			<div class="row"> 
             			<div class=" col-sm-12">
-            				<table id="dataGridDetailLazadaKirim" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+            				<table id="dataGridDetailTiktokKirim" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
             					<thead>
             						<tr>
             							<th style="vertical-align:middle; text-align:center;" width="150px">Kurir</th>
@@ -676,7 +675,7 @@
             							<th style="vertical-align:middle; text-align:center;" >Catatan Penjual</th>
             						</tr>
             					</thead>
-            					<tbody class="table-responsive-lazada-kirim">
+            					<tbody class="table-responsive-tiktok-kirim">
             					</tbody>
             				</table> 
             			</div>
@@ -684,31 +683,31 @@
           		</div> 
       	    </div>
 		</div>
-		<input type="hidden" id="rowDataPengirimanLazada">
+		<input type="hidden" id="rowDataPengirimanTiktok">
 	</div>
 	</div>
 </div>
 
-<div class="modal fade" id="modal-kirim-all-lazada">
+<div class="modal fade" id="modal-kirim-all-tiktok">
 	<div class="modal-dialog modal-lg">
 	<div class="modal-content">
     	<div class="modal-header">
                 <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                     <i class='fa fa-arrow-left' ></i>
                 </button>
-                <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Atur Semua Pengiriman&nbsp;&nbsp;<span id="countAturSemuaPengirimanLazada" style="font-size:14pt;"></span></h4>
-                <button onclick="kirimKonfirmAllLazada()" id='kirim_konfirm_all_lazada' class='btn btn-success' style='float:right;'>Kirim</button>
+                <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Atur Semua Pengiriman&nbsp;&nbsp;<span id="countAturSemuaPengirimanTiktok" style="font-size:14pt;"></span></h4>
+                <button onclick="kirimKonfirmAllTiktok()" id='kirim_konfirm_all_tiktok' class='btn btn-success' style='float:right;'>Kirim</button>
         </div>
 		<div class="modal-body" style="height:655px;">
 		        <div style="margin-left:25px; margin-bottom:25px;">
-		            <label><input type="checkbox" id="pilihKirimanAllKurirLazada" checked> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pilih Semua Kurir</label>
-		            <span style="float:right; margin-top:3px; margin-right:30px;" id="keteranganKurirLazada">Terdapat &nbsp;<span id="countAllPesananLazada" style="font-weight:bold; font-size:14pt; "></span>&nbsp; Pesanan dari &nbsp;<span id="countAllKurirLazada" style="font-weight:bold; font-size:14pt; "></span>&nbsp; Kurir</span>
+		            <label><input type="checkbox" id="pilihKirimanAllKurirTiktok" checked> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pilih Semua Kurir</label>
+		            <span style="float:right; margin-top:3px; margin-right:30px;" id="keteranganKurirTiktok">Terdapat &nbsp;<span id="countAllPesananTiktok" style="font-weight:bold; font-size:14pt; "></span>&nbsp; Pesanan dari &nbsp;<span id="countAllKurirTiktok" style="font-weight:bold; font-size:14pt; "></span>&nbsp; Kurir</span>
 		        </div>
 		        <div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid #dddddd; background:white; border-radius:0px 0px 3px 3px; margin-top:0px; margin-bottom:20px; padding:0px;" >
                       <div class="box-body ">
                       		<div class="x_content" style="height:508px; overflow-y:auto; overflow-x:hidden;">
                       			<div class="row"> 
-                        			<div class=" col-sm-12" id="dataGridDetailAllLazada">
+                        			<div class=" col-sm-12" id="dataGridDetailAllTiktok">
                         			</div>
                       			</div>
                       		</div> 
@@ -719,32 +718,32 @@
 	</div>
 </div>
 
-<div class="modal fade" id="modal-lacak-lazada">
+<div class="modal fade" id="modal-lacak-tiktok">
 	<div class="modal-dialog modal-lg">
 	<div class="modal-content">
     	<div class="modal-header">
                 <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                     <i class='fa fa-arrow-left' ></i>
                 </button>
-                <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Lacak Pesanan&nbsp;&nbsp;<b id="NOLAZADALACAK" style="font-size:14pt;"></b></h4>
+                <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Lacak Pesanan&nbsp;&nbsp;<b id="NOTIKTOKLACAK" style="font-size:14pt;"></b></h4>
         </div>
 		<div class="modal-body" style="height:425px;">
       	    <div class="row"> 
             	<div class="col-sm-5" style="padding:0px 20px 0px 20px; border-right:1px solid #cecece;">
             	   <label>Metode Bayar</label>
-                   <div id="METODEBAYARLACAKLAZADA">-</div>
+                   <div id="METODEBAYARLACAKTIKTOK">-</div>
                    <br>
             	   <label>Kurir</label>
-                   <div id="KURIRLACAKLAZADA">-</div>
+                   <div id="KURIRLACAKTIKTOK">-</div>
                    <br>
                    <label>Resi</label>
-                   <div id="RESILACAKLAZADA">-</div>
+                   <div id="RESILACAKTIKTOK">-</div>
                    <br>
                    <label>Tgl Kirim</label>
-                   <div id="TGLKIRIMLACAKLAZADA">-</div>
+                   <div id="TGLKIRIMLACAKTIKTOK">-</div>
                    <br>
                    <label>Alamat</label>
-                   <div id="ALAMATLACAKLAZADA">-</div>
+                   <div id="ALAMATLACAKTIKTOK">-</div>
             	</div>
             	<div class="col-sm-7"  >
             	    <div class="step-tracker" style="height:375px; overflow-y:scroll;">
@@ -756,17 +755,17 @@
 	</div>
 </div>
 
-<div class="modal fade" id="modal-barang-lazada">
+<div class="modal fade" id="modal-barang-tiktok">
 	<div class="modal-dialog">
 	<div class="modal-content">
     	 <div class="modal-header">
                 <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                     <i class='fa fa-arrow-left' ></i>
                 </button>
-                <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Ganti Produk Asal&nbsp;&nbsp;<b id="warnaOldLazada" style="font-size:14pt;"></b><b> / </b><b id="sizeOldLazada" style="font-size:14pt;"></b></h4>
+                <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Ganti Produk Asal&nbsp;&nbsp;<b id="warnaOldTiktok" style="font-size:14pt;"></b><b> / </b><b id="sizeOldTiktok" style="font-size:14pt;"></b></h4>
         </div>
 		<div class="modal-body">
-			<table id="table_barang_lazada" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+			<table id="table_barang_tiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%">
 				<thead>
 					<tr>
 						<th hidden>ID</th>	
@@ -780,26 +779,26 @@
 	</div>
 </div>
 
-<div class="modal fade" id="modal-note-lazada">
+<div class="modal fade" id="modal-note-tiktok">
 	<div class="modal-dialog ">
     	<div class="modal-content">
         	<div class="modal-header">
                     <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                         <i class='fa fa-arrow-left' ></i>
                     </button>
-                    <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Catatan Pesanan&nbsp;&nbsp;<b id="NOLAZADACATATAN" style="font-size:14pt;"></b></h4>
-                    <button id='btn_note_konfirm_lazada'  style="float:right;" class='btn btn-success' onclick="noteKonfirmLazada()">Simpan</button>
+                    <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Catatan Pesanan&nbsp;&nbsp;<b id="NOTIKTOKCATATAN" style="font-size:14pt;"></b></h4>
+                    <button id='btn_note_konfirm_tiktok'  style="float:right;" class='btn btn-success' onclick="noteKonfirmTiktok()">Simpan</button>
             </div>
     		<div class="modal-body">
-    		    <textarea id="note_lazada" maxlines="5" style="width:100%; height:200px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Catatan.....">
+    		    <textarea id="note_tiktok" maxlines="5" style="width:100%; height:200px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Catatan.....">
     		    </textarea>
-    		    <input type="hidden" id="fromNoteLazada">
+    		    <input type="hidden" id="fromNoteTiktok">
     		</div>
     	</div>
 	</div>
 </div>
 
-<div class="modal fade" id="modal-cetak-lazada">
+<div class="modal fade" id="modal-cetak-tiktok">
 	<div class="modal-dialog modal-lg">
     	<div class="modal-content">
         	<div class="modal-header">
@@ -807,10 +806,10 @@
                         <i class='fa fa-arrow-left' ></i>
                     </button>
                     <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Cetak Pesanan&nbsp;&nbsp;<span id="countCetak" style="font-size:14pt;"></span></h4>
-                    <!--<button id='btn_cetak_konfirm_lazada'  style="float:right;" class='btn btn-warning' onclick="noteKonfirmLazada()">Cetak</button>-->
+                    <!--<button id='btn_cetak_konfirm_tiktok'  style="float:right;" class='btn btn-warning' onclick="noteKonfirmTiktok()">Cetak</button>-->
             </div>
     		<div class="modal-body">
-    		    <div id="previewCetakLazada">
+    		    <div id="previewCetakTiktok">
     		        
     		    </div>
     		</div>
@@ -818,7 +817,7 @@
 	</div>
 </div>
 
-<div class="modal fade" id="modal-cetak-all-lazada">
+<div class="modal fade" id="modal-cetak-all-tiktok">
 	<div class="modal-dialog modal-lg">
     	<div class="modal-content">
         	<div class="modal-header">
@@ -826,24 +825,24 @@
                         <i class='fa fa-arrow-left' ></i>
                     </button>
                     <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; Cetak Semua Pesanan&nbsp;&nbsp;<span id="countCetakSemua" style="font-size:14pt;"></span></h4>
-                    <button id='btn_cetak_all_konfirm_lazada'  style="float:right;" class='btn btn-warning' onclick="cetakAllKonfirmLazada()">Cetak</button>
+                    <button id='btn_cetak_all_konfirm_tiktok'  style="float:right;" class='btn btn-warning' onclick="cetakAllKonfirmTiktok()">Cetak</button>
             </div>
     		<div class="modal-body" style="height:600px;">
           	    <div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:0px; margin-bottom:15px; padding:0px;" >
               		<div class="x_content" style="height:568px; overflow-y:auto; overflow-x:hidden;">
               			<div class="row"> 
                 			<div class=" col-sm-12">
-                				<table id="dataGridDetailLazadaAllCetak" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+                				<table id="dataGridDetailTiktokAllCetak" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
                 					<thead>
                 						<tr>
-                						    <th style="vertical-align:middle; text-align:center;" width="30px"><input type="checkbox" id="pilihCetakAllLazada" checked width="30px"></th>
+                						    <th style="vertical-align:middle; text-align:center;" width="30px"><input type="checkbox" id="pilihCetakAllTiktok" checked width="30px"></th>
                 							<th style="vertical-align:middle; text-align:center;" width="150px" >No. Pesanan</th>
                 							<th style="vertical-align:middle; text-align:center;" width="150px">Metode Bayar</th>
                 							<th style="vertical-align:middle; text-align:center;" width="100px">Kurir</th>
                 							<th style="vertical-align:middle; text-align:center;" width="150px">Resi</th>
                 						</tr>
                 					</thead>
-                					<tbody class="table-responsive-lazada-all-cetak">
+                					<tbody class="table-responsive-tiktok-all-cetak">
                 					</tbody>
                 				</table> 
                 			</div>
@@ -851,65 +850,65 @@
               		</div> 
           	    </div>
 		    </div>
-		    <input type="hidden" id="dataCetakSemuaLazada">
+		    <input type="hidden" id="dataCetakSemuaTiktok">
     	</div>
 	</div>
 </div>
 
-<div class="modal fade" id="modal-pengembalian-lazada">
+<div class="modal fade" id="modal-pengembalian-tiktok">
 	<div class="modal-dialog modal-lg">
 	<div class="modal-content">
 	    <div class="modal-header">
             <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                 <i class='fa fa-arrow-left' ></i>
             </button>
-            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp;Detail Pengembalian&nbsp;&nbsp;<b id="NOLAZADAPENGEMBALIAN" style="font-size:14pt;"></b>&nbsp;&nbsp;&nbsp;-&nbsp;<i id="STATUSLAZADAPENGEMBALIAN"  style="font-size:12pt;"></i></h4>
-            <button onclick="returLazada()" id='returLazadaDetail' class='btn btn-success' style='float:right;'>Jawab</button>
-            <button id='returLazadaWait' class='btn' style='float:right; background:#888888; color:white;'></button>
+            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp;Detail Pengembalian&nbsp;&nbsp;<b id="NOTIKTOKPENGEMBALIAN" style="font-size:14pt;"></b>&nbsp;&nbsp;&nbsp;-&nbsp;<i id="STATUSTIKTOKPENGEMBALIAN"  style="font-size:12pt;"></i></h4>
+            <button onclick="returTiktok()" id='returTiktokDetail' class='btn btn-success' style='float:right;'>Jawab</button>
+            <button id='returTiktokWait' class='btn' style='float:right; background:#888888; color:white;'></button>
             
         </div>
 		<div class="modal-body">
       	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
       	        <div class="col-md-4 col-sm-4 col-xs-4" style="padding:0px;">
                    <label>Tgl Pengembalian</label>
-                   <div id="TGLLAZADAPENGEMBALIAN">-</div>
+                   <div id="TGLTIKTOKPENGEMBALIAN">-</div>
                    <br>
                    <label>Tenggat Waktu</label>
-                   <div id="MINTGLLAZADAPENGEMBALIAN">-</div>
+                   <div id="MINTGLTIKTOKPENGEMBALIAN">-</div>
                    <br>
                    <label>No. Resi Pengembalian</label>
-                   <div id="RESILAZADAPENGEMBALIAN">-</div>
+                   <div id="RESITIKTOKPENGEMBALIAN">-</div>
                    <br>
                    <label>No. Pesanan</label>
-                   <div id="NOLAZADAPESANANPENGEMBALIAN">-</div>
+                   <div id="NOTIKTOKPESANANPENGEMBALIAN">-</div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-xs-4">
                    <label>Pembeli </label>
-                   <div id="NAMAPEMBELILAZADAPENGEMBALIAN">-</div>
+                   <div id="NAMAPEMBELITIKTOKPENGEMBALIAN">-</div>
                    <br>
                    <label>Telp </label>
-                   <div id="TELPPEMBELILAZADAPENGEMBALIAN">-</div>
+                   <div id="TELPPEMBELITIKTOKPENGEMBALIAN">-</div>
                    <br>
                    <label>Alamat </label>
-                   <div id="ALAMATPEMBELILAZADAPENGEMBALIAN">-</div>
+                   <div id="ALAMATPEMBELITIKTOKPENGEMBALIAN">-</div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-xs-4"style="padding:0px;"> 
                    <label>Alasan Pilihan Pembeli</label>
-                   <div id="ALASANLAZADAPILIHAN">-</div>
+                   <div id="ALASANTIKTOKPILIHAN">-</div>
                    <br>
                    <label>Alasan Pengembalian Pembeli</label>
-                   <div id="ALASANLAZADAPENGEMBALIAN" style="max-height:70px; overflow-x:hidden;">-</div>
+                   <div id="ALASANTIKTOKPENGEMBALIAN" style="max-height:70px; overflow-x:hidden;">-</div>
                    <br>
                    <label>Bukti Pengembalian Pembeli</label>
-          	    	<div id="GAMBARPENGEMBALIANLAZADA" style="max-height:70px; overflow-x:hidden; width:50%; float:left;"></div>
-          	    	<div id="VIDEOPENGEMBALIANLAZADA" style="max-height:70px; overflow-x:hidden; width:50%;"></div>
+          	    	<div id="GAMBARPENGEMBALIANTIKTOK" style="max-height:70px; overflow-x:hidden; width:50%; float:left;"></div>
+          	    	<div id="VIDEOPENGEMBALIANTIKTOK" style="max-height:70px; overflow-x:hidden; width:50%;"></div>
                 </div>
       	    	<!--SATU TABEL-->
       	    	<div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:6px; padding:0px;" >
           	    	<div class="x_content" style="height:320px; overflow-y:auto; overflow-x:hidden;">
           	    		<div class="row"> 
               				<div class=" col-sm-12">
-              					<table id="dataGridDetailPengembalianLazada" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+              					<table id="dataGridDetailPengembalianTiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
               						<thead>
               							<tr>
               								<th style="vertical-align:middle; text-align:center;" width="400px" >Nama</th>
@@ -919,7 +918,7 @@
               								<th style="vertical-align:middle; text-align:center;" width="100px">Dana Kembali</th>
               							</tr>
               						</thead>
-              						<tbody class="table-responsive-lazada-pengembalian">
+              						<tbody class="table-responsive-tiktok-pengembalian">
               						</tbody>
               					</table> 
               				</div>
@@ -927,14 +926,14 @@
           	    	</div> 
           	    	<div class="row" style="margin:0px;padding:0px;"> 
               				<div class=" col-sm-12" style="margin:0px;padding:0px; height:40px;">
-              					<table id="footerLazada" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+              					<table id="footerTiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
               						<tfoot>
               							<tr>
               								<th style="vertical-align:middle; text-align:center;" width="400px" >Total</th>
-              								<th style="vertical-align:middle; text-align:center;" id="TOTALQTYPENGEMBALIANLazada" width="50px"></th>
+              								<th style="vertical-align:middle; text-align:center;" id="TOTALQTYPENGEMBALIANTiktok" width="50px"></th>
               								<th style="vertical-align:middle; text-align:center;" width="50px"></th>
               								<th style="vertical-align:middle; text-align:center;" width="100px"></th>
-              								<th style="vertical-align:middle; text-align:right;" id="SUBTOTALPENGEMBALIANLazada" width="100px"></th>
+              								<th style="vertical-align:middle; text-align:right;" id="SUBTOTALPENGEMBALIANTiktok" width="100px"></th>
               							</tr>
               						</tfoot>
               					</table> 
@@ -948,18 +947,18 @@
 	    </div>
 </div>
 
-<div class="modal fade" id="modal-lebih-jelas-lazada" style="z-index:999999999999999999999999999;">
+<div class="modal fade" id="modal-lebih-jelas-tiktok" style="z-index:999999999999999999999999999;">
 	<div class="modal-dialog modal-lg">
     	<div class="modal-content">
         	<div class="modal-header">
                     <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                         <i class='fa fa-arrow-left' ></i>
                     </button>
-                    <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; <span id="titleLebihJelasLazada" style="font-size:14pt;"></span></h4>
-                    <!--<button id='btn_cetak_konfirm_lazada'  style="float:right;" class='btn btn-warning' onclick="noteKonfirmLazada()">Cetak</button>-->
+                    <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp; <span id="titleLebihJelasTiktok" style="font-size:14pt;"></span></h4>
+                    <!--<button id='btn_cetak_konfirm_tiktok'  style="float:right;" class='btn btn-warning' onclick="noteKonfirmTiktok()">Cetak</button>-->
             </div>
     		<div class="modal-body">
-    		    <div id="previewLebihJelasLazada">
+    		    <div id="previewLebihJelasTiktok">
     		        
     		    </div>
     		</div>
@@ -967,108 +966,108 @@
 	</div>
 </div>
 
-<div class="modal fade" id="modal-retur-lazada">
+<div class="modal fade" id="modal-retur-tiktok">
 	<div class="modal-dialog" style="width:700px;">
 	    <div class="modal-content">
 	    <div class="modal-header">
             <button type="button" data-dismiss="modal" aria-label="Close"  class="btn" style=" background:white; float:left;">
                 <i class='fa fa-arrow-left' ></i>
             </button>
-            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp;Proses Pengembalian&nbsp;&nbsp;<b id="NOLAZADARETUR" style="font-size:14pt;"></b></h4>
+            <h4 class="modal-title" id="largeModalLabel" style="float:left; padding-top:4px;">&nbsp;&nbsp;Proses Pengembalian&nbsp;&nbsp;<b id="NOTIKTOKRETUR" style="font-size:14pt;"></b></h4>
         </div>
 		<div class="modal-body">
-		    <div id="HEADERRETURLAZADA"></div>
+		    <div id="HEADERRETURTIKTOK"></div>
 		    Jadi penjual memilih :
 		    <br><br>
-          	<ul class="nav nav-tabs" id="tab_retur_lazada">
-          		<li id="tab_retur_header_lazada_0"><a href="#tab_retur_detail_lazada_0" data-toggle="tab">Kembalikan Dana ke Pembeli</a></li>
-          	    <li id="tab_retur_header_lazada_1" onclick="focusOnRefundLazada()"><a href="#tab_retur_detail_lazada_1" data-toggle="tab">Pengembalian Barang dan Dana</a></li>
-          	    <li id="tab_retur_header_lazada_2"><a href="#tab_retur_detail_lazada_2" data-toggle="tab">Ajukan Banding</a></li>
+          	<ul class="nav nav-tabs" id="tab_retur_tiktok">
+          		<li id="tab_retur_header_tiktok_0"><a href="#tab_retur_detail_tiktok_0" data-toggle="tab">Kembalikan Dana ke Pembeli</a></li>
+          	    <li id="tab_retur_header_tiktok_1" onclick="focusOnRefundTiktok()"><a href="#tab_retur_detail_tiktok_1" data-toggle="tab">Pengembalian Barang dan Dana</a></li>
+          	    <li id="tab_retur_header_tiktok_2"><a href="#tab_retur_detail_tiktok_2" data-toggle="tab">Ajukan Banding</a></li>
             </ul>
             <div class="tab-content" style="border:1px solid #dddddd; background:white; border-radius:0px 0px 3px 3px; padding: 10px 10px 10px 10px;">
-                <div class="tab-pane " id="tab_retur_detail_lazada_0" style="padding:5px 0px 5px 0px;">
-                    <div id="DETAILRETURLAZADA_0">Dengan ini menyatakan bahwa : <br>Penjual telah setuju untuk melakukan <b>Pengembalian Dana Penuh</b>, dan pembeli &nbsp;<i>tidak perlu mengembalikan produk</i>.&nbsp; Setelah klik tombol "Setujui dan Kembalikan Dana". untuk melanjutkan proses pengembalian.</div>
+                <div class="tab-pane " id="tab_retur_detail_tiktok_0" style="padding:5px 0px 5px 0px;">
+                    <div id="DETAILRETURTIKTOK_0">Dengan ini menyatakan bahwa : <br>Penjual telah setuju untuk melakukan <b>Pengembalian Dana Penuh</b>, dan pembeli &nbsp;<i>tidak perlu mengembalikan produk</i>.&nbsp; Setelah klik tombol "Setujui dan Kembalikan Dana". untuk melanjutkan proses pengembalian.</div>
                     <br><br>
                     <label style="width:100%; text-align:center; font-size:18pt;">Total Dana Kembali</label>
-                    <div style="width:100%; text-align:center;"><input type="text" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANLAZADA_0" onkeyup="return numberInputTrans(event,0)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
-                    <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANLAZADA_0">
+                    <div style="width:100%; text-align:center;"><input type="text" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANTIKTOK_0" onkeyup="return numberInputTrans(event,0)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
+                    <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANTIKTOK_0">
                     <br><br><br>
-                     <button onclick="refundLazada(0)" id='returRefundLazada' class='btn btn-success' style='width:100%; font-weight:bold;'>Setuju&nbsp;&nbsp;dan&nbsp;&nbsp;Kembalikan&nbsp;&nbsp;Dana</button>
+                     <button onclick="refundTiktok(0)" id='returRefundTiktok' class='btn btn-success' style='width:100%; font-weight:bold;'>Setuju&nbsp;&nbsp;dan&nbsp;&nbsp;Kembalikan&nbsp;&nbsp;Dana</button>
                 </div>
-                <div class="tab-pane" id="tab_retur_detail_lazada_1" style="padding:5px 0px 5px 0px;">
-                    <div id="DETAILRETURLAZADA_1"></div>
+                <div class="tab-pane" id="tab_retur_detail_tiktok_1" style="padding:5px 0px 5px 0px;">
+                    <div id="DETAILRETURTIKTOK_1"></div>
                     <br><br>
                     <label style="width:100%; text-align:center; font-size:18pt;">Total Dana Pengembalian yang Diajukan</label>
-                    <div style="width:100%; text-align:center;"><input type="text" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANLAZADA_1" onkeyup="return numberInputTrans(event,1)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
-                    <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANLAZADA_1">
-                     <!--<div style="width:100%; margin-top:10px; text-align:center;"><button id='btn_max_kembali_lazada' onclick="setMaksRefundLazada()" style='border:1px solid #CECECE; margin:auto;' class='btn' >Maks Pengembalian</button></div><br><br>-->
+                    <div style="width:100%; text-align:center;"><input type="text" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANTIKTOK_1" onkeyup="return numberInputTrans(event,1)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
+                    <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANTIKTOK_1">
+                     <!--<div style="width:100%; margin-top:10px; text-align:center;"><button id='btn_max_kembali_tiktok' onclick="setMaksRefundTiktok()" style='border:1px solid #CECECE; margin:auto;' class='btn' >Maks Pengembalian</button></div><br><br>-->
                      <br><br><br>
-                     <button onclick="refundLazada(1)" id='returNegotiationLazada' class='btn btn-warning' style='width:100%; font-weight:bold;'>Pengembalian&nbsp;&nbsp;Barang&nbsp;&nbsp;dan&nbsp;&nbsp;Dana</button>
-                     <button id='returLazadaWaitResponse' class='btn' style='width:100%; background:#888888; color:white; font-weight:bold;'>Menunggu&nbsp;&nbsp;Respon&nbsp;&nbsp;Pembeli</button>
+                     <button onclick="refundTiktok(1)" id='returNegotiationTiktok' class='btn btn-warning' style='width:100%; font-weight:bold;'>Pengembalian&nbsp;&nbsp;Barang&nbsp;&nbsp;dan&nbsp;&nbsp;Dana</button>
+                     <button id='returTiktokWaitResponse' class='btn' style='width:100%; background:#888888; color:white; font-weight:bold;'>Menunggu&nbsp;&nbsp;Respon&nbsp;&nbsp;Pembeli</button>
                 </div>
-                <div class="tab-pane" id="tab_retur_detail_lazada_2" style="padding:5px 0px 5px 0px;">
+                <div class="tab-pane" id="tab_retur_detail_tiktok_2" style="padding:5px 0px 5px 0px;">
                     <div id="DISPUTESEBELUMBARANGDATANG">
-                        <div id="DETAILRETURLAZADA_2">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).</div>
+                        <div id="DETAILRETURTIKTOK_2">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).</div>
             		    <div id="ALASANBANDING">
             		        <br>
                       	    <label>Alasan Banding</label>
-                			<select id="cb_alasan_sengketa_lazada" name="cb_alasan_sengketa_lazada" class="form-control "  panelHeight="auto" required="true">
+                			<select id="cb_alasan_sengketa_tiktok" name="cb_alasan_sengketa_tiktok" class="form-control "  panelHeight="auto" required="true">
                       		
                       		</select>
                       	</div>
             		    <br>
                 		<div>
                       	    <label>Penjelasan Banding</label>
-                		    <textarea id="deskripsi_sengketa_lazada" maxlines="2" style="width:100%; height:80px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>
+                		    <textarea id="deskripsi_sengketa_tiktok" maxlines="2" style="width:100%; height:80px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>
                 		</div>
                 		<br>
-                      	<div id="uploadBuktiLazada">
+                      	<div id="uploadBuktiTiktok">
                       	    <label>Upload Bukti</label>
-                      	    <div id="penjelasan_bukti_lazada"></div>
-                			<div id="proof_sengketa_lazada" style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:10px;">
+                      	    <div id="penjelasan_bukti_tiktok"></div>
+                			<div id="proof_sengketa_tiktok" style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:10px;">
                 			    
                 			</div>
                 		 </div>
-                         <div style="width:100%; text-align:center;"><input type="hidden" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANLAZADA_2" onkeyup="return numberInputTrans(event,3)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
-                         <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANLAZADA_2">
-                         <input type="hidden" id="dataDisputeLazada">
-                         <input type="hidden" id="pilihanDisputeLazada">
-                         <input type="hidden" id="pilihDisputeLazada">
+                         <div style="width:100%; text-align:center;"><input type="hidden" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANTIKTOK_2" onkeyup="return numberInputTrans(event,3)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
+                         <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANTIKTOK_2">
+                         <input type="hidden" id="dataDisputeTiktok">
+                         <input type="hidden" id="pilihanDisputeTiktok">
+                         <input type="hidden" id="pilihDisputeTiktok">
                          <br>
-                         <button onclick="refundLazada(2)" id='returDisputeLazada' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>
+                         <button onclick="refundTiktok(2)" id='returDisputeTiktok' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>
                     </div>
-                    <div id="DISPUTESESUDAHBARANGDATANG">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).<br><br>Untuk transaksi hanya dapat dilakukan pada aplikasi lazada. Status transaksi dan stok akan terupdate, melalui sinkronisasi otomatis maupun sinkronisasi manual.</div>
+                    <div id="DISPUTESESUDAHBARANGDATANG">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).<br><br>Untuk transaksi hanya dapat dilakukan pada aplikasi tiktok. Status transaksi dan stok akan terupdate, melalui sinkronisasi otomatis maupun sinkronisasi manual.</div>
                 </div>
             </div>  
         </div>
       </div>
 	</div>
-    <input type="hidden" id="dataReturLazada">
+    <input type="hidden" id="dataReturTiktok">
 </div>
 
-<input type="hidden" id="kategori_item_lazada" value="">
-<input type="hidden" id="rowDataLazada">
+<input type="hidden" id="kategori_item_tiktok" value="">
+<input type="hidden" id="rowDataTiktok">
 
 <script>
 
-var firsTimeLazada = ["",true,true,true,true];
-var sinkronLazadaState = false;
-var doneSinkronLazada =  ["",true,true,true,true];
-var totalPesananLazadaAll = 0;
+var firsTimeTiktok = ["",true,true,true,true];
+var sinkronTiktokState = false;
+var doneSinkronTiktok =  ["",true,true,true,true];
+var totalPesananTiktokAll = 0;
 
 setTimeout(() => {
-    changeTabLazada(1);
-    changeTabLazada(2);
-    changeTabLazada(3);
-    changeTabLazada(4);
+    changeTabTiktok(1);
+    changeTabTiktok(2);
+    changeTabTiktok(3);
+    changeTabTiktok(4);
 	
-	$("#filter_status_lazada_"+1+", #filter_tgl_lazada_"+1).show();
+	$("#filter_status_tiktok_"+1+", #filter_tgl_tiktok_"+1).show();
     
     for(var x = 1; x <= 4 ; x++)
     {
        if(1 != x)
        {
-            $("#filter_status_lazada_"+x+", #filter_tgl_lazada_"+x).hide();
+            $("#filter_status_tiktok_"+x+", #filter_tgl_tiktok_"+x).hide();
        }
     }
 }, "100");
@@ -1076,19 +1075,19 @@ setTimeout(() => {
 $(document).ready(function(){
 	
     //TAMBAH
-	$('#tgl_awal_filter_lazada_1, #tgl_akhir_filter_lazada_1, #tgl_awal_filter_lazada_2, #tgl_akhir_filter_lazada_2, #tgl_awal_filter_lazada_3, #tgl_akhir_filter_lazada_3, #tgl_awal_filter_lazada_4, #tgl_akhir_filter_lazada_4').datepicker({
+	$('#tgl_awal_filter_tiktok_1, #tgl_akhir_filter_tiktok_1, #tgl_awal_filter_tiktok_2, #tgl_akhir_filter_tiktok_2, #tgl_awal_filter_tiktok_3, #tgl_akhir_filter_tiktok_3, #tgl_awal_filter_tiktok_4, #tgl_akhir_filter_tiktok_4').datepicker({
 		format: 'yyyy-mm-dd',
 		 autoclose: true, // Close the datepicker automatically after selection
         container: 'body', // Attach the datepicker to the body element
         orientation: 'bottom auto' // Show the calendar below the input
 	});
-	$("#tgl_awal_filter_lazada_1, #tgl_awal_filter_lazada_2, #tgl_awal_filter_lazada_3, #tgl_awal_filter_lazada_4").datepicker('setDate', "<?=TGLAWALFILTERMARKETPLACE?>");
-	$("#tgl_akhir_filter_lazada_1, #tgl_akhir_filter_lazada_2, #tgl_akhir_filter_lazada_3, #tgl_akhir_filter_lazada_4").datepicker('setDate', new Date());
+	$("#tgl_awal_filter_tiktok_1, #tgl_awal_filter_tiktok_2, #tgl_awal_filter_tiktok_3, #tgl_awal_filter_tiktok_4").datepicker('setDate', "<?=TGLAWALFILTERMARKETPLACE?>");
+	$("#tgl_akhir_filter_tiktok_1, #tgl_akhir_filter_tiktok_2, #tgl_akhir_filter_tiktok_3, #tgl_akhir_filter_tiktok_4").datepicker('setDate', new Date());
 	
-	$("#STATUSLAZADA1").val('UNPAID,PENDING,PACKED,READY_TO_SHIP');
-	$("#STATUSLAZADA2").val('SHIPPED,DELIVERED,FAILED');
-	$("#STATUSLAZADA3").val('COMPLETED,CANCELLED');
-	$("#STATUSLAZADA4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
+	$("#STATUSTIKTOK1").val('UNPAID,ON_HOLD,AWAITING_SHIPMENT,AWAITING_COLLECTION');
+	$("#STATUSTIKTOK2").val('IN_TRANSIT,DELIVERED');
+	$("#STATUSTIKTOK3").val('COMPLETED,CANCELLED');
+	$("#STATUSTIKTOK4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
 	
 	$('body').keyup(function(e){
 		hotkey(e);
@@ -1099,7 +1098,7 @@ $(document).ready(function(){
     });
     
     //TABLE BARANG
-	$("#table_barang_lazada").DataTable({
+	$("#table_barang_tiktok").DataTable({
         'retrieve'    : true,
         'paging'      : false,
         'lengthChange': false,
@@ -1113,8 +1112,8 @@ $(document).ready(function(){
 			dataSrc: "rows",
 			type   : "POST",
 			data    : function(e){
-					e.kategori 	    = getKategoriLazada();
-					e.marketplace 	= "Lazada";
+					e.kategori 	    = getKategoriTiktok();
+					e.marketplace 	= "Tiktok";
 			}
 		},
 		language: {
@@ -1130,15 +1129,15 @@ $(document).ready(function(){
     });
 	
 	//BUAT NAMBAH BARANG BIASA
-	$('#table_barang_lazada tbody').on('click', 'tr', function () {
-		var row = $('#table_barang_lazada').DataTable().row( this ).data();
-		$("#modal-barang-lazada").modal('hide');
+	$('#table_barang_tiktok tbody').on('click', 'tr', function () {
+		var row = $('#table_barang_tiktok').DataTable().row( this ).data();
+		$("#modal-barang-tiktok").modal('hide');
 		
-		 $(".table-responsive-lazada-ubah").html('');
-         var itemDetail = JSON.parse($("#itemUbahLazada").val()); 
+		 $(".table-responsive-tiktok-ubah").html('');
+         var itemDetail = JSON.parse($("#itemUbahTiktok").val()); 
          for(var x = 0 ; x < itemDetail.length ; x++)
          {
-             if(itemDetail[x]['WARNAOLD'] == $("#warnaOldLazada").html() && itemDetail[x]['SIZEOLD'] && $("#sizeOldLazada").html())
+             if(itemDetail[x]['WARNAOLD'] == $("#warnaOldTiktok").html() && itemDetail[x]['SIZEOLD'] && $("#sizeOldTiktok").html())
              {
                  itemDetail[x]['WARNA'] = row.WARNA;
                  itemDetail[x]['SIZE']  = row.SIZE;
@@ -1152,78 +1151,78 @@ $(document).ready(function(){
                   namaBarang += ("&nbsp&nbsp&nbsp&nbsp<span  style='color:#949494; font-style:italic;'>Marketplace : "+itemDetail[x].WARNAOLD+" / "+itemDetail[x].SIZEOLD+"</span>");
               }
              
-             $(".table-responsive-lazada-ubah").append(setDetail(itemDetail,x,namaBarang,true));
+             $(".table-responsive-tiktok-ubah").append(setDetail(itemDetail,x,namaBarang,true));
          }
          
          
-        $("#itemUbahLazada").val(JSON.stringify(itemDetail));
+        $("#itemUbahTiktok").val(JSON.stringify(itemDetail));
             
-		var table = $('#table_barang_lazada').DataTable();
+		var table = $('#table_barang_tiktok').DataTable();
 		table.search("").draw();
 	});
 });
 
-function getKategoriLazada(){
-	return $("#kategori_item_lazada").val();
+function getKategoriTiktok(){
+	return $("#kategori_item_tiktok").val();
 }
 
 //MENAMPILKAN TRANSAKSI
-$("#cb_trans_status_lazada_1").change(function(event){
+$("#cb_trans_status_tiktok_1").change(function(event){
     loading();
 	if($(this).val()  == 'SEMUA' )
 	{
-		$("#STATUSLAZADA1").val('UNPAID,PENDING,PACKED,READY_TO_SHIP');
+		$("#STATUSTIKTOK1").val('UNPAID,ON_HOLD,AWAITING_SHIPMENT,AWAITING_COLLECTION');
 	}	
 	else
 	{
-		$("#STATUSLAZADA1").val($(this).val());
+		$("#STATUSTIKTOK1").val($(this).val());
 	}
-	$("#dataGridLazada1").DataTable().ajax.reload();
+	$("#dataGridTiktok1").DataTable().ajax.reload();
 	
 });
 
 //MENAMPILKAN TRANSAKSI
-$("#cb_trans_status_lazada_2").change(function(event){
+$("#cb_trans_status_tiktok_2").change(function(event){
     loading();
 	if($(this).val()  == 'SEMUA' )
-	{
-		$("#STATUSLAZADA2").val('SHIPPED,FAILED');
+	{	
+		$("#STATUSTIKTOK2").val('IN_TRANSIT,DELIVERED');
 	}	
 	else
 	{
-		$("#STATUSLAZADA2").val($(this).val());
+		$("#STATUSTIKTOK2").val($(this).val());
 	}
-	$("#dataGridLazada2").DataTable().ajax.reload();
+	$("#dataGridTiktok2").DataTable().ajax.reload();
 	
 });
 
 //MENAMPILKAN TRANSAKSI
-$("#cb_trans_status_lazada_3").change(function(event){
+$("#cb_trans_status_tiktok_3").change(function(event){
     loading();
 	if($(this).val()  == 'SEMUA' )
 	{
-		$("#STATUSLAZADA3").val('COMPLETED,CANCELLED');
+		$("#STATUSTIKTOK3").val('COMPLETED,CANCELLED');
 	}	
 	else
 	{
-		$("#STATUSLAZADA3").val($(this).val());
+		$("#STATUSTIKTOK3").val($(this).val());
 	}
-	$("#dataGridLazada3").DataTable().ajax.reload();
+	$("#dataGridTiktok3").DataTable().ajax.reload();
 	
 });
 
 //MENAMPILKAN TRANSAKSI
-$("#cb_trans_status_lazada_4").change(function(event){
+$("#cb_trans_status_tiktok_4").change(function(event){
     loading();
 	if($(this).val()  == 'SEMUA' )
 	{
-		$("#STATUSLAZADA4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
+		$("#STATUSTIKTOK4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
 	}	
 	else
 	{
-		$("#STATUSLAZADA4").val($(this).val());
+		$("#STATUSTIKTOK4").val($(this).val());
 	}
-	$("#dataGridLazada4").DataTable().ajax.reload();
+	$("#dataGridTiktok4").DataTable().ajax.reload();
 	
 });
 
@@ -1255,39 +1254,39 @@ function hotkey(e){
 	
 }
 
-function getStatusLazada(index){
-	return $("#STATUSLAZADA"+index).val();
+function getStatusTiktok(index){
+	return $("#STATUSTIKTOK"+index).val();
 }
 
-function refreshLazada(index){
+function refreshTiktok(index){
     loading();
-    $("#dataGridLazada"+index).DataTable().ajax.reload();
+    $("#dataGridTiktok"+index).DataTable().ajax.reload();
 }
 
-function changeTabLazada(index){
+function changeTabTiktok(index){
     
-    if(!sinkronLazadaState)
+    if(!sinkronTiktokState)
     {
         loading();
     }
     
     
-    // if(firsTimeLazada[1])
+    // if(firsTimeTiktok[1])
     // {
     //      $.ajax({
     //     	type    : 'POST',
-    //     	url     : base_url+'Lazada/init/<?=date('Y-m-d')?>/<?=date('Y-m-d')?>/update_time',
+    //     	url     : base_url+'Tiktok/init/<?=date('Y-m-d')?>/<?=date('Y-m-d')?>/update_time',
     //     	dataType: 'json',
     //     	success : function(msg){
         	    
     //     	}
 	   //  });
     // }
-    // else if(!firsTimeLazada[index])
+    // else if(!firsTimeTiktok[index])
     // {
     //      $.ajax({
     //     	type    : 'POST',
-    //     	url     : base_url+'Lazada/init/<?=date('Y-m-d')?>/<?=date('Y-m-d')?>/update_time',
+    //     	url     : base_url+'Tiktok/init/<?=date('Y-m-d')?>/<?=date('Y-m-d')?>/update_time',
     //     	dataType: 'json',
     //     	success : function(msg){
         	    
@@ -1295,23 +1294,23 @@ function changeTabLazada(index){
 	   //  });
     // }
     
-    $("#filter_status_lazada_"+index+", #filter_tgl_lazada_"+index).show();
+    $("#filter_status_tiktok_"+index+", #filter_tgl_tiktok_"+index).show();
     
     for(var x = 1; x <= 4 ; x++)
     {
        if(index != x)
        {
-            $("#filter_status_lazada_"+x+", #filter_tgl_lazada_"+x+"").hide();
+            $("#filter_status_tiktok_"+x+", #filter_tgl_tiktok_"+x+"").hide();
        }
     }
     
-    if(firsTimeLazada[index])
+    if(firsTimeTiktok[index])
     {
-        firsTimeLazada[index] = false;
+        firsTimeTiktok[index] = false;
     	//GRID BARANG
     	if(index != 4)
     	{
-        	$('#dataGridLazada'+index).DataTable({
+        	$('#dataGridTiktok'+index).DataTable({
                 'paging'      : true,
                 'lengthChange': true,
                 'searching'   : true,
@@ -1332,14 +1331,14 @@ function changeTabLazada(index){
                     }
                 },
         		ajax		  : {
-        			url    : base_url+'Lazada/dataGrid/',
+        			url    : base_url+'Tiktok/dataGrid/',
         			dataSrc: "rows",
         			type   : "POST",
         			data   : function(e){
         			        e.state          = index;
-        					e.status 		 = getStatusLazada(index);
-        					e.tglawal        = $('#tgl_awal_filter_lazada_'+index).val();
-        					e.tglakhir       = $('#tgl_akhir_filter_lazada_'+index).val();
+        					e.status 		 = getStatusTiktok(index);
+        					e.tglawal        = $('#tgl_awal_filter_tiktok_'+index).val();
+        					e.tglakhir       = $('#tgl_akhir_filter_tiktok_'+index).val();
         				  }
         		},
                 columns:[
@@ -1364,21 +1363,21 @@ function changeTabLazada(index){
                         render: function (data, type, row) {
                             let html = "<div style='height:150px; display: flex; flex-direction: column; justify-content: space-between;'>";
                             if (row.STATUS.toUpperCase() == "SIAP DIKEMAS" || row.STATUS.toUpperCase() == "DIKEMAS" || row.STATUS.toUpperCase() == "PROSES KIRIM" ||  row.STATUS.toUpperCase() == "SIAP DIKIRIM") {
-                                html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
-                                html += "<button  style='margin-top:5px;' id='btn_hapus_lazada' class='btn btn-danger'  style='width:122px;' >Batal</button>"; //<button id='btn_edit_lazada' class='btn btn-primary' style='width:59.5px;' >Ubah</button> 
+                                html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
+                                html += "<button  style='margin-top:5px;' id='btn_hapus_tiktok' class='btn btn-danger'  style='width:122px;' >Batal</button>"; //<button id='btn_edit_tiktok' class='btn btn-primary' style='width:59.5px;' >Ubah</button> 
                                 if(row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
                                 {
-                                    html+= "<button  style='margin-top:auto;' id='btn_cetak_lazada' class='btn btn-warning'  style='width:122px;'>Cetak</button>";
+                                    html+= "<button  style='margin-top:auto;' id='btn_cetak_tiktok' class='btn btn-warning'  style='width:122px;'>Cetak</button>";
                                 }
                                 if(row.STATUS.toUpperCase() == "DIKEMAS"  && row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
                                 {
-                                    html += "<div style='margin-top:auto;'><button id='btn_kirim_lazada' class='btn btn-success' style='width:122px;'>Atur Pengiriman</button></div>";
+                                    html += "<div style='margin-top:auto;'><button id='btn_kirim_tiktok' class='btn btn-success' style='width:122px;'>Atur Pengiriman</button></div>";
                                 }
                             } else if (row.STATUS.toUpperCase() == "DALAM PENGIRIMAN" || row.STATUS.toUpperCase() == "GAGAL PENGIRIMAN") {
-                                html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
-                                html += "<div style='margin-top:auto;'><button id='btn_lacak_lazada' class='btn btn-success' style='width:122px;'>Lacak Pesanan</button></div>";
+                                html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
+                                html += "<div style='margin-top:auto;'><button id='btn_lacak_tiktok' class='btn btn-success' style='width:122px;'>Lacak Pesanan</button></div>";
                             } else {
-                                html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
+                                html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                             }
                             html += "</div>";
                             return html;
@@ -1414,7 +1413,7 @@ function changeTabLazada(index){
     	else
     	{
     	    //RETUR
-    	    $('#dataGridLazada'+index).DataTable({
+    	    $('#dataGridTiktok'+index).DataTable({
                 'paging'      : true,
                 'lengthChange': true,
                 'searching'   : true,
@@ -1435,14 +1434,14 @@ function changeTabLazada(index){
                     }
                 },
         		ajax		  : {
-        			url    : base_url+'Lazada/dataGrid/',
+        			url    : base_url+'Tiktok/dataGrid/',
         			dataSrc: "rows",
         			type   : "POST",
         			data   : function(e){
         			        e.state          = index;
-        					e.status 		 = getStatusLazada(index);
-        					e.tglawal        = $('#tgl_awal_filter_lazada_'+index).val();
-        					e.tglakhir       = $('#tgl_akhir_filter_lazada_'+index).val();
+        					e.status 		 = getStatusTiktok(index);
+        					e.tglawal        = $('#tgl_awal_filter_tiktok_'+index).val();
+        					e.tglakhir       = $('#tgl_akhir_filter_tiktok_'+index).val();
         				  }
         		},
                 columns:[
@@ -1465,7 +1464,7 @@ function changeTabLazada(index){
                         "data": null,
                         render: function (data, type, row) {
                             let html = "<div style='height:150px; display: flex; flex-direction: column; justify-content: space-between;'>";
-                                html += "<button id='btn_kembali_lazada' style='border:1px solid #CECECE;' class='btn' >Detail Pengembalian</button>";
+                                html += "<button id='btn_kembali_tiktok' style='border:1px solid #CECECE;' class='btn' >Detail Pengembalian</button>";
                                 if(row.TIPEPENGEMBALIAN == "RETURN_DELIVERED")
                                 {
                                     html += "<i style='color:red;'>Barang Telah Diterima Penjual</i>";
@@ -1481,48 +1480,48 @@ function changeTabLazada(index){
         
         
     	//DAPATKAN INDEX
-    	var table = $('#dataGridLazada'+index).DataTable();
-    	$('#dataGridLazada'+index+' tbody').on( 'click', 'button', function () {
+    	var table = $('#dataGridTiktok'+index).DataTable();
+    	$('#dataGridTiktok'+index+' tbody').on( 'click', 'button', function () {
     		var row = table.row( $(this).parents('tr') ).data();
     		var mode = $(this).attr("id");
-    		$("#rowDataLazada").val(JSON.stringify(row));
+    		$("#rowDataTiktok").val(JSON.stringify(row));
     		
-    		if(mode == "btn_lihat_lazada"){ lihatLazada();}
-    // 		else if(mode == "btn_edit_lazada"){ubahLazada();}
-    		else if(mode == "btn_cetak_lazada"){cetakLazada();}
-    		else if(mode == "btn_hapus_lazada"){hapusLazada();}
-    		else if(mode == "btn_kirim_lazada"){kirimLazada();}
-    		else if(mode == "btn_lacak_lazada"){lacakLazada();}
-    		else if(mode == "btn_kembali_lazada"){kembaliLazada();}
-    		else if(mode == "btn_retur_lazada"){returLazada();}
+    		if(mode == "btn_lihat_tiktok"){ lihatTiktok();}
+    // 		else if(mode == "btn_edit_tiktok"){ubahTiktok();}
+    		else if(mode == "btn_cetak_tiktok"){cetakTiktok();}
+    		else if(mode == "btn_hapus_tiktok"){hapusTiktok();}
+    		else if(mode == "btn_kirim_tiktok"){kirimTiktok();}
+    		else if(mode == "btn_lacak_tiktok"){lacakTiktok();}
+    		else if(mode == "btn_kembali_tiktok"){kembaliTiktok();}
+    		else if(mode == "btn_retur_tiktok"){returTiktok();}
     	} );
     	
-    	$('#dataGridLazada'+index+' tbody').on( 'click', 'i', function () {
+    	$('#dataGridTiktok'+index+' tbody').on( 'click', 'i', function () {
     		var row = table.row( $(this).parents('tr') ).data();
     		var mode = $(this).attr("id");
-    		$("#rowDataLazada").val(JSON.stringify(row));
-    		$("#fromNoteLazada").val("GRID_X");
-    		if(mode == "editNoteLazada"){catatanPenjualLazada();}
+    		$("#rowDataTiktok").val(JSON.stringify(row));
+    		$("#fromNoteTiktok").val("GRID_X");
+    		if(mode == "editNoteTiktok"){catatanPenjualTiktok();}
     	} );
     }
     else
     {
-        $("#dataGridLazada"+index).DataTable().ajax.reload();
+        $("#dataGridTiktok"+index).DataTable().ajax.reload();
     }
     
     // Close SweetAlert after data is loaded
-    $('#dataGridLazada'+index).DataTable().on('xhr.dt', function () {
-        if(!sinkronLazadaState)
+    $('#dataGridTiktok'+index).DataTable().on('xhr.dt', function () {
+        if(!sinkronTiktokState)
         {
            setTimeout(() => {
-               if($('#dataGridLazada'+index).DataTable().data().count() == 0)
+               if($('#dataGridTiktok'+index).DataTable().data().count() == 0)
                {
-                   $("#totalLazada"+index).hide();
+                   $("#totalTiktok"+index).hide();
                }
                else
                {
-                    $("#totalLazada"+index).show();
-                    $("#totalLazada"+index).html($('#dataGridLazada'+index).DataTable().data().count());
+                    $("#totalTiktok"+index).show();
+                    $("#totalTiktok"+index).html($('#dataGridTiktok'+index).DataTable().data().count());
                }
                recountCetakdanKirim(); 
                Swal.close();
@@ -1531,36 +1530,36 @@ function changeTabLazada(index){
         else
         {
             //JIKA SUDAH DONE SEMUA MAKA SINKRON STATE FALSE, JIKA TIDAK DIKEMBALIKAN TRUE
-            sinkronLazadaState = false;
-            doneSinkronLazada[index] = true;
+            sinkronTiktokState = false;
+            doneSinkronTiktok[index] = true;
             for(var x = 1; x <= 4 ; x++)
             {
-                if(!doneSinkronLazada[x]){
-                    sinkronLazadaState = true;
+                if(!doneSinkronTiktok[x]){
+                    sinkronTiktokState = true;
                 }
             }
             
-            if(!sinkronLazadaState)
+            if(!sinkronTiktokState)
             {
                 Swal.close();
                 
                 setTimeout(() => {
                     var caption = "Tidak Ada Pesanan Baru";
-                    if(totalPesananLazadaAll > 0)
+                    if(totalPesananTiktokAll > 0)
                     {
-                        caption = 'Terdapat '+totalPesananLazadaAll+' Pesanan Baru'
+                        caption = 'Terdapat '+totalPesananTiktokAll+' Pesanan Baru'
                     }
                     
                     for(var x = 1; x <= 4 ; x++)
                     {
-                       if($('#dataGridLazada'+x).DataTable().data().count() == 0)
+                       if($('#dataGridTiktok'+x).DataTable().data().count() == 0)
                        {
-                           $("#totalLazada"+x).hide();
+                           $("#totalTiktok"+x).hide();
                        }
                        else
                        {
-                            $("#totalLazada"+x).show();
-                            $("#totalLazada"+x).html($('#dataGridLazada'+x).DataTable().data().count());
+                            $("#totalTiktok"+x).show();
+                            $("#totalTiktok"+x).html($('#dataGridTiktok'+x).DataTable().data().count());
                             recountCetakdanKirim();
                        }
                     }
@@ -1578,7 +1577,7 @@ function changeTabLazada(index){
 }
 
 function recountCetakdanKirim(){
-    var data = $("#dataGridLazada1").DataTable().rows().data();
+    var data = $("#dataGridTiktok1").DataTable().rows().data();
     var countCetak = 0;
     var countKirim = 0;
     for(var x = 0; x < data.length; x++)
@@ -1621,79 +1620,79 @@ function recountCetakdanKirim(){
     }
 }
 
-function lihatLazada(){
-    var row = JSON.parse($("#rowDataLazada").val());
+function lihatTiktok(){
+    var row = JSON.parse($("#rowDataTiktok").val());
     loading();
     $.ajax({
     	type    : 'POST',
-    	url     : base_url+'Lazada/loadDetail/',
+    	url     : base_url+'Tiktok/loadDetail/',
     	data    : {kode: row.KODEPESANAN,metodebayar : row.METODEBAYAR},
     	dataType: 'json',
     	success : function(msg){
-    	    $("#cetakLazadaDetail").hide();
-    	    $("#hapusLazadaDetail").hide();
-    	    $("#ubahLazadaDetail").hide();
-    	    $("#kirimLazadaDetail").hide();
-    	    $("#lacakLazadaDetail").hide();
-            $("#DETAILINFORMASIPENJUALLAZADA").hide();
+    	    $("#cetakTiktokDetail").hide();
+    	    $("#hapusTiktokDetail").hide();
+    	    $("#ubahTiktokDetail").hide();
+    	    $("#kirimTiktokDetail").hide();
+    	    $("#lacakTiktokDetail").hide();
+            $("#DETAILINFORMASIPENJUALTIKTOK").hide();
             $("#ADDINFOINFORMASIPENJUAL").show();
             
             if(row.STATUS.toUpperCase() == "SELESAI")
             {
-               $("#DETAILINFORMASIPENJUALLAZADA").show();
+               $("#DETAILINFORMASIPENJUALTIKTOK").show();
                $("#ADDINFOINFORMASIPENJUAL").hide();
             }
             
     	    if(row.STATUS.toUpperCase() == "DIKEMAS" && row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
     	    {
-    	        $("#kirimLazadaDetail").show();
+    	        $("#kirimTiktokDetail").show();
     	    }
     	    if(row.STATUS.toUpperCase() == "SIAP DIKEMAS" || row.STATUS.toUpperCase() == "DIKEMAS" || row.STATUS.toUpperCase() == "PROSES KIRIM" || row.STATUS.toUpperCase() == "SIAP DIKIRIM")
     	    {
-    	        $("#hapusLazadaDetail").show();
-    	        $("#ubahLazadaDetail").show();
+    	        $("#hapusTiktokDetail").show();
+    	        $("#ubahTiktokDetail").show();
     	        if(row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
     	        {
-    	            $("#cetakLazadaDetail").show();
+    	            $("#cetakTiktokDetail").show();
     	        }
     	    }
     	    if(row.STATUS.toUpperCase() == "DALAM PENGIRIMAN" || row.STATUS.toUpperCase() == "GAGAL PENGIRIMAN")
     	    {
-    	        $("#lacakLazadaDetail").show();
+    	        $("#lacakTiktokDetail").show();
     	    }
     	    
-            $("#NOLAZADA").html("#"+row.KODEPESANAN);
-            $("#STATUSLAZADA").html(row.STATUS);
-            $("#TGLPESANANLAZADA").html(row.TGLPESANAN.replaceAll("<br>"," "));
-            $("#TGLKIRIMLAZADA").html(row.KURIR==""?"-":row.MINTGLKIRIM);
-            $("#PEMBAYARANLAZADA").html(row.METODEBAYAR);
-            $("#KURIRLAZADA").html((row.KURIR==""?"-":row.KURIR)+" / "+(row.RESI==""?"-":row.RESI));
-            $("#NAMAPEMBELILAZADA").html(row.BUYERNAME+" ("+row.USERNAME+")");
-            $("#TELPPEMBELILAZADA").html(row.BUYERPHONE);
-            $("#ALAMATPEMBELILAZADA").html(row.BUYERALAMAT);
-            $("#CATATANPEMBELILAZADA").html(row.CATATANBELI);
-            $("#CATATANPEMBELILAZADA").html($("#CATATANPEMBELILAZADA div").html()==""?"<div>-</div>":row.CATATANBELI);
-            $("#ALASANPENGEMBALIANLAZADA").html(row.CATATANPENGEMBALIAN);
+            $("#NOTIKTOK").html("#"+row.KODEPESANAN);
+            $("#STATUSTIKTOK").html(row.STATUS);
+            $("#TGLPESANANTIKTOK").html(row.TGLPESANAN.replaceAll("<br>"," "));
+            $("#TGLKIRIMTIKTOK").html(row.KURIR==""?"-":row.MINTGLKIRIM);
+            $("#PEMBAYARANTIKTOK").html(row.METODEBAYAR);
+            $("#KURIRTIKTOK").html((row.KURIR==""?"-":row.KURIR)+" / "+(row.RESI==""?"-":row.RESI));
+            $("#NAMAPEMBELITIKTOK").html(row.BUYERNAME+" ("+row.USERNAME+")");
+            $("#TELPPEMBELITIKTOK").html(row.BUYERPHONE);
+            $("#ALAMATPEMBELITIKTOK").html(row.BUYERALAMAT);
+            $("#CATATANPEMBELITIKTOK").html(row.CATATANBELI);
+            $("#CATATANPEMBELITIKTOK").html($("#CATATANPEMBELITIKTOK div").html()==""?"<div>-</div>":row.CATATANBELI);
+            $("#ALASANPENGEMBALIANTIKTOK").html(row.CATATANPENGEMBALIAN);
             
-            if($("#ALASANPENGEMBALIANLAZADA div").html() != "")
+            if($("#ALASANPENGEMBALIANTIKTOK div").html() != "")
             {
-                $(".alasanKembaliLazada").show();
-                $("#ALASANPENGEMBALIANLAZADA").html(row.CATATANPENGEMBALIAN);
+                $(".alasanKembaliTiktok").show();
+                $("#ALASANPENGEMBALIANTIKTOK").html(row.CATATANPENGEMBALIAN);
             }
             else
             {
-                $(".alasanKembaliLazada").hide();
-                $("#ALASANPENGEMBALIANLAZADA").html("<div>-</div>");
+                $(".alasanKembaliTiktok").hide();
+                $("#ALASANPENGEMBALIANTIKTOK").html("<div>-</div>");
             }
             
-            $(".noKembaliLazada").show();
+            $(".noKembaliTiktok").show();
             if(row.KODEPENGEMBALIAN != null)
             {
-                $(".noKembaliLazada").show();
-                $("#NOPENGEMBALIANLAZADA").html(row.KODEPENGEMBALIAN);
+                $(".noKembaliTiktok").show();
+                $("#NOPENGEMBALIANTIKTOK").html(row.KODEPENGEMBALIAN);
             }
             
-            $(".table-responsive-lazada").html('');
+            $(".table-responsive-tiktok").html('');
             
             var totalCurr = 0;
             var totalCurrKembali = 0;
@@ -1710,7 +1709,7 @@ function lihatLazada(){
                     namaBarang += ("<br><span  style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; font-style:italic;'>Retur : "+msg.DETAILBARANG[x].WARNA+" / "+msg.DETAILBARANG[x].SIZE+"</span>");
                 }
                 
-                $(".table-responsive-lazada").append(setDetail(msg.DETAILBARANG,x,namaBarang,false));
+                $(".table-responsive-tiktok").append(setDetail(msg.DETAILBARANG,x,namaBarang,false));
                 totalCurr += msg.DETAILBARANG[x].JUMLAH;
                 totalCurrKembali += parseInt(msg.DETAILBARANG[x].JUMLAHKEMBALI);
             }
@@ -1719,93 +1718,93 @@ function lihatLazada(){
             {
                 totalKembali = "<span style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>' > (-"+currency(totalCurrKembali.toString())+")</span>";
             }
-            $("#TOTALQTYLAZADA").html(currency(totalCurr)+totalKembali);
-            $("#SUBTOTALLAZADA").html(currency(msg.SUBTOTALBELI));
+            $("#TOTALQTYTIKTOK").html(currency(totalCurr)+totalKembali);
+            $("#SUBTOTALTIKTOK").html(currency(msg.SUBTOTALBELI));
            
-            $("#TOTALPENJUALLAZADA").html(currency(msg.SUBTOTALBELI));
-            $("#DISKONPENJUALLAZADA").html(currency(msg.DISKONJUAL));
-            $("#BIAYAKIRIMPENJUALLAZADA").html(currency(msg.BIAYAKIRIMJUAL));
-            $("#BIAYALAYANANPENJUALLAZADA").html(currency(msg.BIAYALAYANANJUAL));
-            $("#GRANDTOTALPENJUALLAZADA").html(currency(msg.PENERIMAANJUAL));
-            $("#REFUNDPENJUALLAZADA").html(currency(msg.REFUNDJUAL));
-            $("#PENYELESAIANPENJUALLAZADA").html(currency(msg.PENYELESAIANPENJUAL));
+            $("#TOTALPENJUALTIKTOK").html(currency(msg.SUBTOTALBELI));
+            $("#DISKONPENJUALTIKTOK").html(currency(msg.DISKONJUAL));
+            $("#BIAYAKIRIMPENJUALTIKTOK").html(currency(msg.BIAYAKIRIMJUAL));
+            $("#BIAYALAYANANPENJUALTIKTOK").html(currency(msg.BIAYALAYANANJUAL));
+            $("#GRANDTOTALPENJUALTIKTOK").html(currency(msg.PENERIMAANJUAL));
+            $("#REFUNDPENJUALTIKTOK").html(currency(msg.REFUNDJUAL));
+            $("#PENYELESAIANPENJUALTIKTOK").html(currency(msg.PENYELESAIANPENJUAL));
            
            
-           $("#TOTALPEMBELILAZADA").html(currency(msg.SUBTOTALBELI));
-           $("#DISKONPEMBELILAZADA").html(currency(msg.DISKONBELI));
-           $("#BIAYAKIRIMPEMBELILAZADA").html(currency(msg.BIAYAKIRIMBELI));
-           $("#BIAYALAINPEMBELILAZADA").html(currency(msg.BIAYALAINBELI));
-           $("#PEMBAYARANPEMBELILAZADA").html(currency(msg.PEMBAYARANBELI));
+           $("#TOTALPEMBELITIKTOK").html(currency(msg.SUBTOTALBELI));
+           $("#DISKONPEMBELITIKTOK").html(currency(msg.DISKONBELI));
+           $("#BIAYAKIRIMPEMBELITIKTOK").html(currency(msg.BIAYAKIRIMBELI));
+           $("#BIAYALAINPEMBELITIKTOK").html(currency(msg.BIAYALAINBELI));
+           $("#PEMBAYARANPEMBELITIKTOK").html(currency(msg.PEMBAYARANBELI));
            if(row.STATUS == "Selesai" || row.STATUS == "Pembatalan")
            {
-               $(".penyelesaianLazada").show();
+               $(".penyelesaianTiktok").show();
            }
            else
            {
-               $(".penyelesaianLazada").hide();
+               $(".penyelesaianTiktok").hide();
            }
             Swal.close();
-            $("#modal-form-lazada").modal('show');
+            $("#modal-form-tiktok").modal('show');
     			
     	}
     });
 }
 
-function kembaliLazada(){
-    var row = JSON.parse($("#rowDataLazada").val());
+function kembaliTiktok(){
+    var row = JSON.parse($("#rowDataTiktok").val());
     loading();
     $.ajax({
     	type    : 'POST',
-    	url     : base_url+'Lazada/loadDetailPengembalian/',
+    	url     : base_url+'Tiktok/loadDetailPengembalian/',
     	data    : {kode: row.KODEPENGEMBALIAN},
     	dataType: 'json',
     	success : function(msg){
     	    
-    		$("#dataReturLazada").val(JSON.stringify(msg));	
+    		$("#dataReturTiktok").val(JSON.stringify(msg));	
     		
-            $("#NOLAZADAPENGEMBALIAN").html("#"+row.KODEPENGEMBALIAN);
-            $("#NOLAZADAPESANANPENGEMBALIAN").html(row.KODEPESANAN);
-            $("#STATUSLAZADAPENGEMBALIAN").html(row.STATUS.replaceAll("<br>"," "));
-            $("#TGLLAZADAPENGEMBALIAN").html(row.TGLPENGEMBALIAN.replaceAll("<br>"," "));
+            $("#NOTIKTOKPENGEMBALIAN").html("#"+row.KODEPENGEMBALIAN);
+            $("#NOTIKTOKPESANANPENGEMBALIAN").html(row.KODEPESANAN);
+            $("#STATUSTIKTOKPENGEMBALIAN").html(row.STATUS.replaceAll("<br>"," "));
+            $("#TGLTIKTOKPENGEMBALIAN").html(row.TGLPENGEMBALIAN.replaceAll("<br>"," "));
             if( row.MINTGLPENGEMBALIAN == "0000-00-00 00:00:00")
             {
-                $("#MINTGLLAZADAPENGEMBALIAN").html("-");
+                $("#MINTGLTIKTOKPENGEMBALIAN").html("-");
             }
             else
             {
-                $("#MINTGLLAZADAPENGEMBALIAN").html(row.MINTGLPENGEMBALIAN.replaceAll("<br>"," "));
+                $("#MINTGLTIKTOKPENGEMBALIAN").html(row.MINTGLPENGEMBALIAN.replaceAll("<br>"," "));
             }
-            $("#RESILAZADAPENGEMBALIAN").html((row.RESIPENGEMBALIAN==""?"-":row.RESIPENGEMBALIAN));
-            $("#NAMAPEMBELILAZADAPENGEMBALIAN").html(row.BUYERNAME+" ("+row.USERNAME+")");
-            $("#TELPPEMBELILAZADAPENGEMBALIAN").html(row.BUYERPHONE);
-            $("#ALAMATPEMBELILAZADAPENGEMBALIAN").html(row.BUYERALAMAT);
-            $("#ALASANLAZADAPILIHAN").html(msg.ALASANPILIHPENGEMBALIAN);
-            $("#ALASANLAZADAPENGEMBALIAN").html(row.CATATANPENGEMBALIAN);
-            $("#ALASANLAZADAPENGEMBALIAN").html($("#ALASANLAZADAPENGEMBALIAN div").html()==""?"<div>-</div>":row.CATATANPENGEMBALIAN);
+            $("#RESITIKTOKPENGEMBALIAN").html((row.RESIPENGEMBALIAN==""?"-":row.RESIPENGEMBALIAN));
+            $("#NAMAPEMBELITIKTOKPENGEMBALIAN").html(row.BUYERNAME+" ("+row.USERNAME+")");
+            $("#TELPPEMBELITIKTOKPENGEMBALIAN").html(row.BUYERPHONE);
+            $("#ALAMATPEMBELITIKTOKPENGEMBALIAN").html(row.BUYERALAMAT);
+            $("#ALASANTIKTOKPILIHAN").html(msg.ALASANPILIHPENGEMBALIAN);
+            $("#ALASANTIKTOKPENGEMBALIAN").html(row.CATATANPENGEMBALIAN);
+            $("#ALASANTIKTOKPENGEMBALIAN").html($("#ALASANTIKTOKPENGEMBALIAN div").html()==""?"<div>-</div>":row.CATATANPENGEMBALIAN);
             
-            $(".table-responsive-lazada-pengembalian").html('');
+            $(".table-responsive-tiktok-pengembalian").html('');
             
-            $("#returLazadaDetail").hide();
-            $("#returLazadaWait").show();
+            $("#returTiktokDetail").hide();
+            $("#returTiktokWait").show();
             
             if(row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED")
             {
-                $("#STATUSLAZADAPENGEMBALIAN").html($("#STATUSLAZADAPENGEMBALIAN").html()+"<br>&nbsp;<i style='color:red;'>(Barang Telah Diterima Penjual)</i>");
+                $("#STATUSTIKTOKPENGEMBALIAN").html($("#STATUSTIKTOKPENGEMBALIAN").html()+"<br>&nbsp;<i style='color:red;'>(Barang Telah Diterima Penjual)</i>");
             }
             
             if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIAJUKAN" || row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED") {
-                $("#returLazadaDetail").show();
-                $("#returLazadaWait").hide();
+                $("#returTiktokDetail").show();
+                $("#returTiktokWait").hide();
             }
             
             if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIPROSES" &&  row.TIPEPENGEMBALIAN.toUpperCase() != "RETURN_DELIVERED") {
-                $("#returLazadaWait").html("Menunggu Barang Tiba");
+                $("#returTiktokWait").html("Menunggu Barang Tiba");
             }
             
             if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DALAM SENGKETA" || row.STATUSPENGEMBALIAN.toUpperCase() == "REFUND_PENDING") {
-                $("#returLazadaDetail").hide();
-                $("#returLazadaWait").show();
-                $("#returLazadaWait").html("Menunggu Respon Lazada");
+                $("#returTiktokDetail").hide();
+                $("#returTiktokWait").show();
+                $("#returTiktokWait").html("Menunggu Respon Tiktok");
             }
             
             var totalCurr = 0;
@@ -1817,7 +1816,7 @@ function kembaliLazada(){
                     namaBarang += ("&nbsp&nbsp&nbsp&nbsp<span  style='color:#949494; font-style:italic;'>Marketplace : "+msg.DETAILBARANG[x].WARNAOLD+" / "+msg.DETAILBARANG[x].SIZEOLD+"</span>");
                 }
                 
-                $(".table-responsive-lazada-pengembalian").append(`<tr>
+                $(".table-responsive-tiktok-pengembalian").append(`<tr>
                 	<td style="vertical-align:middle; text-align:left;" width="400px" >`+namaBarang+`</td>
                   	<td style="vertical-align:middle; text-align:center;" width="50px">`+currency(msg.DETAILBARANG[x].JUMLAH.toString())+`</td>
                   	<td style="vertical-align:middle; text-align:center;" width="50px">`+msg.DETAILBARANG[x].SATUAN.toString()+`</td>
@@ -1827,59 +1826,59 @@ function kembaliLazada(){
                 totalCurr += msg.DETAILBARANG[x].JUMLAH;
             }
             
-            $("#TOTALQTYPENGEMBALIANLazada").html(currency(totalCurr));
-            $("#SUBTOTALPENGEMBALIANLazada").html(currency(msg.TOTALREFUND));
+            $("#TOTALQTYPENGEMBALIANTiktok").html(currency(totalCurr));
+            $("#SUBTOTALPENGEMBALIANTiktok").html(currency(msg.TOTALREFUND));
             
             var buktiGambar = "";
             for(var x = 0 ; x < msg.GAMBAR.length;x++)
             {
-                buktiGambar += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasLazada(`GAMBAR`,`Gambar "+(x+1)+"`,`"+msg.GAMBAR[x]+"`)' >Gambar "+(x+1)+"</span><br>";
+                buktiGambar += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasTiktok(`GAMBAR`,`Gambar "+(x+1)+"`,`"+msg.GAMBAR[x]+"`)' >Gambar "+(x+1)+"</span><br>";
             }
-            $("#GAMBARPENGEMBALIANLAZADA").html(buktiGambar);
+            $("#GAMBARPENGEMBALIANTIKTOK").html(buktiGambar);
             
             var buktiVideo = "";
             for(var x = 0 ; x < msg.VIDEO.length;x++)
             {
-                buktiVideo += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasLazada(`VIDEO`,`Video "+(x+1)+"`,`"+msg.VIDEO[x]['video_url']+"`)' >Video "+(x+1)+"</span><br>";
+                buktiVideo += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasTiktok(`VIDEO`,`Video "+(x+1)+"`,`"+msg.VIDEO[x]['video_url']+"`)' >Video "+(x+1)+"</span><br>";
             }
-            $("#VIDEOPENGEMBALIANLAZADA").html(buktiVideo);
+            $("#VIDEOPENGEMBALIANTIKTOK").html(buktiVideo);
             
             Swal.close();
-            $("#modal-pengembalian-lazada").modal('show');
+            $("#modal-pengembalian-tiktok").modal('show');
     	}
     });
 }
 
-function lihatLebihJelasLazada(jenis,title,url){
+function lihatLebihJelasTiktok(jenis,title,url){
 
-    $("#modal-lebih-jelas-lazada").modal("show");
-    $("#titleLebihJelasLazada").html(title);
-    $("#previewLebihJelasLazada").css("color","#3296ff");
-    $("#previewLebihJelasLazada").css("cursor","pointer");
-    $("#previewLebihJelasLazada").css("text-align","center");
-    $("#previewLebihJelasLazada").css("background","#d4d4d7");
+    $("#modal-lebih-jelas-tiktok").modal("show");
+    $("#titleLebihJelasTiktok").html(title);
+    $("#previewLebihJelasTiktok").css("color","#3296ff");
+    $("#previewLebihJelasTiktok").css("cursor","pointer");
+    $("#previewLebihJelasTiktok").css("text-align","center");
+    $("#previewLebihJelasTiktok").css("background","#d4d4d7");
     if(jenis == "GAMBAR")
     {
-        $("#previewLebihJelasLazada").html("<img src='"+url+"' max-width=100%; height=600px;>");
+        $("#previewLebihJelasTiktok").html("<img src='"+url+"' max-width=100%; height=600px;>");
     }
     else
     {
-        $("#previewLebihJelasLazada").html("<iframe src='"+url+"' max-width=100%; height=600px;>");
+        $("#previewLebihJelasTiktok").html("<iframe src='"+url+"' max-width=100%; height=600px;>");
     }
 }
 
-// function ubahLazada(){
-//     $("#modal-form-lazada").modal('hide');
-//     var row = JSON.parse($("#rowDataLazada").val());
+// function ubahTiktok(){
+//     $("#modal-form-tiktok").modal('hide');
+//     var row = JSON.parse($("#rowDataTiktok").val());
 //     loading();
 //     $.ajax({
 //     	type    : 'POST',
-//     	url     : base_url+'Lazada/loadDetail/',
+//     	url     : base_url+'Tiktok/loadDetail/',
 //     	data    : {kode: row.KODEPESANAN},
 //     	dataType: 'json',
 //     	success : function(msg){
-//             $("#NOLAZADAUBAH").html("#"+row.KODEPESANAN);
-//             $(".table-responsive-lazada-ubah").html('');
+//             $("#NOTIKTOKUBAH").html("#"+row.KODEPESANAN);
+//             $(".table-responsive-tiktok-ubah").html('');
             
 //             var totalCurr = 0;
 //             for(var x = 0 ; x < msg.DETAILBARANG.length ; x++)
@@ -1890,36 +1889,36 @@ function lihatLebihJelasLazada(jenis,title,url){
 //                     namaBarang += ("&nbsp&nbsp&nbsp&nbsp<span  style='color:#949494; font-style:italic;'>Marketplace : "+msg.DETAILBARANG[x].WARNAOLD+" / "+msg.DETAILBARANG[x].SIZEOLD+"</span>");
 //                 }
                 
-//                 $(".table-responsive-lazada-ubah").append(setDetail(msg.DETAILBARANG,x,namaBarang,true));
+//                 $(".table-responsive-tiktok-ubah").append(setDetail(msg.DETAILBARANG,x,namaBarang,true));
 //                 totalCurr += msg.DETAILBARANG[x].JUMLAH;
 //             }
-//             $("#TOTALQTYLAZADAUBAH").html(currency(totalCurr));
-//             $("#SUBTOTALLAZADAUBAH").html(currency(msg.SUBTOTALBELI));
+//             $("#TOTALQTYTIKTOKUBAH").html(currency(totalCurr));
+//             $("#SUBTOTALTIKTOKUBAH").html(currency(msg.SUBTOTALBELI));
 //             Swal.close();
-//             $("#itemUbahLazada").val(JSON.stringify(msg.DETAILBARANG));
-//             $("#modal-ubah-lazada").modal('show');
+//             $("#itemUbahTiktok").val(JSON.stringify(msg.DETAILBARANG));
+//             $("#modal-ubah-tiktok").modal('show');
 //     	}
 //     });
 // }
 
-function openItemLazada(indexItem){
-    var itemDetail = JSON.parse($("#itemUbahLazada").val());
-    $("#kategori_item_lazada").val(itemDetail[indexItem].KATEGORI);
-    $("#warnaOldLazada").html(itemDetail[indexItem].WARNAOLD);
-    $("#sizeOldLazada").html(itemDetail[indexItem].SIZEOLD);
-    $("#table_barang_lazada").DataTable().ajax.reload();
-    $("#modal-barang-lazada").modal('show');
+function openItemTiktok(indexItem){
+    var itemDetail = JSON.parse($("#itemUbahTiktok").val());
+    $("#kategori_item_tiktok").val(itemDetail[indexItem].KATEGORI);
+    $("#warnaOldTiktok").html(itemDetail[indexItem].WARNAOLD);
+    $("#sizeOldTiktok").html(itemDetail[indexItem].SIZEOLD);
+    $("#table_barang_tiktok").DataTable().ajax.reload();
+    $("#modal-barang-tiktok").modal('show');
 }
 
-function resetItemLazada(indexItem){
-    var itemDetail = JSON.parse($("#itemUbahLazada").val());
+function resetItemTiktok(indexItem){
+    var itemDetail = JSON.parse($("#itemUbahTiktok").val());
     
     itemDetail[indexItem]['NAMA']   = itemDetail[indexItem]['NAMAOLD'];
     itemDetail[indexItem]['WARNA']  = itemDetail[indexItem]['WARNAOLD'];
     itemDetail[indexItem]['SIZE']   = itemDetail[indexItem]['SIZEOLD'];
     itemDetail[indexItem]['SKU']    = itemDetail[indexItem]['SKUOLD'];
 
-    $(".table-responsive-lazada-ubah").html('');
+    $(".table-responsive-tiktok-ubah").html('');
     
     for(var x = 0 ; x < itemDetail.length ; x++)
     {
@@ -1929,14 +1928,14 @@ function resetItemLazada(indexItem){
             namaBarang += ("&nbsp&nbsp&nbsp&nbsp<span style='color:#949494; font-style:italic;'>Marketplace : "+itemDetail[x].WARNAOLD+" / "+itemDetail[x].SIZEOLD+"</span>");
         }
             	 
-       $(".table-responsive-lazada-ubah").append(setDetail(itemDetail,x,namaBarang,true));        
+       $(".table-responsive-tiktok-ubah").append(setDetail(itemDetail,x,namaBarang,true));        
     }
      
      
-    $("#itemUbahLazada").val(JSON.stringify(itemDetail));
+    $("#itemUbahTiktok").val(JSON.stringify(itemDetail));
 }
 
-function ubahKonfirmLazada(){
+function ubahKonfirmTiktok(){
      Swal.fire({
         title: 'Anda Yakin Mengubah Pesanan Ini ?',
         showCancelButton: true,
@@ -1945,19 +1944,19 @@ function ubahKonfirmLazada(){
         }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
-                var row = JSON.parse($("#rowDataLazada").val());
+                var row = JSON.parse($("#rowDataTiktok").val());
                 loading();
                 $.ajax({
                 	type    : 'POST',
-                	url     : base_url+'Lazada/ubah/',
-                	data    : {kode: row.KODEPESANAN, dataItem: $("#itemUbahLazada").val()},
+                	url     : base_url+'Tiktok/ubah/',
+                	data    : {kode: row.KODEPESANAN, dataItem: $("#itemUbahTiktok").val()},
                 	dataType: 'json',
                 	success : function(msg){
                 	    
                         if(msg.success)
                         {
                             Swal.close();
-                            $("#modal-ubah-lazada").modal('hide');
+                            $("#modal-ubah-tiktok").modal('hide');
                         }
                         
                 	    Swal.fire({
@@ -1968,7 +1967,7 @@ function ubahKonfirmLazada(){
                         });
                         
                         setTimeout(() => {
-                          reloadLazada();
+                          reloadTiktok();
                         }, "2000");
                 	}
                 });
@@ -1978,12 +1977,12 @@ function ubahKonfirmLazada(){
 
 function setDetail(itemDetail,x,namaBarang,action=false)
 {
-    var row = JSON.parse($("#rowDataLazada").val());
+    var row = JSON.parse($("#rowDataTiktok").val());
     var actButton = '';
     var jmlKembali = '';
     if(action)
     {
-       actButton = `<td style="vertical-align:middle; text-align:center;" width="103px" ><button id="btn_edit_detail_lazada" class="btn btn-primary" onclick="openItemLazada(`+x+`)"><i class="fa fa-edit"></i></button> <button id="btn_back_detail_lazada" class="btn btn-danger" onclick="resetItemLazada(`+x+`)"><i class="fa fa-refresh"></i></button></td>`;
+       actButton = `<td style="vertical-align:middle; text-align:center;" width="103px" ><button id="btn_edit_detail_tiktok" class="btn btn-primary" onclick="openItemTiktok(`+x+`)"><i class="fa fa-edit"></i></button> <button id="btn_back_detail_tiktok" class="btn btn-danger" onclick="resetItemTiktok(`+x+`)"><i class="fa fa-refresh"></i></button></td>`;
     }
     
     if(itemDetail[x].JUMLAHKEMBALI != 0 && row.BARANGSAMPAI == 1)
@@ -2002,14 +2001,14 @@ function setDetail(itemDetail,x,namaBarang,action=false)
             </tr>`;
 }
 
-function cetakLazada(){
-    $("#modal-form-lazada").modal('hide');
-    var row = JSON.parse($("#rowDataLazada").val());
+function cetakTiktok(){
+    $("#modal-form-tiktok").modal('hide');
+    var row = JSON.parse($("#rowDataTiktok").val());
     var rows = [{order_number : row.KODEPESANAN, package_id : row.KODEPACKAGING}];
     loading();
      $.ajax({
      	type    : 'POST',
-     	url     : base_url+'Lazada/print/',
+     	url     : base_url+'Tiktok/print/',
      	data    : {dataNoPesanan: JSON.stringify(rows)},
      	dataType: 'json',
      	success : function(msg){
@@ -2017,13 +2016,13 @@ function cetakLazada(){
      	        if(msg.success)
                 {
                     Swal.close();
-                    $("#modal-note-lazada").modal('hide');
+                    $("#modal-note-tiktok").modal('hide');
                     
                  	setTimeout(() => {
-                      reloadLazada();
+                      reloadTiktok();
                       $("#countCetak").html("("+rows.length+")");
-                      $("#previewCetakLazada").html("<iframe src='"+msg.merge_url+"' width=100%; height=600px;>");
-                      $("#modal-cetak-lazada").modal('show');
+                      $("#previewCetakTiktok").html("<iframe src='"+msg.merge_url+"' width=100%; height=600px;>");
+                      $("#modal-cetak-tiktok").modal('show');
                     }, "2000");
                 }
             
@@ -2037,10 +2036,10 @@ function cetakLazada(){
      });
 }
 
-function cetakLazadaSemua(index){
-    $("#modal-cetak-all-lazada").modal('show');
-    $("#pilihCetakAllLazada").prop("checked",true);
-    var data = $("#dataGridLazada"+index).DataTable().rows().data();
+function cetakTiktokSemua(index){
+    $("#modal-cetak-all-tiktok").modal('show');
+    $("#pilihCetakAllTiktok").prop("checked",true);
+    var data = $("#dataGridTiktok"+index).DataTable().rows().data();
     var detailData = "";
     var dataSimpan = [];
     for(var x = 0; x < data.length; x++)
@@ -2072,8 +2071,8 @@ function cetakLazadaSemua(index){
     {
          $("#countCetakSemua").html("");
     }
-    $("#dataCetakSemuaLazada").val(JSON.stringify(dataSimpan));
-    $(".table-responsive-lazada-all-cetak").html(detailData);
+    $("#dataCetakSemuaTiktok").val(JSON.stringify(dataSimpan));
+    $(".table-responsive-tiktok-all-cetak").html(detailData);
     
     for(var x = 0; x < dataSimpan.length; x++)
     {
@@ -2081,7 +2080,7 @@ function cetakLazadaSemua(index){
          var count = 0;
          for(var x = 0; x < dataSimpan.length; x++)
          {
-             if($(".table-responsive-lazada-all-cetak").find("#cetak"+x).is(':checked'))
+             if($(".table-responsive-tiktok-all-cetak").find("#cetak"+x).is(':checked'))
              {
                 count++;
              }
@@ -2098,19 +2097,19 @@ function cetakLazadaSemua(index){
          
          if(count == dataSimpan.length)
          {
-             $("#pilihCetakAllLazada").prop("checked",true);
+             $("#pilihCetakAllTiktok").prop("checked",true);
          }
          else
          {
-             $("#pilihCetakAllLazada").prop("checked",false);
+             $("#pilihCetakAllTiktok").prop("checked",false);
          }
       });
     }
     
-    $("#pilihCetakAllLazada").change(function(){
+    $("#pilihCetakAllTiktok").change(function(){
         for(var x = 0; x < dataSimpan.length; x++)
          {
-            $(".table-responsive-lazada-all-cetak").find("#cetak"+x).prop("checked",$(this).prop("checked"));
+            $(".table-responsive-tiktok-all-cetak").find("#cetak"+x).prop("checked",$(this).prop("checked"));
          }
          
          if($(this).prop("checked"))
@@ -2125,12 +2124,12 @@ function cetakLazadaSemua(index){
 
 }
 
-function cetakAllKonfirmLazada(){
-    var dataSimpan = JSON.parse($("#dataCetakSemuaLazada").val());
+function cetakAllKonfirmTiktok(){
+    var dataSimpan = JSON.parse($("#dataCetakSemuaTiktok").val());
     var rows = [];
     for(var x = 0; x < dataSimpan.length; x++)
     {
-        if($(".table-responsive-lazada-all-cetak").find("#cetak"+x).is(':checked'))
+        if($(".table-responsive-tiktok-all-cetak").find("#cetak"+x).is(':checked'))
         {
            rows.push({order_number:dataSimpan[x].KODEPESANAN,package_id : dataSimpan[x].KODEPACKAGING});
         }
@@ -2140,7 +2139,7 @@ function cetakAllKonfirmLazada(){
         loading();
         $.ajax({
          	type    : 'POST',
-         	url     : base_url+'Lazada/print/',
+         	url     : base_url+'Tiktok/print/',
          	data    : {dataNoPesanan: JSON.stringify(rows)},
          	dataType: 'json',
          	success : function(msg){
@@ -2148,16 +2147,16 @@ function cetakAllKonfirmLazada(){
          	        if(msg.success)
                     {
                         Swal.close();
-                        $("#modal-note-lazada").modal('hide');
-                        $("#modal-cetak-all-lazada").modal('hide');
+                        $("#modal-note-tiktok").modal('hide');
+                        $("#modal-cetak-all-tiktok").modal('hide');
                         
                      	setTimeout(() => {
-                          reloadLazada();
+                          reloadTiktok();
                           $("#countCetak").html("("+rows.length+")");
                           var iframe = "";
-                          iframe += "<iframe id='LazadaCETAK"+x+"' src='"+msg.merge_url+"' width=100%; height=600px;/><br><br>";
-                          $("#previewCetakLazada").html(iframe);
-                          $("#modal-cetak-lazada").modal('show');
+                          iframe += "<iframe id='TiktokCETAK"+x+"' src='"+msg.merge_url+"' width=100%; height=600px;/><br><br>";
+                          $("#previewCetakTiktok").html(iframe);
+                          $("#modal-cetak-tiktok").modal('show');
                         }, "2000");
                     }
                 
@@ -2182,15 +2181,15 @@ function cetakAllKonfirmLazada(){
 }
 
 
-function kirimLazada(){
-    $("#modal-form-lazada").modal('hide');
-    var row = JSON.parse($("#rowDataLazada").val());
+function kirimTiktok(){
+    $("#modal-form-tiktok").modal('hide');
+    var row = JSON.parse($("#rowDataTiktok").val());
     var rows = [row];
     loading();
     
     $.ajax({
     	type    : 'POST',
-    	url     : base_url+'Lazada/cekStokLokasi/',
+    	url     : base_url+'Tiktok/cekStokLokasi/',
     	dataType: 'json',
     	success : function(msg){
             if(!msg.success)
@@ -2205,11 +2204,11 @@ function kirimLazada(){
             else
             {
                 Swal.close();
-                $("#modal-kirim-lazada").modal('show');
+                $("#modal-kirim-tiktok").modal('show');
                 
                 var countPengiriman = 1;
                 $("#countAturPengiriman").html("("+countPengiriman.toString()+")");
-                $(".table-responsive-lazada-kirim").html('');
+                $(".table-responsive-tiktok-kirim").html('');
                 var indexKirim = 0;
                 
                 var dataKirim = ` <tr>
@@ -2218,22 +2217,22 @@ function kirimLazada(){
                           	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="80px">`+currency(rows[indexKirim].TOTALBARANG)+`</td>
                           	<td style="vertical-align:top; text-align:center;  padding-top:17px;" width="150px">`+rows[indexKirim].RESI+` </td>
                           	<td style="vertical-align:top; text-align:center;  padding-top:17px;" width="150px">	`+rows[indexKirim].MINTGLKIRIM+` </td>
-                          	<td style="vertical-align:top; text-align:left; padding-top:17px;" id="editNoteLazadaDiv`+indexKirim+`">`+rows[indexKirim].CATATANJUAL+`</td>
+                          	<td style="vertical-align:top; text-align:left; padding-top:17px;" id="editNoteTiktokDiv`+indexKirim+`">`+rows[indexKirim].CATATANJUAL+`</td>
                         </tr>`;
                 
-                $(".table-responsive-lazada-kirim").append(dataKirim);
+                $(".table-responsive-tiktok-kirim").append(dataKirim);
                 
-                $("#rowDataPengirimanLazada").val(JSON.stringify(rows));
-                $('#editNoteLazadaDiv'+indexKirim).find('#editNoteLazada').click(function(){
-                   $("#fromNoteLazada").val("KIRIMLAZADA_"+indexKirim);
-                    catatanPenjualLazada();
+                $("#rowDataPengirimanTiktok").val(JSON.stringify(rows));
+                $('#editNoteTiktokDiv'+indexKirim).find('#editNoteTiktok').click(function(){
+                   $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim);
+                    catatanPenjualTiktok();
                 });
         }
     }});
  
 }
 
-function kirimKonfirmLazada(){
+function kirimKonfirmTiktok(){
     
     Swal.fire({
         title: 'Anda Yakin Mengirim Pesanan Ini ?',
@@ -2243,13 +2242,13 @@ function kirimKonfirmLazada(){
         }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
-                var row = JSON.parse($("#rowDataLazada").val());
+                var row = JSON.parse($("#rowDataTiktok").val());
                 var rows = [{order_number : row.KODEPESANAN, package_id : row.KODEPACKAGING}];
                 
                 loading();
                 $.ajax({
                  	type    : 'POST',
-                 	url     : base_url+'Lazada/kirim/',
+                 	url     : base_url+'Tiktok/kirim/',
                  	data    : {dataAll:JSON.stringify(rows)},
                  	dataType: 'json',
                  	success : function(msg){
@@ -2260,10 +2259,10 @@ function kirimKonfirmLazada(){
                             		showConfirmButton: false,
                             		timer            : 2000
                             });
-                             $("#modal-kirim-lazada").modal('hide');
+                             $("#modal-kirim-tiktok").modal('hide');
                             	
                           	setTimeout(() => {
-                            reloadLazada();
+                            reloadTiktok();
                           }, "2000");
                  	}
                  });
@@ -2271,11 +2270,11 @@ function kirimKonfirmLazada(){
         });
 }
 
-function kirimLazadaSemua() {
+function kirimTiktokSemua() {
     loading();
     $.ajax({
         type: 'POST',
-        url: base_url + 'Lazada/cekStokLokasi/',
+        url: base_url + 'Tiktok/cekStokLokasi/',
         dataType: 'json',
         success: function (msg) {
             if (!msg.success) {
@@ -2287,11 +2286,11 @@ function kirimLazadaSemua() {
                 });
             } else {
                 Swal.close();
-                $("#pilihKirimanAllKurirLazada").prop('checked', true);
-                $("#modal-kirim-all-lazada").modal('show');
-                $('#tab_kirim_lazada a:first').tab('show');
+                $("#pilihKirimanAllKurirTiktok").prop('checked', true);
+                $("#modal-kirim-all-tiktok").modal('show');
+                $('#tab_kirim_tiktok a:first').tab('show');
 
-                var data = $("#dataGridLazada1").DataTable().rows().data();
+                var data = $("#dataGridTiktok1").DataTable().rows().data();
                 var dataSimpan = [];
                 var dataPerKurir = [];
 
@@ -2302,11 +2301,11 @@ function kirimLazadaSemua() {
                 }
 
                 if (dataSimpan.length > 0) {
-                    $("#keteranganKurirLazada").show();
-                    $("#countAturSemuaPengirimanLazada").html("(" + dataSimpan.length + ")");
+                    $("#keteranganKurirTiktok").show();
+                    $("#countAturSemuaPengirimanTiktok").html("(" + dataSimpan.length + ")");
                 } else {
-                    $("#keteranganKurirLazada").hide();
-                    $("#countAturSemuaPengirimanLazada").html("");
+                    $("#keteranganKurirTiktok").hide();
+                    $("#countAturSemuaPengirimanTiktok").html("");
                 }
 
                 // Group by KURIR
@@ -2327,8 +2326,8 @@ function kirimLazadaSemua() {
                     }
                 }
 
-                $("#countAllPesananLazada").html(dataSimpan.length);
-                $("#countAllKurirLazada").html(dataPerKurir.length);
+                $("#countAllPesananTiktok").html(dataSimpan.length);
+                $("#countAllKurirTiktok").html(dataPerKurir.length);
 
                 var detailPesanan = "";
                 for (var y = 0; y < dataPerKurir.length; y++) {
@@ -2341,17 +2340,17 @@ function kirimLazadaSemua() {
                                     <table class="table table-bordered table-striped table-hover display nowrap" width="100%" style="background:#CFECF7; border-color:#CFECF7; margin:0px; border-collapse: collapse;">
                                         <tr style="border-color:#CFECF7;">
                                             <td style="text-align:center;" width="45px">
-                                                <input type="checkbox" id="pilihKirimanAllLAZADA_${y}" checked>
+                                                <input type="checkbox" id="pilihKirimanAllTIKTOK_${y}" checked>
                                             </td>
                                             <td colspan="3" style="font-weight:bold; font-size:14pt;">${dataPerKurir[y]["name"]}</td>
                                             <td style="text-align:center;">
                                                 <div style="width:250px; margin-top:2px;">
-                                                    Terdapat &nbsp;<span id="countKurirAllLAZADA_${y}" style="font-weight:bold; font-size:14pt;">...</span>&nbsp; Pesanan
+                                                    Terdapat &nbsp;<span id="countKurirAllTIKTOK_${y}" style="font-weight:bold; font-size:14pt;">...</span>&nbsp; Pesanan
                                                 </div>
                                             </td>
                                         </tr>
                                     </table>
-                                    <table id="dataGridDetailAllLazadaKirim${y}" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                                    <table id="dataGridDetailAllTiktokKirim${y}" class="table table-bordered table-striped table-hover display nowrap" width="100%">
                                         <thead>
                                             <tr>
                                                 <th width="70px"></th>
@@ -2362,7 +2361,7 @@ function kirimLazadaSemua() {
                                                 <th style="text-align:center" >Catatan Penjual</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="table-responsive-lazada-all-kirim_${y}"></tbody>
+                                        <tbody class="table-responsive-tiktok-all-kirim_${y}"></tbody>
                                     </table><br>
                                 `;
                             }
@@ -2372,14 +2371,14 @@ function kirimLazadaSemua() {
                     }
                 }
 
-                $("#dataGridDetailAllLazada").html(detailPesanan);
+                $("#dataGridDetailAllTiktok").html(detailPesanan);
 
                 // Checkbox: Pilih Semua
-                $("#pilihKirimanAllKurirLazada").change(function () {
+                $("#pilihKirimanAllKurirTiktok").change(function () {
                     for (var index = 0; index < dataPerKurir.length; index++) {
-                        $("#pilihKirimanAllLAZADA_" + index).prop("checked", $(this).prop("checked"));
+                        $("#pilihKirimanAllTIKTOK_" + index).prop("checked", $(this).prop("checked"));
                         for (var c = 0; c < dataPerKurir[index]['order'].length; c++) {
-                            $(".table-responsive-lazada-all-kirim_" + index + " #pilihKirimanLAZADA_" + c).prop("checked", $(this).prop("checked"));
+                            $(".table-responsive-tiktok-all-kirim_" + index + " #pilihKirimanTIKTOK_" + c).prop("checked", $(this).prop("checked"));
                         }
                     }
                     recountPengiriman();
@@ -2389,71 +2388,71 @@ function kirimLazadaSemua() {
                 for (let i = 0; i < dataPerKurir.length; i++) {
                     let detailKirim = "";
                     let items = dataPerKurir[i]['order'];
-                    $("#countKurirAllLAZADA_" + i).html(items.length);
+                    $("#countKurirAllTIKTOK_" + i).html(items.length);
 
                     for (let indexKirim = 0; indexKirim < items.length; indexKirim++) {
                         detailKirim += `
                             <tr>
                                 <td style="text-align:center; padding-top:17px;" width="70px">
-                                    <input type="checkbox" id="pilihKirimanLAZADA_${indexKirim}" checked>
+                                    <input type="checkbox" id="pilihKirimanTIKTOK_${indexKirim}" checked>
                                 </td>
                                 <td style="text-align:center; padding-top:17px;" width="150px">${items[indexKirim].KODEPESANAN}</td>
                                 <td style="text-align:center; padding-top:17px;" width="80px">${currency(items[indexKirim].TOTALBARANG)}</td>
                                 <td style="text-align:center; padding-top:17px;" width="150px">${items[indexKirim].RESI}</td>
                                 <td style="text-align:center; padding-top:17px;" width="150px">${items[indexKirim].MINTGLKIRIM}</td>
-                                <td style="text-align:left; padding-top:17px;" id="editNoteLazadaDiv_${indexKirim}">${items[indexKirim].CATATANJUAL}</td>
+                                <td style="text-align:left; padding-top:17px;" id="editNoteTiktokDiv_${indexKirim}">${items[indexKirim].CATATANJUAL}</td>
                             </tr>
                         `;
                     }
 
-                    $(".table-responsive-lazada-all-kirim_" + i).html(detailKirim);
+                    $(".table-responsive-tiktok-all-kirim_" + i).html(detailKirim);
 
                     // Handler checkbox per kurir
-                    $("#pilihKirimanAllLAZADA_" + i).change(function () {
+                    $("#pilihKirimanAllTIKTOK_" + i).change(function () {
                         let index = i;
                         for (let c = 0; c < dataPerKurir[index]['order'].length; c++) {
-                            $(".table-responsive-lazada-all-kirim_" + index + " #pilihKirimanLAZADA_" + c).prop("checked", $(this).prop("checked"));
+                            $(".table-responsive-tiktok-all-kirim_" + index + " #pilihKirimanTIKTOK_" + c).prop("checked", $(this).prop("checked"));
                         }
 
                         // Sync with "all kurir" checkbox
-                        let count = dataPerKurir.filter((_, idx) => $("#pilihKirimanAllLAZADA_" + idx).prop("checked")).length;
-                        $("#pilihKirimanAllKurirLazada").prop("checked", count === dataPerKurir.length);
+                        let count = dataPerKurir.filter((_, idx) => $("#pilihKirimanAllTIKTOK_" + idx).prop("checked")).length;
+                        $("#pilihKirimanAllKurirTiktok").prop("checked", count === dataPerKurir.length);
 
                         recountPengiriman();
                     });
 
                     // Handler checkbox per order
                     items.forEach((_, indexKirim) => {
-                        $(".table-responsive-lazada-all-kirim_" + i + " #pilihKirimanLAZADA_" + indexKirim).change(function () {
+                        $(".table-responsive-tiktok-all-kirim_" + i + " #pilihKirimanTIKTOK_" + indexKirim).change(function () {
                             let index = i;
                             let checkedCount = 0;
                             for (let c = 0; c < dataPerKurir[index]['order'].length; c++) {
-                                if ($(".table-responsive-lazada-all-kirim_" + index + " #pilihKirimanLAZADA_" + c).prop("checked")) {
+                                if ($(".table-responsive-tiktok-all-kirim_" + index + " #pilihKirimanTIKTOK_" + c).prop("checked")) {
                                     checkedCount++;
                                 }
                             }
 
-                            $("#pilihKirimanAllLAZADA_" + index).prop("checked", checkedCount === dataPerKurir[index]['order'].length);
+                            $("#pilihKirimanAllTIKTOK_" + index).prop("checked", checkedCount === dataPerKurir[index]['order'].length);
 
                             // Sync with all kurir checkbox
                             let allChecked = true;
                             for (let z = 0; z < dataPerKurir.length; z++) {
-                                if (!$("#pilihKirimanAllLAZADA_" + z).prop("checked")) {
+                                if (!$("#pilihKirimanAllTIKTOK_" + z).prop("checked")) {
                                     allChecked = false;
                                     break;
                                 }
                             }
-                            $("#pilihKirimanAllKurirLazada").prop("checked", allChecked);
+                            $("#pilihKirimanAllKurirTiktok").prop("checked", allChecked);
 
                             recountPengiriman();
                         });
                         
-                        $(".table-responsive-lazada-all-kirim_"+i+" #editNoteLazadaDiv_"+indexKirim).find('#editNoteLazada').click(function(){
+                        $(".table-responsive-tiktok-all-kirim_"+i+" #editNoteTiktokDiv_"+indexKirim).find('#editNoteTiktok').click(function(){
                           var indexKirim = this.parentNode.id.split("_")[this.parentNode.id.split("_").length-1];
                           
-                          $("#rowDataPengirimanLazada").val(JSON.stringify(dataPerKurir[$(this).closest('tbody').attr("class").split("_")[1]]['order']));
-                          $("#fromNoteLazada").val("KIRIMLAZADA_"+indexKirim+"_"+$(this).closest('tbody').attr("class").split("_")[1]);
-                            catatanPenjualLazada();
+                          $("#rowDataPengirimanTiktok").val(JSON.stringify(dataPerKurir[$(this).closest('tbody').attr("class").split("_")[1]]['order']));
+                          $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim+"_"+$(this).closest('tbody').attr("class").split("_")[1]);
+                            catatanPenjualTiktok();
                         });
                     });
                             
@@ -2463,7 +2462,7 @@ function kirimLazadaSemua() {
     });
 }
 function recountPengiriman() {
-    var data = $("#dataGridLazada1").DataTable().rows().data();
+    var data = $("#dataGridTiktok1").DataTable().rows().data();
     var dataSimpan = [];
     var dataPerKurir = [];
     
@@ -2501,7 +2500,7 @@ function recountPengiriman() {
         {
             if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
             {
-                if($(".table-responsive-lazada-all-kirim_"+y+" #pilihKirimanLAZADA_"+index).prop('checked'))
+                if($(".table-responsive-tiktok-all-kirim_"+y+" #pilihKirimanTIKTOK_"+index).prop('checked'))
                 {
                     countSemuaPengiriman++;
                 }
@@ -2511,15 +2510,15 @@ function recountPengiriman() {
     }
     if(countSemuaPengiriman > 0)
     {
-        $("#countAturSemuaPengirimanLazada").html("("+countSemuaPengiriman.toString()+")");
+        $("#countAturSemuaPengirimanTiktok").html("("+countSemuaPengiriman.toString()+")");
     }
     else
     {
-        $("#countAturSemuaPengirimanLazada").html("");
+        $("#countAturSemuaPengirimanTiktok").html("");
     }
 }
 
-function kirimKonfirmAllLazada(){
+function kirimKonfirmAllTiktok(){
     Swal.fire({
         title: 'Anda Yakin Mengirim Semua Pesanan Ini ?',
         showCancelButton: true,
@@ -2528,7 +2527,7 @@ function kirimKonfirmAllLazada(){
         }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
-                var data = $("#dataGridLazada1").DataTable().rows().data();
+                var data = $("#dataGridTiktok1").DataTable().rows().data();
                 var rows = [];
                 for(var x = 0; x < data.length; x++)
                 {
@@ -2538,7 +2537,7 @@ function kirimKonfirmAllLazada(){
                     }
                 }
                 
-                var data = $("#dataGridLazada1").DataTable().rows().data();
+                var data = $("#dataGridTiktok1").DataTable().rows().data();
                 var detailData = "";
                 var dataSimpan = [];
                 var dataPerKurir = [];
@@ -2576,7 +2575,7 @@ function kirimKonfirmAllLazada(){
                     {
                         if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
                         {
-                            if($(".table-responsive-lazada-all-kirim_"+y+" #pilihKirimanLAZADA_"+index).prop('checked'))
+                            if($(".table-responsive-tiktok-all-kirim_"+y+" #pilihKirimanTIKTOK_"+index).prop('checked'))
                             {
                                 rows.push(dataSimpan[x]);
                             }
@@ -2588,7 +2587,7 @@ function kirimKonfirmAllLazada(){
                 loading();
                 $.ajax({
                  	type    : 'POST',
-                 	url     : base_url+'Lazada/kirim/',
+                 	url     : base_url+'Tiktok/kirim/',
                  	data    : {dataAll:JSON.stringify(rows)},
                  	dataType: 'json',
                  	success : function(msg){
@@ -2599,10 +2598,10 @@ function kirimKonfirmAllLazada(){
                             		showConfirmButton: false,
                             		timer            : 2000
                             });
-                             $("#modal-kirim-all-lazada").modal('hide');
+                             $("#modal-kirim-all-tiktok").modal('hide');
                             	
                           	setTimeout(() => {
-                            reloadLazada();
+                            reloadTiktok();
                           }, "2000");
                  	}
                  });
@@ -2610,28 +2609,28 @@ function kirimKonfirmAllLazada(){
     });
 }
 
-function lacakLazada(){
-    $("#modal-form-lazada").modal('hide');
-    var row = JSON.parse($("#rowDataLazada").val());
+function lacakTiktok(){
+    $("#modal-form-tiktok").modal('hide');
+    var row = JSON.parse($("#rowDataTiktok").val());
     
     loading();
     $.ajax({
     	type    : 'POST',
-    	url     : base_url+'Lazada/setLacak/',
+    	url     : base_url+'Tiktok/setLacak/',
     	data    : {kode: row.KODEPESANAN},
     	dataType: 'json',
     	success : function(msg){
     	        Swal.close();
     	      
             
-                $("#modal-lacak-lazada").modal('show');
+                $("#modal-lacak-tiktok").modal('show');
                 
-                $("#NOLAZADALACAK").html("#"+row.KODEPESANAN);
-                $("#KURIRLACAKLAZADA").html(row.KURIR);
-                $("#METODEBAYARLACAKLAZADA").html(row.METODEBAYAR);
-                $("#RESILACAKLAZADA").html(row.RESI);
-                $("#ALAMATLACAKLAZADA").html(row.BUYERALAMAT);
-                $("#TGLKIRIMLACAKLAZADA").html("-"); 
+                $("#NOTIKTOKLACAK").html("#"+row.KODEPESANAN);
+                $("#KURIRLACAKTIKTOK").html(row.KURIR);
+                $("#METODEBAYARLACAKTIKTOK").html(row.METODEBAYAR);
+                $("#RESILACAKTIKTOK").html(row.RESI);
+                $("#ALAMATLACAKTIKTOK").html(row.BUYERALAMAT);
+                $("#TGLKIRIMLACAKTIKTOK").html("-"); 
                 
                 var stepTracker = "";
                 for(var x = msg.length-1 ; x >= 0;x--)
@@ -2648,7 +2647,7 @@ function lacakLazada(){
                     if(msg[x]['detail_type'] == "picked_up" || (msg[x]['detail_type'] == "ship_info" && msg[x]['status_code'] == 100018))
                     {
                        //PASTI YANG INDEX TERAKHIR
-                        $("#TGLKIRIMLACAKLAZADA").html(msg[x]['event_time']); 
+                        $("#TGLKIRIMLACAKTIKTOK").html(msg[x]['event_time']); 
                     }
                 }
                 
@@ -2659,19 +2658,19 @@ function lacakLazada(){
     });
 }
 
-function hapusLazada(){
-    $("#modal-form-lazada").modal('hide');
-    var row = JSON.parse($("#rowDataLazada").val());
+function hapusTiktok(){
+    $("#modal-form-tiktok").modal('hide');
+    var row = JSON.parse($("#rowDataTiktok").val());
     loading();
     $.ajax({
     	type    : 'POST',
-    	url     : base_url+'Lazada/loadDetail/',
+    	url     : base_url+'Tiktok/loadDetail/',
     	data    : {kode: row.KODEPESANAN,metodebayar : row.METODEBAYAR},
     	dataType: 'json',
     	success : function(msg){
-    	    $('#cb_alasan_pembatalan_lazada').val('');
-            $("#NOLAZADABATAL").html("#"+row.KODEPESANAN);
-            $(".table-responsive-lazada-batal").html('');
+    	    $('#cb_alasan_pembatalan_tiktok').val('');
+            $("#NOTIKTOKBATAL").html("#"+row.KODEPESANAN);
+            $(".table-responsive-tiktok-batal").html('');
             
             var totalCurr = 0;
             for(var x = 0 ; x < msg.DETAILBARANG.length ; x++)
@@ -2682,15 +2681,15 @@ function hapusLazada(){
                   namaBarang += ("&nbsp&nbsp&nbsp&nbsp<span  style='color:#949494; font-style:italic;'>Marketplace : "+msg.DETAILBARANG[x].WARNAOLD+" / "+msg.DETAILBARANG[x].SIZEOLD+"</span>");
               }
           
-                $(".table-responsive-lazada-batal").append(setDetail(msg.DETAILBARANG,x,namaBarang,false));
+                $(".table-responsive-tiktok-batal").append(setDetail(msg.DETAILBARANG,x,namaBarang,false));
                 totalCurr += msg.DETAILBARANG[x].JUMLAH;
             }
-            $("#TOTALQTYLAZADABATAL").html(currency(totalCurr));
-            $("#SUBTOTALLAZADABATAL").html(currency(msg.SUBTOTALBELI));
-            $("#itemBatalLazada").val(JSON.stringify(msg.DETAILBARANG));
+            $("#TOTALQTYTIKTOKBATAL").html(currency(totalCurr));
+            $("#SUBTOTALTIKTOKBATAL").html(currency(msg.SUBTOTALBELI));
+            $("#itemBatalTiktok").val(JSON.stringify(msg.DETAILBARANG));
              $.ajax({
             	type    : 'POST',
-            	url     : base_url+'Lazada/getAlasanPembatalan/',
+            	url     : base_url+'Tiktok/getAlasanPembatalan/',
             	data    : {kode: row.KODEPESANAN},
             	dataType: 'json',
             	success : function(msg){
@@ -2701,9 +2700,9 @@ function hapusLazada(){
           			    option += '<option value="'+msg.data[x].reason_id+'">'+msg.data[x].reason_name+'</option>';
           			}
       			
-                    $("#cb_alasan_pembatalan_lazada").html(option);
-                    $("#itemBatalLazada").val(JSON.stringify(msg.DETAILBARANG));
-                    $("#modal-alasan-lazada").modal('show');
+                    $("#cb_alasan_pembatalan_tiktok").html(option);
+                    $("#itemBatalTiktok").val(JSON.stringify(msg.DETAILBARANG));
+                    $("#modal-alasan-tiktok").modal('show');
                 }
                  
              });
@@ -2711,7 +2710,7 @@ function hapusLazada(){
     });
 }
 
-function hapusKonfirmLazada(){
+function hapusKonfirmTiktok(){
     Swal.fire({
         title: 'Anda Yakin Membatalkan Pesanan Ini ?',
         showCancelButton: true,
@@ -2720,7 +2719,7 @@ function hapusKonfirmLazada(){
         }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
-                if($('#cb_alasan_pembatalan_lazada').val() == "")
+                if($('#cb_alasan_pembatalan_tiktok').val() == "")
                 {
                     Swal.fire({
                 		title            :  "Alasan Pembatalan Belum Dipilih",
@@ -2731,12 +2730,12 @@ function hapusKonfirmLazada(){
                 }
                 else
                 {
-                    $("#modal-alasan-lazada").modal('hide');
+                    $("#modal-alasan-tiktok").modal('hide');
                     loading()
                      $.ajax({
                     	type    : 'POST',
-                    	url     : base_url+'Lazada/hapus/',
-                    	data    : {kode: $("#NOLAZADABATAL").text().split("#")[1], alasan:$('#cb_alasan_pembatalan_lazada').val()},
+                    	url     : base_url+'Tiktok/hapus/',
+                    	data    : {kode: $("#NOTIKTOKBATAL").text().split("#")[1], alasan:$('#cb_alasan_pembatalan_tiktok').val()},
                     	dataType: 'json',
                     	success : function(msg){
                     	       Swal.close();
@@ -2748,7 +2747,7 @@ function hapusKonfirmLazada(){
                             	});
                             	
                             	setTimeout(() => {
-                                 reloadLazada();
+                                 reloadTiktok();
                                }, "2000");
                     	}
                     });
@@ -2758,7 +2757,7 @@ function hapusKonfirmLazada(){
         });
 }
 
-function sinkronLazadaNow(){
+function sinkronTiktokNow(){
     Swal.fire({
         title: 'Anda Yakin Melakukan Sinkronisasi ?',
         showCancelButton: true,
@@ -2770,7 +2769,7 @@ function sinkronLazadaNow(){
                 loading();
                 $.ajax({
                 	type    : 'POST',
-                	url     : base_url+'Lazada/cekStokLokasi/',
+                	url     : base_url+'Tiktok/cekStokLokasi/',
                 	dataType: 'json',
                 	success : function(msg){
                         if(!msg.success)
@@ -2784,18 +2783,18 @@ function sinkronLazadaNow(){
                         }
                         else
                         {
-                            totalPesananLazadaAll = 0;
-                            sinkronLazadaState = true;
+                            totalPesananTiktokAll = 0;
+                            sinkronTiktokState = true;
                             var dateNow = "<?=date('Y-m-d')?>";
                              $.ajax({
                             	type    : 'GET',
-                            	url     : base_url+'Lazada/init/'+dateNow+'/'+dateNow+'/update',
+                            	url     : base_url+'Tiktok/init/'+dateNow+'/'+dateNow+'/update',
                             	dataType: 'json',
                             	success : function(msg){
-                            	    totalPesananLazadaAll = msg.total;
+                            	    totalPesananTiktokAll = msg.total;
                             	    
                             	    var indexTab = 0;
-                                    var tabs = document.querySelectorAll('#tab_transaksi_lazada li');
+                                    var tabs = document.querySelectorAll('#tab_transaksi_tiktok li');
 
                                     tabs.forEach(function(tab, index) {
                                         if (tab.classList.contains('active')) {
@@ -2807,13 +2806,13 @@ function sinkronLazadaNow(){
                                     {
                                         if(x != indexTab)
                                         {
-                                            doneSinkronLazada[x] = false;
-                                            changeTabLazada(x);
+                                            doneSinkronTiktok[x] = false;
+                                            changeTabTiktok(x);
                                         }
                                     }
                                     
-                                    doneSinkronLazada[indexTab] = false;
-                                    changeTabLazada(indexTab);
+                                    doneSinkronTiktok[indexTab] = false;
+                                    changeTabTiktok(indexTab);
 
                             }});
                         }
@@ -2823,7 +2822,7 @@ function sinkronLazadaNow(){
         });
 }
 
-function sinkronLazada(){
+function sinkronTiktok(){
     Swal.fire({
         title: 'Anda Yakin Melakukan Sinkronisasi ?',
         showCancelButton: true,
@@ -2835,7 +2834,7 @@ function sinkronLazada(){
                 loading();
                 $.ajax({
                 	type    : 'POST',
-                	url     : base_url+'Lazada/cekStokLokasi/',
+                	url     : base_url+'Tiktok/cekStokLokasi/',
                 	dataType: 'json',
                 	success : function(msg){
                         if(!msg.success)
@@ -2849,8 +2848,8 @@ function sinkronLazada(){
                         }
                         else
                         {
-                            totalPesananLazadaAll = 0;
-                            sinkronLazadaState = true;
+                            totalPesananTiktokAll = 0;
+                            sinkronTiktokState = true;
                             const date = new Date();
                             const year = date.getFullYear();
                             const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
@@ -2860,13 +2859,13 @@ function sinkronLazada(){
                             
                              $.ajax({
                             	type    : 'GET',
-                            	url     : base_url+'Lazada/init/'+ "<?=TGLAWALFILTERMARKETPLACE?>"+"/"+formattedDate,
+                            	url     : base_url+'Tiktok/init/'+ "<?=TGLAWALFILTERMARKETPLACE?>"+"/"+formattedDate,
                             	dataType: 'json',
                             	success : function(msg){
-                            	    totalPesananLazadaAll = msg.total;
+                            	    totalPesananTiktokAll = msg.total;
                             	    
                                     var indexTab = 0;
-                                    var tabs = document.querySelectorAll('#tab_transaksi_lazada li');
+                                    var tabs = document.querySelectorAll('#tab_transaksi_tiktok li');
 
                                     tabs.forEach(function(tab, index) {
                                         if (tab.classList.contains('active')) {
@@ -2878,13 +2877,13 @@ function sinkronLazada(){
                                     {
                                         if(x != indexTab)
                                         {
-                                            doneSinkronLazada[x] = false;
-                                            changeTabLazada(x);
+                                            doneSinkronTiktok[x] = false;
+                                            changeTabTiktok(x);
                                         }
                                     }
                                     
-                                    doneSinkronLazada[indexTab] = false;
-                                    changeTabLazada(indexTab);
+                                    doneSinkronTiktok[indexTab] = false;
+                                    changeTabTiktok(indexTab);
 
                             }});
                         }
@@ -2894,25 +2893,25 @@ function sinkronLazada(){
         });
 }
 
-function catatanPenjualLazada(){
+function catatanPenjualTiktok(){
     var row;
-    if($("#fromNoteLazada").val().split("_")[0] == "GRID")
+    if($("#fromNoteTiktok").val().split("_")[0] == "GRID")
     {
-        row = JSON.parse($("#rowDataLazada").val());
+        row = JSON.parse($("#rowDataTiktok").val());
     }
     else
     {
-        var rows = JSON.parse($("#rowDataPengirimanLazada").val());
-        row = rows[$("#fromNoteLazada").val().split("_")[1]];
+        var rows = JSON.parse($("#rowDataPengirimanTiktok").val());
+        row = rows[$("#fromNoteTiktok").val().split("_")[1]];
     }
 
     
-    $("#NOLAZADACATATAN").html("#"+row.KODEPESANAN);
-    $("#note_lazada").val(row.CATATANJUALRAW);
-    $("#modal-note-lazada").modal("show");
+    $("#NOTIKTOKCATATAN").html("#"+row.KODEPESANAN);
+    $("#note_tiktok").val(row.CATATANJUALRAW);
+    $("#modal-note-tiktok").modal("show");
 }
 
-function noteKonfirmLazada(){
+function noteKonfirmTiktok(){
     Swal.fire({
         title: 'Anda Yakin Menyimpan Catatan Penjualan Ini ?',
         showCancelButton: true,
@@ -2924,8 +2923,8 @@ function noteKonfirmLazada(){
                 loading();
                  $.ajax({
                  	type    : 'POST',
-                 	url     : base_url+'Lazada/catatanPenjual/',
-                 	data    : {kode: $("#NOLAZADACATATAN").text().split("#")[1], note: $("#note_lazada").val()},
+                 	url     : base_url+'Tiktok/catatanPenjual/',
+                 	data    : {kode: $("#NOTIKTOKCATATAN").text().split("#")[1], note: $("#note_tiktok").val()},
                  	dataType: 'json',
                  	success : function(msg){
                  	        
@@ -2940,47 +2939,47 @@ function noteKonfirmLazada(){
                              	
                  	        if(msg.success)
                             {
-                                $("#modal-note-lazada").modal('hide');
-                                if($("#fromNoteLazada").val().split("_")[0] == "KIRIMLAZADA")
+                                $("#modal-note-tiktok").modal('hide');
+                                if($("#fromNoteTiktok").val().split("_")[0] == "KIRIMTIKTOK")
                                 {
-                                    var indexKirim = $("#fromNoteLazada").val().split("_")[1];
+                                    var indexKirim = $("#fromNoteTiktok").val().split("_")[1];
                                     
-                                    var rows = JSON.parse($("#rowDataPengirimanLazada").val());
-                                    rows[indexKirim]['CATATANJUAL'] = `<i class='fa fa-edit' id='editNoteLazada' style='cursor:pointer;'></i>
+                                    var rows = JSON.parse($("#rowDataPengirimanTiktok").val());
+                                    rows[indexKirim]['CATATANJUAL'] = `<i class='fa fa-edit' id='editNoteTiktok' style='cursor:pointer;'></i>
                                           <div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
                                                         white-space: -moz-pre-wrap; /* Firefox */    
                                                         white-space: -pre-wrap;     /* Opera <7 */   
                                                         white-space: -o-pre-wrap;   /* Opera 7 */    
-                                                        word-wrap: break-word;      /* IE */'>`+$("#note_lazada").val()+`</div>`;
-                                    rows[indexKirim]['CATATANJUALRAW'] = $("#note_lazada").val();
+                                                        word-wrap: break-word;      /* IE */'>`+$("#note_tiktok").val()+`</div>`;
+                                    rows[indexKirim]['CATATANJUALRAW'] = $("#note_tiktok").val();
                                     
                                     
-                                    if($("#fromNoteLazada").val().split("_").length == 3)
+                                    if($("#fromNoteTiktok").val().split("_").length == 3)
                                     {
-                                        var index = $("#fromNoteLazada").val().split("_")[2];
+                                        var index = $("#fromNoteTiktok").val().split("_")[2];
                                         
-                                        $(".table-responsive-lazada-all-kirim_"+index+" #editNoteLazadaDiv_"+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #editNoteTiktokDiv_"+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
                                         
-                                        $("#rowDataPengirimanLazada").val(JSON.stringify(rows));
-                                        $(".table-responsive-lazada-all-kirim_"+index+" #editNoteLazadaDiv_"+indexKirim).find('#editNoteLazada').click(function(){
-                                           $("#fromNoteLazada").val("KIRIMLAZADA_"+indexKirim+"_"+index);
-                                           catatanPenjualLazada();
+                                        $("#rowDataPengirimanTiktok").val(JSON.stringify(rows));
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #editNoteTiktokDiv_"+indexKirim).find('#editNoteTiktok').click(function(){
+                                           $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim+"_"+index);
+                                           catatanPenjualTiktok();
                                         });
                                     }
                                     else
                                     {
-                                        $('#editNoteLazadaDiv'+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
+                                        $('#editNoteTiktokDiv'+indexKirim).html(rows[indexKirim]['CATATANJUAL']);
                                         
-                                        $("#rowDataPengirimanLazada").val(JSON.stringify(rows));
-                                        $('#editNoteLazadaDiv'+indexKirim).find('#editNoteLazada').click(function(){
-                                           $("#fromNoteLazada").val("KIRIMLAZADA_"+indexKirim);
-                                           catatanPenjualLazada();
+                                        $("#rowDataPengirimanTiktok").val(JSON.stringify(rows));
+                                        $('#editNoteTiktokDiv'+indexKirim).find('#editNoteTiktok').click(function(){
+                                           $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim);
+                                           catatanPenjualTiktok();
                                         });
                                     }
                                 }
                              	
                              	setTimeout(() => {
-                                  reloadLazada();
+                                  reloadTiktok();
                                 }, "2000");
                             }
                  	}
@@ -2989,15 +2988,15 @@ function noteKonfirmLazada(){
         });
 }
 
-function returLazada(){
-    $("#modal-pengembalian-lazada").modal("hide");
-    var row = JSON.parse($("#rowDataLazada").val());
-    var rowDetail = JSON.parse($("#dataReturLazada").val());
+function returTiktok(){
+    $("#modal-pengembalian-tiktok").modal("hide");
+    var row = JSON.parse($("#rowDataTiktok").val());
+    var rowDetail = JSON.parse($("#dataReturTiktok").val());
     loading();
     
     $.ajax({
     	type    : 'POST',
-    	url     : base_url+'Lazada/cekStokLokasi/',
+    	url     : base_url+'Tiktok/cekStokLokasi/',
     	dataType: 'json',
     	success : function(msg){
             if(!msg.success)
@@ -3011,41 +3010,41 @@ function returLazada(){
             }
             else
             {
-                $("#tab_retur_header_lazada_0").attr("class","active");
-                $("#tab_retur_detail_lazada_0").attr("class","tab-pane active");
+                $("#tab_retur_header_tiktok_0").attr("class","active");
+                $("#tab_retur_detail_tiktok_0").attr("class","tab-pane active");
                 
-                $("#tab_retur_header_lazada_1").attr("class","");
-                $("#tab_retur_detail_lazada_1").attr("class","tab-pane");
+                $("#tab_retur_header_tiktok_1").attr("class","");
+                $("#tab_retur_detail_tiktok_1").attr("class","tab-pane");
                 
-                $("#tab_retur_header_lazada_2").attr("class","");
-                $("#tab_retur_detail_lazada_2").attr("class","tab-pane");
+                $("#tab_retur_header_tiktok_2").attr("class","");
+                $("#tab_retur_detail_tiktok_2").attr("class","tab-pane");
                 
-                $("#deskripsi_sengketa_lazada").val("");
-                $("#returLazadaWaitResponse").hide();
-                $("#returNegotiationLazada").css("width","100%");
-                $("#btn_max_kembali_lazada").show();
-                // $("#DANADIKEMBALIKANLAZADA_1").removeAttr("readonly");
-                $("#returNegotiationLazada").show();
-                $("#HEADERRETURLAZADA").show();
-                $("#DETAILRETURLAZADA_1").html('Dengan ini menyatakan bahwa : <br>Penjual ingin melakukan <b>Pengembalian Barang dan Dana</b> kepada pembeli, dengan catatan :<ol><li>Item harus dikirim oleh pelanggan dan diverifikasi kualitasnya sebelum menyetujui pengembalian dana.</li><li>Dengan memilih "Pengembalian Barang dan Dana", Pembeli meminta pelanggan untuk mengirimkan kembali barang yang sudah diterima. Setelah pembeli menerima barang yang dikembalikan pelanggan, harap konfirmasikan pengiriman barang yang dikembalikan dan selesaikan pemeriksaan kualitas dalam batas waktu (SLA).</li><li>Penjual dapat memilih untuk mengembalikan dana sepenuhnya atau sebagian berdasarkan kesepakatan penjual dengan pembeli atau menolak pengembalian dan mengajukan banding. Agen CS Lazada akan menghubungi penjual, jika membutuhkan bantuan untuk memproses banding.</li></ol>');
-                $("#NOLAZADARETUR").html("#"+row.KODEPENGEMBALIAN);
-                $("#HEADERRETURLAZADA").html('Pembeli akan mengirimkan barang paling lambat pada <span style="font-weight:bold;">'+row.MINTGLPENGEMBALIAN+'</span>. Anda dapat mengajukan banding setelah menerima barang dari Pembeli atau menawarkan pengembalian Dana sebagian kepada Pembeli.<br><br>');
-                $("#modal-retur-lazada").modal("show");
+                $("#deskripsi_sengketa_tiktok").val("");
+                $("#returTiktokWaitResponse").hide();
+                $("#returNegotiationTiktok").css("width","100%");
+                $("#btn_max_kembali_tiktok").show();
+                // $("#DANADIKEMBALIKANTIKTOK_1").removeAttr("readonly");
+                $("#returNegotiationTiktok").show();
+                $("#HEADERRETURTIKTOK").show();
+                $("#DETAILRETURTIKTOK_1").html('Dengan ini menyatakan bahwa : <br>Penjual ingin melakukan <b>Pengembalian Barang dan Dana</b> kepada pembeli, dengan catatan :<ol><li>Item harus dikirim oleh pelanggan dan diverifikasi kualitasnya sebelum menyetujui pengembalian dana.</li><li>Dengan memilih "Pengembalian Barang dan Dana", Pembeli meminta pelanggan untuk mengirimkan kembali barang yang sudah diterima. Setelah pembeli menerima barang yang dikembalikan pelanggan, harap konfirmasikan pengiriman barang yang dikembalikan dan selesaikan pemeriksaan kualitas dalam batas waktu (SLA).</li><li>Penjual dapat memilih untuk mengembalikan dana sepenuhnya atau sebagian berdasarkan kesepakatan penjual dengan pembeli atau menolak pengembalian dan mengajukan banding. Agen CS Tiktok akan menghubungi penjual, jika membutuhkan bantuan untuk memproses banding.</li></ol>');
+                $("#NOTIKTOKRETUR").html("#"+row.KODEPENGEMBALIAN);
+                $("#HEADERRETURTIKTOK").html('Pembeli akan mengirimkan barang paling lambat pada <span style="font-weight:bold;">'+row.MINTGLPENGEMBALIAN+'</span>. Anda dapat mengajukan banding setelah menerima barang dari Pembeli atau menawarkan pengembalian Dana sebagian kepada Pembeli.<br><br>');
+                $("#modal-retur-tiktok").modal("show");
                 
                 for(var x = 0 ; x < 3 ; x++)
                 {
-                    $("#DANADIKEMBALIKANLAZADA_"+x).number(true,"<?=$_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']?>");
-                    $("#MAXDANADIKEMBALIKANLAZADA_"+x).number(true,"<?=$_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']?>");
+                    $("#DANADIKEMBALIKANTIKTOK_"+x).number(true,"<?=$_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']?>");
+                    $("#MAXDANADIKEMBALIKANTIKTOK_"+x).number(true,"<?=$_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']?>");
                     
-                    $("#DANADIKEMBALIKANLAZADA_"+x).val(rowDetail.TOTALREFUND);
-                    $("#MAXDANADIKEMBALIKANLAZADA_"+x).val(rowDetail.TOTALREFUND);
+                    $("#DANADIKEMBALIKANTIKTOK_"+x).val(rowDetail.TOTALREFUND);
+                    $("#MAXDANADIKEMBALIKANTIKTOK_"+x).val(rowDetail.TOTALREFUND);
                 }
                 
                 
                 if(rowDetail.REFUNDTYPE == 'ONLY_REFUND' || row.TIPEPENGEMBALIAN == 'RETURN_DELIVERED' )
                 {
-                    $("#tab_retur_header_lazada_1").hide();
-                    $("#tab_retur_detail_lazada_1").hide();
+                    $("#tab_retur_header_tiktok_1").hide();
+                    $("#tab_retur_detail_tiktok_1").hide();
                 }
                 
                 $("#ALASANBANDING").hide();
@@ -3059,7 +3058,7 @@ function returLazada(){
                     // $("#ALASANBANDING").show();
                     // $.ajax({
                     // 	type    : 'POST',
-                    // 	url     : base_url+'Lazada/getDispute/',
+                    // 	url     : base_url+'Tiktok/getDispute/',
                     // 	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
                     // 	dataType: 'json',
                     // 	success : function(msg){
@@ -3068,12 +3067,12 @@ function returLazada(){
                     // 	    {
                     // 	        select +=  '<option value="'+dataDispute[x].reason_id+'">'+dataDispute[x].muti_language_text+'</option>';
                     // 	    }
-                    // 	    $("#cb_alasan_sengketa_lazada").html(select);
+                    // 	    $("#cb_alasan_sengketa_tiktok").html(select);
                     // 	}
                     // });
                 }
                 
-                $("#penjelasan_bukti_lazada").html("Kamu dapat menambahkan 8 Foto, ukuran file tidak bisa lebih dari 10MB.");
+                $("#penjelasan_bukti_tiktok").html("Kamu dapat menambahkan 8 Foto, ukuran file tidak bisa lebih dari 10MB.");
                 
                 var htmlProof = "<table><tr>";
                 for(var y = 0 ; y < 8 ;y++)
@@ -3084,44 +3083,44 @@ function returLazada(){
                     }
                     
                     htmlProof += `<td>
-                                        <input type="file" id="file-input-lazada-`+y+`" accept="image/*,video/*" style="display:none;" value="">
-                                        <input type="hidden"  id="keterangan-input-lazada-`+y+`" value="">
-                                        <input type="hidden"  id="format-input-lazada-`+y+`" value="">
-                                        <input type="hidden"  id="index-input-lazada-`+y+`" value="`+y+`">
-                                        <input type="hidden"  id="src-input-lazada-`+y+`" value="">
-                                        <input type="hidden"  id="id-input-lazada-`+y+`" value="">
+                                        <input type="file" id="file-input-tiktok-`+y+`" accept="image/*,video/*" style="display:none;" value="">
+                                        <input type="hidden"  id="keterangan-input-tiktok-`+y+`" value="">
+                                        <input type="hidden"  id="format-input-tiktok-`+y+`" value="">
+                                        <input type="hidden"  id="index-input-tiktok-`+y+`" value="`+y+`">
+                                        <input type="hidden"  id="src-input-tiktok-`+y+`" value="">
+                                        <input type="hidden"  id="id-input-tiktok-`+y+`" value="">
                                         <div style="margin-bottom:20px; margin-right:10px;">
-                                            <img id="preview-image-lazada-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; height:100px; cursor:pointer; border:2px solid #dddddd;'>
+                                            <img id="preview-image-tiktok-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; height:100px; cursor:pointer; border:2px solid #dddddd;'>
                                             <br>
                                             <div style="text-align:center;">
-                                                <span id="ubahProofLazada-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
+                                                <span id="ubahProofTiktok-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
                                                 &nbsp;
-                                                <span id="hapusProofLazada-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
+                                                <span id="hapusProofTiktok-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
                                             </div>
                                         </div>
                                     </td>`;  
                 
                 }
                 htmlProof += "</table>";
-                $("#proof_sengketa_lazada").html(htmlProof);
+                $("#proof_sengketa_tiktok").html(htmlProof);
             
                 for(var y = 0 ; y < 8 ; y++)
                 {
-                        const fileInput = document.getElementById('file-input-lazada-'+y);
-                        const previewImage = document.getElementById('preview-image-lazada-'+y);
-                        const title = document.getElementById('keterangan-input-lazada-'+y);
-                        const format = document.getElementById('format-input-lazada-'+y);
-                        const index = document.getElementById('index-input-lazada-'+y);
-                        const url =  document.getElementById('src-input-lazada-'+y);
-                        const id =  document.getElementById('id-input-lazada-'+y);
+                        const fileInput = document.getElementById('file-input-tiktok-'+y);
+                        const previewImage = document.getElementById('preview-image-tiktok-'+y);
+                        const title = document.getElementById('keterangan-input-tiktok-'+y);
+                        const format = document.getElementById('format-input-tiktok-'+y);
+                        const index = document.getElementById('index-input-tiktok-'+y);
+                        const url =  document.getElementById('src-input-tiktok-'+y);
+                        const id =  document.getElementById('id-input-tiktok-'+y);
                         
-                        const ubahImage = document.getElementById('ubahProofLazada-'+y);
-                        const hapusImage = document.getElementById('hapusProofLazada-'+y);
+                        const ubahImage = document.getElementById('ubahProofTiktok-'+y);
+                        const hapusImage = document.getElementById('hapusProofTiktok-'+y);
                         
                         previewImage.addEventListener('click', () => {
                           if(url.value != '')
                           {
-                              lihatLebihJelasLazada(format.value,title.value,url.value);
+                              lihatLebihJelasTiktok(format.value,title.value,url.value);
                           }
                           else
                           {
@@ -3175,7 +3174,7 @@ function returLazada(){
                               return;
                             }
                         
-                            var row = JSON.parse($("#rowDataLazada").val());
+                            var row = JSON.parse($("#rowDataTiktok").val());
                             // Upload file asli ke server
                             const formData = new FormData();
                             formData.append('index', index.value);
@@ -3183,13 +3182,13 @@ function returLazada(){
                             formData.append('file', file);
                             formData.append('tipe', 'GAMBAR');
                             formData.append('size', file.size);
-                            formData.append("reason","proof/LAZADA");
+                            formData.append("reason","proof/TIKTOK");
                         
                             loading();
                             
                             $.ajax({
                               type: 'POST',
-                              url: base_url + 'Lazada/uploadLocalUrlProof/',
+                              url: base_url + 'Tiktok/uploadLocalUrlProof/',
                               data: formData,
                               contentType: false,
                               processData: false,
@@ -3253,7 +3252,7 @@ function returLazada(){
                                  return;
                                }
                               
-                               var row = JSON.parse($("#rowDataLazada").val());
+                               var row = JSON.parse($("#rowDataTiktok").val());
                                 // Upload file asli ke server
                                 const formData = new FormData();
                                 formData.append('index', index.value);
@@ -3261,13 +3260,13 @@ function returLazada(){
                                 formData.append('file', file);
                                 formData.append('tipe', 'VIDEO');
                                 formData.append('size', file.size);
-                                formData.append("reason","proof/LAZADA");
+                                formData.append("reason","proof/TIKTOK");
                             
                                 loading();
                                 
                                 $.ajax({
                                   type: 'POST',
-                                  url: base_url + 'Lazada/uploadLocalUrlProof/',
+                                  url: base_url + 'Tiktok/uploadLocalUrlProof/',
                                   data: formData,
                                   contentType: false,
                                   processData: false,
@@ -3330,26 +3329,26 @@ function returLazada(){
     });
 }
 
-function setMaksRefundLazada(){
-  $("#DANADIKEMBALIKANLAZADA_1").val($("#MAXDANADIKEMBALIKANLAZADA_1").val());
+function setMaksRefundTiktok(){
+  $("#DANADIKEMBALIKANTIKTOK_1").val($("#MAXDANADIKEMBALIKANTIKTOK_1").val());
 }
 
-function refundLazada(x){
+function refundTiktok(x){
         
    var gambarada = false;
    for(var y = 0 ; y < 8;y++)
    {
        //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
-       if($("#src-input-lazada-"+y).val() != "")
+       if($("#src-input-tiktok-"+y).val() != "")
        {
           gambarada = true;
        }
    
    }
         
-    if(x == 2 && ($("#deskripsi_sengketa_lazada").val() == "" || !gambarada || $("#cb_alasan_sengketa_lazada").val() == "-"))
+    if(x == 2 && ($("#deskripsi_sengketa_tiktok").val() == "" || !gambarada || $("#cb_alasan_sengketa_tiktok").val() == "-"))
     {
-        if($("#cb_alasan_sengketa_lazada").val() == "-")
+        if($("#cb_alasan_sengketa_tiktok").val() == "-")
         {
              Swal.fire({
                  	title            : 'Alasan Banding harus dipilih',
@@ -3358,7 +3357,7 @@ function refundLazada(x){
                  	timer            : 2000
              });
         }
-        else if($("#deskripsi_sengketa_lazada").val() == "")
+        else if($("#deskripsi_sengketa_tiktok").val() == "")
         {
              Swal.fire({
                  	title            : 'Penjelasan Banding wajib diisi',
@@ -3387,22 +3386,22 @@ function refundLazada(x){
         }).then((result) => {
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
-                setRefundLazada(x);
+                setRefundTiktok(x);
         	}
         });
     }
 }
 
-function setRefundLazada(x)
+function setRefundTiktok(x)
 {
-    var row = JSON.parse($("#rowDataLazada").val());
-    var rowDetail = JSON.parse($("#dataReturLazada").val());
+    var row = JSON.parse($("#rowDataTiktok").val());
+    var rowDetail = JSON.parse($("#dataReturTiktok").val());
     loading();
     if(x == 0)
     {
         $.ajax({
         	type    : 'POST',
-        	url     : base_url+'Lazada/refund/',
+        	url     : base_url+'Tiktok/refund/',
         	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
         	dataType: 'json',
         	success : function(msg){
@@ -3416,10 +3415,10 @@ function setRefundLazada(x)
                 });
                 if(msg.success)
                 {
-                    $("#modal-retur-lazada").modal("hide");
+                    $("#modal-retur-tiktok").modal("hide");
                 
                     setTimeout(() => {
-                      reloadLazada();
+                      reloadTiktok();
                     }, "2000");
                 }
         	}
@@ -3429,7 +3428,7 @@ function setRefundLazada(x)
     {
         $.ajax({
         	type    : 'POST',
-        	url     : base_url+'Lazada/returnRefund/',
+        	url     : base_url+'Tiktok/returnRefund/',
         	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
         	dataType: 'json',
         	success : function(msg){
@@ -3443,10 +3442,10 @@ function setRefundLazada(x)
                 });
                 if(msg.success)
                 {
-                    $("#modal-retur-lazada").modal("hide");
+                    $("#modal-retur-tiktok").modal("hide");
                 
                     setTimeout(() => {
-                      reloadLazada();
+                      reloadTiktok();
                     }, "2000");
                 }
         	}
@@ -3461,13 +3460,13 @@ function setRefundLazada(x)
         for(var y = 0 ; y < 8;y++)
         {
             //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
-            if($("#src-input-lazada-"+y).val() != "")
+            if($("#src-input-tiktok-"+y).val() != "")
             {
                 dataDisputeProof.push({
                     "id" : (y+1),
-                    "requirement" : $("#keterangan-input-lazada-"+y).val(),
-                    "thumbnail" : $("#src-input-lazada-"+y).val(),
-                    "url" : $("#src-input-lazada-"+y).val(),
+                    "requirement" : $("#keterangan-input-tiktok-"+y).val(),
+                    "thumbnail" : $("#src-input-tiktok-"+y).val(),
+                    "url" : $("#src-input-tiktok-"+y).val(),
                     "url-baru" : ""
                 });
             }
@@ -3476,7 +3475,7 @@ function setRefundLazada(x)
         
        $.ajax({
             type    : 'POST',
-            url     : base_url+'Lazada/changeLocalUrl/',
+            url     : base_url+'Tiktok/changeLocalUrl/',
             data    : {
                 "url" : JSON.stringify(dataDisputeProof),
             },
@@ -3490,8 +3489,8 @@ function setRefundLazada(x)
                     
                     $.ajax({
                     	type    : 'POST',
-                    	url     : base_url+'Lazada/dispute/',
-                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN,pilihandispute:$("#cb_alasan_sengketa_lazada").val(),alasandispute:$("#deskripsi_sengketa_lazada").val(),disputeproof:JSON.stringify(dataDisputeProof)},
+                    	url     : base_url+'Tiktok/dispute/',
+                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN,pilihandispute:$("#cb_alasan_sengketa_tiktok").val(),alasandispute:$("#deskripsi_sengketa_tiktok").val(),disputeproof:JSON.stringify(dataDisputeProof)},
                     	dataType: 'json',
                     	success : function(msg){
                            
@@ -3504,10 +3503,10 @@ function setRefundLazada(x)
                             });
                             if(msg.success)
                             {
-                                $("#modal-retur-lazada").modal("hide");
+                                $("#modal-retur-tiktok").modal("hide");
                             
                                 setTimeout(() => {
-                                  reloadLazada();
+                                  reloadTiktok();
                                 }, "2000");
                             }
                     	}
@@ -3516,7 +3515,7 @@ function setRefundLazada(x)
                 else
                 {
                     Swal.close();	
-                    setRefundLazada(2);
+                    setRefundTiktok(2);
                     // error = true;
                     // Swal.close();	
                     // Swal.fire({
@@ -3532,10 +3531,10 @@ function setRefundLazada(x)
     }
 }
 
-function reloadLazada(){
+function reloadTiktok(){
     for(var x = 1 ; x <= 4 ; x++ )
     {
-        $("#dataGridLazada"+x).DataTable().ajax.reload();
+        $("#dataGridTiktok"+x).DataTable().ajax.reload();
     }
 }
 
@@ -3552,17 +3551,17 @@ function loading(){
     });
 }
 
-function focusOnRefundLazada(){
+function focusOnRefundTiktok(){
     setTimeout(() => {
-    //  $("#DANADIKEMBALIKANLAZADA_1").focus();
+    //  $("#DANADIKEMBALIKANTIKTOK_1").focus();
     }, "500");
 }
 
 //LIMIT ANGKA SAJA
 function numberInputTrans(evt,index) {
 	
-	if(parseInt($("#DANADIKEMBALIKANLAZADA_"+index).val()) < 0){
-	    $("#DANADIKEMBALIKANLAZADA_"+index).val(0);
+	if(parseInt($("#DANADIKEMBALIKANTIKTOK_"+index).val()) < 0){
+	    $("#DANADIKEMBALIKANTIKTOK_"+index).val(0);
 		Swal.fire({
 				title            : "Dana yang dikembalikan tidak boleh kurang dari Nol",
 				type             : 'error',
@@ -3570,10 +3569,10 @@ function numberInputTrans(evt,index) {
 				timer            : 1500
 		});
 	}
-	else if(parseInt($("#DANADIKEMBALIKANLAZADA_"+index).val()) > parseInt($("#MAXDANADIKEMBALIKANLAZADA_"+index).val())){
-	    $("#DANADIKEMBALIKANLAZADA_"+index).val($("#MAXDANADIKEMBALIKANLAZADA_"+index).val())
+	else if(parseInt($("#DANADIKEMBALIKANTIKTOK_"+index).val()) > parseInt($("#MAXDANADIKEMBALIKANTIKTOK_"+index).val())){
+	    $("#DANADIKEMBALIKANTIKTOK_"+index).val($("#MAXDANADIKEMBALIKANTIKTOK_"+index).val())
 		Swal.fire({
-				title            : "Dana yang dikembalikan tidak boleh lebih dari "+currency($("#MAXDANADIKEMBALIKANLAZADA_"+index).val()),
+				title            : "Dana yang dikembalikan tidak boleh lebih dari "+currency($("#MAXDANADIKEMBALIKANTIKTOK_"+index).val()),
 				type             : 'error',
 				showConfirmButton: false,
 				timer            : 1500

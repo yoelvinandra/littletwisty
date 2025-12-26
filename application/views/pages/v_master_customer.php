@@ -55,6 +55,36 @@
                         </div>
                     </div>
                     <div class="tab-pane" id="tab_tiktok">
+                        <div class="row">
+                           <div class="col-md-12">
+                                <div class="box" style="border:0px; padding:0px; margin:0px;">
+                                   <div class="col-md-12" style="margin:10px;">
+                                       <br>
+                                        <div style="font-size:12pt; font-weight:bold;">*Data tidak termasuk pesanan yang dibatalkan.
+                                        </div>
+                                        <br>
+                                        <table id="dataGridTiktokAPI" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+                                               <!-- class="table-hover"> -->
+                                               <thead>
+                                                   <tr>
+                                                       <th width="10px">No</th>
+                                                       <th width="150px">Nama</th>
+                                                       <th width="100px">Telp</th>
+                                                       <th >Alamat</th>
+                                                       <th width="100px" >Kota</th>
+                                                       <th width="80px">Total Pesanan</th>
+                                                       <th width="80px">Total Pesanan Selesai</th>
+                                                       <th width="80px">Total Pesanan Retur</th>
+                                                       <th width="80px">Total Barang</th>
+                                                       <th width="80px">Total Bayar</th>
+                                                   </tr>
+                                               </thead>
+                                         </table>
+                                        <br>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="tab-pane" id="tab_lazada">
                         <div class="row">
@@ -473,47 +503,33 @@ $(document).ready(function() {
         ],
     });
 	
-// 	//TIKTOK
-// 	$('#dataGridTiktokAPI').DataTable({
-//         'paging'      : true,
-//         'lengthChange': true,
-//         'searching'   : true,
-//         'ordering'    : true,
-//         'info'        : true,
-//         'autoWidth'   : false,
-// 		"scrollX"	  : true,
-// 		ajax		  : {
-// 			url    : base_url+'Tiktok/getStokLokasi',
-// 			dataSrc: "rows",
-// 		},
-//         columns:[
-// 			{data: 'NO'},
-//             {data: 'ADDRESSAPI', visible:false},
-//             {data: 'ADDRESS', visible:false},
-//         ],
-// 		columnDefs: [ 
-// 			{
-//                 "targets": 1,
-//                 "render" :function (data) 
-//                  {
-//                      if (data == 0) return '<button class="btn" id="btn_ubah">Pilih Lokasi Master</button>';
-//                      else return data+' <button class="btn" id="btn_ubah">Ubah</button> <button class="btn" id="btn_hapus">Hapus</button>';
-//                  },		
-// 			}
-			
-// 		],
-//     });  
-
-//     //DAPATKAN INDEX
-// 	$('#dataGridTiktokAPI tbody').on( 'click', 'button', function () {
-	    
-// 	    var table = $('#dataGridTiktokAPI').DataTable();
-// 		var row = table.row( $(this).parents('tr') ).data();
-// 		var mode = $(this).attr("id");
-		
-// 		if(mode == "btn_ubah"){ ubahTiktok(row); }
-// 		else if(mode == "btn_hapus"){ hapusTiktok(row); }
-// 	});
+   //TIKTOK
+	// Step 1: Initialize the table and assign to a variable
+    var tableTiktok = $('#dataGridTiktokAPI').DataTable({
+        paging      : true,
+        lengthChange: true,
+        searching   : true,
+        ordering    : true,
+        info        : true,
+        autoWidth   : false,
+        scrollX     : true,
+        ajax        : {
+            url    : base_url + 'Tiktok/getCustomer',
+            dataSrc: "rows",
+        },
+        columns: [
+            { data: 'NO', className: "text-center" },
+            { data: 'NAMA' },
+            { data: 'TELP' , className:"text-center" },
+            { data: 'ALAMAT' },
+            { data: 'KOTA' , className:"text-center" },
+            { data: 'TOTALPESANAN' , render:format_number , className:"text-center" },
+            { data: 'TOTALPESANANSUKSES' , render:format_number , className:"text-center" },
+            { data: 'TOTALPESANANRETUR' , render:format_number , className:"text-center" },
+            { data: 'TOTALBARANG' ,  render:format_number , className:"text-center"},
+            { data: 'TOTALBAYAR',  render:format_number, className:"text-right" },
+        ],
+    });
 	
     //LAZADA
 	// Step 1: Initialize the table and assign to a variable

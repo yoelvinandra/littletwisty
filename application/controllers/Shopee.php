@@ -4356,7 +4356,7 @@ class Shopee extends MY_Controller {
                   $data['NAME']                       = $dataDetail['recipient_address']['name'];
                   $data['TELP']                       = $dataDetail['recipient_address']['phone'];
                   $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                  $data['KOTA']                       = $dataDetail['recipient_address']['city'];
+                  $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
                   $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
@@ -4666,7 +4666,7 @@ class Shopee extends MY_Controller {
                    $data['NAME']                       = $dataDetail['recipient_address']['name'];
                    $data['TELP']                       = $dataDetail['recipient_address']['phone'];
                    $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = $dataDetail['recipient_address']['city'];
+                   $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
                    $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
                    $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
@@ -4835,7 +4835,7 @@ class Shopee extends MY_Controller {
                    $data['NAME']                       = $dataDetail['recipient_address']['name'];
                    $data['TELP']                       = $dataDetail['recipient_address']['phone'];
                    $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = $dataDetail['recipient_address']['city'];
+                   $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
                    $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
                    $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
@@ -6697,7 +6697,7 @@ class Shopee extends MY_Controller {
                    $data['NAME']                       = $dataDetail['recipient_address']['name'];
                    $data['TELP']                       = $dataDetail['recipient_address']['phone'];
                    $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = $dataDetail['recipient_address']['city'];
+                   $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
                    $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
                    $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
              
@@ -7712,7 +7712,7 @@ class Shopee extends MY_Controller {
                         $data['NAME']                           = $dataDetail['recipient_address']['name'];
                         $data['TELP']                           = $dataDetail['recipient_address']['phone'];
                         $data['ALAMAT']                         = $dataDetail['recipient_address']['full_address'];
-                        $data['KOTA']                           = $dataDetail['recipient_address']['city'];
+                        $data['KOTA']                           = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
                         $data['KURIR']                          = $dataDetail['shipping_carrier'];
                         $data['KODEPACKAGING']                  = $dataDetail['package_list'][0]['package_number'];
                         $data['RESI']                           = "";
