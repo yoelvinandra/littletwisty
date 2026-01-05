@@ -5865,13 +5865,17 @@ class Lazada extends MY_Controller {
         
         $pesananUpdate = substr($pesananUpdate, 0, -1);
         
-        for($x = 0  ; $x < count($history); $x++)
+        if($pesananUpdate != "")
         {
             $sql = "SELECT 1 as ADA , KODEPENJUALANMARKETPLACE, ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS,if(MINTGLKIRIM = '0000-00-00 00:00:00','-',MINTGLKIRIM) as MINTGLKIRIM  FROM TPENJUALANMARKETPLACE 
                                     WHERE MARKETPLACE = 'LAZADA' 
                                     and KODEPENJUALANMARKETPLACE in (".$pesananUpdate.")";
                                 
             $queryPesananDB = $CI->db->query($sql)->result();
+        }
+        
+        for($x = 0  ; $x < count($history); $x++)
+        {
             
             $ada = 0;
             $kodepengembalian = "";

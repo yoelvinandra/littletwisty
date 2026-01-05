@@ -6987,14 +6987,17 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         
         $pesananUpdate = substr($pesananUpdate, 0, -1);
         
-        for($x = 0  ; $x < count($result); $x++)
+        if($pesananUpdate != "")
         {
-            
             $sql = "SELECT 1 as ADA , KODEPENJUALANMARKETPLACE, ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS  FROM TPENJUALANMARKETPLACE 
                                     WHERE MARKETPLACE = 'TIKTOK' 
                                     and KODEPENJUALANMARKETPLACE in (".$pesananUpdate.")";
                                 
             $queryPesananDB = $CI->db->query($sql)->result();
+        }
+        
+        for($x = 0  ; $x < count($result); $x++)
+        {
             
             $ada = 0;
             $kodepengembalian = "";
