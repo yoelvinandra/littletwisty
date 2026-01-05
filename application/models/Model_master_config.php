@@ -38,7 +38,7 @@ class Model_master_config extends CI_Model{
         $data = ($row && property_exists($row, 'VALUE')) ? $row->VALUE : null;
         
         // 5️⃣ Simpan ke cache (termasuk 0 / empty)
-        $this->cache->save($cacheKey, $data, 86400);
+        $this->cache->save($cacheKey, $data, 3600);
         
         return $data;
 	}
