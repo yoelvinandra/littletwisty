@@ -3977,22 +3977,17 @@ class Shopee extends MY_Controller {
                                         FROM MBARANG WHERE SKUSHOPEE = '".explode("*",$produkDataKembali[$t])[1]."'";
                             $dataBarangKembali = $CI->db->query($sql)->row();
                         
+                            $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
                             if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
                             {
-                                
-                                $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
-                                if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
-                                {
-                                    $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
-                                }
-                                
-                                
-                                $dataProduk[$s]->JMLKEMBALI = explode("*",$produkDataKembali[$t])[0];
-                                $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
-                                $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
-                                $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
-                                
+                                $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
                             }
+                            
+                            
+                            $dataProduk[$s]->JMLKEMBALI = explode("*",$produkDataKembali[$t])[0];
+                            $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
+                            $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
+                            $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
                         }
                     }
                 }
@@ -6264,14 +6259,14 @@ class Shopee extends MY_Controller {
         $a++;
 		foreach($dataPesanan as $item)
 		{
-		    if (file_exists(FCPATH."assets/label/waybill_".$item['KODEPESANAN']."_compressed.pdf")) {
-               $files[$a] = FCPATH."assets/label/waybill_".$item['KODEPESANAN']."_compressed.pdf";
+		    if (file_exists(FCPATH."assets/label/shopee/waybill_".$item['KODEPESANAN']."_compressed.pdf")) {
+               $files[$a] = FCPATH."assets/label/shopee/waybill_".$item['KODEPESANAN']."_compressed.pdf";
                $data['code'] = "Done";
             } else {
                $dataRePrint = $this->reprint([$item]);
                if($dataRePrint['success'])
                {
-                $files[$a] = FCPATH."assets/label/waybill_".$dataRePrint['KODEPESANAN']."_compressed.pdf";
+                $files[$a] = FCPATH."assets/label/shopee/waybill_".$dataRePrint['KODEPESANAN']."_compressed.pdf";
                  $data['code'] = "Reprint";
                }
                else
@@ -6529,10 +6524,10 @@ class Shopee extends MY_Controller {
                                 {
                                     // Save the file if request is successful
                                     if ($http_code == 200) {
-                                        file_put_contents("assets/label/waybill_".$invoice[0]['order_sn'].".pdf", $response);
+                                        file_put_contents("assets/label/shopee/waybill_".$invoice[0]['order_sn'].".pdf", $response);
                                         
-                                        $input = FCPATH . "assets/label/waybill_".$invoice[0]['order_sn'].".pdf";
-                                        $output = FCPATH . "assets/label/waybill_".$invoice[0]['order_sn']."_compressed.pdf";
+                                        $input = FCPATH . "assets/label/shopee/waybill_".$invoice[0]['order_sn'].".pdf";
+                                        $output = FCPATH . "assets/label/shopee/waybill_".$invoice[0]['order_sn']."_compressed.pdf";
                                         
                                         $cmd = "gs -sDEVICE=pdfwrite \
                                               -dDEVICEWIDTHPOINTS=283 \
@@ -6567,8 +6562,8 @@ class Shopee extends MY_Controller {
 	   $CI =& get_instance();	
 	   $CI->load->library('Pdf_merger'); 
 	   
-	    $input = FCPATH . 'assets/label/waybill.pdf';
-        $output = FCPATH . 'assets/label/waybill_compressed.pdf';
+	    $input = FCPATH . 'assets/label/shopee/waybill.pdf';
+        $output = FCPATH . 'assets/label/shopee/waybill_compressed.pdf';
         
         $cmd = "gs -sDEVICE=pdfwrite \
                -dDEVICEWIDTHPOINTS=283 \
@@ -6580,8 +6575,8 @@ class Shopee extends MY_Controller {
         
         if ($status === 0) {
     	   $files = [
-                'assets/label/waybill_compressed.pdf',
-                'assets/label/waybill_compressed.pdf',
+                'assets/label/shopee/waybill_compressed.pdf',
+                'assets/label/shopee/waybill_compressed.pdf',
             ];
     
             foreach ($files as $file) {
@@ -7361,8 +7356,7 @@ class Shopee extends MY_Controller {
                                                     {
                                                         $data['success'] = false;
                                                         $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                                                        die(json_encode($data));
-                                                        print_r($ret);
+                                                        echo $ret['code']." : ".$ret['message'];
                                                     }
                                     	         }
                                     	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
@@ -7418,7 +7412,7 @@ class Shopee extends MY_Controller {
                                         {
                                             $data['success'] = false;
                                             $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                                            die(json_encode($data));
+                                            echo $ret['error']." : ".$ret['message'];
                                         }
                                     }
                                 }
@@ -7485,7 +7479,7 @@ class Shopee extends MY_Controller {
         
 	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('SHOPEE','TGLSTOKMULAI');
 
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and (BARANGSAMPAI = 0 AND BARANGSAMPAIMANUAL = 0) and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."' ";
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'SHOPEE' and BARANGSAMPAIMANUAL = 0 and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."' ";
         $dataRetur = $CI->db->query($sqlRetur)->result();
 
         foreach($dataRetur as $itemRetur)
@@ -7964,8 +7958,8 @@ class Shopee extends MY_Controller {
 		foreach($finalData as $item)
 		{
 		   
-        	$file = FCPATH."assets/label/waybill_".$item['KODEPENJUALANMARKETPLACE'].".pdf";
-        	$fileCompressed = FCPATH."assets/label/waybill_".$item['KODEPENJUALANMARKETPLACE']."_compressed.pdf";
+        	$file = FCPATH."assets/label/shopee/waybill_".$item['KODEPENJUALANMARKETPLACE'].".pdf";
+        	$fileCompressed = FCPATH."assets/label/shopee/waybill_".$item['KODEPENJUALANMARKETPLACE']."_compressed.pdf";
         	//JIKA DIA DIPROSES dan SIAP DIKIRIM, CEK DULU ADA APA NDAK BARANGNYA, KALAU NDAK ADA BARU BUAT
     		if(strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "DIPROSES" || (strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "SIAP DIKIRIM" && $item['KODEPENGAMBILAN'] != ""))
         	{
@@ -8052,7 +8046,7 @@ class Shopee extends MY_Controller {
                         $data['success'] = false;
                         $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
                         $data['ret'] = $ret;
-                        die(json_encode($data));
+                        echo $ret['error']." : ".$ret['message'];
                     }
                     else
                     {
@@ -8102,7 +8096,7 @@ class Shopee extends MY_Controller {
                             $data['success'] = false;
                             $data['msg'] =  "2 ".$ret['error']." : ".$ret['message'];
                             $data['ret'] = $ret;
-                            die(json_encode($data));
+                            echo $ret['error']." : ".$ret['message'];
                         }
                         else
                         {
@@ -8134,7 +8128,7 @@ class Shopee extends MY_Controller {
                                 $data['success'] = false;
                                 $data['msg'] =   "3 ".$ret['error']." : ".$ret['message'];
                                 $data['ret'] = $ret;
-                                die(json_encode($data));
+                                 echo $ret['error']." : ".$ret['message'];
                             }
                             else
                             {
@@ -8179,16 +8173,16 @@ class Shopee extends MY_Controller {
                                         $data['success'] = false;
                                         $data['msg'] =   "4 ".$ret['error']." : ".$ret['message'];
                                         $data['ret'] = $ret;
-                                         die(json_encode($data));
+                                        echo $ret['error']." : ".$ret['message'];
                                     }
                                     else
                                     {
                                         // Save the file if request is successful
                                         if ($http_code == 200) {
-                                            file_put_contents("assets/label/waybill_".$invoiceKirim[0]['order_sn'].".pdf", $response);
+                                            file_put_contents("assets/label/shopee/waybill_".$invoiceKirim[0]['order_sn'].".pdf", $response);
                                             
-                                            $input = FCPATH . "assets/label/waybill_".$invoiceKirim[0]['order_sn'].".pdf";
-                                            $output = FCPATH . "assets/label/waybill_".$invoiceKirim[0]['order_sn']."_compressed.pdf";
+                                            $input = FCPATH . "assets/label/shopee/waybill_".$invoiceKirim[0]['order_sn'].".pdf";
+                                            $output = FCPATH . "assets/label/shopee/waybill_".$invoiceKirim[0]['order_sn']."_compressed.pdf";
                                             
                                             $cmd = "gs -sDEVICE=pdfwrite \
                                                   -dDEVICEWIDTHPOINTS=283 \
@@ -8202,7 +8196,7 @@ class Shopee extends MY_Controller {
                                         } else {
                                             $data['success'] = false;
                                             $data['msg'] =  "Failed to download file. HTTP Status: $http_code\n";
-                                            die(json_encode($data));
+                                             echo $ret['error']." : ".$ret['message'];
                                         }
                                     }
                                 }
@@ -8255,7 +8249,7 @@ class Shopee extends MY_Controller {
                       $data['success'] = false;
                       $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
                       $data['ret'] = $ret;
-                      die(json_encode($data));
+                      echo $ret['error']." : ".$ret['message'];
                   }
                   else
                   {
@@ -8604,7 +8598,6 @@ class Shopee extends MY_Controller {
         
         //SET STOK
         $dataBarang = [];
-        //SET STOK
         $curl = curl_init();
         $parameter = "";
         
@@ -8701,8 +8694,7 @@ class Shopee extends MY_Controller {
                         {
                             $data['success'] = false;
                             $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                            die(json_encode($data));
-                            print_r($ret);
+                             echo $ret['error']." : ".$ret['message'];
                         }
             	         }
             	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
@@ -8757,7 +8749,7 @@ class Shopee extends MY_Controller {
             {
                 $data['success'] = false;
                 $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                die(json_encode($data));
+                 echo $ret['error']." : ".$ret['message'];
             }
         }
         //SET STOK

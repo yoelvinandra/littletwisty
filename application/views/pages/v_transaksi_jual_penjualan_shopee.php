@@ -1414,7 +1414,7 @@ function changeTabShopee(index){
                             } else if (row.STATUS.toUpperCase() == "DIPROSES" ) {
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                                 html += "<div style='margin-top:auto;'><button id='btn_cetak_shopee' class='btn btn-warning'  style='width:122px;'>Cetak</button></div>";
-                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && (row.BARANGSAMPAI == 0 && row.BARANGSAMPAIMANUAL == 0)){
+                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && row.BARANGSAMPAIMANUAL == 0){
                                 html += "<button id='btn_lihat_shopee' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                                 html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_shopee' class='btn btn-danger'  style='width:122px;' >Retur B. Manual</button>";
                             }  else {
@@ -1690,7 +1690,7 @@ function lihatShopee(){
     	        $("#cetakShopeeDetail").show();
     	    }
     	    
-    	     if(row.STATUS.toUpperCase() == "SELESAI"  && row.BARANGSAMPAI == 0 && row.BARANGSAMPAIMANUAL == 0)
+    	     if(row.STATUS.toUpperCase() == "SELESAI"  && row.BARANGSAMPAIMANUAL == 0)
             {
                $("#returBarangShopeeDetail").show();
             }
@@ -1738,7 +1738,7 @@ function lihatShopee(){
                     namaBarang += ("&nbsp&nbsp&nbsp&nbsp<span  style='color:#949494; font-style:italic;'>Marketplace : "+msg.DETAILBARANG[x].WARNAOLD+" / "+msg.DETAILBARANG[x].SIZEOLD+"</span>");
                 }
                 
-                if((msg.DETAILBARANG[x].SIZEKEMBALI != "" || msg.DETAILBARANG[x].WARNAKEMBALI != "") && row.BARANGSAMPAI == 1)
+                if((msg.DETAILBARANG[x].SIZEKEMBALI != "" || msg.DETAILBARANG[x].WARNAKEMBALI != "") && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1))
                 {
                     namaBarang += ("<br><span  style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; font-style:italic;'>Retur : "+msg.DETAILBARANG[x].WARNA+" / "+msg.DETAILBARANG[x].SIZE+"</span>");
                 }
@@ -1748,7 +1748,7 @@ function lihatShopee(){
                 totalCurrKembali += parseInt(msg.DETAILBARANG[x].JUMLAHKEMBALI);
             }
             var totalKembali = "";
-            if(totalCurrKembali > 0 && row.BARANGSAMPAI == 1)
+            if(totalCurrKembali > 0 && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1))
             {
                 totalKembali = "<span style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>' > (-"+currency(totalCurrKembali.toString())+")</span>";
             }
@@ -2297,7 +2297,7 @@ function setDetail(itemDetail,x,namaBarang,action=false)
        actButton = `<td style="vertical-align:middle; text-align:center;" width="103px" ><button id="btn_edit_detail_shopee" class="btn btn-primary" onclick="openItemShopee(`+x+`)"><i class="fa fa-edit"></i></button> <button id="btn_back_detail_shopee" class="btn btn-danger" onclick="resetItemShopee(`+x+`)"><i class="fa fa-refresh"></i></button></td>`;
     }
     
-    if(itemDetail[x].JUMLAHKEMBALI != 0 && row.BARANGSAMPAI == 1)
+    if(itemDetail[x].JUMLAHKEMBALI != 0 && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1))
     {
         jmlKembali = "<span style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>' > (-"+currency(itemDetail[x].JUMLAHKEMBALI.toString())+")</span>";
     }

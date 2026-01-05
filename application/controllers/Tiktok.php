@@ -1308,9 +1308,7 @@ class Tiktok extends MY_Controller {
 		}
 		
         $curl = curl_init();
-        $parameter = "";
-        
-        curl_setopt_array($curl, array(
+          curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
@@ -1319,7 +1317,7 @@ class Tiktok extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/logistics/202309/warehouses','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -1328,40 +1326,33 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-        $lokasi = 0;
-        
         if($ret['code'] != 0)
         {
-            echo $ret['error']." LOKASI : ".$ret['message'];
+            echo $ret['code']." : ".$ret['message'];
         }
         else
         {
-            $dataAddress = $ret['response']['address_list'];
+            $dataAddress = $ret['data']['warehouses'];
+            $data['rows'] = [];
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
-                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
-                for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
+                
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
                 {
-                    if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                    {
-                        $pickup = true;
-                    }
-                    // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                    // {
-                    //     $default = true;
-                    // }
+                    $pickup = true;
                 }
                 
                 if($pickup)
                 {
                     $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                    $lokasiPickupTiktok = $dataAddress[$x]['id'];
                 }
             }
             
             if($lokasi == $idlokasiset)
             {
-                $modeList = [];
                 $countBarang = 0;
                 $whereBarang = " and IDBARANG in (";
                 foreach($dataBarang as $itemBarang)
@@ -1376,7 +1367,7 @@ class Tiktok extends MY_Controller {
                 
                 $whereBarang .= ")";	
                 
-                $sql = "select IDPERUSAHAAN, IDBARANGTIKTOK, idindukbarangtiktok, IDBARANG
+                $sql = "select IDPERUSAHAAN, IDBARANGTIKTOK, IDINDUKBARANGTIKTOK, IDBARANG
             				from MBARANG
             				where (1=1) $whereBarang and (IDBARANGTIKTOK is not null and IDBARANGTIKTOK <> 0)
             				order by idindukbarangtiktok
@@ -1388,12 +1379,11 @@ class Tiktok extends MY_Controller {
                  $parameter = [];
             	 foreach($dataHeader as $itemHeader)
             	 {
-            	     if($itemHeader->idindukbarangtiktok != $idHeader)
-            	     {
-            	         if(count($parameter) > 0)
-            	         {
-            	        
-            	            $curl = curl_init();
+            	     if($itemHeader->IDINDUKBARANGTIKTOK != $idHeader)
+                     {
+                         if(count($parameter) > 0)
+                         {
+                            $curl = curl_init();
                             curl_setopt_array($curl, array(
                               CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
                               CURLOPT_RETURNTRANSFER => true,
@@ -1404,7 +1394,7 @@ class Tiktok extends MY_Controller {
                               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                               CURLOPT_CUSTOMREQUEST => 'POST',
                               CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'product/update_stock',
+                              'endpoint' => '/product/202309/products/'.$idHeader.'/inventory/update',
                               'parameter' => json_encode($parameter)),
                               CURLOPT_HTTPHEADER => array(
                                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
@@ -1418,68 +1408,67 @@ class Tiktok extends MY_Controller {
                             if($ret['code'] != 0)
                             {
                                 $data['success'] = false;
-                                $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
+                                $data['msg'] =  $ret['error']." STOK 1 : ".$ret['message'];
                                 die(json_encode($data));
-                                print_r($ret);
+                                // print_r($ret);
                             }
-            	         }
-            	         $idHeader = $itemHeader->idindukbarangtiktok;
-            	         
-            	         //UPDATE KE TIKTOKNYA
+                         }
+                         $idHeader = $itemHeader->IDINDUKBARANGTIKTOK;
+                         
+                         //UPDATE KE TIKTOKNYA
                         $parameter = [];
-                     	$parameter['item_id'] = (int)$itemHeader->idindukbarangtiktok;
-                     	$parameter['stock_list'] = [];
-            	     }
-            	     
-                     $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
+                     	$parameter['skus'] = [];
+                     }
+                	     
+                     $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
                      $saldoQty = $result->QTY??0;
                     
-                    $modelId = 0;
+                    $idskuvarian = $itemHeader->IDBARANGTIKTOK;
                     
-                    if($itemHeader->IDBARANGTIKTOK != $itemHeader->idindukbarangtiktok)
+                    if(explode("_",$itemHeader->IDBARANGTIKTOK)[0] == $itemHeader->IDINDUKBARANGTIKTOK)
                     {
-                        $modelId = $itemHeader->IDBARANGTIKTOK;
+                        $idskuvarian = explode("_",$itemHeader->IDBARANGTIKTOK)[1];
                     }
                     
-                     array_push($parameter['stock_list'],array(
-                        'model_id'      => (int)$modelId,
-                        'seller_stock'  => array(
-                             array('stock' => (int)$saldoQty)
+                     array_push($parameter['skus'],array(
+                        'id'      => $idskuvarian,
+                        'inventory'  => array(
+                             array(
+                                 'warehouse_id' => $lokasiPickupTiktok,
+                                 'quantity' => (int)$saldoQty
+                            )
                         ))
                     );
-            	}
-            	
-            	if(count($dataHeader) > 0)
-            	{
-                	$curl = curl_init();
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS =>  array(
-                      'endpoint' => 'product/update_stock',
-                      'parameter' => json_encode($parameter)),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                      
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-                    
-                    if($ret['code'] != 0)
-                    {
-                        $data['success'] = false;
-                        $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                        die(json_encode($data));
-                    }
-            	}
+                }
+                
+                $curl = curl_init();
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS =>  array(
+                  'endpoint' =>  '/product/202309/products/'.$idHeader.'/inventory/update',
+                  'parameter' => json_encode($parameter)),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                  
+                $response = curl_exec($curl);
+                curl_close($curl);
+                $ret =  json_decode($response,true);
+                
+                if($ret['code'] != 0)
+                {
+                    $data['success'] = false;
+                    $data['msg'] =  $ret['error']." STOK 2 : ".$ret['message'];
+                    die(json_encode($data));
+                }
             	else
             	{
             	    $data['success'] = true;
@@ -1492,14 +1481,14 @@ class Tiktok extends MY_Controller {
         if($lokasi == $idlokasiset)
         {
             $data['success'] = true;
-            $data['msg'] = "Stok TIKTOK Berhasil Diupdate";
+            $data['msg'] = "Stok Tiktok Berhasil Diupdate";
             echo(json_encode($data));
         }
         else
         {
-           $data['success'] = true; 
-           $data['msg'] = "";
-           echo(json_encode($data));
+          $data['success'] = true; 
+          $data['msg'] = "";
+          echo(json_encode($data));
         }
 	}
 	
@@ -2660,25 +2649,25 @@ class Tiktok extends MY_Controller {
 		$this->output->set_content_type('application/json');
 		$status = $this->input->post('status');
 		
-		$statusok = true;
-		$statusParam = "";
-		$data['rows'] = [];
+	    $data['rows'] = [];
 		$data["total"] = 0;
-		$pageno = 1;
-		$pageSize = 100;
-		
-		//PROMO
-		$curl = curl_init();
-		
-		while($statusok)
+		$count = 0;
+        $countTotal = 1;
+        $nextPageToken = "";
+        $newOrder = 0;
+        
+        while(count($data['rows']) < $countTotal)
         {
+            $parameter = [];
+            $parameter['page_size'] = 100;
+            $parameter['page_token'] = $nextPageToken;
+            $parameter['activity_type'] = "FIXED_PRICE";
+            $parameter['status'] = $status;
             
-		    $parameter = "&discount_status=".$status."&page_no=".$pageno."&page_size=".$pageSize.$statusParam;
-		    
-		  //  echo $parameter;
-		    
+            $curl = curl_init();
+            
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -2686,40 +2675,41 @@ class Tiktok extends MY_Controller {
               CURLOPT_FOLLOWLOCATION => true,
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount_list','parameter' => $parameter),
+              CURLOPT_POSTFIELDS =>  array(
+              'endpoint' => '/promotion/202309/activities/search',
+              'urlparameter' => $urlparameter,
+              'parameter' => json_encode($parameter)),
               CURLOPT_HTTPHEADER => array(
                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
               ),
             ));
-            
+             
             $response = curl_exec($curl);
             curl_close($curl);
             $ret =  json_decode($response,true);
             if($ret['code'] != 0)
             {
                 echo $ret['code']." : ".$ret['message'];
+                $countTotal = 0;
             }
             else
             {
-                $response = $ret['response'];
-                $statusok = $response['more'];
-                if($statusok){
-                    $pageno++;
-                }
-                
-                for($p = 0 ; $p < count($response['discount_list']);$p++)
+                for($x = 0 ;$x < count($ret['data']['activities']); $x++)
                 {
-                    $dataPromo = $response['discount_list'][$p];
+                    $dataPromo = $ret['data']['activities'][$x];
                     array_push($data['rows'],array(
-                        'NAMAPROMOSI'   => $dataPromo['discount_name'],
-                        'TGLMULAI'      => date("Y-m-d H:i:s", $dataPromo['start_time']),
+                        'NAMAPROMOSI'   => $dataPromo['title'],
+                        'TGLMULAI'      => date("Y-m-d H:i:s", $dataPromo['begin_time']),
                         'TGLAKHIR'      => date("Y-m-d H:i:s", $dataPromo['end_time']),
                         'STATUS'        => $dataPromo['status'],
-                        'IDPROMOSI'     => $dataPromo['discount_id'],
+                        'IDPROMOSI'     => $dataPromo['id'],
                     ));
                 }
+                $nextPageToken = $ret['data']['next_page_token'];
+                $countTotal = $ret['data']['total_count'];
             }
         }
+
         
         //URUTKAN BERDASARKAN NAMA BARANG
         // usort($data['rows'], function($a, $b) {
@@ -2794,7 +2784,7 @@ class Tiktok extends MY_Controller {
                             
                             array_push($data['rows'], array(
                                 'ID'                => $ID,
-                                'IDINDUKBARANGSHOPE'=> $dataPromo[$p]['item_id'],
+                                'IDINDUKBARANGTIKTOK'=> $dataPromo[$p]['item_id'],
                                 'IDBARANGTIKTOK'    => $dataPromo[$p]['promotion'][$pm]['model_id']??$dataPromo[$p]['item_id'],
                                 'STARTDATE'         => $dataPromo[$p]['promotion'][$pm]['start_time'],
                                 'ENDDATE'           => $dataPromo[$p]['promotion'][$pm]['end_time'],
@@ -3418,34 +3408,34 @@ class Tiktok extends MY_Controller {
         $statusVar = "";
         if(count($status)>1)
         {
-            $whereStatus = "and STATUS = $state";
-            $statusVar = "STATUSMARKETPLACE";
+            $whereStatus = "and b.STATUS = $state";
+            $statusVar = "b.STATUSMARKETPLACE";
             
             if($state == 4)
             {
-                $statusVar = "CONCAT(STATUSMARKETPLACE,'|',STATUSPENGEMBALIANMARKETPLACE)";
+                $statusVar = "CONCAT(b.STATUSMARKETPLACE,'|',b.STATUSPENGEMBALIANMARKETPLACE)";
             }
         }
         else
         {
             $statusKhusus = explode("|",$status[0]);
-            if(count($statusKhusus) == 2)
+            $statusGabungan = [];
+            
+            for($s = 1 ; $s < count($statusKhusus) ; $s++)
             {
-                $statusGanda = explode("-",$statusKhusus[1]);
-                if(count($statusGanda) == 2)
-                {
-                    $whereStatus = "and STATUSMARKETPLACE = '".$statusKhusus[0]."' and (STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[0]."' OR STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[1]."')";
-                }
-                else
-                {
-                    $whereStatus = "and STATUSMARKETPLACE = '".$statusKhusus[0]."' and STATUSPENGEMBALIANMARKETPLACE = '".$statusKhusus[1]."'";
-                }
-                $statusVar = "CONCAT(STATUSMARKETPLACE,'|',STATUSPENGEMBALIANMARKETPLACE)";
+                array_push($statusGabungan,$statusKhusus[$s]);
+            }
+            //KHUSUS RETUR
+            if(count($statusKhusus) > 2)
+            {
+                $whereStatus = "b.STATUSPENGEMBALIANMARKETPLACE = '" . implode("' OR b.STATUSPENGEMBALIANMARKETPLACE = '", $statusGabungan) . "'";
+                $whereStatus = "and b.STATUSMARKETPLACE = '".$statusKhusus[0]."' and (".$whereStatus.")";
+                $statusVar = "CONCAT(b.STATUSMARKETPLACE,'|',b.STATUSPENGEMBALIANMARKETPLACE)";
             }
             else
             {
-                $whereStatus = "and STATUSMARKETPLACE = '$status[0]'";
-                $statusVar = "STATUSMARKETPLACE";
+                $whereStatus = "and b.STATUSMARKETPLACE = '$status[0]'";
+                $statusVar = "b.STATUSMARKETPLACE";
             }
         }
         
@@ -3455,19 +3445,46 @@ class Tiktok extends MY_Controller {
            $whereTgltrans = "and TGLPENGEMBALIAN BETWEEN '".$tgl_aw."' and '".$tgl_ak."' ".$whereStatus ;
         }
     
+        if($state != 4)
+        {
+            $sql = "SELECT KODEPENJUALANMARKETPLACE as KODEPESANAN, TGLTRANS as TGLPESANAN, MINTGLKIRIM, $statusVar AS STATUS,KODEPENGAMBILAN,
+                            SKUPRODUK, '' as BARANG, TOTALBARANG, TOTALHARGA, TOTALBAYAR,  '' as ALAMAT,SKUPRODUKOLD,USERNAME,
+                            NAME as BUYERNAME, TELP as BUYERPHONE, ALAMAT as BUYERALAMAT, KOTA,
+                            METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
+                            KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
+                            TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI,BARANGSAMPAIMANUAL
+                            FROM TPENJUALANMARKETPLACE b WHERE MARKETPLACE = 'TIKTOK' ".$whereTgltrans."
+                            order by TGLTRANS DESC";
+        }
+        else
+        {
+            $sql = "SELECT  a.IDPENJUALANDARIMARKETPLACE as IDPESANAN, b.KODEPENJUALANMARKETPLACE as KODEPESANAN, a.TGLTRANS as TGLPESANAN, if(a.MINTGLKIRIM = '0000-00-00 00:00:00','-',a.MINTGLKIRIM) as MINTGLKIRIM, $statusVar AS STATUS,a.KODEPENGAMBILAN,
+                            a.SKUPRODUK, '' as BARANG, a.TOTALBARANG, a.TOTALHARGA, a.TOTALBAYAR,  '' as ALAMAT,a.SKUPRODUKOLD,a.USERNAME,
+                            a.NAME as BUYERNAME, a.TELP as BUYERPHONE, a.ALAMAT as BUYERALAMAT, a.KOTA,
+                            a.METODEBAYAR, a.KURIR, a.RESI, a.CATATANPEMBELI as CATATANBELI, a.CATATANPENJUAL AS CATATANJUAL, b.CATATANPENGEMBALIAN,KODEPACKAGING,
+                            b.KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, b.TGLPENGEMBALIAN, b.MINTGLPENGEMBALIAN, b.RESIPENGEMBALIAN, 0 as TOTALBARANGPENGEMBALIAN,b.MINTGLKIRIMPENGEMBALIAN,
+                            SUM(b.TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, group_concat(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, b.TIPEPENGEMBALIAN, a.SELLERMENUNGGUBARANGDATANG,SUM(IF(b.BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,SUM(IF(b.BARANGSAMPAIMANUAL = 1,1,0)) as BARANGSAMPAIMANUAL,b.STATUSPENGEMBALIANMARKETPLACE as STATUSPENGEMBALIAN
+                            FROM TPENJUALANMARKETPLACEDTL b
+                            INNER JOIN TPENJUALANMARKETPLACE a ON b.IDPENJUALANMARKETPLACE = a.IDPENJUALANMARKETPLACE
+                            WHERE a.MARKETPLACE = 'TIKTOK' and b.TGLPENGEMBALIAN BETWEEN '".$tgl_aw."' and '".$tgl_ak."' $whereStatus 
+                            group by b.KODEPENGEMBALIANMARKETPLACE
+                            order by a.TGLTRANS DESC";
+        }
         
-        $sql = "SELECT KODEPENJUALANMARKETPLACE as KODEPESANAN, TGLTRANS as TGLPESANAN, MINTGLKIRIM, $statusVar AS STATUS,KODEPENGAMBILAN,
-                        SKUPRODUK, '' as BARANG, TOTALBARANG, TOTALHARGA, TOTALBAYAR,  '' as ALAMAT,SKUPRODUKOLD,USERNAME,
-                        NAME as BUYERNAME, TELP as BUYERPHONE, ALAMAT as BUYERALAMAT, KOTA,
-                        METODEBAYAR, KURIR, RESI, CATATANPEMBELI as CATATANBELI, CATATANPENJUAL AS CATATANJUAL, CATATANPENGEMBALIAN,KODEPACKAGING,
-                        KODEPENGEMBALIANMARKETPLACE as KODEPENGEMBALIAN, TGLPENGEMBALIAN, MINTGLPENGEMBALIAN, RESIPENGEMBALIAN, TOTALBARANGPENGEMBALIAN,MINTGLKIRIMPENGEMBALIAN,
-                        TOTALPENGEMBALIANDANA, SKUPRODUKPENGEMBALIAN, '' as BARANGPENGEMBALIAN, TIPEPENGEMBALIAN, SELLERMENUNGGUBARANGDATANG,BARANGSAMPAI
-                        FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'TIKTOK' ".$whereTgltrans."
-                        order by TGLTRANS DESC";
         $result = $CI->db->query($sql)->result();
-        
+     
         foreach($result as $item)
         {
+            if($state == 4)
+            {
+                 $skukembalidata = explode("|",$item->SKUPRODUKPENGEMBALIAN);
+
+                  for($j = 0 ; $j < count($skukembalidata); $j++)
+                  {
+                     $item->TOTALBARANGPENGEMBALIAN += (int)(explode("*",$skukembalidata[$j])[0]);
+                  }
+            }
+            
             $produk = explode("|",$item->SKUPRODUK);
             $produkOld = explode("|",$item->SKUPRODUKOLD);
             $item->STATUS = $this->getStatus($item->STATUS)['status'];
@@ -3568,7 +3585,7 @@ class Tiktok extends MY_Controller {
                                                 white-space: -o-pre-wrap;   /* Opera 7 */    
                                                 word-wrap: break-word;      /* IE */'>".$item->CATATANBELI??''."</div>";
             $item->CATATANJUALRAW = $item->CATATANJUAL;                                    
-            $item->CATATANJUAL = "<i class='fa fa-edit' id='editNoteTIKTOK' style='cursor:pointer;'></i>
+            $item->CATATANJUAL = "<i class='fa fa-edit' id='editNoteTiktok' style='cursor:pointer;'></i>
                                   <div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
                                                 white-space: -moz-pre-wrap; /* Firefox */    
                                                 white-space: -pre-wrap;     /* Opera <7 */   
@@ -3618,28 +3635,118 @@ class Tiktok extends MY_Controller {
         }
         else
         {
-            $dataPayment = $ret['data']['orders'][0]['payment'];
-            $result;
-		    $result['BIAYALAINBELI']        = (int)$dataPayment['tax'] + (int)$dataPayment['small_order_fee'] + (int)$dataPayment['shipping_fee_tax'] + (int)$dataPayment['product_tax'] + (int)$dataPayment['retail_delivery_fee']  + (int)$dataPayment['handling_fee']  + (int)$dataPayment['shipping_insurance_fee']  + (int)$dataPayment['item_insurance_fee']  + (int)$dataPayment['item_insurance_tax']; 
-		    $result['PEMBAYARANBELI']       = (int)$dataPayment['total_amount']; 
-		    $result['DISKONBELI']           = -((int)$dataPayment['platform_discount'] + (int)$dataPayment['seller_discount'] + (int)$dataPayment['payment_platform_discount'] + (int)$dataPayment['payment_discount_service_fee']); 
-		    $result['SUBTOTALBELI']         = (int)$dataPayment['original_total_product_price']; 
-		    $result['BIAYAKIRIMBELI']       = (int)$dataPayment['original_shipping_fee']; 
-		    
-		    $result['BIAYALAYANANJUAL']     = ($ret['response']['order_income']['service_fee']+$ret['response']['order_income']['commission_fee']+$ret['response']['order_income']['order_ams_commission_fee']) * -1; 
-		    $result['PENERIMAANJUAL']       = $ret['response']['order_income']['escrow_amount']; 
-		    $result['DISKONJUAL']           = $ret['response']['buyer_payment_info']['seller_voucher']; 
-		    $result['SUBTOTALJUAL']         = $ret['response']['order_income']['merchant_subtotal']; 
-		    $result['BIAYAKIRIMJUAL']       = ($ret['response']['order_income']['reverse_shipping_fee']*-1) + $ret['response']['order_income']['final_shipping_fee']  + $ret['response']['order_income']['buyer_paid_shipping_fee']; 
-		    $result['REFUNDJUAL']           = $ret['response']['order_income']['seller_return_refund'];
-		    $result['PENYELESAIANPENJUAL']  = $ret['response']['order_income']['escrow_amount'];
-		    $result['DETAILBARANG'] = [];
-		    
-		    $sql = "SELECT SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD, SKUPRODUKPENGEMBALIAN
+            $sql = "SELECT SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD, SKUPRODUKPENGEMBALIAN, STATUSMARKETPLACE
                         FROM TPENJUALANMARKETPLACE 
                         WHERE MARKETPLACE = 'TIKTOK' and KODEPENJUALANMARKETPLACE = '$nopesanan' ";
                         
             $resultPesanan = $CI->db->query($sql)->row();
+            
+            $dataPayment = $ret['data']['orders'][0]['payment'];
+
+            $result;
+		    $result['BIAYALAINBELI']        = (int)$dataPayment['buyer_service_fee'] + (int)$dataPayment['tax'] + (int)$dataPayment['small_order_fee'] + (int)$dataPayment['shipping_fee_tax'] + (int)$dataPayment['product_tax'] + (int)$dataPayment['retail_delivery_fee']  + (int)$dataPayment['handling_fee']  + (int)$dataPayment['shipping_insurance_fee']  + (int)$dataPayment['item_insurance_fee']  + (int)$dataPayment['item_insurance_tax']; 
+		    $result['PEMBAYARANBELI']       = (int)$dataPayment['total_amount']; 
+		    $result['DISKONBELI']           = -((int)$dataPayment['platform_discount'] + (int)$dataPayment['shipping_fee_cofunded_discount'] + (int)$dataPayment['shipping_fee_platform_discount'] + (int)$dataPayment['shipping_fee_seller_discount'] + (int)$dataPayment['seller_discount'] + (int)$dataPayment['payment_platform_discount'] + (int)$dataPayment['payment_discount_service_fee']); 
+		    $result['SUBTOTALBELI']         = (int)$dataPayment['original_total_product_price']; 
+		    $result['BIAYAKIRIMBELI']       = (int)$dataPayment['original_shipping_fee']; 
+		    
+		    if($this->getStatus($resultPesanan->STATUSMARKETPLACE)['state'] != 3)
+            {
+        		//UNSETTLED
+                $dataUnsettled = [];
+                $curl = curl_init();
+                $parameter = "&sort_field=order_create_time&page_size=100&search_time_ge=".$ret['data']['orders'][0]['create_time'];
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202507/orders/unsettled','parameter' => $parameter),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                
+                $response = curl_exec($curl);
+                curl_close($curl);
+                $retUnsettled =  json_decode($response,true);
+                if($retUnsettled['code'] != 0)
+                {
+                    echo $retUnsettled['code']." : ".$retUnsettled['message'];
+                }
+                else
+                {
+                    $dataUnsettled = $retUnsettled['data']['transactions'];
+                }
+                
+                for($u = 0; $u < count($dataUnsettled); $u++)
+                {
+                    if($dataUnsettled[$u]['order_id'] == $nopesanan)
+                    {
+            		    $result['BIAYALAYANANJUAL']     = (int)$dataUnsettled[$u]['est_fee_tax_amount']; 
+            		    $result['PENERIMAANJUAL']       = (int)$dataUnsettled[$u]['est_settlement_amount']; 
+            		    $result['DISKONJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_amount']+(int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_refund_amount']; 
+            		    $result['SUBTOTALJUAL']         = (int)$dataUnsettled[$u]['est_revenue_amount']; 
+            		    $result['BIAYAKIRIMJUAL']       = (int)$dataUnsettled[$u]['est_shipping_cost_amount'];
+            		    $result['REFUNDJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['refund_subtotal_before_discount_amount'];
+            		    $result['PENYELESAIANPENJUAL']  = (int)$dataUnsettled[$u]['est_settlement_amount']; 
+                    }
+                }
+          }
+		  else if($finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
+		  {
+		       $curl = curl_init();
+               $parameter = "";
+               curl_setopt_array($curl, array(
+                 CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202501/orders/'.$nopesanan.'/statement_transactions','parameter' => $parameter),
+                 CURLOPT_HTTPHEADER => array(
+                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
+               ));
+               
+               $response = curl_exec($curl);
+               curl_close($curl);
+               $ret =  json_decode($response,true);
+               if($ret['code'] != 0)
+               {
+                   echo $ret['code']." : ".$ret['message'];
+               }
+               else
+               {
+                   $result['BIAYALAYANANJUAL']     = (int)$dataUnsettled[$u]['fee_and_tax_amount']; 
+            	   $result['PENERIMAANJUAL']       = (int)$dataUnsettled[$u]['settlement_amount']; 
+            	   $result['DISKONJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_amount']+(int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_refund_amount']; 
+            	   $result['SUBTOTALJUAL']         = (int)$dataUnsettled[$u]['revenue_amount']; 
+            	   $result['BIAYAKIRIMJUAL']       = (int)$dataUnsettled[$u]['shipping_cost_amount'];
+            	   $result['REFUNDJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['refund_subtotal_before_discount_amount'];
+            	   $result['PENYELESAIANPENJUAL']  = (int)$dataUnsettled[$u]['settlement_amount']; 
+               }
+		  }
+		  else
+		  {
+		       $result['BIAYALAYANANJUAL']     = 0;
+               $result['PENERIMAANJUAL']       = 0;
+               $result['DISKONJUAL']           = 0; 
+               $result['SUBTOTALJUAL']         = 0;
+               $result['BIAYAKIRIMJUAL']       = 0;
+               $result['REFUNDJUAL']           = 0;
+               $result['PENYELESAIANPENJUAL']  = 0;
+		  }
+		    $result['DETAILBARANG'] = [];
+		    
+		    
             
             $produkData = explode("|",$resultPesanan->SKUPRODUK);
             $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
@@ -3708,33 +3815,27 @@ class Tiktok extends MY_Controller {
                     $dataProduk[$s]->WARNAKEMBALI =  "";
                     $dataProduk[$s]->SIZEKEMBALI =  "";
                     $dataProduk[$s]->SKUKEMBALI =  "";
-                
                     for($t = 0 ; $t < count($produkDataKembali);$t++)
                     {
+         
                         if(explode("*",$produkDataKembali[$t])[1] == $dataProduk[$s]->SKUOLD)
                         {
-                           
                              //JIKA ADA YANG BEDA UPDATE LAGI
                             $sql = "SELECT NAMABARANG, WARNA, SIZE,SKUTIKTOK as SKU
                                         FROM MBARANG WHERE SKUTIKTOK = '".explode("*",$produkDataKembali[$t])[1]."'";
                             $dataBarangKembali = $CI->db->query($sql)->row();
                         
+                            $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
                             if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
                             {
-                                
-                                $dataProduk[$s]->BARANGKEMBALI  = explode(" | ",$dataBarangKembali->NAMABARANG)[0];
-                                if(count(explode(" | ",$dataBarangKembali->NAMABARANG)) > 1)
-                                {
-                                    $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
-                                }
-                                
-                                
-                                $dataProduk[$s]->JMLKEMBALI = explode("*",$produkDataKembali[$t])[0];
-                                $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
-                                $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
-                                $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
-                                
+                                $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
                             }
+                            
+                            
+                            $dataProduk[$s]->JMLKEMBALI = explode("*",$produkDataKembali[$t])[0];
+                            $dataProduk[$s]->WARNAKEMBALI = $dataBarangKembali->WARNA;
+                            $dataProduk[$s]->SIZEKEMBALI = $dataBarangKembali->SIZE;
+                            $dataProduk[$s]->SKUKEMBALI = $dataBarangKembali->SKU;
                         }
                     }
                 }
@@ -3743,7 +3844,6 @@ class Tiktok extends MY_Controller {
 		    $dataDetail = $ret['data']['orders'][0]['line_items'];
 		    for($x = 0; $x < count($dataDetail) ; $x++)
 		    {
-            
 		        $resultDetail;
 		        $resultDetail['KATEGORI'] = $dataProduk[$x]->KATEGORI;
 		        $resultDetail['ITEMID'] = $dataDetail[$x]['id'];
@@ -3780,7 +3880,7 @@ class Tiktok extends MY_Controller {
 		$nopengembalian = $this->input->post('kode')??"";
 		
 		//PAYMENT DETAIL
-	    $parameter = "&return_sn=".$nopengembalian;
+	    $parameter = "";
         
         $curl = curl_init();
         
@@ -3793,7 +3893,7 @@ class Tiktok extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_detail','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/return_refund/202309/returns/'.$nopengembalian.'/records','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -3808,27 +3908,62 @@ class Tiktok extends MY_Controller {
         }
         else
         {
+            $dataRetur = $ret['data']['records'][0];
             $result;
-            $result['TOTALREFUND'] = $ret['response']['refund_amount'];
-            $result['GAMBAR'] = $ret['response']['image'];
-            $result['VIDEO'] = $ret['response']['buyer_videos'];
-            $result['MINTGLCEKBARANG'] =  date("Y-m-d H:i:s", $ret['response']['return_seller_due_date']);
+            $result['GAMBAR'] = $dataRetur['images']??[];
+            $result['VIDEO'] = $dataRetur['videos']??[];
             
-            $result['NEGOTIATIONSTATUS'] = $ret['response']['negotiation']['negotiation_status'];
-            $result['NEGOTIATIONREFUND'] = $ret['response']['negotiation']['latest_offer_amount'];
-            $result['NEGOTIATIONCOUNTER'] = $ret['response']['negotiation']['counter_limit']??0;
-            $result['NEGOTIATIONSOLUTION'] = $ret['response']['negotiation']['latest_solution'];
-            $result['NEGOTIATIONDATE'] = date("Y-m-d H:i:s", $ret['response']['negotiation']['offer_due_date']);
-            $result['LOGISTICSTATUS'] = $ret['response']['logistics_status'];
-            $result['REFUNDTYPE'] = $ret['response']['return_refund_type'];
+            $result['ALASANPENGEMBALIAN'] = $dataRetur['note'];
             
-            $result['ALASANPILIHPENGEMBALIAN'] = $this->getAlasanKembali($ret['response']['reason']);
+            
+            //PRODUCT RETURN
+            $parameter = [];
+            $parameter['return_ids'] = [$nopengembalian];
+            $dataDetail = [];
+            $curl = curl_init();
+            
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS =>  array(
+              'endpoint' => '/return_refund/202309/returns/search',
+              'urlparameter' => $urlparameter,
+              'parameter' => json_encode($parameter)),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+             
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            if($ret['code'] != 0)
+            {
+                echo $ret['code']." : ".$ret['message'];
+                $statusok = false;
+                $countTotal = 0;
+            }
+            else
+            {
+                for($x = 0 ;$x < count($ret['data']['return_orders']); $x++)
+                {
+                    $dataDetail = $ret['data']['return_orders'][$x]['return_line_items'];
+                    $result['TOTALREFUND'] =  $ret['data']['return_orders'][$x]['refund_amount']['refund_total'];
+                };
+            }
             
 		    $result['DETAILBARANG'] = [];
 		    
-		    $sql = "SELECT SKUPRODUKPENGEMBALIAN, SKUPRODUK, ifnull(SKUPRODUKOLD,'') as SKUPRODUKOLD
-                        FROM TPENJUALANMARKETPLACE 
-                        WHERE MARKETPLACE = 'TIKTOK' and KODEPENGEMBALIANMARKETPLACE = '$nopengembalian' ";
+		     $sql = "SELECT GROUP_CONCAT(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, a.SKUPRODUK, ifnull(a.SKUPRODUKOLD,'') as SKUPRODUKOLD
+                        FROM TPENJUALANMARKETPLACE a
+                        INNER JOIN  TPENJUALANMARKETPLACEDTL b  on a.IDPENJUALANMARKETPLACE = b.IDPENJUALANMARKETPLACE
+                        WHERE b.MARKETPLACE = 'TIKTOK' and b.KODEPENGEMBALIANMARKETPLACE = '$nopengembalian' ";
                         
             $resultPesanan = $CI->db->query($sql)->row();
             $produkDataPengembalian = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
@@ -3836,10 +3971,12 @@ class Tiktok extends MY_Controller {
             $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
             $dataProduk = [];
             $indexProduk = 0;
+            
+            $itemTidakAda = true;
             foreach($produkData as $item)
             {
                 //GET NAMA BARANG
-                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUTIKTOK as SKU
+                $sql = "SELECT IDINDUKBARANGTIKTOK, NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUTIKTOK as SKU
                             FROM MBARANG WHERE SKUTIKTOK = '".explode("*",$item)[1]."'";
                 $dataBarang = $CI->db->query($sql)->row();
                 $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
@@ -3847,6 +3984,7 @@ class Tiktok extends MY_Controller {
                 {
                     $dataProduk[$indexProduk]->BARANG .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
                 }
+                $dataProduk[$indexProduk]->IDINDUKBARANGTIKTOK = $dataBarang->IDINDUKBARANGTIKTOK;
                 $dataProduk[$indexProduk]->SATUAN = $dataBarang->SATUAN;
                 $dataProduk[$indexProduk]->KATEGORI = $dataBarang->KATEGORI;
                 $dataProduk[$indexProduk]->WARNA = $dataBarang->WARNA;
@@ -3857,6 +3995,10 @@ class Tiktok extends MY_Controller {
                 $dataProduk[$indexProduk]->SIZEOLD = $dataProduk[$indexProduk]->SIZE;
                 $dataProduk[$indexProduk]->SKUOLD = $dataProduk[$indexProduk]->SKU;
                 $indexProduk++;
+                if($dataBarang->NAMABARANG != "")
+                {
+                    $itemTidakAda = false;
+                }
             }
             
             if($resultPesanan->SKUPRODUKOLD != "")
@@ -3918,27 +4060,50 @@ class Tiktok extends MY_Controller {
                     }
                 }
             }
-		    
-		    for($x = 0; $x < count($ret['response']['item']) ; $x++)
-		    {
             
-		        $resultDetail;
-		        $resultDetail['KATEGORI'] = $dataProduk[$x]->KATEGORI;
-		        $resultDetail['ITEMID'] = $ret['response']['item'][$x]['item_id'];
-		        $resultDetail['MODELID'] = $ret['response']['item'][$x]['model_id'];
-		        $resultDetail['NAMA'] = $dataProduk[$x]->BARANG;
-		        $resultDetail['WARNA'] = $dataProduk[$x]->WARNA;
-		        $resultDetail['SIZE'] = $dataProduk[$x]->SIZE;
-		        $resultDetail['SKU'] = $dataProduk[$x]->SKU;
-		        $resultDetail['NAMAOLD'] = $dataProduk[$x]->BARANGOLD;
-		        $resultDetail['WARNAOLD'] = $dataProduk[$x]->WARNAOLD;
-		        $resultDetail['SIZEOLD'] = $dataProduk[$x]->SIZEOLD;
-		        $resultDetail['SKUOLD'] = $dataProduk[$x]->SKUOLD;
-		        $resultDetail['JUMLAH'] = $ret['response']['item'][$x]['amount'];
-		        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
-		        $resultDetail['HARGA'] = $ret['response']['item'][$x]['item_price'];
-		        $resultDetail['SUBTOTAL'] =  $ret['response']['item'][$x]['refund_amount'];
-		        array_push($result['DETAILBARANG'],$resultDetail);
+		    for($x = 0; $x < count($dataDetail) ; $x++)
+		    {
+                if(!$itemTidakAda)
+                {
+    		        $resultDetail;
+    		        $resultDetail['KATEGORI'] = $dataProduk[$x]->KATEGORI;
+    		        $resultDetail['ITEMID'] = $dataDetail[$x]['sku_id'];
+    		        $resultDetail['MODELID'] = $dataDetail[$x]['sku_id'];
+    		        $resultDetail['NAMA'] = $dataProduk[$x]->BARANG;
+    		        $resultDetail['WARNA'] = $dataProduk[$x]->WARNA;
+    		        $resultDetail['SIZE'] = $dataProduk[$x]->SIZE;
+    		        $resultDetail['SKU'] = $dataProduk[$x]->SKU;
+    		        $resultDetail['NAMAOLD'] = $dataProduk[$x]->BARANGOLD;
+    		        $resultDetail['WARNAOLD'] = $dataProduk[$x]->WARNAOLD;
+    		        $resultDetail['SIZEOLD'] = $dataProduk[$x]->SIZEOLD;
+    		        $resultDetail['SKUOLD'] = $dataProduk[$x]->SKUOLD;
+    		        $resultDetail['JUMLAH'] = 1;
+    		        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
+    		        $resultDetail['HARGA'] =  (float)($dataDetail[$x]['refund_amount']['refund_total']) ;
+    		        $resultDetail['SUBTOTAL'] = ($resultDetail['JUMLAH'] * $resultDetail['HARGA']);
+    		        array_push($result['DETAILBARANG'],$resultDetail);
+                }
+                else
+                {
+                    $resultDetail;
+    		        $resultDetail['KATEGORI'] = "-";
+    		        $resultDetail['ITEMID'] =  $dataDetail[$x]['sku_id'];
+    		        $resultDetail['MODELID'] = $dataDetail[$x]['sku_id'];
+    		        $resultDetail['NAMA'] = "-<br>Barang Tidak terhubung dengan master barang";
+    		        $resultDetail['WARNA'] = "";
+    		        $resultDetail['SIZE'] = "";
+    		        $resultDetail['SKU'] =  "";
+    		        $resultDetail['NAMAOLD'] = "-<br>Barang Tidak terhubung dengan master barang";
+    		        $resultDetail['WARNAOLD'] =  "";
+    		        $resultDetail['SIZEOLD'] =  "";
+    		        $resultDetail['SKUOLD'] =  "";
+    		        
+    		        $resultDetail['JUMLAH'] = 1;
+    		        $resultDetail['SATUAN'] = "";
+    		        $resultDetail['HARGA'] =  (float)($dataDetail[$x]['refund_amount']['refund_total']);
+    		        $resultDetail['SUBTOTAL'] =  ($resultDetail['JUMLAH'] * $resultDetail['HARGA']);
+    		        array_push($result['DETAILBARANG'],$resultDetail);
+                }
 		    }
 		    echo(json_encode($result));
         }
@@ -4880,7 +5045,7 @@ class Tiktok extends MY_Controller {
                     if($ret['code'] != 0)
                     {
                         $data['success'] = false;
-                        print_r($ret);
+                        // print_r($ret);
                         echo json_encode($postData).$ret['code']." : ".$ret['message'];
                     }
                     else
@@ -5269,7 +5434,7 @@ class Tiktok extends MY_Controller {
     	$parameter['description'] = $description;
         $curl = curl_init();
         
-        print_r($parameter);
+        // print_r($parameter);
         
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
@@ -5427,50 +5592,14 @@ class Tiktok extends MY_Controller {
 		$nopesanan = $this->input->post('kode')??"";
 		$note = $this->input->post('note')??"";
 		
-		$parameter = [];
-		$parameter['order_sn'] = $nopesanan;
-		$parameter['note'] = $note;
-		//HAPUS PESANAN
-		
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'order/set_note',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-        if($ret['code'] != 0)
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['code']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-            $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-                    ->where("MARKETPLACE","TIKTOK")
-		            ->set("CATATANPENJUAL", $note)
-		            ->updateRaw("TPENJUALANMARKETPLACE");
-		            
-            $data['success'] = true;
-            $data['msg'] = "Catatan #".$parameter['order_sn']." Berhasil Disimpan";
-            echo(json_encode($data));
-        }
+		$CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
+               ->where("MARKETPLACE","TIKTOK")
+	           ->set("CATATANPENJUAL", $note)
+	           ->updateRaw("TPENJUALANMARKETPLACE");
+	        
+       $data['success'] = true;
+       $data['msg'] = "Catatan #".$parameter['order_sn']." Berhasil Disimpan";
+       echo(json_encode($data));
 
 	}
 	
@@ -5478,75 +5607,112 @@ class Tiktok extends MY_Controller {
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
-	    $dataNoPackaging = json_decode($this->input->post('dataNoPackaging'),true)??"";
+		$dataNoPackaging = json_decode($this->input->post('dataNoPackaging'),true);
+		
+	    //GET RESI
+        $parameter = "";
+        $data = [];
+        $curl = curl_init();
         
-		$parameter = [];
-	    $packaging = [];
-        $indexPackaging = 0;
-        for($f = 0 ; $f < count($dataNoPackaging);$f++){
-            $packaging[count($packaging)]['package_number'] = $dataNoPackaging[$f]['KODEPACKAGING'];
-            if(($f % 49 == 0 && $f != 0) || $f == count($dataNoPackaging)-1)
+        foreach($dataNoPackaging as $itemPackaging)
+        {
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS => array('endpoint' => '/fulfillment/202309/packages/'.$itemPackaging['KODEPACKAGING'].'/handover_time_slots','parameter' => $parameter),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+              
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            if($ret['code'] != 0)
             {
-                //GET RESI
-                $parameter['package_list'] =  $packaging;
-                $curl = curl_init();
+                echo $ret['code']." : ".$ret['message'];
+                $statusok = false;
+            }
+            else
+            {
+                $res = $ret['data']['pickup_slots'];
                 
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'logistics/get_mass_shipping_parameter',
-                  'parameter' => json_encode($parameter)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                  
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['code'] != 0)
+                if(count($res) > 0)
                 {
-                    echo $ret['code']." : ".$ret['message'];
-                    $statusok = false;
-                }
-                else
-                {
-                    $data['pickup'] = $ret['response']['pickup']['address_list'];
-                    
-                    for($x = 0 ; $x < count($data['pickup']) ; $x++)
-                    {
-                        
-                        $sql = "SELECT IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE IDLOKASITIKTOKPICKUP = ". $data['pickup'][$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                        $namalokasiset = $CI->db->query($sql)->row()->NAMALOKASI??'';
-                        
-                        if($namalokasiset != "")
-                        {
-                            $data['pickup'][$x]['address'] .= ("&nbsp;&nbsp;|&nbsp;&nbsp;".$namalokasiset);
-                        }
-                
-                        for($y = 0 ; $y < count($data['pickup'][$x]['time_slot_list']);$y++)
-                        {
-                            $data['pickup'][$x]['time_slot_list'][$y]['date'] =  date("Y-m-d",$data['pickup'][$x]['time_slot_list'][$y]['date']);
-                        }
-                        
-                    }
-                    
-                    $data['info'] =$ret['response']['info_needed'];
-                    $data['dropoff'] =$ret['response']['dropoff'];
                     $data['index'] = $this->input->post('index')??0;
-                    echo(json_encode($data));
+                    $data['time_pickup'] = [];
+                    
+                    for($x = 0 ; $x < count($res) ; $x++)
+                    {
+                      if($res[$x]['avaliable']){
+                          $startDate = new DateTime('@' . (int)$res[$x]['start_time']);
+                                        $startDate->modify('+7 hours');
+                                        
+                          $endDate = new DateTime('@' . (int)$res[$x]['end_time']);
+                                        $endDate->modify('+7 hours');
+                                        
+                                        
+                         array_push(
+                            $data['time_pickup'], array(
+                                'id_pickup' => $startDate->format('Y-m-d H:i:s')."|".$endDate->format('Y-m-d H:i:s'),
+                                'start_pickup' => $startDate->format('Y-m-d H:i:s'),
+                                'end_pickup' => $endDate->format('Y-m-d H:i:s')
+                            )
+                         );
+                      }
+                    }
                 }
                 
-                $packaging = [];
+                // $minStartPickup = 0;
+                // $minEndPickup =  0;
+                
+                // $maxStartPickup = 0;
+                // $maxEndPickup =  0;
+                
+                // for($x = 0 ; $x < count($res) ; $x++)
+                // {
+                //   if($res[$x]['avaliable']){
+                //       if($minStartPickup == 0)
+                //       {
+                //             $minStartPickup = $res[$x]['start_time'];
+                //       }
+                //         $maxStartPickup = $res[$x]['start_time'];
+                         
+                //       if($minEndPickup == 0)
+                //       {
+                //         $minEndPickup =  $res[$x]['end_time'];
+                //       }
+                //       $maxEndPickup =  $res[$x]['end_time'];
+                //   }
+                // }
+                
+                // $data['success'] = true; 
+                // $dtStartMin = new DateTime('@' . (int)$minStartPickup);
+                // $dtStartMin->modify('+7 hours');
+                
+                // $dtStartMax = new DateTime('@' . (int)$maxStartPickup);
+                // $dtStartMax->modify('+7 hours');
+                
+                // $dtEndMin = new DateTime('@' . (int)$minEndPickup);
+                // $dtEndMin->modify('+7 hours');
+                
+                // $dtEndMax = new DateTime('@' . (int)$maxEndPickup);
+                // $dtEndMax->modify('+7 hours');
+
+                // $data['minStartPickup'] = $dtStartMin->format('Y-m-d H:i:s');
+                // $data['minEndPickup'] = $dtStartMax->format('Y-m-d H:i:s');
+                // $data['maxStartPickup'] = $dtEndMin->format('Y-m-d H:i:s');
+                // $data['maxEndPickup'] = $dtEndMax->format('Y-m-d H:i:s');
             }
         }
+             
+        echo(json_encode($data));
 	}
 	
 	public function kirim(){
@@ -5558,9 +5724,16 @@ class Tiktok extends MY_Controller {
 	    $dataPesanan = [];
 	    $order = [];
 		$kurir = [];
+		
 		foreach($dataAll as $item)
 		{
-		    
+            if($item['METHOD'] == "PICKUP" && ($item['JAMAWAL'] == "" || $item['JAMAKHIR'] == ""))
+            {
+                $data['success'] = false;
+                $data['msg'] = "Terdapat Waktu Pickup yang belum ditentukan";
+                die(json_encode($data));
+            }
+            
 		    $ada = false;
 		    for($x = 0 ; $x < count($kurir) ; $x++)
 		    {
@@ -5581,6 +5754,10 @@ class Tiktok extends MY_Controller {
 		for($a = 0 ; $a < count($kurir); $a++)
 		{
 		    $dataPesanan = [];
+        	$parameter = [];
+        	$packaging = [];
+            $indexPackaging = 0;
+            
     		for($s = 0 ; $s < count($order);$s++){
     		    if($kurir[$a] == $order[$s]['KURIR'])
     		    {
@@ -5589,296 +5766,81 @@ class Tiktok extends MY_Controller {
     		}
             
             for($k = 0 ; $k < count($dataPesanan);$k++){
-                
-        		$parameter = [];
-        	    $packaging = [];
-                $indexPackaging = 0;
             
                 $indexPackaging = count($packaging);
                 
-                $packaging[$indexPackaging]['package_number'] = $dataPesanan[$k]['KODEPACKAGING'];
-                $packaging[$indexPackaging]['order_sn'] = $dataPesanan[$k]['KODEPESANAN'];
+                $packaging[$indexPackaging]['id'] = $dataPesanan[$k]['KODEPACKAGING'];
+                $packaging[$indexPackaging]['handover_method'] = $dataPesanan[$k]['METHOD'];
 
-                //GET RESI
-                $parameter['package_list'] =  $packaging;
-                if($dataPesanan[$k]['METHOD'] == "PICK_UP")
+                if($dataPesanan[$k]['METHOD'] == "PICKUP")
                 {
-                    $parameter['pickup'] =  array(
-                        'address_id'     => (int) $dataPesanan[$k]['ADDRESS'],
-                        'pickup_time_id' =>  $dataPesanan[$k]['PICKUP']
+                    $dateAw = new DateTime(
+                        $dataPesanan[$k]['JAMAWAL'],      // contoh: '2026-01-03 12:20:00'
+                        new DateTimeZone('Asia/Jakarta')  // WIB
+                    );
+                    
+                    $dateAw->setTimezone(new DateTimeZone('UTC'));
+                    
+                    $dateAk = new DateTime(
+                        $dataPesanan[$k]['JAMAKHIR'],      // contoh: '2026-01-03 12:20:00'
+                        new DateTimeZone('Asia/Jakarta')  // WIB
+                    );
+                    
+                    $dateAk->setTimezone(new DateTimeZone('UTC'));
+                    
+                    $packaging[$indexPackaging]['pickup_slot'] = array(
+                        'start_time' => $dateAw->getTimestamp(), 
+                        'end_time' => $dateAk->getTimestamp(),
+                        // 'start_time_raw' => $dateAw, 
+                        // 'end_time_raw' => $dateAk
                     );
                 }
-                else
-                {
-                     $parameter['dropoff'] =  array(
-                        'branch_id'     => "",
-                        'sender_real_name' => "",
-                        'tracking_number' =>  ""
-                    );
-                }
-                
-                // print_r($parameter);
-                
-                $curl = curl_init();
-                
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'logistics/mass_ship_order',
-                  'parameter' => json_encode($parameter)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                  
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                
-                if($ret['code'] != 0)
-                {
-                    echo $ret['code']." : ".$ret['message'];
-                    $statusok = false;
-                }
-                else
-                {
-                    $parameter = [];
-                    $packaging = [];
-                    $indexPackaging2 = 0;
-                    for($f = 0 ; $f < count($dataPesanan);$f++){
-                        $packaging[count($packaging)]['package_number'] = $dataPesanan[$f]['KODEPACKAGING'];
-                        if(($f % 49 == 0 && $f != 0) || $f == count($dataPesanan)-1)
-                        {
-                            //GET RESI
-                            $parameter['package_list'] =  $packaging;
-                            $curl = curl_init();
-                            curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                              CURLOPT_RETURNTRANSFER => true,
-                              CURLOPT_ENCODING => '',
-                              CURLOPT_MAXREDIRS => 10,
-                              CURLOPT_TIMEOUT => 30,
-                              CURLOPT_FOLLOWLOCATION => true,
-                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                              CURLOPT_CUSTOMREQUEST => 'POST',
-                              CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'logistics/get_mass_tracking_number',
-                              'parameter' => json_encode($parameter)),
-                              CURLOPT_HTTPHEADER => array(
-                                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                              ),
-                            ));
-                              
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $ret =  json_decode($response,true);
-                            if($ret['code'] != 0)
-                            {
-                                echo $ret['code']." : ".$ret['message'];
-                                $statusok = false;
-                            }
-                            else
-                            {
-                                for($x = 0 ;$x < count($ret['response']['success_list']); $x++)
-                                {
-                                    
-                                    $dataPesanan[$indexPackaging2]['RESI'] = $ret['response']['success_list'][$x]['tracking_number'];
-                                    $dataPesanan[$indexPackaging2]['KODEPENGAMBILAN'] = $ret['response']['success_list'][$x]['pickup_code'];
-                                    
-                                    $CI->db->where("KODEPENJUALANMARKETPLACE",$dataPesanan[$indexPackaging2]['KODEPESANAN'])
-                                        ->where('MARKETPLACE',"TIKTOK")
-                    		            ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                            'RESI'                       => $dataPesanan[$indexPackaging2]['RESI'],
-                                            'KODEPENGAMBILAN'            => $dataPesanan[$indexPackaging2]['KODEPENGAMBILAN'],
-                    		        ));
-                    		            
-                                    $indexPackaging2++;
-                                }
-                            }
-                            
-                            $packaging = [];
-                        }
-                    }
-            
-            
-                    $nopesanan = "";
-                    if(count($dataPesanan) == 1)
-                    {
-                        $nopesanan = "#".$dataPesanan[0]['KODEPESANAN'];
-                    }
-                  //MASUK KE PROCCESSED
-                  $data['success'] = true;
-                  $data['msg'] = "Pesanan ".$nopesanan." Berhasil Dikirim";
-                }
-            
             }
-		}
-		sleep(3); 
-		$nopesanan = "";
-        for($x = 0 ; $x < count($dataAll);$x++)
-        {
-            $nopesanan .= $dataAll[$x]['KODEPESANAN'];
-            if(($x % 49 == 0 && $x != 0) || $x == count($dataAll)-1)
+            
+            //GET RESI
+            $parameter['packages'] =  $packaging;
+            
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS =>  array(
+              'endpoint' => "/fulfillment/202309/packages/ship",
+              'parameter' => json_encode($parameter)),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+              
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            if($ret['code'] != 0)
             {
-                //GET ORDER DETAIL
-                $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-                // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-                // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-                
-                $curl = curl_init();
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['code'] != 0)
-                {
-                    echo $ret['code']." : ".$ret['message'];
-                    $statusok = false;
-                }
-                else
-                {
-                     for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                     {
-                        $dataDetail = $ret['response']['order_list'][$y];
-
-                        $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                        ->where('MARKETPLACE',"TIKTOK")
-                         ->updateRaw("TPENJUALANMARKETPLACE", array(
-                            'STATUSMARKETPLACE'          => $dataDetail['order_status'],
-                            'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
-                        ));   
-                        
-                        //JAGA2x
-                        if($dataDetail['order_status'] == "READY_TO_SHIP")
-                        {
-                           $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                            ->where('MARKETPLACE',"TIKTOK")
-                             ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                'STATUSMARKETPLACE'          => 'PROCESSED',
-                                'STATUS'                     => $this->getStatus('PROCESSED')['state'],
-                            ));   
-                        }
-                        else
-                        {
-                            $CI->db->where("KODEPENJUALANMARKETPLACE",$dataDetail['order_sn'])
-                            ->where('MARKETPLACE',"TIKTOK")
-                             ->updateRaw("TPENJUALANMARKETPLACE", array(
-                                'STATUSMARKETPLACE'          => $dataDetail['order_status'],
-                                'STATUS'                     => $this->getStatus($dataDetail['order_status'])['state'],
-                            ));   
-                        }
-                     }
-                }
-                $nopesanan = "";
+                echo $ret['code']." : ".$ret['message'];
+                $statusok = false;
             }
             else
             {
-                $nopesanan .= "%2C";
+                $nopesanan = "";
+                if(count($dataPesanan) == 1 && count($kurir) == 1)
+                {
+                    $nopesanan = "#".$dataPesanan[0]['KODEPESANAN'];
+                }
+              //MASUK KE PROCCESSED
+              $data['success'] = true;
+              $data['msg'] = "Pesanan ".$nopesanan." Berhasil Dikirim";
             }
-            
-        }
+		}
+		sleep(3); 
         
-    //     //CEK LOKASI PICKUP
-    //     $lokasi = "0";
-    //     $parameter="";
-    //     $curl = curl_init();
-        
-    //     curl_setopt_array($curl, array(
-    //       CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-    //       CURLOPT_RETURNTRANSFER => true,
-    //       CURLOPT_ENCODING => '',
-    //       CURLOPT_MAXREDIRS => 10,
-    //       CURLOPT_TIMEOUT => 30,
-    //       CURLOPT_FOLLOWLOCATION => true,
-    //       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    //       CURLOPT_CUSTOMREQUEST => 'POST',
-    //       CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-    //       CURLOPT_HTTPHEADER => array(
-    //         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-    //       ),
-    //     ));
-        
-    //     $response = curl_exec($curl);
-    //     curl_close($curl);
-    //     $ret =  json_decode($response,true);
-    //     if($ret['code'] != 0)
-    //     {
-    //         echo $ret['code']." : ".$ret['message'];
-    //     }
-    //     else
-    //     {
-    //         $dataAddress = $ret['response']['address_list'];
-    //     }
-        
-	   // $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
-	    
-    //     for($f = 0 ; $f < count($dataAll) ; $f++)
-    //     {
-    //         //DROP OFF
-    //         if($dataAll[$f]['ADDRESS'] == "")
-    //         {
-    //             for($x = 0 ; $x < count($dataAddress);$x++)
-    //             {
-                    
-    //                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOK = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-    //                 $pickup = false;
-    //                 // $default = false;
-                    
-    //                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-    //                 {
-    //                     if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-    //                     {
-    //                         $pickup = true;
-    //                     }
-    //                     // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-    //                     // {
-    //                     //     $default = true;
-    //                     // }
-    //                 }
-                    
-                    
-                
-    //                 if($pickup)
-    //                 {
-    //                     $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-    //                 }
-    //             }
-    //         }
-    //         //PICKUP
-    //         else
-    //         {
-    //              $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOK = ".$dataAll[$f]['ADDRESS']." AND GROUPLOKASI like '%MARKETPLACE%'";
-    //              $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-    //         }
-            
-    //         //INSERT KARTUSTOK
-    //         if($this->getStatus($dataAll[$f]['STATUSMARKETPLACE'])['state'] != 1)
-    //         {
-    //             $this->insertKartuStokPesanan($dataAll[$f]['KODEPESANAN'],$dataAll[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
-    //         }
-    //     }
-    //     //CEK LOKASI PICKUP
+        $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
         
         echo(json_encode($data));
         
@@ -5892,7 +5854,7 @@ class Tiktok extends MY_Controller {
 		$nopackaging = $this->input->post('kodepackaging')??"";
 		
 	    //GET RESI
-        $parameter = "&order_sn=".$nopesanan."&package_number=".$nopackaging;
+        $parameter = "";
         $curl = curl_init();
         
         curl_setopt_array($curl, array(
@@ -5904,7 +5866,7 @@ class Tiktok extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_tracking_info','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/fulfillment/202309/orders/'.$nopesanan.'/tracking','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
@@ -5920,11 +5882,17 @@ class Tiktok extends MY_Controller {
         }
         else
         {
-            $data = $ret['response']['tracking_info'];
+            $data = $ret['data']['tracking'];
              
             for($x = 0 ; $x < count($data) ; $x++)
             {
-                $data[$x]['update_time'] = date("Y-m-d H:i:s", $data[$x]['update_time']);
+                $millis = $data[$x]['update_time_millis'];
+                $dt = (new DateTime('@' . (int) floor($millis / 1000)))
+                        ->setTimezone(new DateTimeZone('Asia/Jakarta'));
+                
+                $dt->format('Y-m-d H:i:s');
+
+                $data[$x]['update_time'] = $dt->format('Y-m-d H:i:s');
             }
             
             echo(json_encode($data));
@@ -5942,14 +5910,14 @@ class Tiktok extends MY_Controller {
         $a++;
 		foreach($dataPesanan as $item)
 		{
-		    if (file_exists(FCPATH."assets/label/waybill_".$item['KODEPESANAN']."_compressed.pdf")) {
-               $files[$a] = FCPATH."assets/label/waybill_".$item['KODEPESANAN']."_compressed.pdf";
+		    if (file_exists(FCPATH."assets/label/tiktok/waybill_".$item['KODEPESANAN']."_compressed.pdf")) {
+               $files[$a] = FCPATH."assets/label/tiktok/waybill_".$item['KODEPESANAN']."_compressed.pdf";
                $data['code'] = "Done";
             } else {
                $dataRePrint = $this->reprint([$item]);
                if($dataRePrint['success'])
                {
-                $files[$a] = FCPATH."assets/label/waybill_".$dataRePrint['KODEPESANAN']."_compressed.pdf";
+                $files[$a] = FCPATH."assets/label/tiktok/waybill_".$dataRePrint['KODEPESANAN']."_compressed.pdf";
                  $data['code'] = "Reprint";
                }
                else
@@ -5973,7 +5941,7 @@ class Tiktok extends MY_Controller {
             }
         }
     
-        $output_file = "assets/label/Tiktok/waybill_merge.pdf";
+        $output_file = "assets/label/tiktok/waybill_merge.pdf";
         $this->pdf_merger->Output('F', $output_file); // Simpan ke file
         
         // Kembalikan URL hasil merge sebagai JSON
@@ -6027,9 +5995,7 @@ class Tiktok extends MY_Controller {
             $invoice[$index]['package_number'] = $item["KODEPACKAGING"];
             $invoice[$index]['kurir'] = $item["KURIR"];
             $invoice[$index]['tracking_number'] = $item["RESI"];
-            $invoice[$index]['shipping_document_type'] = "";
 		}
-		
 		
 		$invoiceKirim = [];
 		for($a = 0 ; $a < count($kurir); $a++)
@@ -6041,197 +6007,65 @@ class Tiktok extends MY_Controller {
     		        array_push($invoiceKirim, $invoice[$f]);
     		    }
     		}
-    		
+    		$parameter = "&document_type=SHIPPING_LABEL";
         	for($f = 0 ; $f < count($invoiceKirim);$f++){	    
-                if(($f % 49 == 0 && $f != 0) || $f == count($invoiceKirim)-1)
-                {
-            		$parameter = [];
-            		$parameter['order_list'] = $invoiceKirim;
-            		
-            		//GET RESI
-                    $curl = curl_init();
-                    
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS =>  array(
-                      'endpoint' => 'logistics/get_shipping_document_parameter',
-                      'parameter' => json_encode($parameter)),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                      
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-    		        $data = [];
-                    if($ret['code'] != 0)
-                    {
-                        $data['success'] = false;
-                        $data['msg'] =   "1 ".$ret['code']." : ".$ret['message'];
-                        $data['ret'] = $ret;
-                    }
-                    else
-                    {
-                        
-                        $dataDocumentType = $ret['response']['result_list'];
-                    
-                        $indexCetak = 0;
-                        foreach($parameter['order_list'] as $item)
-                    	{
-                            foreach($dataDocumentType as $itemDocumentType)
-                            {
-                        	    if($item['order_sn'] == $itemDocumentType['order_sn'])
-                        	    {
-                        	        $parameter['order_list'][$indexCetak]['shipping_document_type'] =  $itemDocumentType['suggest_shipping_document_type']??"NORMAL_AIR_WAYBILL";
-                        	        $indexCetak++;
-                        	    }
-                            }
-                    	}
-                    	
-                    	//BUAT LABEL PESANAN
-                    	
-                        $curl = curl_init();
-                        
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'logistics/create_shipping_document',
-                          'parameter' => json_encode($parameter)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                          
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-    		            $data = [];
-                        if($ret['code'] != 0)
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  "2 ".$ret['code']." : ".$ret['message'];
-                            $data['ret'] = $ret;
-                        }
-                        else
-                        {
+                $curl = curl_init();
+                curl_setopt_array($curl, array(
+                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS => array('endpoint' => '/fulfillment/202309/packages/'.$invoiceKirim[$f]['package_number'].'/shipping_documents','parameter' => $parameter),
+                  CURLOPT_HTTPHEADER => array(
+                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  ),
+                ));
+                  
+                $response = curl_exec($curl);
+                $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                $content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
                 
-                            //DAPATKAN HASIL LABEL PESANAN
-                            $curl = curl_init();
-                            curl_setopt_array($curl, array(
-                              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                              CURLOPT_RETURNTRANSFER => true,
-                              CURLOPT_ENCODING => '',
-                              CURLOPT_MAXREDIRS => 10,
-                              CURLOPT_TIMEOUT => 30,
-                              CURLOPT_FOLLOWLOCATION => true,
-                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                              CURLOPT_CUSTOMREQUEST => 'POST',
-                              CURLOPT_POSTFIELDS =>  array(
-                              'endpoint' => 'logistics/get_shipping_document_result',
-                              'parameter' => json_encode($parameter)),
-                              CURLOPT_HTTPHEADER => array(
-                                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                              ),
-                            ));
-                                  
-                            $response = curl_exec($curl);
-                            curl_close($curl);
-                            $ret =  json_decode($response,true);
-                                
-                            if($ret['code'] != 0)
-                            {
-                                $data['success'] = false;
-                                $data['msg'] =   "3 ".$ret['code']." : ".$ret['message'];
-                                $data['ret'] = $ret;
-                            }
-                            else
-                            {
-                                $dataDocumentDownload = $ret['response']['result_list'];
-                                
-                                $invoiceKirim = [];
-                                foreach($dataDocumentDownload as $itemDocumentDownload)
-                                {
-                                    $index = count($invoiceKirim);
-                                		$invoiceKirim[$index]['order_sn'] = $itemDocumentDownload['order_sn'];
-                                		$invoiceKirim[$index]['package_number'] = $itemDocumentDownload['package_number'];
-                                }
-                                $parameter = [];
-                                $parameter['order_list'] = $invoiceKirim;
-                                	//DAPATKAN HASIL LABEL PESANAN
-                                $curl = curl_init();
-                                curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                                  CURLOPT_RETURNTRANSFER => true,
-                                  CURLOPT_ENCODING => '',
-                                  CURLOPT_MAXREDIRS => 10,
-                                  CURLOPT_TIMEOUT => 30,
-                                  CURLOPT_FOLLOWLOCATION => true,
-                                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                  CURLOPT_CUSTOMREQUEST => 'POST',
-                                  CURLOPT_POSTFIELDS =>  array(
-                                  'endpoint' => 'logistics/download_shipping_document',
-                                  'parameter' => json_encode($parameter)),
-                                  CURLOPT_HTTPHEADER => array(
-                                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                  ),
-                                ));
-                                  
-                                $response = curl_exec($curl);
-                                $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                                $content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-                                
-                                curl_close($curl);
-                                $ret =  json_decode($response,true);
-                                if($ret['code'] != 0)
-                                {
-                                    $data['success'] = false;
-                                    $data['msg'] =   "4 ".$ret['code']." : ".$ret['message'];
-                                    $data['ret'] = $ret;
-                                }
-                                else
-                                {
-                                    // Save the file if request is successful
-                                    if ($http_code == 200) {
-                                        file_put_contents("assets/label/waybill_".$invoice[0]['order_sn'].".pdf", $response);
-                                        
-                                        $input = FCPATH . "assets/label/waybill_".$invoice[0]['order_sn'].".pdf";
-                                        $output = FCPATH . "assets/label/waybill_".$invoice[0]['order_sn']."_compressed.pdf";
-                                        
-                                        $cmd = "gs -sDEVICE=pdfwrite \
-                                              -dDEVICEWIDTHPOINTS=283 \
-                                              -dDEVICEHEIGHTPOINTS=425 \
-                                              -dPDFFitPage \
-                                              -dNOPAUSE -dQUIET -dBATCH \ -sOutputFile='$output' '$input'";
-                                        
-                                        exec($cmd, $outputLines, $status);
-                                        $data['success'] = true;
-                                        $data['KODEPESANAN'] = $invoice[0]['order_sn'];
-                                    } else {
-                                        $data['success'] = false;
-                                        $data['msg'] =  "Failed to download file. HTTP Status: $http_code\n";;
-                                    }
-                                }
-                            }
+                curl_close($curl);
+                $ret =  json_decode($response,true);
+                if($ret['code'] != 0)
+                {
+                    $data['success'] = false;
+                    $data['msg'] =   $ret['code']." : ".$ret['message'];
+                    $data['ret'] = $ret;
+                }
+                else
+                {
+                    // Save the file if request is successful
+                    if ($http_code == 200) {
+                        
+                        $pdfContent = file_get_contents($ret['data']['doc_url']);
+
+                        if ($pdfContent === false) {
+                            die('Gagal download PDF');
                         }
-                    
+
+                        file_put_contents("assets/label/tiktok/waybill_".$invoiceKirim[$f]['order_sn'].".pdf", $pdfContent);
+                        
+                        $input = FCPATH . "assets/label/tiktok/waybill_".$invoiceKirim[$f]['order_sn'].".pdf";
+                        $output = FCPATH . "assets/label/tiktok/waybill_".$invoiceKirim[$f]['order_sn']."_compressed.pdf";
+                        
+                        $cmd = "gs -sDEVICE=pdfwrite \
+                              -dDEVICEWIDTHPOINTS=283 \
+                              -dDEVICEHEIGHTPOINTS=425 \
+                              -dPDFFitPage \
+                              -dNOPAUSE -dQUIET -dBATCH \ -sOutputFile='$output' '$input'";
+                        
+                        exec($cmd, $outputLines, $status);
+                        $data['success'] = true;
+                        $data['KODEPESANAN'] = $invoiceKirim[$f]['order_sn'];
+                    } else {
+                        $data['success'] = false;
+                        $data['msg'] =  "Failed to download file. HTTP Status: $http_code\n";;
                     }
-                          
-                    $invoiceKirim = [];
                 }
         	}
     	}
@@ -6245,8 +6079,8 @@ class Tiktok extends MY_Controller {
 	   $CI =& get_instance();	
 	   $CI->load->library('Pdf_merger'); 
 	   
-	    $input = FCPATH . 'assets/label/waybill.pdf';
-        $output = FCPATH . 'assets/label/waybill_compressed.pdf';
+	    $input = FCPATH . 'assets/label/tiktok/waybill.pdf';
+        $output = FCPATH . 'assets/label/tiktok/waybill_compressed.pdf';
         
         $cmd = "gs -sDEVICE=pdfwrite \
                -dDEVICEWIDTHPOINTS=283 \
@@ -6258,8 +6092,8 @@ class Tiktok extends MY_Controller {
         
         if ($status === 0) {
     	   $files = [
-                'assets/label/waybill_compressed.pdf',
-                'assets/label/waybill_compressed.pdf',
+                'assets/label/tiktok/waybill_compressed.pdf',
+                'assets/label/tiktok/waybill_compressed.pdf',
             ];
     
             foreach ($files as $file) {
@@ -6271,16 +6105,71 @@ class Tiktok extends MY_Controller {
                 }
             }
     
-            $output_file = "assets/label/Tiktok/waybill_merge.pdf";
+            $output_file = "assets/label/tiktok/waybill_merge.pdf";
             $this->pdf_merger->Output('F', $output_file); // Simpan ke file
         
             // Kembalikan URL hasil merge sebagai JSON
-            echo json_encode(['pdf_url' => base_url('assets/label/Tiktok/waybill_merge.pdf')]);
+            echo json_encode(['pdf_url' => base_url('assets/label/tiktok/waybill_merge.pdf')]);
         } else {
             echo "Gagal convert PDF. Cek Ghostscript terinstall atau tidak.";
         }
        
 	}
+	
+	public function getAlasanPembatalan(){
+
+        $curl = curl_init();
+        
+        $status = $this->input->post('status')??"";
+        $alasan = [];
+        if(strtoupper($status) == "BELUM BAYAR")
+        {
+            $alasan = [
+                [
+                     'reason_id' => 'seller_cancel_unpaid_reason_out_of_stock',
+                     'reason_name' => 'Out of stock'
+                ],
+                [
+                     'reason_id' => 'seller_cancel_unpaid_reason_wrong_price',
+                     'reason_name' => 'Pricing error'
+                ],
+                [
+                     'reason_id' => 'seller_cancel_unpaid_reason_buyer_hasnt_paid_within_time_allowed',
+                     'reason_name' => 'Buyer did not pay on time'
+                ],
+                [
+                     'reason_id' => 'seller_cancel_unpaid_reason_buyer_requested_cancellation',
+                     'reason_name' => 'Buyer requested cancellation'
+                ]
+            ];
+        }
+        else if(strtoupper($status) == "MENUNGGU" || strtoupper($status) == "SIAP DIKIRIM")
+        {
+            $alasan = [
+                [
+                     'reason_id' => 'seller_cancel_reason_out_of_stock',
+                     'reason_name' => 'Out of stock'
+                ],
+                [
+                     'reason_id' => 'seller_cancel_reason_wrong_price',
+                     'reason_name' => 'Pricing error'
+                ],
+                [
+                     'reason_id' => 'seller_cancel_paid_reason_address_not_deliver',
+                     'reason_name' => 'Unable to deliver to buyer address'
+                ],
+                [
+                     'reason_id' => 'seller_cancel_paid_reason_buyer_requested_cancellation',
+                     'reason_name' => 'Buyer requested cancellation'
+                ]
+            ];
+        }
+        
+        $ret['success'] = true;
+        $ret['data'] = $alasan;
+        echo json_encode($ret); 
+	}
+	
 	
 	public function hapus(){
 	    $CI =& get_instance();
@@ -6290,16 +6179,16 @@ class Tiktok extends MY_Controller {
 		$dataitem = json_decode($this->input->post('dataItem'),true)??"";
 		
 		$parameter = [];
-		$parameter['order_sn'] = $nopesanan;
+		$parameter['order_id'] = $nopesanan;
 		$parameter['cancel_reason'] = $alasan;
-		$parameter['item_list'] = [];
-		foreach($dataitem as $item)
-		{
-		    $parameter['item_list'][count($parameter['item_list'])] = array(
-		      "item_id"  => $item['ITEMID'],
-		      "model_id"  => $item['MODELID']
-		    );
-		}
+// 		$parameter['item_list'] = [];
+// 		foreach($dataitem as $item)
+// 		{
+// 		    $parameter['item_list'][count($parameter['item_list'])] = array(
+// 		      "item_id"  => $item['ITEMID'],
+// 		      "model_id"  => $item['MODELID']
+// 		    );
+// 		}
 		//HAPUS PESANAN
 		
         $curl = curl_init();
@@ -6314,7 +6203,7 @@ class Tiktok extends MY_Controller {
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
           CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'order/cancel_order',
+          'endpoint' => '/return_refund/202309/cancellations',
           'parameter' => json_encode($parameter)),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
@@ -6324,6 +6213,12 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
+        
+        
+        sleep(3); 
+        
+        $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+            
         if($ret['code'] != 0)
         {
             $data['success'] = false;
@@ -6332,72 +6227,10 @@ class Tiktok extends MY_Controller {
         }
         else
         {
-           //GET ORDER DETAIL
-           $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-           // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-           // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-           $curl = curl_init();
-           
-           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['code'] != 0)
-           {
-               echo $ret['code']." : ".$ret['message'];
-               $statusok = false;
-           }
-           else
-           {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                {
-                   $dataDetail = $ret['response']['order_list'][$y];
-                   $data;
-                   //DAPATKAN RESI
-                   $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                   $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                   $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                   $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                   $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                   $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
-                   $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                   $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"TIKTOK")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                       'NAME'                       => $data['NAME'],  
-                       'TELP'                       => $data['TELP'],  
-                       'ALAMAT'                     => $data['ALAMAT'],
-                       'KOTA'                       => $data['KOTA'],  
-                       'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                       'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                       'STATUS'                     => $data['STATUS'],
-                       'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                ));    
-                }
-           }
         
             $data['success'] = true;
             $data['msg'] = "Pesanan #".$nopesanan." Berhasil Dibatalkan";
             echo(json_encode($data));
-            
         }
 
 	}
@@ -6480,31 +6313,45 @@ class Tiktok extends MY_Controller {
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN|REQUESTED")
+	    else if($orderStatus == "RETURNED|RETURN_OR_REFUND_REQUEST_PENDING")
 	    {
 	        return [
-	            "status" => "Pengembalian<br>Diajukan",
+	            "status" => "Permintaan<br>Pengembalian",
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN|PROCESSING")
+	    else if($orderStatus == "RETURNED|AWAITING_BUYER_SHIP")
 	    {
 	        return [
-	            "status" => "Pengembalian<br>Diproses",
+	            "status" => "Barang<br>Akan Dikirim",
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN|JUDGING")
+	    else if($orderStatus == "RETURNED|AWAITING_BUYER_RESPONSE")
 	    {
 	        return [
-	            "status" => "Pengembalian<br>Dalam Sengketa",
+	            "status" => "Menunggu<br>Respon Pembeli",
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN|SELLER_DISPUTE")
+	    else if($orderStatus == "RETURNED|BUYER_SHIPPED_ITEM")
 	    {
 	        return [
-	            "status" => "Pengembalian<br>Dalam Sengketa",
+	            "status" => "Barang<br>Telah Dikirim",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|REFUND_PENDING")
+	    {
+	        return [
+	            "status" => "Menunggu<br>Kembali Dana",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|RETURN_OR_REFUND_REQUEST_SUCCESS")
+	    {
+	        return [
+	            "status" => "Pengembalian<br>Berhasil",
 	            "state"  => 4,
 	         ];
 	    }
@@ -6747,7 +6594,7 @@ class Tiktok extends MY_Controller {
         
 	}
 	
-	public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi){
+public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi){
 	    
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
@@ -6765,59 +6612,12 @@ class Tiktok extends MY_Controller {
         $ada = $CI->db->query($sqlStok)->row()->ADA;
         if($ada == 0)
         {
-            $sqlPesanan = "SELECT * FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'TIKTOK' and KODEPENGEMBALIANMARKETPLACE = '".$kodetrans."'";
+            $sqlPesanan = "SELECT b.SKUPRODUKPENGEMBALIAN, a.SKUPRODUK,a.SKUPRODUKOLD,b.KODEPENGEMBALIANMARKETPLACE,b.TGLPENGEMBALIAN,b.KODEBARANGPENGEMBALIANMARKETPLACE AS IDTRANS,a.USERNAME FROM TPENJUALANMARKETPLACE  a
+                            INNER JOIN TPENJUALANMARKETPLACEDTL b ON a.KODEPENJUALANMARKETPLACE = b.KODEPENJUALANMARKETPLACE
+                            WHERE a.MARKETPLACE = 'TIKTOK' and b.KODEPENGEMBALIANMARKETPLACE = '".$kodetrans."'";
             $resultPesanan = $CI->db->query($sqlPesanan)->row();
             
             $produkDataPengembalian = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
-            $produkData = explode("|",$resultPesanan->SKUPRODUK);
-            $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
-            $dataProduk = [];
-            $indexProduk = 0;
-            foreach($produkData as $item)
-            {
-                //GET NAMA BARANG
-                $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUTIKTOK as SKU
-                            FROM MBARANG WHERE SKUTIKTOK = '".explode("*",$item)[1]."'";
-                $dataBarang = $CI->db->query($sql)->row();
-                $dataProduk[$indexProduk]->BARANG  = explode(" | ",$dataBarang->NAMABARANG)[0];
-                if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
-                {
-                    $dataProduk[$indexProduk]->BARANG .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
-                }
-                $dataProduk[$indexProduk]->SATUAN = $dataBarang->SATUAN;
-                $dataProduk[$indexProduk]->KATEGORI = $dataBarang->KATEGORI;
-                $dataProduk[$indexProduk]->WARNA = $dataBarang->WARNA;
-                $dataProduk[$indexProduk]->SIZE = $dataBarang->SIZE;
-                $dataProduk[$indexProduk]->SKU = $dataBarang->SKU;
-                $dataProduk[$indexProduk]->BARANGOLD = $dataProduk[$indexProduk]->BARANG;
-                $dataProduk[$indexProduk]->WARNAOLD = $dataProduk[$indexProduk]->WARNA;
-                $dataProduk[$indexProduk]->SIZEOLD = $dataProduk[$indexProduk]->SIZE;
-                $dataProduk[$indexProduk]->SKUOLD = $dataProduk[$indexProduk]->SKU;
-                $indexProduk++;
-            }
-            
-            if($resultPesanan->SKUPRODUKOLD != "")
-            {
-                
-                $indexProduk = 0;
-                foreach($produkDataOld as $item)
-                {
-                    //GET NAMA BARANG
-                    $sql = "SELECT NAMABARANG, WARNA, SIZE, SATUAN, KATEGORI,SKUTIKTOK as SKU
-                                FROM MBARANG WHERE SKUTIKTOK = '".explode("*",$item)[1]."'";
-                    $dataBarang = $CI->db->query($sql)->row();
-                    $dataProduk[$indexProduk]->BARANGOLD  = explode(" | ",$dataBarang->NAMABARANG)[0];
-                    if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
-                    {
-                        $dataProduk[$indexProduk]->BARANGOLD .= "<br><i>".$dataBarang->WARNA.", ".$dataBarang->SIZE."</i>";
-                    }
-                    
-                    $dataProduk[$indexProduk]->WARNAOLD = $dataBarang->WARNA;
-                    $dataProduk[$indexProduk]->SIZEOLD = $dataBarang->SIZE;
-                    $dataProduk[$indexProduk]->SKUOLD = $dataBarang->SKU;
-                    $indexProduk++;
-                }
-            }
             
             if($resultPesanan->SKUPRODUKPENGEMBALIAN != "")
             {
@@ -6826,313 +6626,288 @@ class Tiktok extends MY_Controller {
 
                 for($t = 0 ; $t < count($produkDataKembali);$t++)
                 {
-                    for($s = 0 ; $s < count($produkDataOld);$s++)
+                      //GET ID BARANG
+                        $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
+                                   FROM MBARANG 
+                                   INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
+                                   INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
+                                   WHERE MBARANG.SKUTIKTOK = '".explode("*",$produkDataKembali[$t])[1]."' and MCUSTOMER.NAMACUSTOMER = 'TIKTOK'";
+                
+                       $dataBarangKembali = $CI->db->query($sql)->row();
+                       
+                       $param = array(
+                       	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN??"2",
+                       	"IDLOKASI"      => $lokasi,
+                       	"MODUL"         => 'RETUR JUAL',
+                       	"IDTRANS"       => 0,
+                       	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
+                       	"IDBARANG"      => $dataBarangKembali->IDBARANG??"0",
+                       	"KONVERSI1"     => 1,
+                       	"KONVERSI2"     => 1,
+                       	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
+                       	"JENISTRANS"    => 'RETUR JUAL TIKTOK',
+                       	"KETERANGAN"    => 'RETUR TIKTOK KE '.$resultPesanan->USERNAME,
+                       	"MK"            => 'M',
+                       	"JML"           => explode("*",$produkDataKembali[$t])[0],
+                       	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
+                       	"STATUS"        => '1',
+                       );
+                       $exe = $CI->db->insert($labelKartuStok,$param);
+                       $idBarang = $dataBarangKembali->IDBARANG??"0";
+                }
+                
+                
+               
+              //CEK TAKUTNYA ADA BARANG YANG SAMA TAPI 1-1
+               
+              $sqlGroup = 'SELECT IDPERUSAHAAN, IDLOKASI, MODUL, IDTRANS, KODETRANS, IDBARANG, TGLTRANS, JENISTRANS, KETERANGAN, MK, SUM(JML) as JML, SUM(TOTALHARGA) as TOTALHARGA 
+                          FROM '.$labelKartuStok.'
+                          WHERE KODETRANS = "'.$resultPesanan->KODEPENGEMBALIANMARKETPLACE.'"
+                          AND JENISTRANS = "RETUR JUAL TIKTOK"
+                          GROUP BY IDBARANG
+                          ORDER BY URUTAN';
+               
+              $queryGroup = $CI->db->query($sqlGroup)->result();
+               
+              $CI->db->where('KODETRANS',$resultPesanan->KODEPENGEMBALIANMARKETPLACE)->where('JENISTRANS','RETUR JUAL TIKTOK')->delete($labelKartuStok);
+               
+              foreach($queryGroup as $itemGroup)
+              {
+                  $param = array(
+                  	"IDPERUSAHAAN"  => $itemGroup->IDPERUSAHAAN,
+                  	"IDLOKASI"      => $itemGroup->IDLOKASI,
+                  	"MODUL"         => $itemGroup->MODUL,
+                  	"IDTRANS"       => $itemGroup->IDTRANS,
+                  	"KODETRANS"     => $itemGroup->KODETRANS,
+                  	"IDBARANG"      => $itemGroup->IDBARANG,
+                  	"KONVERSI1"     => 1,
+                  	"KONVERSI2"     => 1,
+                  	"TGLTRANS"      => $itemGroup->TGLTRANS,
+                  	"JENISTRANS"    => $itemGroup->JENISTRANS,
+                  	"KETERANGAN"    => $itemGroup->KETERANGAN,
+                  	"MK"            => $itemGroup->MK,
+                  	"JML"           => $itemGroup->JML,
+                  	"TOTALHARGA"    => $itemGroup->TOTALHARGA,
+                  	"STATUS"        => '1',
+                  );
+                  $exe = $CI->db->insert($labelKartuStok,$param);
+                   
+              }
+               
+              if($labelKartuStok == "KARTUSTOK")
+              {
+                  $parameter = "";
+                  $idHeader = 0;
+                  
+                  $curl = curl_init();
+        
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => '',
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 30,
+                      CURLOPT_FOLLOWLOCATION => true,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_CUSTOMREQUEST => 'POST',
+                      CURLOPT_POSTFIELDS => array('endpoint' => '/logistics/202309/warehouses','parameter' => $parameter),
+                      CURLOPT_HTTPHEADER => array(
+                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                      ),
+                    ));
+                    
+                    $response = curl_exec($curl);
+                    curl_close($curl);
+                    $ret =  json_decode($response,true);
+                    if($ret['code'] != 0)
                     {
-                        if(explode("*",$produkDataKembali[$t])[1] == explode("*",$produkDataOld[$s])[1])
+                        echo $ret['code']." : ".$ret['message'];
+                    }
+                    else
+                    {
+                        $dataAddress = $ret['data']['warehouses'];
+                        $data['rows'] = [];
+                        for($x = 0 ; $x < count($dataAddress);$x++)
                         {
-                           $indexPengganti = $s;
-                           
-                             //GET NAMA BARANG
-                            $sql = "SELECT NAMABARANG, WARNA, SIZE, SKUTIKTOK as SKU
-                                        FROM MBARANG WHERE SKUTIKTOK = '".explode("*",$produkData[$indexPengganti])[1]."'";
-                            $dataBarang = $CI->db->query($sql)->row();
+                            $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
+                            $return = false;
                             
-                            $sqlOld = "SELECT NAMABARANG, WARNA, SIZE, SKUTIKTOK as SKU
-                                    FROM MBARANG WHERE SKUTIKTOK = '".explode("*",$produkDataOld[$indexPengganti])[1]."'";
-                            $dataBarangOld = $CI->db->query($sqlOld)->row();
-                            
-                            $idBarang = "0";
-                            if(count(explode(" | ",$dataBarang->NAMABARANG)) > 1)
+                            //RENCANA PAKAI YANG RETURN_WAREHOUSE, TAPI KETIKA COBA HIT API STOK NYA, MESTI ERROR, AKHIRNYA PAKE YANG INI
+                            if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
                             {
-                                
-                                if($dataBarang->SIZE != $dataBarangOld->SIZE || $dataBarang->WARNA != $dataBarangOld->WARNA)
-                                {
-                                    
-                                    //GET ID BARANG
-                                    $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
-                                                FROM MBARANG 
-                                                INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
-                                                INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                                WHERE MBARANG.SKUTIKTOK = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'TIKTOK'";
-                
-                                    $dataBarangKembali = $CI->db->query($sql)->row();
-                                    
-                                    
-                                    $param = array(
-                                    	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN??"2",
-                                    	"IDLOKASI"      => $lokasi,
-                                    	"MODUL"         => 'RETUR JUAL',
-                                    	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
-                                    	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
-                                    	"IDBARANG"      => $dataBarangKembali->IDBARANG??"0",
-                                    	"KONVERSI1"     => 1,
-                                    	"KONVERSI2"     => 1,
-                                    	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
-                                    	"JENISTRANS"    => 'RETUR JUAL TIKTOK',
-                                    	"KETERANGAN"    => 'RETUR TIKTOK KE '.$resultPesanan->USERNAME,
-                                    	"MK"            => 'M',
-                                    	"JML"           => explode("*",$produkDataKembali[$t])[0],
-                                    	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
-                                    	"STATUS"        => '1',
-                                    );
-                                    $exe = $CI->db->insert($labelKartuStok,$param);
-                                    $idBarang = $dataBarangKembali->IDBARANG??"0";
-                                }
-                                else
-                                {
-                                    //GET ID BARANG
-                                    $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
-                                                FROM MBARANG 
-                                                INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
-                                                INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                                WHERE MBARANG.SKUTIKTOK = '".$dataBarangOld->SKU."' and MCUSTOMER.NAMACUSTOMER = 'TIKTOK'";
-                
-                                    $dataBarangKembali = $CI->db->query($sql)->row();
-                                    
-                                    
-                                    $param = array(
-                                    	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN,
-                                    	"IDLOKASI"      => $lokasi,
-                                    	"MODUL"         => 'RETUR JUAL',
-                                    	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
-                                    	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
-                                    	"IDBARANG"      => $dataBarangKembali->IDBARANG,
-                                    	"KONVERSI1"     => 1,
-                                    	"KONVERSI2"     => 1,
-                                    	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
-                                    	"JENISTRANS"    => 'RETUR JUAL TIKTOK',
-                                    	"KETERANGAN"    => 'RETUR TIKTOK KE '.$resultPesanan->USERNAME,
-                                    	"MK"            => 'M',
-                                    	"JML"           => explode("*",$produkDataKembali[$t])[0],
-                                    	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * $dataBarangKembali->HARGA),
-                                    	"STATUS"        => '1',
-                                    );
-                                    $exe = $CI->db->insert($labelKartuStok,$param);
-                                    $idBarang = $dataBarangKembali->IDBARANG??"0";
-                                }
-                            }
-                            else
-                            {
-                                 //GET ID BARANG
-                                  $sql = "SELECT MBARANG.IDPERUSAHAAN, MBARANG.IDBARANG, ifnull(MHARGA.HARGAKONSINYASI,0) as HARGA
-                                             FROM MBARANG 
-                                             INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
-                                             INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                             WHERE MBARANG.SKUTIKTOK = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'TIKTOK'";
-                
-                                 $dataBarangKembali = $CI->db->query($sql)->row();
-                                 
-                                 $param = array(
-                                 	"IDPERUSAHAAN"  => $dataBarangKembali->IDPERUSAHAAN??"2",
-                                 	"IDLOKASI"      => $lokasi,
-                                 	"MODUL"         => 'RETUR JUAL',
-                                 	"IDTRANS"       => $resultPesanan->IDPENJUALANMARKETPLACE,
-                                 	"KODETRANS"     => $resultPesanan->KODEPENGEMBALIANMARKETPLACE,
-                                 	"IDBARANG"      => $dataBarangKembali->IDBARANG??"0",
-                                 	"KONVERSI1"     => 1,
-                                 	"KONVERSI2"     => 1,
-                                 	"TGLTRANS"      => $resultPesanan->TGLPENGEMBALIAN,
-                                 	"JENISTRANS"    => 'RETUR JUAL TIKTOK',
-                                 	"KETERANGAN"    => 'RETUR TIKTOK KE '.$resultPesanan->USERNAME,
-                                 	"MK"            => 'M',
-                                 	"JML"           => explode("*",$produkDataKembali[$t])[0],
-                                 	"TOTALHARGA"    => (explode("*",$produkDataKembali[$t])[0] * ($dataBarangKembali->HARGA??"0")),
-                                 	"STATUS"        => '1',
-                                 );
-                                 $exe = $CI->db->insert($labelKartuStok,$param);
-                                 $idBarang = $dataBarangKembali->IDBARANG??"0";
+                                $return = true;
                             }
                             
-                            if($labelKartuStok == "KARTUSTOK")
+                            if($return)
                             {
-                                // $dataBarang = [];
-                                $idlokasiset = $lokasi;
-                                //SET STOK
-                                $curl = curl_init();
-                                $parameter = "";
-                                
-                                curl_setopt_array($curl, array(
-                                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                                  CURLOPT_RETURNTRANSFER => true,
-                                  CURLOPT_ENCODING => '',
-                                  CURLOPT_MAXREDIRS => 10,
-                                  CURLOPT_TIMEOUT => 30,
-                                  CURLOPT_FOLLOWLOCATION => true,
-                                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                  CURLOPT_CUSTOMREQUEST => 'POST',
-                                  CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-                                  CURLOPT_HTTPHEADER => array(
-                                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                  ),
-                                ));
-                                
-                                $response = curl_exec($curl);
-                                curl_close($curl);
-                                $ret =  json_decode($response,true);
-                                $lokasi = 0;
-                                
-                                if($ret['code'] != 0)
-                                {
-                                    echo $ret['error']." LOKASI : ".$ret['message'];
-                                }
-                                else
-                                {
-                                    $dataAddress = $ret['response']['address_list'];
-                                    for($x = 0 ; $x < count($dataAddress);$x++)
-                                    {
-                                        $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                                        $pickup = false;
-                                        for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                                        {
-                                            if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-                                            {
-                                                $pickup = true;
-                                            }
-                                            // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-                                            // {
-                                            //     $default = true;
-                                            // }
-                                        }
-                                        
-                                        if($pickup)
-                                        {
-                                            $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                                        }
-                                    }
-                                    
-                                    if($lokasi == $idlokasiset)
-                                    {
-                                        $modeList = [];
-                                        $countBarang = 0;
-                                        $whereBarang = " and IDBARANG in (";
-                                        foreach($dataBarang as $itemBarang)
-                                        {
-                                    		$whereBarang .= $itemBarang;
-                                    		if($countBarang < count($dataBarang)-1)
-                                    		{
-                                    		    $whereBarang .= ",";
-                                    		}
-                                    		$countBarang++;
-                                        }
-                                        
-                                        $whereBarang .= ")";	
-                                        
-                                        $sql = "select IDPERUSAHAAN, IDBARANGTIKTOK, idindukbarangtiktok, IDBARANG
-                                    				from MBARANG
-                                    				where (1=1) $whereBarang
-                                    				order by idindukbarangtiktok
-                                    				";	
-                                    		
-                                    	$dataHeader = $this->db->query($sql)->result();
-                                    		
-                                         $idHeader = 0;
-                                         $parameter = [];
-                                    	 foreach($dataHeader as $itemHeader)
-                                    	 {
-                                    	     if($itemHeader->idindukbarangtiktok != $idHeader)
-                                    	     {
-                                    	         if(count($parameter) > 0)
-                                    	         {
-                                    	            $curl = curl_init();
-                                                    curl_setopt_array($curl, array(
-                                                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                                                      CURLOPT_RETURNTRANSFER => true,
-                                                      CURLOPT_ENCODING => '',
-                                                      CURLOPT_MAXREDIRS => 10,
-                                                      CURLOPT_TIMEOUT => 30,
-                                                      CURLOPT_FOLLOWLOCATION => true,
-                                                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                                      CURLOPT_CUSTOMREQUEST => 'POST',
-                                                      CURLOPT_POSTFIELDS =>  array(
-                                                      'endpoint' => 'product/update_stock',
-                                                      'parameter' => json_encode($parameter)),
-                                                      CURLOPT_HTTPHEADER => array(
-                                                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                                      ),
-                                                    ));
-                                                      
-                                                    $response = curl_exec($curl);
-                                                    curl_close($curl);
-                                                    $ret =  json_decode($response,true);
-                                                    
-                                                    if($ret['code'] != 0)
-                                                    {
-                                                        $data['success'] = false;
-                                                        $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                                                        die(json_encode($data));
-                                                        print_r($ret);
-                                                    }
-                                    	         }
-                                    	         $idHeader = $itemHeader->idindukbarangtiktok;
-                                    	         
-                                    	         //UPDATE KE TIKTOKNYA
-                                                $parameter = [];
-                                             	$parameter['item_id'] = (int)$itemHeader->idindukbarangtiktok;
-                                             	$parameter['stock_list'] = [];
-                                    	     }
-                                    	     
-                                             $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
-                                             $saldoQty = $result->QTY??0;
-                                            
-                                            $modelId = 0;
-                                            
-                                            if($itemHeader->IDBARANGTIKTOK != $itemHeader->idindukbarangtiktok)
-                                            {
-                                                $modelId = $itemHeader->IDBARANGTIKTOK;
-                                            }
-                                            
-                                             array_push($parameter['stock_list'],array(
-                                                'model_id'      => (int)$modelId,
-                                                'seller_stock'  => array(
-                                                     array('stock' => (int)$saldoQty)
-                                                ))
-                                            );
-                                    	}
-                                    	
-                                    	  
-                                    	$curl = curl_init();
-                                        curl_setopt_array($curl, array(
-                                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                                          CURLOPT_RETURNTRANSFER => true,
-                                          CURLOPT_ENCODING => '',
-                                          CURLOPT_MAXREDIRS => 10,
-                                          CURLOPT_TIMEOUT => 30,
-                                          CURLOPT_FOLLOWLOCATION => true,
-                                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                          CURLOPT_CUSTOMREQUEST => 'POST',
-                                          CURLOPT_POSTFIELDS =>  array(
-                                          'endpoint' => 'product/update_stock',
-                                          'parameter' => json_encode($parameter)),
-                                          CURLOPT_HTTPHEADER => array(
-                                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                                          ),
-                                        ));
-                                          
-                                        $response = curl_exec($curl);
-                                        curl_close($curl);
-                                        $ret =  json_decode($response,true);
-                                        
-                                        if($ret['code'] != 0)
-                                        {
-                                            $data['success'] = false;
-                                            $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                                            die(json_encode($data));
-                                        }
-                                    }
-                                }
+                                $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                                $lokasiReturnTiktok = $dataAddress[$x]['id'];
                             }
                         }
                     }
-                }
+                  
+                  $parameter = [];
+                  
+                  $countBarang = 0;
+                  $whereBarang = " and IDBARANG in (";
+                
+                  foreach($queryGroup as $itemBarang)
+                  {
+                  	$whereBarang .= $itemBarang->IDBARANG;
+                  	if($countBarang < count($queryGroup)-1)
+                  	{
+                  	    $whereBarang .= ",";
+                  	}
+                  	$countBarang++;
+                  }
+                   
+                  $whereBarang .= ")";	
+                  $count = 0;
+                  $sql = "select IDPERUSAHAAN, IDBARANGTIKTOK, IDINDUKBARANGTIKTOK, IDBARANG,SKUTIKTOK,HARGAJUAL
+                  			from MBARANG
+                  			where (1=1) $whereBarang and (IDBARANGTIKTOK is not null and IDBARANGTIKTOK <> 0)
+                  			order by IDINDUKBARANGTIKTOK
+                  			";	
+                   	
+                  $dataHeader = $this->db->query($sql)->result();
+                   
+                  foreach($dataHeader as $itemHeader)
+                  {
+                       if($itemHeader->IDINDUKBARANGTIKTOK != $idHeader)
+                       {
+                           if(count($parameter) > 0)
+                           {
+                              $curl = curl_init();
+                              curl_setopt_array($curl, array(
+                                CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+                                CURLOPT_RETURNTRANSFER => true,
+                                CURLOPT_ENCODING => '',
+                                CURLOPT_MAXREDIRS => 10,
+                                CURLOPT_TIMEOUT => 30,
+                                CURLOPT_FOLLOWLOCATION => true,
+                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                CURLOPT_CUSTOMREQUEST => 'POST',
+                                CURLOPT_POSTFIELDS =>  array(
+                                'endpoint' => '/product/202309/products/'.$idHeader.'/inventory/update',
+                                'parameter' => json_encode($parameter)),
+                                CURLOPT_HTTPHEADER => array(
+                                  'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                                ),
+                              ));
+                                
+                              $response = curl_exec($curl);
+                              curl_close($curl);
+                              $ret =  json_decode($response,true);
+                              
+                              if($ret['code'] != 0)
+                              {
+                                  $data['success'] = false;
+                                  $data['msg'] =  $ret['error']." STOK 1 : ".$ret['message'];
+                                  
+                                  echo $data['code']." : ".$data['msg'];
+                                  // print_r($ret);
+                              }
+                           }
+                           $idHeader = $itemHeader->IDINDUKBARANGTIKTOK;
+                           
+                           //UPDATE KE TIKTOKNYA
+                          $parameter = [];
+                       	$parameter['skus'] = [];
+                       }
+                  	     
+                       $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
+                       $saldoQty = $result->QTY??0;
+                      
+                      $idskuvarian = $itemHeader->IDBARANGTIKTOK;
+                      
+                      if(explode("_",$itemHeader->IDBARANGTIKTOK)[0] == $itemHeader->IDINDUKBARANGTIKTOK)
+                      {
+                          $idskuvarian = explode("_",$itemHeader->IDBARANGTIKTOK)[1];
+                      }
+                      
+                       array_push($parameter['skus'],array(
+                          'id'      => $idskuvarian,
+                          'inventory'  => array(
+                               array(
+                                   'warehouse_id' => $lokasiReturnTiktok,
+                                   'quantity' => (int)$saldoQty
+                              )
+                          ))
+                      );
+                  }
+                  
+                  $curl = curl_init();
+                  curl_setopt_array($curl, array(
+                    CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_MAXREDIRS => 10,
+                    CURLOPT_TIMEOUT => 30,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_CUSTOMREQUEST => 'POST',
+                    CURLOPT_POSTFIELDS =>  array(
+                    'endpoint' =>  '/product/202309/products/'.$idHeader.'/inventory/update',
+                    'parameter' => json_encode($parameter)),
+                    CURLOPT_HTTPHEADER => array(
+                      'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                    ),
+                  ));
+                    
+                  $response = curl_exec($curl);
+                  curl_close($curl);
+                  $ret =  json_decode($response,true);
+                  
+                  if($ret['code'] != 0)
+                  { 
+                      $ret['success'] = false;
+                      $ret['msg'] = $ret['message'];
+                      echo $ret['code']." : ".$ret['msg'];
+                  }
+                  else
+                  {
+                      $parameter = [];
+                  }
+              }
             }
         }
         
 	}
 	
-	public function init($tgl_aw,$tgl_ak,$jenis = 'create_time') {
+	public function setReturBarang(){
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		$nopengembalian = $this->input->post('kodepengembalian')??"";
+		$nopesanan = $this->input->post('kodepesanan')??"";
+	    
+	    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOK = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
+        $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
+
+        $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN, BARANGSAMPAIMANUAL FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'TIKTOK' and BARANGSAMPAIMANUAL = 0 and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."'  ORDER BY KODEPENJUALANMARKETPLACE";
+        $dataRetur = $CI->db->query($sqlRetur)->result();
+		   
+        foreach($dataRetur as $itemRetur)
+        {
+            $CI->db->where("KODEPENGEMBALIANMARKETPLACE", $itemRetur->KODEPENGEMBALIANMARKETPLACE)
+              ->set('BARANGSAMPAIMANUAL',1)
+    	     ->update('TPENJUALANMARKETPLACEDTL');
+    	     
+            $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$idlokasiset);
+        }
+     
+        
+        $data['success'] = true;
+        $data['msg'] = "Pengembalian Barang Manual Atas Pesanan #".$nopesanan." Berhasil Dilakukan";
+        echo(json_encode($data));
+
+	}
+	
+	public function init($tgl_aw,$tgl_ak,$jenis = 'create_time',$showResponse = true) {
 	  
-	    $dateAw = new DateTime($tgl_aw." 00:00:00",new DateTimeZone('+08:00'));
-        $dateAk = new DateTime($tgl_ak." 23:59:59",new DateTimeZone('+08:00'));
+	    $dateAw = new DateTime($tgl_aw." 00:00:00",new DateTimeZone('+00:00'));
+        $dateAk = new DateTime($tgl_ak." 23:59:59",new DateTimeZone('+00:00'));
         $parameter = [];
 	    if($jenis == "update")
 	    {
@@ -7149,19 +6924,20 @@ class Tiktok extends MY_Controller {
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 
         $finalResult = [];
+        $finalData = [];
         $history = [];
-        $parameterhistory = [];
-        $parameterreturnhistory = [];
+        $result = [];
+        $returnhistory = [];
    
         $count = 0;
         $countTotal = 1;
         $nextPageToken = "";
         $newOrder = 0;
         
-        while(count($history) < $countTotal)
+        while(count($result) < $countTotal)
         {
             $urlparameter = "&page_size=100&page_token=".$nextPageToken;
-            array_push($parameterhistory,$urlparameter.json_encode($parameter));
+            array_push($history,($urlparameter.json_encode($parameter)));
             $curl = curl_init();
             
             curl_setopt_array($curl, array(
@@ -7189,23 +6965,24 @@ class Tiktok extends MY_Controller {
             {
                 echo $ret['code']." : ".$ret['message'];
                 $statusok = false;
+                $countTotal = 0;
             }
             else
             {
                 for($x = 0 ;$x < count($ret['data']['orders']); $x++)
                 {
-                    array_push($history, $ret['data']['orders'][$x]);
+                    array_push($result, $ret['data']['orders'][$x]);
                 }
                 $nextPageToken = $ret['data']['next_page_token'];
                 $countTotal = $ret['data']['total_count'];
             }
         }
         
-        for($x = 0  ; $x < count($history); $x++)
+        for($x = 0  ; $x < count($result); $x++)
         {
             $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS,if(MINTGLKIRIM = '0000-00-00 00:00:00','-',MINTGLKIRIM) as MINTGLKIRIM  FROM TPENJUALANMARKETPLACE 
                                     WHERE MARKETPLACE = 'TIKTOK' 
-                                    and KODEPENJUALANMARKETPLACE = '".$history[$x]['id']."'";
+                                    and KODEPENJUALANMARKETPLACE = '".$result[$x]['id']."'";
                                 
             $dataPesananDB = $CI->db->query($sql)->row();
             
@@ -7213,7 +6990,8 @@ class Tiktok extends MY_Controller {
             $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
             $idtrans =  $dataPesananDB->IDTRANS;
             
-            $dataDetail = $history[$x]['line_items'];
+            $dataDetail = $result[$x]['line_items'];
+            $allsku = "";
             for($d = 0 ; $d < count($dataDetail);$d++)
             {
                 //KHUSUS SKU YANG KOSONG
@@ -7239,37 +7017,58 @@ class Tiktok extends MY_Controller {
             $data['IDPENJUALAN']                    = 0;
             $data['MARKETPLACE']                    = "TIKTOK";
             $data['IDPENJUALANDARIMARKETPLACE']     = 0;
-            $data['KODEPENJUALANMARKETPLACE']       = $history[$x]['id'];
-            $data['TGLTRANS']                       = date('Y-m-d H:i:s', $history[$x]['create_time']);
+            $data['KODEPENJUALANMARKETPLACE']       = $result[$x]['id'];
+            $data['TGLTRANS']                       = date('Y-m-d H:i:s', $result[$x]['create_time']);
 ;
-            $data['USERNAME']                       = $history[$x]['recipient_address']['name'];
-            $data['NAME']                           = $history[$x]['recipient_address']['first_name']." ".$history[$x]['recipient_address']['last_name'];
-            $data['TELP']                           = $history[$x]['recipient_address']['phone_number']??"-";
-            $data['ALAMAT']                         = $history[$x]['recipient_address']['full_address'];
-            $data['KOTA']                           = "-";
+            $data['USERNAME']                       = $result[$x]['recipient_address']['name'];
+            $data['NAME']                           = $result[$x]['recipient_address']['first_name']." ".$result[$x]['recipient_address']['last_name'];
+            $data['TELP']                           = $result[$x]['recipient_address']['phone_number']??"-";
+            $data['ALAMAT']                         = $result[$x]['recipient_address']['full_address'];
+            $data['KOTA']                           = "";
             //CARI KOTA
-            for($c = 0 ; $c < count($history[$x]['recipient_address']['district_info']); $c++)
+            for($c = 0 ; $c < count($result[$x]['recipient_address']['district_info']); $c++)
             {
-                if($history[$x]['recipient_address']['district_info'][$c]['address_level_name'] == 'city')
+                if($result[$x]['recipient_address']['district_info'][$c]['address_level_name'] == 'city')
                 {
-                    $data['KOTA'] = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($history[$x]['recipient_address']['district_info'][$c]['address_name']))));
+                    $data['KOTA'] = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($result[$x]['recipient_address']['district_info'][$c]['address_name']))));
                 }
             }
             $data['SKUPRODUK']                      = $allsku;
             $data['SKUPRODUKOLD']                   = $allsku;
             
-            $data['MINTGLKIRIM']                    =  date('Y-m-d H:i:s', $history[$x]['shipping_due_time']);
+            $data['MINTGLKIRIM']                    =  date('Y-m-d H:i:s', $result[$x]['shipping_due_time']);
+            $data['KURIR']                          = $result[$x]['shipping_provider']??"";
+            $data['KODEPACKAGING']                  = $dataDetail[0]['package_id']??"";
+            $data['RESI']                           = $dataDetail[0]['tracking_number']??"";
             
-            $data['METODEBAYAR']                    = str_replace("_"," ",$history[$x]['payment_method_name']);
+            $data['METODEBAYAR']                    = str_replace("_"," ",$result[$x]['payment_method_name']);
             $data['TOTALBARANG']                    = count($dataDetail);
-            $data['TOTALBAYAR']                     = $history[$x]['payment']['total_amount'];
-            $data['TOTALHARGA']                     = $history[$x]['payment']['sub_total']; 
-
-            $data['STATUSMARKETPLACE']              = $history[$x]['status'];
-            $data['STATUS']                         = $this->getStatus($history[$x]['status'])['state'];
-            $data['CATATANPEMBELI']                 = $history[$x]['buyer_message'];
+            $data['TOTALBAYAR']                     = $result[$x]['payment']['total_amount'];
+            $data['TOTALHARGA']                     = $result[$x]['payment']['sub_total']; 
+            
+            
+            $data['STATUSMARKETPLACE']              = $result[$x]['status'];
+            $data['STATUS']                         = $this->getStatus($result[$x]['status'])['state'];
+            $data['CATATANPEMBELI']                 = $result[$x]['buyer_message'];
             $data['CATATANPENJUAL']                 = ($dataPesananDB->CATATANPENJUAL??"");
+            $data['CATATANPENGEMBALIAN']            = ($result[$x]['cancel_reason']??"");
             $data["LASTUPDATED"]                    =  date("Y-m-d H:i:s");
+            
+            
+            if(strtoupper($this->getStatus($result[$x]['status'])['status']) == "DIPROSES")
+            {
+                $invoice = [];
+                $invoice['KODEPESANAN'] = $data['KODEPENJUALANMARKETPLACE'];
+                $invoice['KODEPACKAGING'] = $data["KODEPACKAGING"];
+                $invoice['KURIR'] = $data["KURIR"];
+                $invoice['RESI'] = $data["RESI"];
+                    
+                if (!file_exists(FCPATH."assets/label/tiktok/waybill_". $invoice['KODEPESANAN']."_compressed.pdf")) {
+                  $dataRePrint = $this->reprint([$invoice]);
+                }
+            }
+            
+            array_push($finalData,$data);
             
             if($ada)
             {
@@ -7289,6 +7088,9 @@ class Tiktok extends MY_Controller {
                     'SKUPRODUKOLD'                      => $data['SKUPRODUKOLD'],
                     'KODEPENGAMBILAN'                   => $data['KODEPENGAMBILAN'],
                     'MINTGLKIRIM'                       => $data['MINTGLKIRIM'],
+                    'KODEPACKAGING'                     => $data['KODEPACKAGING'],
+                    'KURIR'                             => $data['KURIR'],
+                    'RESI'                              => $data['RESI'],
                     'METODEBAYAR'                       => $data['METODEBAYAR'],
                     'TOTALBARANG'                       => $data['TOTALBARANG'],
                     'TOTALBAYAR'                        => $data['TOTALBAYAR'],
@@ -7298,6 +7100,7 @@ class Tiktok extends MY_Controller {
                     'STATUS'                            => $data['STATUS'],
                     'CATATANPEMBELI'                    => $data['CATATANPEMBELI'],
                     'CATATANPENJUAL'                    => $data['CATATANPENJUAL'],
+                    'CATATANPENGEMBALIAN'               => $data['CATATANPENGEMBALIAN'],
                     "LASTUPDATED"                       =>  date("Y-m-d H:i:s")
                 ));
                
@@ -7343,1154 +7146,591 @@ class Tiktok extends MY_Controller {
                     ));
                 }
             } 
-            
-            
         }
         
-        // print_r($history);
-	   
-        // $nopesanan = "";
-        // for($x = 0 ; $x < count($result);$x++)
-        // {
-        //     $nopesanan .= $result[$x]['KODEPESANAN'];
-        //     if(($x % 49 == 0 && $x != 0) || $x == count($result)-1)
-        //     {
-        //         //GET ORDER DETAIL
-        //         $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-        //         // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-        //         // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
+        //CEK LOKASI PICKUP
+        $lokasi = "1";
+        $parameter="";
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/logistics/202309/warehouses','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            echo $ret['code']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataAddress = $ret['data']['warehouses'];
+            $data['rows'] = [];
+            for($x = 0 ; $x < count($dataAddress);$x++)
+            {
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
+                $pickup = false;
                 
-        //         $curl = curl_init();
-            
-        //         curl_setopt_array($curl, array(
-        //           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-        //           CURLOPT_RETURNTRANSFER => true,
-        //           CURLOPT_ENCODING => '',
-        //           CURLOPT_MAXREDIRS => 10,
-        //           CURLOPT_TIMEOUT => 30,
-        //           CURLOPT_FOLLOWLOCATION => true,
-        //           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        //           CURLOPT_CUSTOMREQUEST => 'POST',
-        //           CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-        //           CURLOPT_HTTPHEADER => array(
-        //             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-        //           ),
-        //         ));
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+                {
+                    $pickup = true;
+                }
                 
-        //         $response = curl_exec($curl);
-        //         curl_close($curl);
-        //         $ret =  json_decode($response,true);
-        //         if($ret['code'] != 0)
-        //         {
-        //             echo $ret['code']." : ".$ret['message'];
-        //             $statusok = false;
-        //         }
-        //         else
-        //         {
-        //              for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-        //              {
-        //                 $dataDetail = $ret['response']['order_list'][$y];
-        //                 $allsku = "";
-        //                 $jml = 0;
-                        
-        //                 //URUTKAN BERDASARKAN NAMA BARANG
-        //                 usort($dataDetail['item_list'], function($a, $b) {
-        //                     return strcmp($a['item_name'], $b['item_name']);
-        //                 });
-                        
-        //                 for($d = 0 ; $d < count($dataDetail['item_list']);$d++)
-        //                 {
-        //                     //KHUSUS SKU YANG KOSONG
-        //                     if($dataDetail['item_list'][$d]['model_sku'] == "")
-        //                     {
-        //                         $sku = $dataDetail['item_list'][$d]['item_sku'];
-        //                     }
-        //                     else
-        //                     {  
-        //                         $sku = $dataDetail['item_list'][$d]['model_sku'];
-        //                     }
-                            
-        //                     if(strpos(strtoupper($dataDetail['item_list'][$d]['item_name']),"BIRTHDAY CARD") !== false){
-        //                         $sku = "LTWS";
-        //                     }
-        //                     else if(strpos(strtoupper($dataDetail['item_list'][$d]['item_name']),"NEWBORN CARD") !== false){
-        //                         $sku = "CARD-BOX-OTHER";
-        //                     }
-        //                     $jml += $dataDetail['item_list'][$d]['model_quantity_purchased'];
-        //                     $allsku .= $dataDetail['item_list'][$d]['model_quantity_purchased']."*".$sku."|";
-        //                 }
-                        
-        //                 $allsku = substr($allsku, 0, -1);
-                        
-        //                 $catatanBeli = "<div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
-        //                                                         white-space: -moz-pre-wrap; /* Firefox */    
-        //                                                         white-space: -pre-wrap;     /* Opera <7 */   
-        //                                                         white-space: -o-pre-wrap;   /* Opera 7 */    
-        //                                                         word-wrap: break-word;      /* IE */'>".$dataDetail['message_to_seller']."</div>";
-                                                                
-        //                 $catatanJual = "<div style='width:250px; white-space: pre-wrap;      /* CSS3 */   
-        //                                                         white-space: -moz-pre-wrap; /* Firefox */    
-        //                                                         white-space: -pre-wrap;     /* Opera <7 */   
-        //                                                         white-space: -o-pre-wrap;   /* Opera 7 */    
-        //                                                         word-wrap: break-word;      /* IE */'>".$dataDetail['message_to_seller']."</div>";
-                        
-        //                 $data;
-        //                 //DAPATKAN RESI
-        //                 $data['ALLBARANG']                      = $dataDetail['item_list'];
-        //                 $data['IDPENJUALAN']                    = 0;
-        //                 $data['MARKETPLACE']                    = "TIKTOK";
-        //                 $data['KODEPENJUALANMARKETPLACE']       = $dataDetail['order_sn'];
-        //                 $data['TGLTRANS']                       = date("Y-m-d H:i:s", $dataDetail['create_time']);
-        //                 $data['USERNAME']                       = $dataDetail['buyer_username']??"-";
-        //                 $data['NAME']                           = $dataDetail['recipient_address']['name'];
-        //                 $data['TELP']                           = $dataDetail['recipient_address']['phone'];
-        //                 $data['ALAMAT']                         = $dataDetail['recipient_address']['full_address'];
-        //                 $data['KOTA']                           = $dataDetail['recipient_address']['city'];
-        //                 $data['KURIR']                          = $dataDetail['shipping_carrier'];
-        //                 $data['KODEPACKAGING']                  = $dataDetail['package_list'][0]['package_number'];
-        //                 $data['RESI']                           = "";
-        //                 $data['SKUPRODUK']                      = $allsku;
-        //                 $data['SKUPRODUKOLD']                   = $allsku;
-        //                 $data['MINTGLKIRIM']                    = date("Y-m-d H:i:s", $dataDetail['ship_by_date']);
-        //                 $data['METODEBAYAR']                    = $dataDetail['payment_method'];
-        //                 $data['TOTALBARANG']                    = $jml;
-        //                 $data['TOTALBAYAR']                     = $dataDetail['total_amount'];
-        //                 $data['STATUSMARKETPLACE']              = $dataDetail['order_status'];
-        //                 $data['STATUS']                         = $this->getStatus($dataDetail['order_status'])['state'];
-        //                 $data['CATATANPEMBELI']                 = $dataDetail['message_to_seller'];
-        //                 $data['CATATANPENJUAL']                 = $dataDetail['note'];
-        //                 $data['CATATANPENGEMBALIAN']            = $dataDetail['buyer_cancel_reason'];
-        //                 $data["LASTUPDATED"]                    =  date("Y-m-d H:i:s");
-                  
-        //                 array_push($finalData,$data);     
-        //              }
-        //         }
-        //         $nopesanan = "";
-        //     }
-        //     else
-        //     {
-        //         $nopesanan .= "%2C";
-        //     }
-            
-        // }
+                if($pickup)
+                {
+                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                }
+            }
+        }
         
-        
-        
-//         $parameter = [];
-//         $packaging = [];
-//         $indexPackaging = 0;
-        
-//         for($f = 0 ; $f < count($finalData);$f++){
-//             $packaging[count($packaging)]['package_number'] = $finalData[$f]['KODEPACKAGING'];
-//             if(($f % 49 == 0 && $f != 0) || $f == count($finalData)-1)
-//             {
-//                 //GET RESI
-//                 $parameter['package_list'] =  $packaging;
-//                 $curl = curl_init();
-                
-//                 curl_setopt_array($curl, array(
-//                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//                   CURLOPT_RETURNTRANSFER => true,
-//                   CURLOPT_ENCODING => '',
-//                   CURLOPT_MAXREDIRS => 10,
-//                   CURLOPT_TIMEOUT => 30,
-//                   CURLOPT_FOLLOWLOCATION => true,
-//                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                   CURLOPT_CUSTOMREQUEST => 'POST',
-//                   CURLOPT_POSTFIELDS =>  array(
-//                   'endpoint' => 'logistics/get_mass_tracking_number',
-//                   'parameter' => json_encode($parameter)),
-//                   CURLOPT_HTTPHEADER => array(
-//                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                   ),
-//                 ));
-                  
-//                 $response = curl_exec($curl);
-//                 curl_close($curl);
-//                 $ret =  json_decode($response,true);
-//                 if($ret['code'] != 0)
-//                 {
-//                     echo $ret['code']." : ".$ret['message'];
-//                     $statusok = false;
-//                 }
-//                 else
-//                 {
-//                     for($x = 0 ;$x < count($ret['response']['success_list']); $x++)
-//                     {
-//                       $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACE 
-//                                     WHERE MARKETPLACE = 'TIKTOK' 
-//                                     and KODEPENJUALANMARKETPLACE = '".$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE']."'";
-                                
-//                         $dataPesananDB = $CI->db->query($sql)->row();
-                        
-//                         $ada = $dataPesananDB->ADA;
-//                         $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
-                        
-//                         $finalData[$indexPackaging]['RESI'] = $ret['response']['success_list'][$x]['tracking_number'];
-//                         $finalData[$indexPackaging]['KODEPENGAMBILAN'] = $ret['response']['success_list'][$x]['pickup_code'];
-                        
-//                         if($ada)
-//                         {
-//                             $CI->db->where("KODEPENJUALANMARKETPLACE",$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'])
-//                             ->where('MARKETPLACE',"TIKTOK")
-//         		            ->updateRaw("TPENJUALANMARKETPLACE", array(
-//                                 'USERNAME'                   => $finalData[$indexPackaging]['USERNAME']??"-",
-//                                 'NAME'                       => $finalData[$indexPackaging]['NAME'],
-//                                 'TELP'                       => $finalData[$indexPackaging]['TELP'],
-//                                 'ALAMAT'                     => $finalData[$indexPackaging]['ALAMAT'],
-//                                 'KOTA'                       => $finalData[$indexPackaging]['KOTA'],
-//                                 'KURIR'                      => $finalData[$indexPackaging]['KURIR'],
-//                                 'KODEPENGAMBILAN'            => $finalData[$indexPackaging]['KODEPENGAMBILAN'],
-//                                 'KODEPACKAGING'              => $finalData[$indexPackaging]['KODEPACKAGING'],
-//                                 'RESI'                       => $finalData[$indexPackaging]['RESI'],
-//                                 'MINTGLKIRIM'                => $finalData[$indexPackaging]['MINTGLKIRIM'],
-//                                 'METODEBAYAR'                => $finalData[$indexPackaging]['METODEBAYAR'],
-//                                 'TOTALBARANG'                => $finalData[$indexPackaging]['TOTALBARANG'],
-//                                 'TOTALBAYAR'                 => $finalData[$indexPackaging]['TOTALBAYAR'],
-//                                 'STATUSMARKETPLACE'          => $finalData[$indexPackaging]['STATUSMARKETPLACE'],
-//                                 'STATUS'                     => $finalData[$indexPackaging]['STATUS'],
-//                                 'CATATANPEMBELI'             => $finalData[$indexPackaging]['CATATANPEMBELI'],
-//                                 'CATATANPENJUAL'             => $finalData[$indexPackaging]['CATATANPENJUAL'],
-//                                 'CATATANPENGEMBALIAN'        => $finalData[$indexPackaging]['CATATANPENGEMBALIAN'],
-//                                 "LASTUPDATED"                =>  date("Y-m-d H:i:s")
-//         		            ));
-//                         }
-//                         else
-//                         {
-//                             $detailBarang = $finalData[$indexPackaging]['ALLBARANG'];
-                            
-//                             unset($finalData[$indexPackaging]['ALLBARANG']);
-                            
-//                             $newOrder++;
-//                             $CI->db->insertRaw("TPENJUALANMARKETPLACE",$finalData[$indexPackaging]);
-                            
-//                             $idtrans = $CI->db->insert_id();
-//                             $urutan = 0;
-//                             foreach($detailBarang as $itemBarang){
-//                                 $urutan++;
-                                
-//                               //KHUSUS SKU YANG KOSONG
-//                                 if($itemBarang['model_sku'] == "")
-//                                 {
-//                                     $sku = $itemBarang['item_sku'];
-//                                 }
-//                                 else
-//                                 {  
-//                                     $sku = $itemBarang['model_sku'];
-//                                 }
-                            
-//                                 if(strpos(strtoupper($itemBarang['item_name']),"BIRTHDAY CARD") !== false){
-//                                     $sku = "LTWS";
-//                                 }
-//                                 else if(strpos(strtoupper($itemBarang['item_name']),"NEWBORN CARD") !== false){
-//                                     $sku = "CARD-BOX-OTHER";
-//                                 }
-                            
-//                                 $sqlBarang = "select idbarang from mbarang where SKUTIKTOK = '$sku'";
-//                                 $queryBarang = $CI->db->query($sqlBarang)->row();
-                                
-//                                 $CI->db->insertRaw("TPENJUALANMARKETPLACEDTL",
-//                                 array(
-//                                     'IDPENJUALANMARKETPLACE'    => $idtrans,
-//                                     'KODEPENJUALANMARKETPLACE'  => $finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'],
-//                                     'IDBARANG'                  => $queryBarang->IDBARANG??0,
-//                                     'MARKETPLACE'               => 'TIKTOK',
-//                                     'SKU'                       => $sku,
-//                                     'URUTAN'                    => $urutan,
-//                                     'JML'                       => $itemBarang['model_quantity_purchased'],
-//                                     'HARGA'                     => $itemBarang['model_discounted_price'],
-//                                     'TOTAL'                     => ($itemBarang['model_quantity_purchased'] * $itemBarang['model_discounted_price']),
-//             		            ));
-//                             }
-//                         }
-                        
-//                         $indexPackaging++;
-//                     }
-//                 }
-                
-//                 $packaging = [];
-//             }
-//         }
-        
-//         //CEK LOKASI PICKUP
-//         $lokasi = "0";
-//         $parameter="";
-//         $curl = curl_init();
-        
-//         curl_setopt_array($curl, array(
-//           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-//           CURLOPT_RETURNTRANSFER => true,
-//           CURLOPT_ENCODING => '',
-//           CURLOPT_MAXREDIRS => 10,
-//           CURLOPT_TIMEOUT => 30,
-//           CURLOPT_FOLLOWLOCATION => true,
-//           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//           CURLOPT_CUSTOMREQUEST => 'POST',
-//           CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-//           CURLOPT_HTTPHEADER => array(
-//             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//           ),
-//         ));
-        
-//         $response = curl_exec($curl);
-//         curl_close($curl);
-//         $ret =  json_decode($response,true);
-//         if($ret['code'] != 0)
-//         {
-//             echo $ret['code']." : ".$ret['message'];
-//         }
-//         else
-//         {
-//             $dataAddress = $ret['response']['address_list'];
-//             $data['rows'] = [];
-//             for($x = 0 ; $x < count($dataAddress);$x++)
-//             {
-//                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-//                 $pickup = false;
-//                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-//                 {
-//                     if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-//                     {
-//                         $pickup = true;
-//                     }
-//                     // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-//                     // {
-//                     //     $default = true;
-//                     // }
-//                 }
-                
-//                 if($pickup)
-//                 {
-//                     $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-//                 }
-//             }
-//         }
-        
-// 	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
+	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
 	    
-//         for($f = 0 ; $f < count($finalData) ; $f++)
-//         {
-//             //INSERT KARTUSTOK
-//             if($this->getStatus($finalData[$f]['STATUSMARKETPLACE'])['state'] != 1 && $finalData[$f]['STATUSMARKETPLACE'] != "CANCELLED" )
-//             {
-//                 $this->insertKartuStokPesanan($finalData[$f]['KODEPENJUALANMARKETPLACE'],$finalData[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
-//             }
-//         }
-//         //CEK LOKASI PICKUP
+        for($f = 0 ; $f < count($finalData) ; $f++)
+        {
+            //INSERT KARTUSTOK
+            if($this->getStatus($finalData[$f]['STATUSMARKETPLACE'])['state'] != 1 && $finalData[$f]['STATUSMARKETPLACE'] != "CANCELLED" )
+            {
+                $this->insertKartuStokPesanan($finalData[$f]['KODEPENJUALANMARKETPLACE'],$finalData[$f]['TGLTRANS'],$tglStokMulai,$lokasi);
+            }
+        }
+        //CEK LOKASI PICKUP
         
-//         //PRINT
-//         $invoice = [];
-// 		$kurir = [];
-// 		$files = [];
-// 		$parameter = [];
-		
-// 		foreach($finalData as $item)
-// 		{
-		   
-//         	$file = FCPATH."assets/label/waybill_".$item['KODEPENJUALANMARKETPLACE'].".pdf";
-//         	$fileCompressed = FCPATH."assets/label/waybill_".$item['KODEPENJUALANMARKETPLACE']."_compressed.pdf";
-//         	//JIKA DIA DIPROSES dan SIAP DIKIRIM, CEK DULU ADA APA NDAK BARANGNYA, KALAU NDAK ADA BARU BUAT
-//     		if(strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "DIPROSES" || (strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "SIAP DIKIRIM" && $item['KODEPENGAMBILAN'] != ""))
-//         	{
-        		    
-//         		 if (!file_exists($fileCompressed)) {
-//             		    $ada = false;
-//             		    for($x = 0 ; $x < count($kurir) ; $x++)
-//             		    {
-//             		        if($kurir[$x] == $item["KURIR"])
-//             		        {
-//             		            $ada = true;
-//             		        }
-//             		    }
-            		    
-//             		    if(!$ada)
-//             		    {
-//             		       array_push($kurir,$item["KURIR"]) ;
-//             		    }
-//             		    $index = count($invoice);
-//                         $invoice[$index]['order_sn'] = $item["KODEPENJUALANMARKETPLACE"];
-//                         $invoice[$index]['package_number'] = $item["KODEPACKAGING"];
-//                         $invoice[$index]['kurir'] = $item["KURIR"];
-//                         $invoice[$index]['tracking_number'] = $item["RESI"];
-//                         $invoice[$index]['shipping_document_type'] = "";
-//         		}
-// 		    }
-//     		else
-//     		{
-//     		    //KALAU DALAM PENGIRIMAN, HAPUS AJA PDF SISA
-//     		   if(strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "DALAM PENGIRIMAN")
-//               {
-//                  unlink($file);
-//                  unlink($fileCompressed);
-//               }
-//     		}
-// 		}
-		
-		
-// 		for($a = 0 ; $a < count($kurir); $a++)
-// 		{
-// 		    $invoiceKirim = [];
-//     		for($f = 0 ; $f < count($invoice);$f++){
-//     		    if($kurir[$a] == $invoice[$f]['kurir'])
-//     		    {
-//     		        array_push($invoiceKirim, $invoice[$f]);
-//     		    }
-//     		}
-    		
-//         	$params=[];
-//         	for($f = 0 ; $f < count($invoiceKirim);$f++){
-        	    
-//         	    array_push($params,$invoiceKirim[$f]);
-//                 if(($f % 49 == 0 && $f != 0) || $f == count($invoiceKirim)-1)
-//                 {
-//             		$parameter = [];
-//             		$parameter['order_list'] = $params;
-            		
-//             		  //GET RESI
-//                     $curl = curl_init();
-                    
-//                     curl_setopt_array($curl, array(
-//                       CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//                       CURLOPT_RETURNTRANSFER => true,
-//                       CURLOPT_ENCODING => '',
-//                       CURLOPT_MAXREDIRS => 10,
-//                       CURLOPT_TIMEOUT => 30,
-//                       CURLOPT_FOLLOWLOCATION => true,
-//                       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                       CURLOPT_CUSTOMREQUEST => 'POST',
-//                       CURLOPT_POSTFIELDS =>  array(
-//                       'endpoint' => 'logistics/get_shipping_document_parameter',
-//                       'parameter' => json_encode($parameter)),
-//                       CURLOPT_HTTPHEADER => array(
-//                         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                       ),
-//                     ));
-                      
-//                     $response = curl_exec($curl);
-//                     curl_close($curl);
-//                     $ret =  json_decode($response,true);
-// 		            $data = [];
-//                     if($ret['code'] != 0)
-//                     {
-//                         $data['success'] = false;
-//                         $data['msg'] =   "1 ".$ret['code']." : ".$ret['message'];
-//                         $data['ret'] = $ret;
-//                         die(json_encode($data));
-//                     }
-//                     else
-//                     {
-                        
-//                         $dataDocumentType = $ret['response']['result_list'];
-                    
-//                         $indexCetak = 0;
-//                         foreach($parameter['order_list'] as $item)
-//                     	{
-//                             foreach($dataDocumentType as $itemDocumentType)
-//                             {
-//                         	    if($item['order_sn'] == $itemDocumentType['order_sn'])
-//                         	    {
-//                         	        $parameter['order_list'][$indexCetak]['shipping_document_type'] =  $itemDocumentType['suggest_shipping_document_type']??"NORMAL_AIR_WAYBILL";
-//                         	        $indexCetak++;
-//                         	    }
-//                             }
-//                     	}
-                    	
-//                     	//BUAT LABEL PESANAN
-                    	
-//                         $curl = curl_init();
-                        
-//                         curl_setopt_array($curl, array(
-//                           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//                           CURLOPT_RETURNTRANSFER => true,
-//                           CURLOPT_ENCODING => '',
-//                           CURLOPT_MAXREDIRS => 10,
-//                           CURLOPT_TIMEOUT => 30,
-//                           CURLOPT_FOLLOWLOCATION => true,
-//                           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                           CURLOPT_CUSTOMREQUEST => 'POST',
-//                           CURLOPT_POSTFIELDS =>  array(
-//                           'endpoint' => 'logistics/create_shipping_document',
-//                           'parameter' => json_encode($parameter)),
-//                           CURLOPT_HTTPHEADER => array(
-//                             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                           ),
-//                         ));
-                          
-//                         $response = curl_exec($curl);
-//                         curl_close($curl);
-//                         $ret =  json_decode($response,true);
-// 		                $data = [];
-//                         if($ret['code'] != 0)
-//                         {
-//                             $data['success'] = false;
-//                             $data['msg'] =  "2 ".$ret['code']." : ".$ret['message'];
-//                             $data['ret'] = $ret;
-//                             die(json_encode($data));
-//                         }
-//                         else
-//                         {
-//                             // DAPATKAN HASIL LABEL PESANAN
-//                             $curl = curl_init();
-//                             curl_setopt_array($curl, array(
-//                               CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//                               CURLOPT_RETURNTRANSFER => true,
-//                               CURLOPT_ENCODING => '',
-//                               CURLOPT_MAXREDIRS => 10,
-//                               CURLOPT_TIMEOUT => 30,
-//                               CURLOPT_FOLLOWLOCATION => true,
-//                               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                               CURLOPT_CUSTOMREQUEST => 'POST',
-//                               CURLOPT_POSTFIELDS =>  array(
-//                               'endpoint' => 'logistics/get_shipping_document_result',
-//                               'parameter' => json_encode($parameter)),
-//                               CURLOPT_HTTPHEADER => array(
-//                                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                               ),
-//                             ));
-                                  
-//                             $response = curl_exec($curl);
-//                             curl_close($curl);
-//                             $ret =  json_decode($response,true);
-                                
-//                             if($ret['code'] != 0)
-//                             {
-//                                 $data['success'] = false;
-//                                 $data['msg'] =   "3 ".$ret['code']." : ".$ret['message'];
-//                                 $data['ret'] = $ret;
-//                                 die(json_encode($data));
-//                             }
-//                             else
-//                             {
-//                                 $dataDocumentDownload = $ret['response']['result_list'];
-                                
-                                
-//                                 foreach($dataDocumentDownload as $itemDocumentDownload)
-//                                 {
-//                                     $invoiceKirim = [];
-//                                     $index = count($invoiceKirim);
-//                                 	$invoiceKirim[$index]['order_sn'] = $itemDocumentDownload['order_sn'];
-//                                 	$invoiceKirim[$index]['package_number'] = $itemDocumentDownload['package_number'];
-//                                 	$parameter = [];
-//                                     $parameter['order_list'] = $invoiceKirim;
-//                                     	//DAPATKAN HASIL LABEL PESANAN
-//                                     $curl = curl_init();
-//                                     curl_setopt_array($curl, array(
-//                                       CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//                                       CURLOPT_RETURNTRANSFER => true,
-//                                       CURLOPT_ENCODING => '',
-//                                       CURLOPT_MAXREDIRS => 10,
-//                                       CURLOPT_TIMEOUT => 30,
-//                                       CURLOPT_FOLLOWLOCATION => true,
-//                                       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                                       CURLOPT_CUSTOMREQUEST => 'POST',
-//                                       CURLOPT_POSTFIELDS =>  array(
-//                                       'endpoint' => 'logistics/download_shipping_document',
-//                                       'parameter' => json_encode($parameter)),
-//                                       CURLOPT_HTTPHEADER => array(
-//                                         'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                                       ),
-//                                     ));
-                                      
-//                                     $response = curl_exec($curl);
-//                                     $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-//                                     $content_type = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-                                    
-//                                     curl_close($curl);
-//                                     $ret =  json_decode($response,true);
-//                                     if($ret['code'] != 0)
-//                                     {
-//                                         $data['success'] = false;
-//                                         $data['msg'] =   "4 ".$ret['code']." : ".$ret['message'];
-//                                         $data['ret'] = $ret;
-//                                          die(json_encode($data));
-//                                     }
-//                                     else
-//                                     {
-//                                         // Save the file if request is successful
-//                                         if ($http_code == 200) {
-//                                             file_put_contents("assets/label/waybill_".$invoiceKirim[0]['order_sn'].".pdf", $response);
-                                            
-//                                             $input = FCPATH . "assets/label/waybill_".$invoiceKirim[0]['order_sn'].".pdf";
-//                                             $output = FCPATH . "assets/label/waybill_".$invoiceKirim[0]['order_sn']."_compressed.pdf";
-                                            
-//                                             $cmd = "gs -sDEVICE=pdfwrite \
-//                                                   -dDEVICEWIDTHPOINTS=283 \
-//                                                   -dDEVICEHEIGHTPOINTS=425 \
-//                                                   -dPDFFitPage \
-//                                                   -dNOPAUSE -dQUIET -dBATCH \ -sOutputFile='$output' '$input'";
-                                            
-//                                             exec($cmd, $outputLines, $status);
-//                                             $data['success'] = true;
-//                                             $data['order_sn'] = $invoiceKirim[0]['order_sn'];
-//                                         } else {
-//                                             $data['success'] = false;
-//                                             $data['msg'] =  "Failed to download file. HTTP Status: $http_code\n";
-//                                             die(json_encode($data));
-//                                         }
-//                                     }
-//                                 }
-//                             }
-//                         }
-                
-//                     }
-                    
-//         	        $params=[];
-//                 }
-//         	}
-// 		}
-		
-// 		//TOTALPENDAPATANPENJUAL
-// 		$params=[];
-//         for($f = 0 ; $f < count($finalData);$f++){
+        
+        //PENDAPATAN PENJUAL
+        //UNSETTLED
+        $dataUnsettled = [];
+        $curl = curl_init();
+        $parameter = "&sort_field=order_create_time&page_size=100&search_time_ge=".$dateAw->getTimestamp()."&search_time_lt=". $dateAk->getTimestamp();
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202507/orders/unsettled','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            echo $ret['code']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataUnsettled = $ret['data']['transactions'];
+        }
+        
+        for($x = 0 ; $x < count($finalData) ; $x++)
+        {
+            $totalPendapatan = 0;
+            $ada = false;
+            if($this->getStatus($finalData[$x]['STATUSMARKETPLACE'])['state'] != 3)
+            {
+                for($u = 0; $u < count($dataUnsettled); $u++)
+                {
+                    if($dataUnsettled[$u]['order_id'] == $finalData[$x]['KODEPENJUALANMARKETPLACE'])
+                    {
+                        $totalPendapatan = $dataUnsettled[$u]['est_settlement_amount'];
+                        $ada = true;
+                    }
+                }
+            }
+            else if($finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
+            {
+               $curl = curl_init();
+               $parameter = "";
+               curl_setopt_array($curl, array(
+                 CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202501/orders/'.$finalData[$x]['KODEPENJUALANMARKETPLACE'].'/statement_transactions','parameter' => $parameter),
+                 CURLOPT_HTTPHEADER => array(
+                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
+               ));
+               
+               $response = curl_exec($curl);
+               curl_close($curl);
+               $ret =  json_decode($response,true);
+               if($ret['code'] != 0)
+               {
+                   echo $ret['code']." : ".$ret['message'];
+               }
+               else
+               {
+                   $totalPendapatan = $ret['data']['settlement_amount'];
+                   $ada = true;
+               }
+            }
+            else if($finalData[$x]['STATUSMARKETPLACE'] == 'CANCELLED')
+            {
+                $ada = true;
+            }
             
-//             array_push($params,$finalData[$f]['KODEPENJUALANMARKETPLACE']);
-//               if(($f % 49 == 0 && $f != 0) || $f == count($finalData)-1)
-//               {
-//           		$parameter = [];
-//           		$parameter['order_sn_list'] = $params;
-          		
-//           		  //GET RESI
-//                   $curl = curl_init();
-                  
-//                   curl_setopt_array($curl, array(
-//                     CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//                     CURLOPT_RETURNTRANSFER => true,
-//                     CURLOPT_ENCODING => '',
-//                     CURLOPT_MAXREDIRS => 10,
-//                     CURLOPT_TIMEOUT => 30,
-//                     CURLOPT_FOLLOWLOCATION => true,
-//                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                     CURLOPT_CUSTOMREQUEST => 'POST',
-//                     CURLOPT_POSTFIELDS =>  array(
-//                     'endpoint' => 'payment/get_escrow_detail_batch',
-//                     'parameter' => json_encode($parameter)),
-//                     CURLOPT_HTTPHEADER => array(
-//                       'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                     ),
-//                   ));
-                    
-//                   $response = curl_exec($curl);
-//                   curl_close($curl);
-//                   $ret =  json_decode($response,true);
-// 		          $data = [];
-//                   if($ret['code'] != 0)
-//                   {
-//                       $data['success'] = false;
-//                       $data['msg'] =   "1 ".$ret['code']." : ".$ret['message'];
-//                       $data['ret'] = $ret;
-//                       die(json_encode($data));
-//                   }
-//                   else
-//                   {
-                      
-//                       $dataPendapatan = $ret['response'];
-                      
-//                       foreach($dataPendapatan as $itemPendapatan)
-//                       {
-//                           $CI->db->where("KODEPENJUALANMARKETPLACE",$itemPendapatan['escrow_detail']['order_sn'])
-//     		              ->where('MARKETPLACE','TIKTOK')
-//     		              ->updateRaw("TPENJUALANMARKETPLACE", array(
-//     		                  'TOTALHARGA'               =>  $itemPendapatan['escrow_detail']['buyer_payment_info']['merchant_subtotal'], 
-//     		                  'TOTALPENDAPATANPENJUAL'   =>  $itemPendapatan['escrow_detail']['order_income']['escrow_amount'],
-//     		                  "LASTUPDATED"              =>  date("Y-m-d H:i:s")
-//     		                ));
-//                       }
-              
-//                   }
-                  
-//                 $params=[];
-//               }
-//         }
+            if($ada)
+            {
+             $CI->db->where("KODEPENJUALANMARKETPLACE",$finalData[$x]['KODEPENJUALANMARKETPLACE'])
+    		              ->where('MARKETPLACE','TIKTOK')
+    		              ->updateRaw("TPENJUALANMARKETPLACE", array(
+    		                  'TOTALPENDAPATANPENJUAL'   =>  $totalPendapatan,
+    		                  "LASTUPDATED"              =>  date("Y-m-d H:i:s")
+    		                ));
+            }
+        }
+        
+		//RETURN 
 		
 		
-// 		//RETURN 
-//         $bigger = false;
-//         $cursor = 0;
-//         $more = true;
-//         $statusok = true; 
-//         $tglTemp = $tgl_aw." 00:00:00"; 
-//         $dateAk = new DateTime($tgl_ak." 23:59:59");
-//         $tglcobaAW;
-//         $tglcobaAK;
-//         $returnhistory = [];
-//         while(!$bigger && $statusok)
-//         {
-//             $dateAw = new DateTime($tglTemp);
-//             $dateTemp = new DateTime($tglTemp);
-//             $tglTempAdd = $dateTemp->modify('+14 days')->format('Y-m-d')." 23:59:59"; // Add 15 days
-//             $dateTemp = new DateTime($tglTempAdd);    
-//             if($dateTemp >= $dateAk)
-//             {
-//                 $tglcobaAW = $tglTemp;
-//                 $tglcobaAK = $tgl_ak." 23:59:59";
-                
-//                 $bigger = true;
-//                 $tglAw = $dateAw->getTimestamp();
-//                 $tglAk = $dateAk->getTimestamp();
-//             }
-//             else
-//             {
-//                 $tglcobaAW = $tglTemp;
-//                 $tglcobaAK = $tglTempAdd;
-                
-//                 $tglAw = $dateAw->getTimestamp();
-//                 $tglAk = $dateTemp->getTimestamp();
-//             }
-                 
-//             while($more  && $statusok)
-//             {
-//                  $parameter = "&create_time_from=".$tglAw."&create_time_to=".$tglAk."&page_size=100&page_no=".$cursor;
-//                  array_push($returnhistory, $parameter);
-//                  $curl = curl_init();
-//                 //GET ORDER LIST
-//                  curl_setopt_array($curl, array(
-//                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-//                   CURLOPT_RETURNTRANSFER => true,
-//                   CURLOPT_ENCODING => '',
-//                   CURLOPT_MAXREDIRS => 10,
-//                   CURLOPT_TIMEOUT => 30,
-//                   CURLOPT_FOLLOWLOCATION => true,
-//                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                   CURLOPT_CUSTOMREQUEST => 'POST',
-//                   CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_list','parameter' => $parameter),
-//                   CURLOPT_HTTPHEADER => array(
-//                      'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                   ),
-//                  ));
-                 
-//                  $response = curl_exec($curl);
-//                  curl_close($curl);
-//                  $ret =  json_decode($response,true);
-//                  if($ret['code'] != 0)
-//                  {
-//                      echo $ret['code']." : ".$ret['message'];
-//                      $statusok = false;
-//                  }
-//                  else
-//                  {
-//                      $return = $ret['response']['return'];
-//                      for($x = 0  ; $x < count($return); $x++)
-//                      {
-//                 		//JIKA BARANG SAMPAI, HARUS RETUR STOK BARANG
-//                 	    $parameter = "&return_sn=".$return[$x]['return_sn'];
-                        
-//                         $curl = curl_init();
-//                         $logisticStatus = "";
-//                         curl_setopt_array($curl, array(
-//                           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-//                           CURLOPT_RETURNTRANSFER => true,
-//                           CURLOPT_ENCODING => '',
-//                           CURLOPT_MAXREDIRS => 10,
-//                           CURLOPT_TIMEOUT => 30,
-//                           CURLOPT_FOLLOWLOCATION => true,
-//                           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                           CURLOPT_CUSTOMREQUEST => 'POST',
-//                           CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_detail','parameter' => $parameter),
-//                           CURLOPT_HTTPHEADER => array(
-//                             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                           ),
-//                         ));
-                        
-//                         $response = curl_exec($curl);
-//                         curl_close($curl);
-//                         $ret =  json_decode($response,true);
-//                         if($ret['code'] != 0)
-//                         {
-//                             echo $ret['code']." : ".$ret['message'];
-//                         }
-//                         else
-//                         {
-//                             $logisticStatus = $ret['response']['logistics_status'];
-//                         }
-//                         //JIKA BARANG SAMPAI, HARUS RETUR
+        $count = 0;
+        $countTotal = 1;
+        $nextPageToken = "";
+        
+        $parameter = [];
+        $resultReturn = [];
+	    if($jenis == "update")
+	    {
+	        $parameter['update_time_ge'] = $dateAw->getTimestamp();
+	        $parameter['update_time_lt'] = $dateAk->getTimestamp();
+	    }
+	    else
+	    {
+	        $parameter['create_time_ge'] = $dateAw->getTimestamp();
+	        $parameter['create_time_lt'] = $dateAk->getTimestamp();
+	    }
+        
+        while(count($resultReturn) < $countTotal)
+        {
+            $urlparameter = "&page_size=50&page_token=".$nextPageToken;
+            array_push($returnhistory,($urlparameter.json_encode($parameter)));
+            $curl = curl_init();
             
-//                         $dataDetail = $return[$x]['item'];
-                        
-//                         //URUTKAN BERDASARKAN NAMA BARANG
-//                         usort($dataDetail, function($a, $b) {
-//                             return strcmp($a['name'], $b['name']);
-//                         });
-                        
-//                         $allsku = "";
-//                         $jml = 0;
-//                         for($d = 0 ; $d < count($dataDetail);$d++)
-//                         {
-//                             //KHUSUS SKU YANG KOSONG
-//                             $sku = $dataDetail[$d]['variation_sku'];
-//                             if(strpos(strtoupper($dataDetail[$d]['name']),"BIRTHDAY CARD") !== false){
-//                                 $sku = "LTWS";
-//                             }
-//                             else if(strpos(strtoupper($dataDetail[$d]['name']),"NEWBORN CARD") !== false){
-//                                 $sku = "CARD-BOX-OTHER";
-//                             }
-//                             $jml += $dataDetail[$d]['amount'];
-//                             $allsku .= $dataDetail[$d]['amount']."*".$sku."|";
-//                         }
-                        
-//                         $allsku = substr($allsku, 0, -1);
-                        
-//                          $CI->db->where("KODEPENJUALANMARKETPLACE",$return[$x]['order_sn'])
-// 		                    ->where('MARKETPLACE','TIKTOK')
-// 		                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-// 		                        'KODEPENGEMBALIANMARKETPLACE'   =>  $return[$x]['return_sn'],
-// 		                        'SKUPRODUKPENGEMBALIAN'         =>  $allsku,
-// 		                        'TOTALBARANGPENGEMBALIAN'       =>  $jml,
-// 		                        'STATUSPENGEMBALIANMARKETPLACE' =>  $return[$x]['status'],
-// 		                        'CATATANPENGEMBALIAN'           =>  $return[$x]['text_reason'],
-// 		                        'TOTALPENGEMBALIANDANA'         =>  $return[$x]['refund_amount'],
-// 		                        'TIPEPENGEMBALIAN'              =>  $return[$x]['return_refund_type'],
-// 		                        'TGLPENGEMBALIAN'               =>  date("Y-m-d H:i:s", $return[$x]['create_time']),
-// 		                        'MINTGLPENGEMBALIAN'            =>  date("Y-m-d H:i:s", $return[$x]['due_date']),
-// 		                        'MINTGLKIRIMPENGEMBALIAN'       =>  date("Y-m-d H:i:s", $return[$x]['return_ship_due_date']),
-// 		                        'RESIPENGEMBALIAN'              =>  $return[$x]['tracking_number'],
-// 		                        'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0),
-// 		                        "LASTUPDATED"                   =>  date("Y-m-d H:i:s")
-// 		                      ));
-//                      }
-//                      $cursor++;
-//                      $more = $ret['response']['more'];
-//                  }
-//             }
-//             $cursor = 0;
-//             $more = false;
-//             $statusok = true;
-            
-//             $dateAddOne = new DateTime($tglTempAdd);
-//             $tglTempAddOne = $dateAddOne->modify('+1 days')->format('Y-m-d')." 00:00:00"; // Add 1 days
-//             $tglTemp = $tglTempAddOne;
-//         }
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS =>  array(
+              'endpoint' => '/return_refund/202309/returns/search',
+              'urlparameter' => $urlparameter,
+              'parameter' => json_encode($parameter)),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+             
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            if($ret['code'] != 0)
+            {
+                echo $ret['code']." : ".$ret['message'];
+                $statusok = false;
+                $countTotal = 0;
+            }
+            else
+            {
+                for($x = 0 ;$x < count($ret['data']['return_orders']); $x++)
+                {
+                    array_push($resultReturn, $ret['data']['return_orders'][$x]);
+                }
+                $nextPageToken = $ret['data']['next_page_token'];
+                $countTotal = $ret['data']['total_count'];
+            }
+        }
         
-        
-//         //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
-//         $lokasi = "0";
-//         $parameter="";
-//         $curl = curl_init();
-        
-//         curl_setopt_array($curl, array(
-//           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-//           CURLOPT_RETURNTRANSFER => true,
-//           CURLOPT_ENCODING => '',
-//           CURLOPT_MAXREDIRS => 10,
-//           CURLOPT_TIMEOUT => 30,
-//           CURLOPT_FOLLOWLOCATION => true,
-//           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//           CURLOPT_CUSTOMREQUEST => 'POST',
-//           CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-//           CURLOPT_HTTPHEADER => array(
-//             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//           ),
-//         ));
-        
-//         $response = curl_exec($curl);
-//         curl_close($curl);
-//         $ret =  json_decode($response,true);
-//         if($ret['code'] != 0)
-//         {
-//             echo $ret['code']." : ".$ret['message'];
-//         }
-//         else
-//         {
-//             $dataAddress = $ret['response']['address_list'];
-//             $data['rows'] = [];
-//             for($x = 0 ; $x < count($dataAddress);$x++)
-//             {
-//                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
+        for($x = 0 ; $x < count($resultReturn); $x++)
+        {
+            for($d = 0 ; $d < count($resultReturn[$x]['return_line_items']); $d++)
+            {
                 
-//                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-//                 {
-//                     if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
-//                     {
-//                         $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-//                     }
-//                 }
-//             }
-//         }
+                $reverseComplete = true;
+                if($statusRetur != "RETURN_OR_REFUND_REQUEST_REJECT" && $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL")
+                {
+                    if($statusRetur != "RETURN_OR_REFUND_REQUEST_COMPLETE" && $reverseComplete)
+                    {
+                        $reverseComplete = false;
+                    }
+                }
+                else if($reverseComplete)
+                {
+                    $reverseComplete = false;
+                }
+                         
+                $sku = $resultReturn[$x]['return_line_items'][$d]['seller_sku'];
+                //CARI URUTAN
+                $sqlUrutan = "SELECT KODEBARANGPENGEMBALIANMARKETPLACE,URUTAN,BARANGSAMPAI FROM TPENJUALANMARKETPLACEDTL 
+                               WHERE KODEPENJUALANMARKETPLACE = '".$resultReturn[$x]['order_id']."' 
+                               AND MARKETPLACE = 'TIKTOK' 
+                               AND SKU = '".$sku."' 
+                               ";
+                $queryUrutan = $CI->db->query($sqlUrutan)->result();
+                $urutan = 0;
+                $barangSampai = 0;
+                
+                //CEK SUDAH PERNAH ADA ATAU BELUM
+                foreach($queryUrutan as $itemUrutan)
+                {
+                    if($itemUrutan->KODEBARANGPENGEMBALIANMARKETPLACE == $resultReturn[$x]['return_line_items'][$d]['return_line_item_id'])
+                    {
+                        $urutan = $itemUrutan->URUTAN;
+                        $barangSampai =  $itemUrutan->BARANGSAMPAI;
+                    }
+                    else if($itemUrutan->KODEBARANGPENGEMBALIANMARKETPLACE == "" && $urutan == 0)
+                    {
+                        $urutan = $itemUrutan->URUTAN;
+                        $barangSampai =  $itemUrutan->BARANGSAMPAI;
+                    }
+                }
+                
+                $statusRetur = $resultReturn[$x]['return_status'];
+                
+                //HANYA UNTUK YANG RETUR SAJA
+                if (strpos($status, 'REPLACEMENT') === false) {
+                    $CI->db->where("KODEPENJUALANMARKETPLACE",$resultReturn[$x]['order_id'])
+                     ->where('SKU',$sku)
+                     ->where('URUTAN',$urutan)
+            	    ->where('MARKETPLACE','TIKTOK')
+            	    ->updateRaw("TPENJUALANMARKETPLACEDTL", array(
+            	        'KODEPENGEMBALIANMARKETPLACE'       =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_id']),
+            	        'KODEBARANGPENGEMBALIANMARKETPLACE' =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_line_items'][$d]['return_line_item_id']),
+            	        'SKUPRODUKPENGEMBALIAN'             =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:("1*".$sku)),
+            	        'STATUSPENGEMBALIANMARKETPLACE'     =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_status']),
+            	        'CATATANPENGEMBALIAN'               =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_reason_text']),
+            	        'TOTALPENGEMBALIANDANA'             =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_line_items'][$d]['refund_amount']['refund_total']),
+            	        'TIPEPENGEMBALIAN'                  =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_type']),
+            	        'TGLPENGEMBALIAN'                   =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:date("Y-m-d H:i:s", $resultReturn[$x]['create_time'])),
+            	        'MINTGLPENGEMBALIAN'                =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:date("Y-m-d H:i:s", $resultReturn[$x]['seller_next_action_response']['deadline'])),
+            	        'STATUS'                            =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL" || $statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" ?'3':'4'),
+            	        'STATUSMARKETPLACE'                 =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL" || $statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" ?'COMPLETED':'RETURNED'),
+            	        'RESIPENGEMBALIAN'                  =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL")?null: $resultReturn[$x]['return_tracking_number'],
+            	        'BARANGSAMPAI'                      =>  (($barangSampai == 1 || ($statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" &&  $resultReturn[$x]['return_type'] == 'RETURN_AND_REFUND'))? 1 : 0)
+            	      ));
+                }
+            }
+            
+            //JIKA ADA KURANG RETUR NYA, INPUT STOK LAGI
+            if(!$reverseComplete){
+                $CI->db->where('KODETRANS',$resultReturn[$x]['return_id'])
+                     ->where('JENISTRANS','RETUR JUAL TIKTOK')
+                     ->delete('KARTUSTOK');
+            }
+        }
         
-// 	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
+        
+         //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
+        $lokasi = "1";
+        $parameter="";
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/logistics/202309/warehouses','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            echo $ret['code']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataAddress = $ret['data']['warehouses'];
+            $data['rows'] = [];
+            for($x = 0 ; $x < count($dataAddress);$x++)
+            {
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
+                $return = false;
+                
+                if($dataAddress[$x]['type'] == "RETURN_WAREHOUSE")
+                {
+                    $return = true;
+                }
+                
+                if($pickup)
+                {
+                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                }
+            }
+        }
+        
+        
+	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
 	    
-// 	    if(count($finalData) > 0)
-// 	    {
-//     	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
-//             for($f = 0 ; $f < count($finalData) ; $f++)
-//             {
-//                 $wherePesanan .= "'".$finalData[$f]['KODEPENJUALANMARKETPLACE']."'";
+	    if(count($finalData) > 0)
+	    {
+    	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
+            for($f = 0 ; $f < count($finalData) ; $f++)
+            {
+                $wherePesanan .= "'".$finalData[$f]['KODEPENJUALANMARKETPLACE']."'";
                 
-//                 if($f != count($finalData)-1)
-//                 {
-//                      $wherePesanan .= ",";
-//                 }
-//             }
-//             $wherePesanan .= ")";
-// 	    }
+                if($f != count($finalData)-1)
+                {
+                     $wherePesanan .= ",";
+                }
+            }
+            $wherePesanan .= ")";
+	    }
         
-//         $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'TIKTOK' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
-//         $dataRetur = $CI->db->query($sqlRetur)->result();
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'TIKTOK' and (BARANGSAMPAI = 1 OR BARANGSAMPAIMANUAL = 1) and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY KODEPENJUALANMARKETPLACE";
+        $dataRetur = $CI->db->query($sqlRetur)->result();
 
-//         foreach($dataRetur as $itemRetur)
-//         {
-//           $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
-//         }
-//         //CEK LOKASI RETURN
+        foreach($dataRetur as $itemRetur)
+        {
+          $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
+        }
+        
+         //DELETE KARTUSTOK YANG STATUSNYA CANCELLED
+        $sqlDeleteStok = "
+            DELETE ks
+            FROM KARTUSTOK ks
+            JOIN TPENJUALANMARKETPLACE tp
+              ON tp.KODEPENJUALANMARKETPLACE = ks.KODETRANS
+            WHERE tp.MARKETPLACE = 'TIKTOK'
+              AND tp.STATUSMARKETPLACE = 'CANCELLED';
+        ";
+        
+        $CI->db->query($sqlDeleteStok);
+        
+        //TOTAL RETUR HEADER
+        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(IF(BARANGSAMPAI = 1,SKUPRODUKPENGEMBALIAN,null) SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
+                                sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,  SUM(IF(BARANGSAMPAIMANUAL = 1,1,0)) as BARANGSAMPAIMANUAL
+                                FROM TPENJUALANMARKETPLACEDTL 
+                                WHERE MARKETPLACE = 'TIKTOK' and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  
+                                GROUP BY KODEPENJUALANMARKETPLACE 
+                                ORDER BY KODEPENJUALANMARKETPLACE";
+        $dataReturHeader = $CI->db->query($sqlReturHeader)->result();
+		   
+        foreach($dataReturHeader as $itemReturHeader)
+        {
+          
+          $CI->db->where("KODEPENJUALANMARKETPLACE",$itemReturHeader->KODEPENJUALANMARKETPLACE)
+		 ->where('MARKETPLACE','TIKTOK')
+		 ->updateRaw("TPENJUALANMARKETPLACE", array(
+		     'KODEPENGEMBALIANMARKETPLACE'   =>  $itemReturHeader->KODEPENGEMBALIANMARKETPLACE,
+		     'SKUPRODUKPENGEMBALIAN'         =>  $itemReturHeader->SKUPRODUKPENGEMBALIAN, 
+		     'TOTALBARANGPENGEMBALIAN'       =>  $itemReturHeader->BARANGSAMPAI, 
+		     'TOTALPENGEMBALIANDANA'         =>  $itemReturHeader->TOTALPENGEMBALIANDANA, 
+		     'STATUSMARKETPLACE'             =>  ($itemReturHeader->STATUS > 0 ? 'RETURNED' : 'COMPLETED'),  
+		     'STATUS'                        =>  ($itemReturHeader->STATUS > 0 ? '4' : '3'),
+		     "LASTUPDATED"                   =>  date("Y-m-d H:i:s"),
+		     'BARANGSAMPAI'                  =>  ($itemReturHeader->BARANGSAMPAI > 0 ? 1 : 0), 
+		     'BARANGSAMPAIMANUAL'           =>  ($itemReturHeader->BARANGSAMPAIMANUAL > 0 ? 1 : 0), 
+		   ));
+        }
+        //CEK LOKASI RETURN
         
         
-//         //SET BOOST
+        //SET STOK
+        $dataBarang = [];
+        $lokasi = "1";
+        $lokasiPickupTiktok = "1";
+        $parameter="";
         
-//         //CEK COOLDOWN HABIS APA TIDAK
-//         $waktu = 0;
-//         $curl = curl_init();
-	    
-// 	    curl_setopt_array($curl, array(
-//           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-//           CURLOPT_RETURNTRANSFER => true,
-//           CURLOPT_ENCODING => '',
-//           CURLOPT_MAXREDIRS => 10,
-//           CURLOPT_TIMEOUT => 30,
-//           CURLOPT_FOLLOWLOCATION => true,
-//           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//           CURLOPT_CUSTOMREQUEST => 'POST',
-//           CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_boosted_list','parameter' => $parameter),
-//           CURLOPT_HTTPHEADER => array(
-//             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//           ),
-//         ));
+        $curl = curl_init();
         
-//         $response = curl_exec($curl);
-//         curl_close($curl);
-//         $ret =  json_decode($response,true);
-//         if($ret['code'] != 0)
-//         {
-//             echo $ret['code']." : ".$ret['message'];
-//         }
-//         else
-//         {
-//             $itemList = $ret['response']['item_list'];
-//             for($i = 0 ; $i < count($itemList) ; $i++)
-//             {
-//               $waktu = $itemList[$i]['cool_down_second'];
-//             }
-//         }
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/logistics/202309/warehouses','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
         
-//         if($waktu == 0)
-//         {
-            
-//     		$parameter = [];
-//     		$parameter['item_id_list'] = [];
-    		
-//             $sql = "SELECT idindukbarangtiktok FROM MBARANG WHERE BOOSTTIKTOK = 2 GROUP BY KATEGORI LIMIT 5";
-//             $dataBarangPermanent = $CI->db->query($sql)->result();
-            
-//             foreach($dataBarangPermanent as $itemBarangPermanent)
-//     		{
-//     		    array_push($parameter['item_id_list'],(int)$itemBarangPermanent->idindukbarangtiktok);
-//     		}
-            
-//             $sql = "SELECT idindukbarangtiktok FROM MBARANG WHERE BOOSTTIKTOK = 1 GROUP BY KATEGORI ORDER BY RAND() LIMIT ".(5-count($dataBarangPermanent));
-//             $dataBarang = $CI->db->query($sql)->result();
-    		
-//     		foreach($dataBarang as $itemBarang)
-//     		{
-//     		    array_push($parameter['item_id_list'],(int)$itemBarang->idindukbarangtiktok);
-//     		}
-    		
-//     		print_r($parameter);
-//     	    $curl = curl_init();
-            
-//             curl_setopt_array($curl, array(
-//               CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//               CURLOPT_RETURNTRANSFER => true,
-//               CURLOPT_ENCODING => '',
-//               CURLOPT_MAXREDIRS => 10,
-//               CURLOPT_TIMEOUT => 30,
-//               CURLOPT_FOLLOWLOCATION => true,
-//               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//               CURLOPT_CUSTOMREQUEST => 'POST',
-//               CURLOPT_POSTFIELDS =>  array(
-//               'endpoint' => 'product/boost_item',
-//               'parameter' => json_encode($parameter)),
-//               CURLOPT_HTTPHEADER => array(
-//                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//               ),
-//             ));
-              
-//             $response = curl_exec($curl);
-//             curl_close($curl);
-//             $ret =  json_decode($response,true);
-         
-//             if($ret['code'] != 0)
-//             {
-//                 echo $ret['error']." BOOST : ".$ret['message'];
-//             }
-//         }
-        
-//         //SET BOOST
-        
-        
-//         //SET STOK
-//         $dataBarang = [];
-//         //SET STOK
-//         $curl = curl_init();
-//         $parameter = "";
-        
-//         curl_setopt_array($curl, array(
-//           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-//           CURLOPT_RETURNTRANSFER => true,
-//           CURLOPT_ENCODING => '',
-//           CURLOPT_MAXREDIRS => 10,
-//           CURLOPT_TIMEOUT => 30,
-//           CURLOPT_FOLLOWLOCATION => true,
-//           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//           CURLOPT_CUSTOMREQUEST => 'POST',
-//           CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-//           CURLOPT_HTTPHEADER => array(
-//             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//           ),
-//         ));
-        
-//         $response = curl_exec($curl);
-//         curl_close($curl);
-//         $ret =  json_decode($response,true);
-//         $lokasi = 0;
-        
-//         if($ret['code'] != 0)
-//         {
-//             echo $ret['error']." LOKASI : ".$ret['message'];
-//         }
-//         else
-//         {
-//             $dataAddress = $ret['response']['address_list'];
-//             for($x = 0 ; $x < count($dataAddress);$x++)
-//             {
-//                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-//                 $pickup = false;
-//                 for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-//                 {
-//                     if($dataAddress[$x]['address_type'][$y] == "PICKUP_ADDRESS")
-//                     {
-//                         $pickup = true;
-//                     }
-//                     // else if($dataAddress[$x]['address_type'][$y] == "DEFAULT_ADDRESS")
-//                     // {
-//                     //     $default = true;
-//                     // }
-//                 }
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+            echo $ret['code']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataAddress = $ret['data']['warehouses'];
+            $data['rows'] = [];
+            for($x = 0 ; $x < count($dataAddress);$x++)
+            {
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
+                $pickup = false;
                 
-//                 if($pickup)
-//                 {
-//                     $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-//                 }
-//             }
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+                {
+                    $pickup = true;
+                }
                 
-//             $sql = "select IDPERUSAHAAN, IDBARANGTIKTOK, idindukbarangtiktok, IDBARANG
-//             				from MBARANG
-//             				WHERE idindukbarangtiktok is not null AND
-//             				idindukbarangtiktok <> '' AND
-//             				idindukbarangtiktok <> 0
-//             				order by idindukbarangtiktok
-//             				";	
+                if($pickup)
+                {
+                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
+                    $lokasiPickupTiktok = $dataAddress[$x]['id'];
+                }
+            }
+                
+            $sql = "select IDPERUSAHAAN, IDBARANGTIKTOK, IDINDUKBARANGTIKTOK, IDBARANG
+            				from MBARANG
+            				WHERE idindukbarangtiktok is not null AND
+            				idindukbarangtiktok <> '' AND
+            				idindukbarangtiktok <> 0
+            				order by idindukbarangtiktok
+            				";	
             		
-//             	$dataHeader = $this->db->query($sql)->result();
+            $dataHeader = $this->db->query($sql)->result();
             		
-//              $idHeader = 0;
-//              $parameter = [];
-//             	 foreach($dataHeader as $itemHeader)
-//             	 {
-//             	     if($itemHeader->idindukbarangtiktok != $idHeader)
-//             	     {
-//             	         if(count($parameter) > 0)
-//             	         {
-//             	            $curl = curl_init();
-//                         curl_setopt_array($curl, array(
-//                           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//                           CURLOPT_RETURNTRANSFER => true,
-//                           CURLOPT_ENCODING => '',
-//                           CURLOPT_MAXREDIRS => 10,
-//                           CURLOPT_TIMEOUT => 30,
-//                           CURLOPT_FOLLOWLOCATION => true,
-//                           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                           CURLOPT_CUSTOMREQUEST => 'POST',
-//                           CURLOPT_POSTFIELDS =>  array(
-//                           'endpoint' => 'product/update_stock',
-//                           'parameter' => json_encode($parameter)),
-//                           CURLOPT_HTTPHEADER => array(
-//                             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//                           ),
-//                         ));
+            $idHeader = 0;
+            $parameter = [];
+            foreach($dataHeader as $itemHeader)
+            {
+                 if($itemHeader->IDINDUKBARANGTIKTOK != $idHeader)
+                 {
+                     if(count($parameter) > 0)
+                     {
+                        $curl = curl_init();
+                        curl_setopt_array($curl, array(
+                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+                          CURLOPT_RETURNTRANSFER => true,
+                          CURLOPT_ENCODING => '',
+                          CURLOPT_MAXREDIRS => 10,
+                          CURLOPT_TIMEOUT => 30,
+                          CURLOPT_FOLLOWLOCATION => true,
+                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                          CURLOPT_CUSTOMREQUEST => 'POST',
+                          CURLOPT_POSTFIELDS =>  array(
+                          'endpoint' => '/product/202309/products/'.$idHeader.'/inventory/update',
+                          'parameter' => json_encode($parameter)),
+                          CURLOPT_HTTPHEADER => array(
+                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                          ),
+                        ));
                           
-//                         $response = curl_exec($curl);
-//                         curl_close($curl);
-//                         $ret =  json_decode($response,true);
+                        $response = curl_exec($curl);
+                        curl_close($curl);
+                        $ret =  json_decode($response,true);
                         
-//                         if($ret['code'] != 0)
-//                         {
-//                             $data['success'] = false;
-//                             $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-//                             die(json_encode($data));
-//                             print_r($ret);
-//                         }
-//             	         }
-//             	         $idHeader = $itemHeader->idindukbarangtiktok;
-            	         
-//             	         //UPDATE KE TIKTOKNYA
-//                     $parameter = [];
-//                  	$parameter['item_id'] = (int)$itemHeader->idindukbarangtiktok;
-//                  	$parameter['stock_list'] = [];
-//             	     }
+                        if($ret['code'] != 0)
+                        {
+                            $data['success'] = false;
+                            $data['msg'] =  $ret['error']." STOK 1 : ".$ret['message'];
+                             echo $ret['code']." : ".$ret['message'];
+                            // print_r($ret);
+                        }
+                     }
+                     $idHeader = $itemHeader->IDINDUKBARANGTIKTOK;
+                     
+                     //UPDATE KE TIKTOKNYA
+                    $parameter = [];
+                 	$parameter['skus'] = [];
+                 }
             	     
-//                  $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
-//                  $saldoQty = $result->QTY??0;
+                 $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
+                 $saldoQty = $result->QTY??0;
                 
-//                 $modelId = 0;
+                $idskuvarian = $itemHeader->IDBARANGTIKTOK;
                 
-//                 if($itemHeader->IDBARANGTIKTOK != $itemHeader->idindukbarangtiktok)
-//                 {
-//                     $modelId = $itemHeader->IDBARANGTIKTOK;
-//                 }
+                if(explode("_",$itemHeader->IDBARANGTIKTOK)[0] == $itemHeader->IDINDUKBARANGTIKTOK)
+                {
+                    $idskuvarian = explode("_",$itemHeader->IDBARANGTIKTOK)[1];
+                }
                 
-//                  array_push($parameter['stock_list'],array(
-//                     'model_id'      => (int)$modelId,
-//                     'seller_stock'  => array(
-//                          array('stock' => (int)$saldoQty)
-//                     ))
-//                 );
-//             	}
-            	
-//             	$curl = curl_init();
-//             curl_setopt_array($curl, array(
-//               CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-//               CURLOPT_RETURNTRANSFER => true,
-//               CURLOPT_ENCODING => '',
-//               CURLOPT_MAXREDIRS => 10,
-//               CURLOPT_TIMEOUT => 30,
-//               CURLOPT_FOLLOWLOCATION => true,
-//               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//               CURLOPT_CUSTOMREQUEST => 'POST',
-//               CURLOPT_POSTFIELDS =>  array(
-//               'endpoint' => 'product/update_stock',
-//               'parameter' => json_encode($parameter)),
-//               CURLOPT_HTTPHEADER => array(
-//                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-//               ),
-//             ));
-              
-//             $response = curl_exec($curl);
-//             curl_close($curl);
-//             $ret =  json_decode($response,true);
+                 array_push($parameter['skus'],array(
+                    'id'      => $idskuvarian,
+                    'inventory'  => array(
+                         array(
+                             'warehouse_id' => $lokasiPickupTiktok,
+                             'quantity' => (int)$saldoQty
+                        )
+                    ))
+                );
+            }
             
-//             if($ret['code'] != 0)
-//             {
-//                 $data['success'] = false;
-//                 $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-//                 die(json_encode($data));
-//             }
-//         }
-//         //SET STOK
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS =>  array(
+              'endpoint' =>  '/product/202309/products/'.$idHeader.'/inventory/update',
+              'parameter' => json_encode($parameter)),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+              
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            
+            if($ret['code'] != 0)
+            {
+                $data['success'] = false;
+                $data['msg'] =  $ret['error']." STOK 2 : ".$ret['message'];
+                echo $ret['code']." : ".$ret['message'];
+            }
+        }
+        //SET STOK
         	
         
         $finalResult["history"] = $history;
         $finalResult["return_history"] = $returnhistory;
 		$finalResult["total"] = $newOrder;
 		
-		echo json_encode($finalResult); 
+		if($showResponse)
+		{
+		    echo json_encode($finalResult); 
+		}
 	}
 	
 }

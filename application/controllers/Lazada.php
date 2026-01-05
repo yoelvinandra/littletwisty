@@ -2403,17 +2403,17 @@ class Lazada extends MY_Controller {
         else
         {
             $statusKhusus = explode("|",$status[0]);
-            if(count($statusKhusus) == 2)
+            $statusGabungan = [];
+            
+            for($s = 1 ; $s < count($statusKhusus) ; $s++)
             {
-                $statusGanda = explode("-",$statusKhusus[1]);
-                if(count($statusGanda) == 2)
-                {
-                    $whereStatus = "and b.STATUSMARKETPLACE = '".$statusKhusus[0]."' and (b.STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[0]."' OR b.STATUSPENGEMBALIANMARKETPLACE = '".$statusGanda[1]."')";
-                }
-                else
-                {
-                    $whereStatus = "and b.STATUSMARKETPLACE = '".$statusKhusus[0]."' and b.STATUSPENGEMBALIANMARKETPLACE = '".$statusKhusus[1]."'";
-                }
+                array_push($statusGabungan,$statusKhusus[$s]);
+            }
+            //KHUSUS RETUR
+            if(count($statusKhusus) > 2)
+            {
+                $whereStatus = "b.STATUSPENGEMBALIANMARKETPLACE = '" . implode("' OR b.STATUSPENGEMBALIANMARKETPLACE = '", $statusGabungan) . "'";
+                $whereStatus = "and b.STATUSMARKETPLACE = '".$statusKhusus[0]."' and (".$whereStatus.")";
                 $statusVar = "CONCAT(b.STATUSMARKETPLACE,'|',b.STATUSPENGEMBALIANMARKETPLACE)";
             }
             else
@@ -2858,10 +2858,6 @@ class Lazada extends MY_Controller {
                         {
                             $dataProduk[$s]->BARANGKEMBALI .= "<br><i>".$dataBarangKembali->WARNA.", ".$dataBarangKembali->SIZE."</i>";
                         }
-                        else
-                        {
-                            $dataProduk[$s]->BARANGKEMBALI  = $dataBarangKembali->NAMABARANG;
-                        }
                         
                             
                         $dataProduk[$s]->JMLKEMBALI = explode("*", $produkDataKembali[$t])[0];
@@ -3297,7 +3293,7 @@ class Lazada extends MY_Controller {
     		        
     		        $resultDetail['JUMLAH'] = 1;
     		        $resultDetail['SATUAN'] = "";
-    		        $resultDetail['HARGA'] =  ($dataDetail[$x]['reverse_status'] == "REFUND_SUCCESS"?(float)($dataDetail[$x]['refund_amount'] / 100):0) ;
+    		        $resultDetail['HARGA'] =  (float)($dataDetail[$x]['refund_amount'] / 100);
     		        $resultDetail['SUBTOTAL'] =  ($resultDetail['JUMLAH'] * $resultDetail['HARGA']);
     		        array_push($result['DETAILBARANG'],$resultDetail);
                 }
@@ -4866,8 +4862,8 @@ class Lazada extends MY_Controller {
 	   $CI =& get_instance();	
 	   $CI->load->library('Pdf_merger'); 
 	   
-	    $input = FCPATH . 'assets/label/waybill.pdf';
-        $output = FCPATH . 'assets/label/waybill_compressed.pdf';
+	    $input = FCPATH . 'assets/label/lazada/waybill.pdf';
+        $output = FCPATH . 'assets/label/lazada/waybill_compressed.pdf';
         
         $cmd = "gs -sDEVICE=pdfwrite \
                -dDEVICEWIDTHPOINTS=283 \
@@ -4879,8 +4875,8 @@ class Lazada extends MY_Controller {
         
         if ($status === 0) {
     	   $files = [
-                'assets/label/waybill_compressed.pdf',
-                'assets/label/waybill_compressed.pdf',
+                'assets/label/lazada/waybill_compressed.pdf',
+                'assets/label/lazada/waybill_compressed.pdf',
             ];
     
             foreach ($files as $file) {
@@ -5435,7 +5431,7 @@ class Lazada extends MY_Controller {
                                    FROM MBARANG 
                                    INNER JOIN MHARGA on MBARANG.IDBARANG = MHARGA.IDBARANG
                                    INNER JOIN MCUSTOMER on MCUSTOMER.IDCUSTOMER = MHARGA.IDCUSTOMER
-                                   WHERE MBARANG.SKULAZADA = '".$dataBarang->SKU."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
+                                   WHERE MBARANG.SKULAZADA = '".explode("*",$produkDataKembali[$t])[1]."' and MCUSTOMER.NAMACUSTOMER = 'LAZADA'";
                 
                        $dataBarangKembali = $CI->db->query($sql)->row();
                        
@@ -5590,7 +5586,7 @@ class Lazada extends MY_Controller {
                           { 
                               $ret['success'] = false;
                               $ret['msg'] = $ret['message'];
-                              die(json_encode($ret));
+                              echo $ret['code']." : ".$ret['msg'];
                           }
                           else
                           {
@@ -5713,7 +5709,7 @@ class Lazada extends MY_Controller {
         $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
 
         $tglStokMulai = $this->model_master_config->getConfigMarketplace('LAZADA','TGLSTOKMULAI');
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN, BARANGSAMPAIMANUAL FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'LAZADA' and (BARANGSAMPAI = 0 AND BARANGSAMPAIMANUAL = 0) and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."'  ORDER BY KODEPENJUALANMARKETPLACE";
+        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN, BARANGSAMPAIMANUAL FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'LAZADA' and BARANGSAMPAIMANUAL = 0 and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."'  ORDER BY KODEPENJUALANMARKETPLACE";
         $dataRetur = $CI->db->query($sqlRetur)->result();
 		   
         foreach($dataRetur as $itemRetur)
@@ -5786,7 +5782,7 @@ class Lazada extends MY_Controller {
             {
                 $ret['success'] = false;
                 $ret['msg'] = $ret['message'];
-                die(json_encode($ret));
+                echo $ret['code']." : ".$ret['msg'];
             }
             else
             {
@@ -5841,7 +5837,7 @@ class Lazada extends MY_Controller {
                 {
                     $ret['success'] = false;
                     $ret['msg'] = $ret['message'];
-                    die(json_encode($ret));
+                    echo $ret['code']." : ".$ret['msg'];
                 }
                 else
                 {
@@ -6107,7 +6103,7 @@ class Lazada extends MY_Controller {
                 { 
                     $ret['success'] = false;
                     $ret['msg'] = $ret['message'];
-                    die(json_encode($ret));
+                    echo $ret['code']." : ".$ret['msg'];
                 }
                 else
                 {
@@ -6152,7 +6148,7 @@ class Lazada extends MY_Controller {
                 { 
                     $ret['success'] = false;
                     $ret['msg'] = $ret['message'];
-                    die(json_encode($ret));
+                    echo $ret['code']." : ".$ret['msg'];
                 }
                 else
                 {
@@ -6278,7 +6274,7 @@ class Lazada extends MY_Controller {
             {
                 $ret['success'] = false;
                 $ret['msg'] = $ret['message'];
-                die(json_encode($ret));
+                echo $ret['code']." : ".$ret['msg'];
             }
             else
             {
@@ -6564,7 +6560,7 @@ class Lazada extends MY_Controller {
                 { 
                     $ret['success'] = false;
                     $ret['msg'] = $ret['message'];
-                    die(json_encode($ret));
+                    echo $ret['code']." : ".$ret['msg'];
                 }
                 else
                 {

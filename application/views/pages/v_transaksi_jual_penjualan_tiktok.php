@@ -182,6 +182,15 @@
         overflow-y: auto;
         flex: 1 1 auto;
     }
+    
+    .bootstrap-datetimepicker-widget {
+       position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%);
+        z-index: 1060; /* Bootstrap modal = 1050 */
+      min-width: 300px !important; /* You can adjust this value */
+    }
 
   </style>
   
@@ -259,9 +268,9 @@
       					 </div>
       					  <select id="cb_trans_status_tiktok_4" name="cb_trans_status_tiktok_4" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
-      					  	<option value="RETURNED|REQUEST_INITIATE">Pengembalian Diajukan</option>
-      					  	<option value="RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING">Pengembalian Diproses</option>
-      					  	<option value="RETURNED|DISPUTE">Pengembalian dalam Sengketa</option>
+      					  	<option value="RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP">Pengembalian Diajukan</option>
+      					  	<option value="RETURNED|AWAITING_BUYER_RESPONSE|BUYER_SHIPPED_ITEM|REFUND_PENDING|RETURN_OR_REFUND_REQUEST_SUCCESS">Pengembalian Diproses</option>
+      					  	<!--<option value="RETURNED|DISPUTE">Pengembalian dalam Sengketa</option>-->
       					  </select>
       					</div>
       				</li>
@@ -393,6 +402,7 @@
             <button onclick="cetakTiktok()" id="cetakTiktokDetail" style="margin-left:5px;" class='btn btn-warning'>Cetak</button>
             <button onclick="kirimTiktok()" id='kirimTiktokDetail' class='btn btn-success' style='float:right;'>Atur Pengiriman</button>
             <button onclick="lacakTiktok()" id='lacakTiktokDetail' class='btn btn-success' style='float:right;'>Lacak Pesanan</button>
+            <button onclick="returBarangTiktok()" id='returBarangTiktokDetail' class='btn btn-danger' style='float:right;'>Retur B. Manual</button>
         </div>
 		<div class="modal-body">
       	    <div class="row"  style="margin-left:4px; margin-right:4px; ">
@@ -493,7 +503,7 @@
               	    </div>
       	    	</div>
       	    	<div class="col-md-6 col-sm-6 col-xs-6  "style="padding:0px 0px 0px 15px;">
-          	    	    <div style="font-weight:bold; margin:auto;" ><i style="font-size:14pt;">Informasi Penjual <span id="ADDINFOINFORMASIPENJUAL" style="font-weight:500;"><br>Informasi penjual tertunda sampai pesanan diterima customer</span></i></div>
+          	    	    <div style="font-weight:bold; margin:auto;" ><i style="font-size:14pt;">Informasi Penjual</i></div>
           	    	    <div class="row" id="DETAILINFORMASIPENJUALTIKTOK">
           	    			<div class="col-md-12">
                   	    	    <div class="col-md-9" align="right" style="font-weight:bold">Total</div>
@@ -670,8 +680,7 @@
             							<th style="vertical-align:middle; text-align:center;" width="150px">Kurir</th>
             							<th style="vertical-align:middle; text-align:center;" width="150px" >No. Pesanan</th>
             							<th style="vertical-align:middle; text-align:center;" width="80px">T. Qty</th>
-            							<th style="vertical-align:middle; text-align:center;" width="150px" >No Resi</th>
-            							<th style="vertical-align:middle; text-align:center;" width="150px" >Min Tgl Kirim</th>
+            							<th style="vertical-align:middle; text-align:center;" width="332px" >Tanggal & Waktu Jemput</th>
             							<th style="vertical-align:middle; text-align:center;" >Catatan Penjual</th>
             						</tr>
             					</thead>
@@ -684,6 +693,7 @@
       	    </div>
 		</div>
 		<input type="hidden" id="rowDataPengirimanTiktok">
+		<input type="hidden" id="pickupKirimTiktok">
 	</div>
 	</div>
 </div>
@@ -703,14 +713,34 @@
 		            <label><input type="checkbox" id="pilihKirimanAllKurirTiktok" checked> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pilih Semua Kurir</label>
 		            <span style="float:right; margin-top:3px; margin-right:30px;" id="keteranganKurirTiktok">Terdapat &nbsp;<span id="countAllPesananTiktok" style="font-weight:bold; font-size:14pt; "></span>&nbsp; Pesanan dari &nbsp;<span id="countAllKurirTiktok" style="font-weight:bold; font-size:14pt; "></span>&nbsp; Kurir</span>
 		        </div>
-		        <div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid #dddddd; background:white; border-radius:0px 0px 3px 3px; margin-top:0px; margin-bottom:20px; padding:0px;" >
-                      <div class="box-body ">
-                      		<div class="x_content" style="height:508px; overflow-y:auto; overflow-x:hidden;">
-                      			<div class="row"> 
-                        			<div class=" col-sm-12" id="dataGridDetailAllTiktok">
-                        			</div>
-                      			</div>
-                      		</div> 
+		        <ul class="nav nav-tabs" id="tab_kirim_tiktok">
+      				<li class="active" ><a href="#tab_regular_tiktok" data-toggle="tab">Regular <span id="countRegular"></span></a></li>
+      			    <li ><a href="#tab_instant_tiktok" data-toggle="tab">Instant & Sameday <span id="countInstant"></span></a></li>
+                  </ul>
+                  <div class="tab-content">
+                      <div class="tab-pane active" id="tab_regular_tiktok">
+                        <div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid #dddddd; background:white; border-radius:0px 0px 3px 3px; margin-top:0px; margin-bottom:20px; padding:0px;" >
+                              <div class="box-body ">
+                              		<div class="x_content" style="height:508px; overflow-y:auto; overflow-x:hidden;">
+                              			<div class="row"> 
+                                			<div class=" col-sm-12" id="dataGridDetailAllRegularTiktok">
+                                			</div>
+                              			</div>
+                              		</div> 
+                              </div>
+                        </div>
+                      </div>
+                      <div class="tab-pane" id="tab_instant_tiktok">
+                            <div class="col-md-12 col-sm-12 col-xs-12 " style="border:1px solid #dddddd; background:white; border-radius:0px 0px 3px 3px; margin-top:0px; margin-bottom:20px; padding:0px;" >
+                              <div class="box-body ">
+                              		<div class="x_content" style="height:508px; overflow-y:auto; overflow-x:hidden;">
+                              			<div class="row"> 
+                                			<div class=" col-sm-12" id="dataGridDetailAllInstantTiktok">
+                                			</div>
+                              			</div>
+                              		</div> 
+                              </div>
+                            </div>
                       </div>
                 </div>
       	    </div>
@@ -1047,6 +1077,9 @@
 
 <input type="hidden" id="kategori_item_tiktok" value="">
 <input type="hidden" id="rowDataTiktok">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.0/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/js/tempusdominus-bootstrap-4.min.js" integrity="sha512-k6/Bkb8Fxf/c1Tkyl39yJwcOZ1P4cRrJu77p83zJjN2Z55prbFHxPs9vN7q3l3+tSMGPDdoH51AEU8Vgo1cgAA==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/css/tempusdominus-bootstrap-4.min.css" integrity="sha512-3JRrEUwaCkFUBLK1N8HehwQgu8e23jTH4np5NHOmQOobuC4ROQxFwFgBLTnhcnQRMs84muMh0PnnwXlPq5MGjg==" crossorigin="anonymous" />
 
 <script>
 
@@ -1087,7 +1120,7 @@ $(document).ready(function(){
 	$("#STATUSTIKTOK1").val('UNPAID,ON_HOLD,AWAITING_SHIPMENT,AWAITING_COLLECTION');
 	$("#STATUSTIKTOK2").val('IN_TRANSIT,DELIVERED');
 	$("#STATUSTIKTOK3").val('COMPLETED,CANCELLED');
-	$("#STATUSTIKTOK4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
+	$("#STATUSTIKTOK4").val('RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP,RETURNED|AWAITING_BUYER_RESPONSE|BUYER_SHIPPED_ITEM|REFUND_PENDING|RETURN_OR_REFUND_REQUEST_SUCCESS');
 	
 	$('body').keyup(function(e){
 		hotkey(e);
@@ -1216,7 +1249,7 @@ $("#cb_trans_status_tiktok_4").change(function(event){
     loading();
 	if($(this).val()  == 'SEMUA' )
 	{
-		$("#STATUSTIKTOK4").val('RETURNED|REQUEST_INITIATE,RETURNED|BUYER_RETURN_ITEM|RETURN_PICKUP_PENDING|REFUND_PENDING,RETURNED|DISPUTE');
+		$("#STATUSTIKTOK4").val('RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP,RETURNED|AWAITING_BUYER_RESPONSE|BUYER_SHIPPED_ITEM|REFUND_PENDING|RETURN_OR_REFUND_REQUEST_SUCCESS');
 	}	
 	else
 	{
@@ -1362,21 +1395,29 @@ function changeTabTiktok(index){
                         "data": null,
                         render: function (data, type, row) {
                             let html = "<div style='height:150px; display: flex; flex-direction: column; justify-content: space-between;'>";
-                            if (row.STATUS.toUpperCase() == "SIAP DIKEMAS" || row.STATUS.toUpperCase() == "DIKEMAS" || row.STATUS.toUpperCase() == "PROSES KIRIM" ||  row.STATUS.toUpperCase() == "SIAP DIKIRIM") {
+                            if (row.STATUS.toUpperCase() == "DIPROSES" ||  row.STATUS.toUpperCase() == "SIAP DIKIRIM" || row.STATUS.toUpperCase() == "DALAM PENGIRIMAN" || row.STATUS.toUpperCase() == "TELAH DIKIRIM") {
                                 html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
-                                html += "<button  style='margin-top:5px;' id='btn_hapus_tiktok' class='btn btn-danger'  style='width:122px;' >Batal</button>"; //<button id='btn_edit_tiktok' class='btn btn-primary' style='width:59.5px;' >Ubah</button> 
-                                if(row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
+                                if(row.STATUS.toUpperCase() == "DIPROSES")
                                 {
+                                    // html += "<button  style='margin-top:5px;' id='btn_hapus_tiktok' class='btn btn-danger'  style='width:122px;' >Batal</button>"; 
+                                    // html += "<button style='margin-top:5px;' id='btn_edit_tiktok' class='btn btn-primary' style='width:122px;' >Ubah</button>";
                                     html+= "<button  style='margin-top:auto;' id='btn_cetak_tiktok' class='btn btn-warning'  style='width:122px;'>Cetak</button>";
                                 }
-                                if(row.STATUS.toUpperCase() == "DIKEMAS"  && row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
+                                if(row.STATUS.toUpperCase() == "SIAP DIKIRIM") // row.STATUS.toUpperCase() == "SIAP DIKIRIM"
                                 {
+                                    html += "<button  style='margin-top:5px;' id='btn_hapus_tiktok' class='btn btn-danger'  style='width:122px;' >Batal</button>"; 
+                                    // html += "<button style='margin-top:5px;' id='btn_edit_tiktok' class='btn btn-primary' style='width:122px;' >Ubah</button>
                                     html += "<div style='margin-top:auto;'><button id='btn_kirim_tiktok' class='btn btn-success' style='width:122px;'>Atur Pengiriman</button></div>";
                                 }
-                            } else if (row.STATUS.toUpperCase() == "DALAM PENGIRIMAN" || row.STATUS.toUpperCase() == "GAGAL PENGIRIMAN") {
-                                html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
-                                html += "<div style='margin-top:auto;'><button id='btn_lacak_tiktok' class='btn btn-success' style='width:122px;'>Lacak Pesanan</button></div>";
-                            } else {
+                                if (row.STATUS.toUpperCase() == "DALAM PENGIRIMAN" || row.STATUS.toUpperCase() == "TELAH DIKIRIM") 
+                                {
+                                    html += "<div style='margin-top:auto;'><button id='btn_lacak_tiktok' class='btn btn-success' style='width:122px;'>Lacak Pesanan</button></div>";
+                                }
+                                
+                            }  else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && row.BARANGSAMPAIMANUAL == 0){
+                                html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
+                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_lazada' class='btn btn-danger'  style='width:122px;' >Retur B. Manual</button>";
+                            }   else {
                                 html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                             }
                             html += "</div>";
@@ -1388,7 +1429,7 @@ function changeTabTiktok(index){
                         "targets": 1,
                         render: function (data, type, row) {
                             let html = row.STATUS;
-                            if(row.STATUS.toUpperCase() == "SELESAI" && row.BARANGSAMPAI == 1){
+                            if(row.STATUS.toUpperCase() == "SELESAI"  && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1)){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang</div><div style='margin:auto;'></div>";
                             } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Dana</div><div style='margin:auto;'></div>";
@@ -1494,6 +1535,7 @@ function changeTabTiktok(index){
     		else if(mode == "btn_lacak_tiktok"){lacakTiktok();}
     		else if(mode == "btn_kembali_tiktok"){kembaliTiktok();}
     		else if(mode == "btn_retur_tiktok"){returTiktok();}
+    	    else if(mode == "btn_retur_manual_tiktok"){returBarangLazada();}
     	} );
     	
     	$('#dataGridTiktok'+index+' tbody').on( 'click', 'i', function () {
@@ -1582,12 +1624,12 @@ function recountCetakdanKirim(){
     var countKirim = 0;
     for(var x = 0; x < data.length; x++)
     {
-        if((data[x]['STATUS'].toUpperCase() == "SIAP DIKEMAS" || data[x]['STATUS'].toUpperCase() == "DIKEMAS" || data[x]['STATUS'].toUpperCase() == "PROSES KIRIM" || data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM") && data[x]['KURIR'].toUpperCase() != "DELIVERED BY SELLER")
+        if((data[x]['STATUS'].toUpperCase() == "DIPROSES"))
         {
             countCetak++;
         }
         
-        if(data[x]['STATUS'].toUpperCase() == "DIKEMAS"  && data[x]['KURIR'].toUpperCase() != "DELIVERED BY SELLER")
+        if(data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM")
         {
             countKirim++;
         }
@@ -1634,28 +1676,21 @@ function lihatTiktok(){
     	    $("#ubahTiktokDetail").hide();
     	    $("#kirimTiktokDetail").hide();
     	    $("#lacakTiktokDetail").hide();
-            $("#DETAILINFORMASIPENJUALTIKTOK").hide();
-            $("#ADDINFOINFORMASIPENJUAL").show();
+    	    $("#returBarangTiktokDetail").hide();
             
-            if(row.STATUS.toUpperCase() == "SELESAI")
-            {
-               $("#DETAILINFORMASIPENJUALTIKTOK").show();
-               $("#ADDINFOINFORMASIPENJUAL").hide();
-            }
-            
-    	    if(row.STATUS.toUpperCase() == "DIKEMAS" && row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
-    	    {
-    	        $("#kirimTiktokDetail").show();
-    	    }
-    	    if(row.STATUS.toUpperCase() == "SIAP DIKEMAS" || row.STATUS.toUpperCase() == "DIKEMAS" || row.STATUS.toUpperCase() == "PROSES KIRIM" || row.STATUS.toUpperCase() == "SIAP DIKIRIM")
+    	    if(row.STATUS.toUpperCase() == "SIAP DIKIRIM")
     	    {
     	        $("#hapusTiktokDetail").show();
     	        $("#ubahTiktokDetail").show();
-    	        if(row.KURIR.toUpperCase() != "DELIVERED BY SELLER")
-    	        {
-    	            $("#cetakTiktokDetail").show();
-    	        }
+    	    }             
+    	    if(row.STATUS.toUpperCase() == "SIAP DIKIRIM")
+    	    {
+    	        $("#kirimTiktokDetail").show(); 
     	    }
+    	    if(row.STATUS.toUpperCase() == "DIPROSES")
+            {
+                 $("#cetakTiktokDetail").show();
+            }
     	    if(row.STATUS.toUpperCase() == "DALAM PENGIRIMAN" || row.STATUS.toUpperCase() == "GAGAL PENGIRIMAN")
     	    {
     	        $("#lacakTiktokDetail").show();
@@ -1692,6 +1727,11 @@ function lihatTiktok(){
                 $("#NOPENGEMBALIANTIKTOK").html(row.KODEPENGEMBALIAN);
             }
             
+            if(row.STATUS.toUpperCase() == "SELESAI" && row.BARANGSAMPAIMANUAL == 0)
+            {
+               $("#returBarangTiktokDetail").show();
+            }
+            
             $(".table-responsive-tiktok").html('');
             
             var totalCurr = 0;
@@ -1704,7 +1744,7 @@ function lihatTiktok(){
                     namaBarang += ("&nbsp&nbsp&nbsp&nbsp<span  style='color:#949494; font-style:italic;'>Marketplace : "+msg.DETAILBARANG[x].WARNAOLD+" / "+msg.DETAILBARANG[x].SIZEOLD+"</span>");
                 }
                 
-                if((msg.DETAILBARANG[x].SIZEKEMBALI != "" || msg.DETAILBARANG[x].WARNAKEMBALI != "") && row.BARANGSAMPAI == 1)
+                if((msg.DETAILBARANG[x].SIZEKEMBALI != "" || msg.DETAILBARANG[x].WARNAKEMBALI != "") && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1))
                 {
                     namaBarang += ("<br><span  style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; font-style:italic;'>Retur : "+msg.DETAILBARANG[x].WARNA+" / "+msg.DETAILBARANG[x].SIZE+"</span>");
                 }
@@ -1714,14 +1754,14 @@ function lihatTiktok(){
                 totalCurrKembali += parseInt(msg.DETAILBARANG[x].JUMLAHKEMBALI);
             }
             var totalKembali = "";
-            if(totalCurrKembali > 0 && row.BARANGSAMPAI == 1)
+            if(totalCurrKembali > 0 && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1))
             {
                 totalKembali = "<span style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>' > (-"+currency(totalCurrKembali.toString())+")</span>";
             }
             $("#TOTALQTYTIKTOK").html(currency(totalCurr)+totalKembali);
             $("#SUBTOTALTIKTOK").html(currency(msg.SUBTOTALBELI));
-           
-            $("#TOTALPENJUALTIKTOK").html(currency(msg.SUBTOTALBELI));
+            
+            $("#TOTALPENJUALTIKTOK").html(currency(msg.SUBTOTALJUAL));
             $("#DISKONPENJUALTIKTOK").html(currency(msg.DISKONJUAL));
             $("#BIAYAKIRIMPENJUALTIKTOK").html(currency(msg.BIAYAKIRIMJUAL));
             $("#BIAYALAYANANPENJUALTIKTOK").html(currency(msg.BIAYALAYANANJUAL));
@@ -1778,34 +1818,34 @@ function kembaliTiktok(){
             $("#NAMAPEMBELITIKTOKPENGEMBALIAN").html(row.BUYERNAME+" ("+row.USERNAME+")");
             $("#TELPPEMBELITIKTOKPENGEMBALIAN").html(row.BUYERPHONE);
             $("#ALAMATPEMBELITIKTOKPENGEMBALIAN").html(row.BUYERALAMAT);
-            $("#ALASANTIKTOKPILIHAN").html(msg.ALASANPILIHPENGEMBALIAN);
-            $("#ALASANTIKTOKPENGEMBALIAN").html(row.CATATANPENGEMBALIAN);
-            $("#ALASANTIKTOKPENGEMBALIAN").html($("#ALASANTIKTOKPENGEMBALIAN div").html()==""?"<div>-</div>":row.CATATANPENGEMBALIAN);
+            $("#ALASANTIKTOKPILIHAN").html(row.CATATANPENGEMBALIAN);
+            $("#ALASANTIKTOKPENGEMBALIAN").html(msg.ALASANPENGEMBALIAN);
+            $("#ALASANTIKTOKPENGEMBALIAN").html($("#ALASANTIKTOKPENGEMBALIAN div").html()==""?"<div>-</div>":msg.ALASANPENGEMBALIAN);
             
             $(".table-responsive-tiktok-pengembalian").html('');
             
             $("#returTiktokDetail").hide();
             $("#returTiktokWait").show();
             
-            if(row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED")
-            {
-                $("#STATUSTIKTOKPENGEMBALIAN").html($("#STATUSTIKTOKPENGEMBALIAN").html()+"<br>&nbsp;<i style='color:red;'>(Barang Telah Diterima Penjual)</i>");
-            }
+            // if(row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED")
+            // {
+            //     $("#STATUSTIKTOKPENGEMBALIAN").html($("#STATUSTIKTOKPENGEMBALIAN").html()+"<br>&nbsp;<i style='color:red;'>(Barang Telah Diterima Penjual)</i>");
+            // }
             
-            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIAJUKAN" || row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED") {
-                $("#returTiktokDetail").show();
-                $("#returTiktokWait").hide();
-            }
+            // if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIAJUKAN" || row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED") {
+            //     $("#returTiktokDetail").show();
+            //     $("#returTiktokWait").hide();
+            // }
             
-            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIPROSES" &&  row.TIPEPENGEMBALIAN.toUpperCase() != "RETURN_DELIVERED") {
-                $("#returTiktokWait").html("Menunggu Barang Tiba");
-            }
+            // if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DIPROSES" &&  row.TIPEPENGEMBALIAN.toUpperCase() != "RETURN_DELIVERED") {
+            //     $("#returTiktokWait").html("Menunggu Barang Tiba");
+            // }
             
-            if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DALAM SENGKETA" || row.STATUSPENGEMBALIAN.toUpperCase() == "REFUND_PENDING") {
-                $("#returTiktokDetail").hide();
-                $("#returTiktokWait").show();
-                $("#returTiktokWait").html("Menunggu Respon Tiktok");
-            }
+            // if (row.STATUS.toUpperCase() == "PENGEMBALIAN<BR>DALAM SENGKETA" || row.STATUSPENGEMBALIAN.toUpperCase() == "REFUND_PENDING") {
+            //     $("#returTiktokDetail").hide();
+            //     $("#returTiktokWait").show();
+            //     $("#returTiktokWait").html("Menunggu Respon Tiktok");
+            // }
             
             var totalCurr = 0;
             for(var x = 0 ; x < msg.DETAILBARANG.length ; x++)
@@ -1832,14 +1872,14 @@ function kembaliTiktok(){
             var buktiGambar = "";
             for(var x = 0 ; x < msg.GAMBAR.length;x++)
             {
-                buktiGambar += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasTiktok(`GAMBAR`,`Gambar "+(x+1)+"`,`"+msg.GAMBAR[x]+"`)' >Gambar "+(x+1)+"</span><br>";
+                buktiGambar += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasTiktok(`GAMBAR`,`Gambar "+(x+1)+"`,`"+msg.GAMBAR[x].url+"`)' >Gambar "+(x+1)+"</span><br>";
             }
             $("#GAMBARPENGEMBALIANTIKTOK").html(buktiGambar);
             
             var buktiVideo = "";
             for(var x = 0 ; x < msg.VIDEO.length;x++)
             {
-                buktiVideo += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasTiktok(`VIDEO`,`Video "+(x+1)+"`,`"+msg.VIDEO[x]['video_url']+"`)' >Video "+(x+1)+"</span><br>";
+                buktiVideo += "<span style='color : blue; cursor:pointer; text-align:center;' onclick='lihatLebihJelasTiktok(`VIDEO`,`Video "+(x+1)+"`,`"+msg.VIDEO[x].url+"`)' >Video "+(x+1)+"</span><br>";
             }
             $("#VIDEOPENGEMBALIANTIKTOK").html(buktiVideo);
             
@@ -1985,7 +2025,7 @@ function setDetail(itemDetail,x,namaBarang,action=false)
        actButton = `<td style="vertical-align:middle; text-align:center;" width="103px" ><button id="btn_edit_detail_tiktok" class="btn btn-primary" onclick="openItemTiktok(`+x+`)"><i class="fa fa-edit"></i></button> <button id="btn_back_detail_tiktok" class="btn btn-danger" onclick="resetItemTiktok(`+x+`)"><i class="fa fa-refresh"></i></button></td>`;
     }
     
-    if(itemDetail[x].JUMLAHKEMBALI != 0 && row.BARANGSAMPAI == 1)
+    if(itemDetail[x].JUMLAHKEMBALI != 0 && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1))
     {
         jmlKembali = "<span style='color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>' > (-"+currency(itemDetail[x].JUMLAHKEMBALI.toString())+")</span>";
     }
@@ -2004,7 +2044,7 @@ function setDetail(itemDetail,x,namaBarang,action=false)
 function cetakTiktok(){
     $("#modal-form-tiktok").modal('hide');
     var row = JSON.parse($("#rowDataTiktok").val());
-    var rows = [{order_number : row.KODEPESANAN, package_id : row.KODEPACKAGING}];
+    var rows = [row];
     loading();
      $.ajax({
      	type    : 'POST',
@@ -2044,7 +2084,7 @@ function cetakTiktokSemua(index){
     var dataSimpan = [];
     for(var x = 0; x < data.length; x++)
     {
-        if((data[x]['STATUS'].toUpperCase() == "SIAP DIKEMAS" || data[x]['STATUS'].toUpperCase() == "DIKEMAS" || data[x]['STATUS'].toUpperCase() == "PROSES KIRIM" || data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM") && data[x]['KURIR'].toUpperCase() != "DELIVERED BY SELLER")
+        if(data[x]['STATUS'].toUpperCase() == "DIPROSES")
         {
             dataSimpan.push(data[x]);
         }
@@ -2131,7 +2171,7 @@ function cetakAllKonfirmTiktok(){
     {
         if($(".table-responsive-tiktok-all-cetak").find("#cetak"+x).is(':checked'))
         {
-           rows.push({order_number:dataSimpan[x].KODEPESANAN,package_id : dataSimpan[x].KODEPACKAGING});
+           rows.push(dataSimpan[x]);
         }
     }
     if(rows.length > 0)
@@ -2203,29 +2243,84 @@ function kirimTiktok(){
             }
             else
             {
-                Swal.close();
-                $("#modal-kirim-tiktok").modal('show');
-                
-                var countPengiriman = 1;
-                $("#countAturPengiriman").html("("+countPengiriman.toString()+")");
-                $(".table-responsive-tiktok-kirim").html('');
-                var indexKirim = 0;
-                
-                var dataKirim = ` <tr>
-                        	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="150px" >`+rows[indexKirim].KURIR+`</td>
-                          	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="150px">`+rows[indexKirim].KODEPESANAN+`</td>
-                          	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="80px">`+currency(rows[indexKirim].TOTALBARANG)+`</td>
-                          	<td style="vertical-align:top; text-align:center;  padding-top:17px;" width="150px">`+rows[indexKirim].RESI+` </td>
-                          	<td style="vertical-align:top; text-align:center;  padding-top:17px;" width="150px">	`+rows[indexKirim].MINTGLKIRIM+` </td>
-                          	<td style="vertical-align:top; text-align:left; padding-top:17px;" id="editNoteTiktokDiv`+indexKirim+`">`+rows[indexKirim].CATATANJUAL+`</td>
-                        </tr>`;
-                
-                $(".table-responsive-tiktok-kirim").append(dataKirim);
-                
-                $("#rowDataPengirimanTiktok").val(JSON.stringify(rows));
-                $('#editNoteTiktokDiv'+indexKirim).find('#editNoteTiktok').click(function(){
-                   $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim);
-                    catatanPenjualTiktok();
+                $.ajax({
+                     	type    : 'POST',
+                     	url     : base_url+'Tiktok/setKirim/',
+                     	data    : {dataNoPackaging: JSON.stringify(rows),index:0},
+                     	dataType: 'json',
+                     	success : function(msg){
+                     	    Swal.close();
+                            $("#modal-kirim-tiktok").modal('show');
+                            
+                            var cbJemputTiktok = "";
+                            if(rows[0].KODEPENGAMBILAN != "")
+                            {
+                                cbJemputTiktok += ` <option value="PICKUP" selected>Request Pickup</option>`;
+                            }
+                            else
+                            {
+                                cbJemputTiktok += `	<option value="DROP_OFF" selected>Drop Off</option>
+                                          			<option value="PICKUP">Request Pickup</option>`;
+                            }
+                            
+                            var countPengiriman = 1;
+                            $("#countAturPengiriman").html("("+countPengiriman.toString()+")");
+                            $(".table-responsive-tiktok-kirim").html('');
+                            var indexKirim = 0;
+                            
+                            var cb_pickup = "";
+                            for(var x = 0 ; x < msg.time_pickup.length ; x++)
+                            {
+                                var selected = "";
+                                if(x == 0)
+                                {
+                                    selected = "selected";
+                                    $("#pickupKirimTiktok").val(msg.time_pickup[x].id_pickup);
+                                }
+                                cb_pickup += ("<option value='"+msg.time_pickup[x].id_pickup+"' "+selected+">"+msg.time_pickup[x].start_pickup+" - "+msg.time_pickup[x].end_pickup+"</option>");
+                            }
+                            
+                            var dataKirim = ` <tr>
+                                    	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="150px" >`+rows[indexKirim].KURIR+`</td>
+                                      	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="150px">`+rows[indexKirim].KODEPESANAN+`</td>
+                                      	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="80px">`+currency(rows[indexKirim].TOTALBARANG)+`</td>
+                                      	<td style="vertical-align:top; text-align:left;" width="280px">	
+                                            <select id="cb_penjemputan_tiktok_`+indexKirim+`" class="form-control "  style="width:280px; " panelHeight="auto" required="true">
+                                          		`+cbJemputTiktok+`
+                                          	</select>
+                                          	<select id="cb_pickup_tiktok_`+indexKirim+`" class="form-control "  style="width:280px; " panelHeight="auto" required="true">
+                                              	 `+cb_pickup+`
+                                            </select>
+                                        </td>
+                                      	<td style="vertical-align:top; text-align:left; padding-top:17px;" id="editNoteTiktokDiv`+indexKirim+`">`+rows[indexKirim].CATATANJUAL+`</td>
+                                    </tr>`;
+                            
+                            $(".table-responsive-tiktok-kirim").append(dataKirim);
+                            $("#cb_pickup_tiktok_"+indexKirim).hide();
+                            
+                            $("#cb_penjemputan_tiktok_"+indexKirim).change(function(){
+                                if($(this).val() == "DROP_OFF")
+                                {
+                                    $("#cb_pickup_tiktok_"+indexKirim).hide();
+                                    $('#txt_pickup_tiktok_aw_'+indexKirim).val("");
+                                    $('#txt_pickup_tiktok_ak_'+indexKirim).val("");
+                                }
+                                else if($(this).val() == "PICKUP")
+                                {
+                                    $("#cb_pickup_tiktok_"+indexKirim).show();
+                                }
+                            })
+                            
+                            $("#rowDataPengirimanTiktok").val(JSON.stringify(rows));
+                            $('#editNoteTiktokDiv'+indexKirim).find('#editNoteTiktok').click(function(){
+                               $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim);
+                                catatanPenjualTiktok();
+                            });
+                            
+                            $("#cb_pickup_tiktok_"+indexKirim).change(function(){
+                                $("#pickupKirimTiktok").val($(this).val());
+                            })
+                    }
                 });
         }
     }});
@@ -2243,7 +2338,10 @@ function kirimKonfirmTiktok(){
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
                 var row = JSON.parse($("#rowDataTiktok").val());
-                var rows = [{order_number : row.KODEPESANAN, package_id : row.KODEPACKAGING}];
+                row.METHOD = $("#cb_penjemputan_tiktok_0").val();
+                row.JAMAWAL = $("#pickupKirimTiktok").val().split("|")[0];
+                row.JAMAKHIR = $("#pickupKirimTiktok").val().split("|")[1];
+                var rows = [row];
                 
                 loading();
                 $.ajax({
@@ -2259,11 +2357,15 @@ function kirimKonfirmTiktok(){
                             		showConfirmButton: false,
                             		timer            : 2000
                             });
-                             $("#modal-kirim-tiktok").modal('hide');
-                            	
-                          	setTimeout(() => {
-                            reloadTiktok();
-                          }, "2000");
+                            
+                            if(msg.success)
+                            {
+                                 $("#modal-kirim-tiktok").modal('hide');
+                                	
+                              	setTimeout(() => {
+                                reloadTiktok();
+                              }, "2000");
+                            }
                  	}
                  });
                 }
@@ -2286,177 +2388,433 @@ function kirimTiktokSemua() {
                 });
             } else {
                 Swal.close();
-                $("#pilihKirimanAllKurirTiktok").prop('checked', true);
+                $("#pilihKirimanAllKurirTiktok").prop('checked',true);
                 $("#modal-kirim-all-tiktok").modal('show');
                 $('#tab_kirim_tiktok a:first').tab('show');
-
                 var data = $("#dataGridTiktok1").DataTable().rows().data();
+                var detailData = "";
                 var dataSimpan = [];
                 var dataPerKurir = [];
-
-                for (var x = 0; x < data.length; x++) {
-                    if (data[x]['STATUS'].toUpperCase() === "DIKEMAS"  && data[x]['KURIR'].toUpperCase() != "DELIVERED BY SELLER") {
+                for(var x = 0; x < data.length; x++)
+                {
+                    if(data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM")
+                    {
                         dataSimpan.push(data[x]);
                     }
                 }
-
-                if (dataSimpan.length > 0) {
+                
+                if(dataSimpan.length > 0)
+                {
                     $("#keteranganKurirTiktok").show();
-                    $("#countAturSemuaPengirimanTiktok").html("(" + dataSimpan.length + ")");
-                } else {
+                    $("#countAturSemuaPengirimanTiktok").html("("+dataSimpan.length.toString()+")");
+                }
+                else
+                {
                     $("#keteranganKurirTiktok").hide();
                     $("#countAturSemuaPengirimanTiktok").html("");
                 }
-
-                // Group by KURIR
-                for (var x = 0; x < dataSimpan.length; x++) {
+                
+                for(var x = 0; x < dataSimpan.length; x++)
+                {
                     var ada = false;
-                    for (var y = 0; y < dataPerKurir.length; y++) {
-                        if (dataSimpan[x]['KURIR'] === dataPerKurir[y]["name"]) {
+                    for(var y = 0 ; y < dataPerKurir.length;y++)
+                    {
+                        if(dataSimpan[x]['KURIR'] == dataPerKurir[y]["name"])
+                        {
                             ada = true;
-                            break;
                         }
                     }
-                    if (!ada) {
+                    
+                    if(!ada)
+                    {
                         dataPerKurir.push({
                             name: dataSimpan[x]['KURIR'],
                             order: [],
-                            loading_done: false
+                            loading_done : false
                         });
                     }
                 }
-
-                $("#countAllPesananTiktok").html(dataSimpan.length);
-                $("#countAllKurirTiktok").html(dataPerKurir.length);
-
+                
+                
+                $("#countAllPesananTiktok").html(dataSimpan.length.toString());
+                $("#countAllKurirTiktok").html(dataPerKurir.length.toString());
+                
+                    //BUAT GRID PER KATEGORI
+                var detailPesananRegular = "";
+                var detailPesananInstant = "";
+                var countRegular = 0;
+                var countInstant = 0;
                 var detailPesanan = "";
-                for (var y = 0; y < dataPerKurir.length; y++) {
+                for(var y = 0 ; y < dataPerKurir.length;y++)
+                {  
                     var index = 0;
-
-                    for (var x = 0; x < dataSimpan.length; x++) {
-                        if (dataSimpan[x]['KURIR'] === dataPerKurir[y]["name"]) {
-                            if (index === 0) {
-                                detailPesanan += `
-                                    <table class="table table-bordered table-striped table-hover display nowrap" width="100%" style="background:#CFECF7; border-color:#CFECF7; margin:0px; border-collapse: collapse;">
-                                        <tr style="border-color:#CFECF7;">
-                                            <td style="text-align:center;" width="45px">
-                                                <input type="checkbox" id="pilihKirimanAllTIKTOK_${y}" checked>
-                                            </td>
-                                            <td colspan="3" style="font-weight:bold; font-size:14pt;">${dataPerKurir[y]["name"]}</td>
-                                            <td style="text-align:center;">
-                                                <div style="width:250px; margin-top:2px;">
-                                                    Terdapat &nbsp;<span id="countKurirAllTIKTOK_${y}" style="font-weight:bold; font-size:14pt;">...</span>&nbsp; Pesanan
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                    <table id="dataGridDetailAllTiktokKirim${y}" class="table table-bordered table-striped table-hover display nowrap" width="100%">
-                                        <thead>
-                                            <tr>
-                                                <th width="70px"></th>
-                                                <th style="text-align:center" width="150px">No. Pesanan</th>
-                                                <th style="text-align:center" width="80px">T. Qty</th>
-                                                <th style="text-align:center" width="150px">No. Resi</th>
-                                                <th style="text-align:center" width="150px">Min Tgl Kirim</th>
-                                                <th style="text-align:center" >Catatan Penjual</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="table-responsive-tiktok-all-kirim_${y}"></tbody>
-                                    </table><br>
+                    
+                    for(var x = 0 ; x < dataSimpan.length;x++)
+                    {
+                        if(dataSimpan[x]['KURIR'] == dataPerKurir[y]["name"])
+                        {
+                            if(index == 0)
+                            {
+                                detailPesanan = `
+                                <table class="table table-bordered table-striped table-hover display nowrap" width="100%" style="background:#CFECF7; border-color:#CFECF7; margin:0px; border-collapse: collapse;" >
+                        			    <tr style="border-color:#CFECF7;">
+                        			    	<td style="background:#CFECF7; border-color:#CFECF7; vertical-align:top; padding-top:15px; text-align:center;" width="45px"><input type="checkbox" id="pilihKirimanAllTiktok_`+y+`" checked></td>
+                        			    	<td style="background:#CFECF7; border-color:#CFECF7; vertical-align:top; padding-top:12px; text-align:left; font-weight:bold; font-size:14pt;" width="230px" colspan='2' >`+dataPerKurir[y]["name"]+`</td>
+                        			    	<td style="background:#CFECF7; border-color:#CFECF7; vertical-align:top; text-align:center;" width="300px"  id="aturKurirAllTiktok_`+y+`" ></td>
+                        			    	<td style="background:#CFECF7; border-color:#CFECF7; vertical-align:top; text-align:center;" ><div style="width:250px; margin-top:2px;">Terdapat &nbsp;<span id="countKurirAllTiktok_`+y+`" style="font-weight:bold; font-size:14pt; ">...</span>&nbsp; Pesanan</div></td>
+                        			    </tr>
+                        		    </table>
+                                	<table id="dataGridDetailAllTiktokKirim`+y+`" class="table table-bordered table-striped table-hover display nowrap" width="100%" >
+                        				<thead>
+                        					<tr>
+                        						<th style="vertical-align:middle; text-align:center;" width="70px"></th>
+                        						<th style="vertical-align:middle; text-align:center;" width="150" >No. Pesanan</th>
+                        						<th style="vertical-align:middle; text-align:center;" width="80px">T. Qty</th>
+                        						<th style="vertical-align:middle; text-align:center;" width="300px" >Tanggal & Waktu Jemput</th>
+                        						<th style="vertical-align:middle; text-align:center;" >Catatan Penjual</th>
+                        					</tr>
+                        				</thead>
+                        				<tbody class="table-responsive-tiktok-all-kirim_`+y+`">
+                        				</tbody>
+                        		    </table>
+                                    <br>
                                 `;
+                            
+                                if(dataSimpan[x]['KODEPENGAMBILAN'] == "")
+                                {
+                                    detailPesananRegular += detailPesanan;
+                                }
+                                else
+                                {
+                                    detailPesananInstant += detailPesanan;
+                                }
                             }
+                            
                             dataPerKurir[y]["order"].push(dataSimpan[x]);
+                            if(dataSimpan[x]['KODEPENGAMBILAN'] == "")
+                            {
+                                countRegular++;
+                                $("#countRegular").html("("+countRegular+")");
+                            }
+                            else
+                            {
+                                countInstant++;
+                                $("#countInstant").html("("+countInstant+")");
+                            }
+                           
                             index++;
                         }
                     }
                 }
-
-                $("#dataGridDetailAllTiktok").html(detailPesanan);
-
-                // Checkbox: Pilih Semua
-                $("#pilihKirimanAllKurirTiktok").change(function () {
-                    for (var index = 0; index < dataPerKurir.length; index++) {
-                        $("#pilihKirimanAllTIKTOK_" + index).prop("checked", $(this).prop("checked"));
-                        for (var c = 0; c < dataPerKurir[index]['order'].length; c++) {
-                            $(".table-responsive-tiktok-all-kirim_" + index + " #pilihKirimanTIKTOK_" + c).prop("checked", $(this).prop("checked"));
+                
+                $("#dataGridDetailAllRegularTiktok").html(detailPesananRegular);
+                $("#dataGridDetailAllInstantTiktok").html(detailPesananInstant);
+                
+                $("#pilihKirimanAllKurirTiktok").change(function(){
+                    for(var index = 0 ; index < dataPerKurir.length ; index++)
+                    {
+                        $("#pilihKirimanAllTiktok_"+index).prop("checked",$(this).prop("checked"));
+                         
+                        for(var c = 0 ; c < dataPerKurir[index]['order'].length; c++)
+                        {
+                            $(".table-responsive-tiktok-all-kirim_"+index+" #pilihKirimanTiktok_"+c).prop("checked",$(this).prop("checked"));
                         }
                     }
+                    
                     recountPengiriman();
                 });
-
-                // LOOP PER KURIR
-                for (let i = 0; i < dataPerKurir.length; i++) {
-                    let detailKirim = "";
-                    let items = dataPerKurir[i]['order'];
-                    $("#countKurirAllTIKTOK_" + i).html(items.length);
-
-                    for (let indexKirim = 0; indexKirim < items.length; indexKirim++) {
-                        detailKirim += `
-                            <tr>
-                                <td style="text-align:center; padding-top:17px;" width="70px">
-                                    <input type="checkbox" id="pilihKirimanTIKTOK_${indexKirim}" checked>
-                                </td>
-                                <td style="text-align:center; padding-top:17px;" width="150px">${items[indexKirim].KODEPESANAN}</td>
-                                <td style="text-align:center; padding-top:17px;" width="80px">${currency(items[indexKirim].TOTALBARANG)}</td>
-                                <td style="text-align:center; padding-top:17px;" width="150px">${items[indexKirim].RESI}</td>
-                                <td style="text-align:center; padding-top:17px;" width="150px">${items[indexKirim].MINTGLKIRIM}</td>
-                                <td style="text-align:left; padding-top:17px;" id="editNoteTiktokDiv_${indexKirim}">${items[indexKirim].CATATANJUAL}</td>
-                            </tr>
-                        `;
+            
+               for(var i = 0 ; i < dataPerKurir.length;i++)
+               {
+                    var rows = dataPerKurir[i]['order'];
+                    if(i == 0)
+                    {
+                        loading();
                     }
-
-                    $(".table-responsive-tiktok-all-kirim_" + i).html(detailKirim);
-
-                    // Handler checkbox per kurir
-                    $("#pilihKirimanAllTIKTOK_" + i).change(function () {
-                        let index = i;
-                        for (let c = 0; c < dataPerKurir[index]['order'].length; c++) {
-                            $(".table-responsive-tiktok-all-kirim_" + index + " #pilihKirimanTIKTOK_" + c).prop("checked", $(this).prop("checked"));
-                        }
-
-                        // Sync with "all kurir" checkbox
-                        let count = dataPerKurir.filter((_, idx) => $("#pilihKirimanAllTIKTOK_" + idx).prop("checked")).length;
-                        $("#pilihKirimanAllKurirTiktok").prop("checked", count === dataPerKurir.length);
-
-                        recountPengiriman();
-                    });
-
-                    // Handler checkbox per order
-                    items.forEach((_, indexKirim) => {
-                        $(".table-responsive-tiktok-all-kirim_" + i + " #pilihKirimanTIKTOK_" + indexKirim).change(function () {
-                            let index = i;
-                            let checkedCount = 0;
-                            for (let c = 0; c < dataPerKurir[index]['order'].length; c++) {
-                                if ($(".table-responsive-tiktok-all-kirim_" + index + " #pilihKirimanTIKTOK_" + c).prop("checked")) {
-                                    checkedCount++;
+                    $.ajax({
+                     	type    : 'POST',
+                     	url     : base_url+'Tiktok/setKirim/',
+                     	data    : {dataNoPackaging: JSON.stringify(rows),index:i},
+                     	dataType: 'json',
+                     	success : function(msg){
+                     	    
+                     	    dataPerKurir[msg.index].loading_done = true;
+                     	    var countDone = 0;
+                     	    
+                     	    for(var i = 0 ; i < dataPerKurir.length ; i++)
+                     	    {
+                     	        if(dataPerKurir[i].loading_done)
+                     	        {
+                     	            countDone++;
+                     	        }
+                     	    }
+                     	    
+                     	    if(dataPerKurir.length == countDone)
+                     	    {
+                     	        Swal.close();
+                     	    }
+                     	    
+                             var detailKirim = "";
+                             var items = dataPerKurir[msg.index]['order'];
+                             var cb_pickup = "";
+                             $("#countKurirAllTiktok_"+msg.index).html(items.length.toString());
+                             for(var indexKirim = 0; indexKirim < items.length;indexKirim++)
+                             {
+                                var dataKirim = msg;
+                                       
+                                $(".table-responsive-tiktok-all-kirim_"+msg.index).html('');
+                                 
+                                var cb_pickup = "";
+                                var cb_pickup_all = `<option value="" selected>-Pilih Waktu Pickup-</option>`;
+                                for(var x = 0 ; x < dataKirim.time_pickup.length ; x++)
+                                {
+                                    var selected = "";
+                                    if(x == 0)
+                                    {
+                                        selected = "selected";
+                                    }
+                                    cb_pickup_all += ("<option value='"+dataKirim.time_pickup[x].id_pickup+"' "+selected+">"+(dataKirim.time_pickup[x].start_pickup+" - "+dataKirim.time_pickup[x].end_pickup)+"</option>");
+                                    cb_pickup += ("<option value='"+dataKirim.time_pickup[x].id_pickup+"' "+selected+">"+(dataKirim.time_pickup[x].start_pickup+" - "+dataKirim.time_pickup[x].end_pickup)+"</option>");
                                 }
-                            }
-
-                            $("#pilihKirimanAllTIKTOK_" + index).prop("checked", checkedCount === dataPerKurir[index]['order'].length);
-
-                            // Sync with all kurir checkbox
-                            let allChecked = true;
-                            for (let z = 0; z < dataPerKurir.length; z++) {
-                                if (!$("#pilihKirimanAllTIKTOK_" + z).prop("checked")) {
-                                    allChecked = false;
-                                    break;
+                                
+                                 var cbJemputTiktok = "";
+                                 var cbJemputTiktokAll = "";
+                                 if(items[0].KODEPENGAMBILAN != "")
+                                 {
+                                     cbJemputTiktokAll += `<option value="PICKUP" selected>Request Pickup</option>`;
+                                     
+                                     cbJemputTiktok += `<option value="PICKUP" selected>Request Pickup</option>`;
+                                 }
+                                 else
+                                 {
+                                     cbJemputTiktokAll += `<option value="">-Pilih Metode-</option>
+                                                          <option value="DROP_OFF" selected>Drop Off</option>
+                                     	                 <option value="PICKUP">Request Pickup</option>`;
+                                     	                 
+                                     cbJemputTiktok += `	<option value="DROP_OFF" selected>Drop Off</option>
+                                               			<option value="PICKUP">Request Pickup</option>`;
+                                 }
+                                 
+                                 detailKirim += ` <tr>
+                                         	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="70px" ><input type="checkbox" id="pilihKirimanTiktok_`+indexKirim+`" width="30px" checked></td>
+                                           	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="150px">`+items[indexKirim].KODEPESANAN+`</td>
+                                           	<td style="vertical-align:top; text-align:center; padding-top:17px;" width="80px">`+currency(items[indexKirim].TOTALBARANG)+`</td>
+                                           	<td style="vertical-align:top; text-align:left;" width="300px">	
+                                           	    <select id="cb_penjemputan_tiktok_`+indexKirim+`"class="form-control "  style="width:300px" panelHeight="auto" required="true">
+                                               		`+cbJemputTiktok+`
+                                               	</select>
+                                           		<select id="cb_pickup_tiktok_`+indexKirim+`" class="form-control "  panelHeight="auto" required="true">
+                                              	      `+cb_pickup+`
+                                              	</select>
+                                             </td>
+                                     		<input type="hidden" id="jadwalKirimTiktok_`+indexKirim+`">
+                                     		<input type="hidden" id="pickupKirimTiktok_`+indexKirim+`">
+                                           	<td style="vertical-align:top; text-align:left; padding-top:17px;" id="editNoteTiktokDiv_`+indexKirim+`">`+items[indexKirim].CATATANJUAL+`</td>
+                                         </tr>`;
+                             }
+                             
+                             $("#aturKurirAllTiktok_"+msg.index).html(`
+                                 <select id="cb_penjemputan_all_tiktok_`+msg.index+`"class="form-control "  style="width:300px" panelHeight="auto" required="true">
+                                 	`+cbJemputTiktokAll+`
+                                 </select>
+                                <select id="cb_pickup_all_tiktok_`+msg.index+`" class="form-control "  panelHeight="auto" required="true">
+                                      `+cb_pickup_all+`
+                                </select>
+                                <input type="hidden" id="pickupKirimTiktokAll_`+indexKirim+`">
+                                
+                             `);
+                             
+                             $(".table-responsive-tiktok-all-kirim_"+msg.index).html(detailKirim);
+                             
+                             $("#cb_pickup_all_tiktok_"+msg.index).hide();
+                             
+                             $("#pilihKirimanAllTiktok_"+msg.index).change(function(){
+                                var index = msg.index; 
+                                for(var c = 0 ; c < dataPerKurir[index]['order'].length; c++)
+                                {
+                                    $(".table-responsive-tiktok-all-kirim_"+index+" #pilihKirimanTiktok_"+c).prop("checked",$(this).prop("checked"));
                                 }
-                            }
-                            $("#pilihKirimanAllKurirTiktok").prop("checked", allChecked);
+                                
+                                var count = 0;
+                                for(var index = 0 ; index < dataPerKurir.length ; index++)
+                                {
+                                    if($("#pilihKirimanAllTiktok_"+index).prop("checked"))
+                                    {
+                                        count++;
+                                    }
+                                }
+                                
+                                if(count == dataPerKurir.length)
+                                {
+                                     $("#pilihKirimanAllKurirTiktok").prop("checked",true);
+                                }
+                                else
+                                {
+                                     $("#pilihKirimanAllKurirTiktok").prop("checked",false);
+                                }
+                                
+                                recountPengiriman();
+                            });
+                             
+                            $(document).on('change', '[id^=cb_penjemputan_all_tiktok_]', function () {
+                                var index = $(this).attr("id").split("_")[$(this).attr("id").split("_").length-1];
+                                if($(this).val() == "DROP_OFF" || $(this).val() == "")
+                                {
+                                    $("#cb_pickup_all_tiktok_"+index).hide();
+                                    $("#cb_pickup_all_tiktok_"+index).val("");
+                                        
+                                    $("#pickupKirimTiktokAll_"+index).val("");
+                                    
+                                    for(var c = 0 ; c < dataPerKurir[index]['order'].length; c++)
+                                    {
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #cb_pickup_tiktok_"+c).hide();
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #pickupKirimTiktok_"+c).val("");
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #cb_penjemputan_tiktok_"+c).val($(this).val());
+                                    }
+                                }
+                                else if($(this).val() == "PICKUP")
+                                {
+                                    $("#cb_pickup_all_tiktok_"+index).show();
+                                    
+                                    for(var c = 0 ; c < dataPerKurir[index]['order'].length; c++)
+                                    {
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #cb_pickup_tiktok_"+c).show();
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #cb_penjemputan_tiktok_"+c).val($(this).val());
+                                    }
+                                }
+                                 
+                                 recountPengiriman();
+                             })
+                             
+                            $("#cb_pickup_all_tiktok_"+msg.index).change(function(){
+                                if($(this).val() != "")
+                                {
+                                    var index = $(this).attr("id").split("_")[$(this).attr("id").split("_").length-1];
+                                    $(".table-responsive-tiktok-all-kirim_"+index+" #pickupKirimTiktok_"+c).val($(this).val());
+                                    for(var c = 0 ; c < dataPerKurir[index]['order'].length; c++)
+                                    {
+                                        $(".table-responsive-tiktok-all-kirim_"+index+" #cb_pickup_tiktok_"+c).val($(this).val());
+                                    }
+                                }
+                                
+                                recountPengiriman();
+                            })
+                             //CHILD
+                             
+                             for(var indexKirim = 0; indexKirim < items.length;indexKirim++)
+                             {    
+                                 
+                             
+                                 for(var x = 0 ; x < dataKirim.time_pickup.length ; x++)
+                                 {
+                                     if(x == 0)
+                                     {
+                                        $(".table-responsive-tiktok-all-kirim_"+msg.index+" #pickupKirimTiktok_"+indexKirim).val(dataKirim.time_pickup[x].id_pickup);
+                                        $('.table-responsive-tiktok-all-kirim_'+msg.index+' #cb_pickup_tiktok_'+indexKirim).hide();
+                                     }
+                                 }
+                                 
+                                 $(".table-responsive-tiktok-all-kirim_"+i+" #editNoteTiktokDiv_"+indexKirim).find('#editNoteTiktok').click(function(){
+                                   var indexKirim = this.parentNode.id.split("_")[this.parentNode.id.split("_").length-1];
+                                   
+                                   $("#rowDataPengirimanTiktok").val(JSON.stringify(dataPerKurir[$(this).closest('tbody').attr("class").split("_")[1]]['order']));
+                                   $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim+"_"+$(this).closest('tbody').attr("class").split("_")[1]);
+                                     catatanPenjualTiktok();
+                                 });
+                                 
+                                 $(".table-responsive-tiktok-all-kirim_"+i+" #jadwalKirimTiktok_"+indexKirim).val(JSON.stringify(msg));
+                                 
+                                 
+                                $(document).on('change', '[id^=cb_penjemputan_tiktok_]', function () {
+                                        // ambil i dari parent class
+                                     let parentClass = $(this).closest('[class^=table-responsive-tiktok-all-kirim_]')
+                                         .attr('class')
+                                         .match(/table-responsive-tiktok-all-kirim_(\d+)/)[1];
+                                    
+                                     let i = parentClass;
+                                     var indexKirim = $(this).attr("id").split("_")[$(this).attr("id").split("_").length-1];
+                                    
+                                     if($(this).val() == "DROP_OFF")
+                                     {
+                                         $(".table-responsive-tiktok-all-kirim_"+i+" #cb_pickup_tiktok_"+indexKirim).hide();
+                                         $(".table-responsive-tiktok-all-kirim_"+i+" #pickupKirimTiktok_"+indexKirim).val("");
+                                         $(".table-responsive-tiktok-all-kirim_"+i+" #cb_penjemputan_tiktok_"+indexKirim).val($(this).val());
+                                     }
+                                     else if($(this).val() == "PICKUP")
+                                     {
+                                         $(".table-responsive-tiktok-all-kirim_"+i+" #cb_pickup_tiktok_"+indexKirim).show();
+                                         $(".table-responsive-tiktok-all-kirim_"+i+" #cb_penjemputan_tiktok_"+indexKirim).val($(this).val());
+                                     }
+                                     
+                                     if(dataPerKurir[i]['order'][0].KODEPENGAMBILAN == "")
+                                     {
+                                         $("#cb_penjemputan_all_tiktok_"+i).val("");
+                                     }
+                                     
+                                     
+                                     recountPengiriman();
+                                 })
+                                 
+                                  $(".table-responsive-tiktok-all-kirim_"+msg.index+" #cb_pickup_tiktok_"+indexKirim).change(function(){
+                                    var indexKirim = $(this).attr("id").split("_")[$(this).attr("id").split("_").length-1];
 
-                            recountPengiriman();
-                        });
-                        
-                        $(".table-responsive-tiktok-all-kirim_"+i+" #editNoteTiktokDiv_"+indexKirim).find('#editNoteTiktok').click(function(){
-                          var indexKirim = this.parentNode.id.split("_")[this.parentNode.id.split("_").length-1];
-                          
-                          $("#rowDataPengirimanTiktok").val(JSON.stringify(dataPerKurir[$(this).closest('tbody').attr("class").split("_")[1]]['order']));
-                          $("#fromNoteTiktok").val("KIRIMTIKTOK_"+indexKirim+"_"+$(this).closest('tbody').attr("class").split("_")[1]);
-                            catatanPenjualTiktok();
-                        });
-                    });
-                            
-                }
+                                    $(".table-responsive-tiktok-all-kirim_"+msg.index+" #pickupKirimTiktok_"+indexKirim).val($(this).val());
+                                        
+                                    if(dataPerKurir[msg.index]['order'][0].KODEPENGAMBILAN == "")
+                                    {
+                                        $("#cb_penjemputan_all_tiktok_"+msg.index).val("");
+                                        $("#cb_pickup_all_tiktok_"+msg.index).hide();
+                                    }
+                                    
+                                    $("#cb_pickup_all_tiktok_"+msg.index).val("");
+                                    
+                                    
+                                    recountPengiriman();
+                                })
+                                
+                                 $(".table-responsive-tiktok-all-kirim_"+msg.index+" #pilihKirimanTiktok_"+indexKirim).change(function(){
+                                    var index = msg.index; 
+                                    var count = 0;
+                                    for(var c = 0 ; c < dataPerKurir[index]['order'].length; c++)
+                                    {
+                                        if($(".table-responsive-tiktok-all-kirim_"+index+" #pilihKirimanTiktok_"+c).prop("checked"))
+                                        {
+                                            count++;
+                                        }
+                                    }
+                                    
+                                    if(count == dataPerKurir[index]['order'].length)
+                                    {
+                                         $("#pilihKirimanAllTiktok_"+index).prop("checked",true);
+                                    }
+                                    else
+                                    {
+                                         $("#pilihKirimanAllTiktok_"+index).prop("checked",false);
+                                    }
+                                    
+                                    var count = 0;
+                                    for(var index = 0 ; index < dataPerKurir.length ; index++)
+                                    {
+                                        if($("#pilihKirimanAllTiktok_"+index).prop("checked"))
+                                        {
+                                            count++;
+                                        }
+                                    }
+                                    
+                                    if(count == dataPerKurir.length)
+                                    {
+                                         $("#pilihKirimanAllKurirTiktok").prop("checked",true);
+                                    }
+                                    else
+                                    {
+                                         $("#pilihKirimanAllKurirTiktok").prop("checked",false);
+                                    }
+                                    
+                                    recountPengiriman();
+                                });
+                             }
+                    }});
+               }
             }
         }
     });
@@ -2468,7 +2826,7 @@ function recountPengiriman() {
     
     for(var x = 0; x < data.length; x++)
     {
-        if(data[x]['STATUS'].toUpperCase() == "DIKEMAS"  && data[x]['KURIR'].toUpperCase() != "DELIVERED BY SELLER")
+        if(data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM")
         {
             dataSimpan.push(data[x]);
         }
@@ -2500,7 +2858,7 @@ function recountPengiriman() {
         {
             if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
             {
-                if($(".table-responsive-tiktok-all-kirim_"+y+" #pilihKirimanTIKTOK_"+index).prop('checked'))
+                if($(".table-responsive-tiktok-all-kirim_"+y+" #pilihKirimanTiktok_"+index).prop('checked'))
                 {
                     countSemuaPengiriman++;
                 }
@@ -2531,9 +2889,9 @@ function kirimKonfirmAllTiktok(){
                 var rows = [];
                 for(var x = 0; x < data.length; x++)
                 {
-                    if(data[x]['STATUS'].toUpperCase() == "DIKEMAS"  && data[x]['KURIR'].toUpperCase() != "DELIVERED BY SELLER")
+                    if(data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM")
                     {
-                        rows.push({order_number : data[x]['KODEPESANAN'], package_id : data[x]['KODEPACKAGING']});
+                        rows.push(data[x]);
                     }
                 }
                 
@@ -2544,9 +2902,9 @@ function kirimKonfirmAllTiktok(){
                 var rows = [];
                 for(var x = 0; x < data.length; x++)
                 {
-                    if(data[x]['STATUS'].toUpperCase() == "DIKEMAS"  && data[x]['KURIR'].toUpperCase() != "DELIVERED BY SELLER")
+                    if(data[x]['STATUS'].toUpperCase() == "SIAP DIKIRIM")
                     {
-                        dataSimpan.push({order_number : data[x]['KODEPESANAN'], KURIR : data[x]['KURIR'],  package_id : data[x]['KODEPACKAGING']});
+                        dataSimpan.push(data[x]);
                     }
                 }
                 
@@ -2575,8 +2933,12 @@ function kirimKonfirmAllTiktok(){
                     {
                         if(dataSimpan[x]['KURIR'] == dataPerKurir[y])
                         {
-                            if($(".table-responsive-tiktok-all-kirim_"+y+" #pilihKirimanTIKTOK_"+index).prop('checked'))
+                            if($(".table-responsive-tiktok-all-kirim_"+y+" #pilihKirimanTiktok_"+index).prop('checked'))
                             {
+                                dataSimpan[x].METHOD = $(".table-responsive-tiktok-all-kirim_"+y+" #cb_penjemputan_tiktok_"+index).val();
+                                dataSimpan[x].JAMAWAL = $(".table-responsive-tiktok-all-kirim_"+y+" #pickupKirimTiktok_"+index).val().split("|")[0];
+                                dataSimpan[x].JAMAKHIR = $(".table-responsive-tiktok-all-kirim_"+y+" #pickupKirimTiktok_"+index).val().split("|")[1];
+                
                                 rows.push(dataSimpan[x]);
                             }
                             index++;
@@ -2598,11 +2960,15 @@ function kirimKonfirmAllTiktok(){
                             		showConfirmButton: false,
                             		timer            : 2000
                             });
-                             $("#modal-kirim-all-tiktok").modal('hide');
-                            	
-                          	setTimeout(() => {
-                            reloadTiktok();
-                          }, "2000");
+                            
+                            if(msg.success)
+                            {
+                                $("#modal-kirim-all-tiktok").modal('hide');
+                                	
+                              	setTimeout(() => {
+                                reloadTiktok();
+                              }, "2000");
+                            }
                  	}
                  });
         	}
@@ -2633,21 +2999,24 @@ function lacakTiktok(){
                 $("#TGLKIRIMLACAKTIKTOK").html("-"); 
                 
                 var stepTracker = "";
-                for(var x = msg.length-1 ; x >= 0;x--)
+                for(var x = 0 ; x < msg.length;x++)
                 {
-                    if(x==msg.length-1)
+                    if(x==0)
                     {
-                        stepTracker += `<div class="step active"><div class="circle">&nbsp</div><div class="label-step" style="font-weight:bold;">`+msg[x]['description']+`<br><span style="color:#949494; font-style:italic;">`+msg[x]['event_time']+`</span></div></div>`;
+                        stepTracker += `<div class="step active"><div class="circle">&nbsp</div><div class="label-step" style="font-weight:bold;">`+msg[x]['description']+`<br><span style="color:#949494; font-style:italic;">`+msg[x]['update_time']+`</span></div></div>`;
                     }
                     else
                     {
-                        stepTracker += `<div class="step"><div class="circle">&nbsp</div><div class="label-step">`+msg[x]['description']+`<br><span style="color:#949494; font-style:italic;">`+msg[x]['event_time']+`</span></div></div>`;
+                        stepTracker += `<div class="step"><div class="circle">&nbsp</div><div class="label-step">`+msg[x]['description']+`<br><span style="color:#949494; font-style:italic;">`+msg[x]['update_time']+`</span></div></div>`;
                     }
                     
-                    if(msg[x]['detail_type'] == "picked_up" || (msg[x]['detail_type'] == "ship_info" && msg[x]['status_code'] == 100018))
+                    if(msg.length > 1)
                     {
-                       //PASTI YANG INDEX TERAKHIR
-                        $("#TGLKIRIMLACAKTIKTOK").html(msg[x]['event_time']); 
+                        if(x == msg.length-2)
+                        {
+                        //PASTI YANG INDEX TERAKHIR
+                        $("#TGLKIRIMLACAKTIKTOK").html(msg[x]['update_time']); 
+                        }
                     }
                 }
                 
@@ -2690,7 +3059,7 @@ function hapusTiktok(){
              $.ajax({
             	type    : 'POST',
             	url     : base_url+'Tiktok/getAlasanPembatalan/',
-            	data    : {kode: row.KODEPESANAN},
+            	data    : {status: row.STATUS},
             	dataType: 'json',
             	success : function(msg){
                     Swal.close();
@@ -2986,6 +3355,44 @@ function noteKonfirmTiktok(){
                  });
         	}
         });
+}
+
+function returBarangTiktok(){
+    $("#modal-form-Tiktok").modal("hide");
+    var row = JSON.parse($("#rowDataTiktok").val());
+    loading();
+    Swal.fire({
+        title: 'Anda Yakin Merubah Pengembalian Dana menjadi Barang ?',
+        showCancelButton: true,
+        confirmButtonText: 'Yakin',
+        cancelButtonText: 'Tidak',
+        }).then((result) => {
+            Swal.close();
+        /* Read more about isConfirmed, isDenied below */
+        	if (result.value) {
+                $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Tiktok/setReturBarang/',
+                	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
+                	dataType: 'json',
+                	success : function(msg){
+                        Swal.fire({
+                        		title            :  msg.msg,
+                        		type             : (msg.success?'success':'error'),
+                        		showConfirmButton: false,
+                        		timer            : 2000
+                        });
+                        
+                        if(msg.success)
+                        {
+                            setTimeout(() => {
+                                reloadTiktok();
+                            }, "2000");
+                        }
+                	}
+                });
+        	}
+    });
 }
 
 function returTiktok(){
