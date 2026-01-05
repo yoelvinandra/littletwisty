@@ -1122,7 +1122,6 @@ class Shopee extends MY_Controller {
                                 $data['success'] = false;
                                 $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
                                 die(json_encode($data));
-                                print_r($ret);
                             }
             	         }
             	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
@@ -1135,6 +1134,10 @@ class Shopee extends MY_Controller {
             	     
                      $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                      $saldoQty = $result->QTY??0;
+                     if($saldoQty < 0)
+                     {
+                         $saldoQty = 0;
+                     }
                     
                     $modelId = 0;
                     
@@ -2094,6 +2097,10 @@ class Shopee extends MY_Controller {
             $itemHeader = $CI->db->query($sql)->row();
             $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
             $saldoQty = $result->QTY??0;
+            if($saldoQty < 0)
+            {
+                $saldoQty = 0;
+            }
     		$parameter['seller_stock'] = array(array('stock' => (int)$saldoQty ));
         }
 		
@@ -2216,6 +2223,10 @@ class Shopee extends MY_Controller {
                                    $itemHeader = $CI->db->query($sql)->row();
                                    $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                                    $saldoQty = $result->QTY??0;
+                                   if($saldoQty < 0)
+                                   {
+                                     $saldoQty = 0;
+                                   }
                                }
                                else
                                {
@@ -5133,7 +5144,6 @@ class Shopee extends MY_Controller {
                     if($ret['error'] != "")
                     {
                         $data['success'] = false;
-                        print_r($ret);
                         echo json_encode($postData).$ret['error']." : ".$ret['message'];
                     }
                     else
@@ -5586,7 +5596,6 @@ class Shopee extends MY_Controller {
     	$parameter['description'] = $description;
         $curl = curl_init();
         
-        print_r($parameter);
         
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/shopee/postAPI/",
@@ -7369,6 +7378,10 @@ class Shopee extends MY_Controller {
                                     	     
                                              $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                                              $saldoQty = $result->QTY??0;
+                                             if($saldoQty < 0)
+                                             {
+                                                 $saldoQty = 0;
+                                             }
                                             
                                             $modelId = 0;
                                             
@@ -8562,7 +8575,6 @@ class Shopee extends MY_Controller {
     		    array_push($parameter['item_id_list'],(int)$itemBarang->IDINDUKBARANGSHOPEE);
     		}
     		
-    		print_r($parameter);
     	    $curl = curl_init();
             
             curl_setopt_array($curl, array(
@@ -8704,6 +8716,10 @@ class Shopee extends MY_Controller {
             	     
                  $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
                  $saldoQty = $result->QTY??0;
+                 if($saldoQty < 0)
+                 {
+                     $saldoQty = 0;
+                 }
                 
                 $modelId = 0;
                 

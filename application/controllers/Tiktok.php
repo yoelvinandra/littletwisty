@@ -1422,7 +1422,11 @@ class Tiktok extends MY_Controller {
                 	     
                      $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
                      $saldoQty = $result->QTY??0;
-                    
+                     if($saldoQty < 0)
+                     {
+                         $saldoQty = 0;
+                     }
+                     
                     $idskuvarian = $itemHeader->IDBARANGTIKTOK;
                     
                     if(explode("_",$itemHeader->IDBARANGTIKTOK)[0] == $itemHeader->IDINDUKBARANGTIKTOK)
@@ -2252,6 +2256,10 @@ class Tiktok extends MY_Controller {
                     $itemHeader = $CI->db->query($sql)->row();
                     $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                     $saldoQty = $result->QTY??0;
+                     if($saldoQty < 0)
+                     {
+                         $saldoQty = 0;
+                     }
                     
                     // $sql = "SELECT IF($dataCustomer->KONSINYASI = 1,HARGAKONSINYASI,HARGACORET) as HARGAPROMO FROM MHARGA WHERE IDBARANG = $itemHeader->IDBARANG AND IDCUSTOMER = $dataCustomer->IDCUSTOMER";
                     // $hargaPromo = $CI->db->query($sql)->row()->HARGAPROMO;  
@@ -2313,6 +2321,10 @@ class Tiktok extends MY_Controller {
             $itemHeader = $CI->db->query($sql)->row();
             $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
             $saldoQty = $result->QTY??0;
+             if($saldoQty < 0)
+            {
+                $saldoQty = 0;
+            }
             
             // $sql = "SELECT IF($dataCustomer->KONSINYASI = 1,HARGAKONSINYASI,HARGACORET) as HARGAPROMO FROM MHARGA WHERE IDBARANG = $itemHeader->IDBARANG AND IDCUSTOMER = $dataCustomer->IDCUSTOMER";
             // $hargaPromo = $CI->db->query($sql)->row()->HARGAPROMO;
@@ -6817,6 +6829,11 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                   	     
                        $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
                        $saldoQty = $result->QTY??0;
+                       
+                         if($saldoQty < 0)
+                         {
+                             $saldoQty = 0;
+                         }
                       
                       $idskuvarian = $itemHeader->IDBARANGTIKTOK;
                       
@@ -7695,6 +7712,10 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             	     
                  $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $lokasi, date('Y-m-d'));
                  $saldoQty = $result->QTY??0;
+                   if($saldoQty < 0)
+                     {
+                         $saldoQty = 0;
+                     }
                 
                 $idskuvarian = $itemHeader->IDBARANGTIKTOK;
                 

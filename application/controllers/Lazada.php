@@ -706,6 +706,10 @@ class Lazada extends MY_Controller {
         	    
             	$result   = get_saldo_stok_new($dataHeader[$x]->IDPERUSAHAAN,$dataHeader[$x]->IDBARANG, $idlokasiset, date('Y-m-d'));
                 $saldoQty = $result->QTY??0;
+                if($saldoQty < 0)
+                {
+                    $saldoQty = 0;
+                }
                                               
             	 array_push($detailParameter,
             	       ['Sku' => [
@@ -1476,7 +1480,11 @@ class Lazada extends MY_Controller {
                     $itemHeader = $CI->db->query($sql)->row();
                     $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
                     $saldoQty = $result->QTY??0;
-                    
+                    if($saldoQty < 0)
+                    {
+                        $saldoQty = 0;
+                    }
+                     
     		       array_push($detailParameter,
     		       ['Sku' => [
     		            'Status' => 'active',
@@ -1513,6 +1521,10 @@ class Lazada extends MY_Controller {
             $itemHeader = $CI->db->query($sql)->row();
             $result   = get_saldo_stok_new($itemHeader->IDPERUSAHAAN,$itemHeader->IDBARANG, $idlokasiset, date('Y-m-d'));
             $saldoQty = $result->QTY??0;
+            if($saldoQty < 0)
+            {
+                $saldoQty = 0;
+            }
             
 		    $detailParameter = ['Sku' => [[
 		        'Status' => 'active',
@@ -5530,9 +5542,13 @@ class Lazada extends MY_Controller {
                   for($x = 0; $x < count($dataHeader) ; $x++)
                   {
                        
-                  	$result   = get_saldo_stok_new($dataHeader[$x]->IDPERUSAHAAN,$dataHeader[$x]->IDBARANG, $lokasi, date('Y-m-d'));
+                  	  $result   = get_saldo_stok_new($dataHeader[$x]->IDPERUSAHAAN,$dataHeader[$x]->IDBARANG, $lokasi, date('Y-m-d'));
                       $saldoQty = $result->QTY??0;
-                                                     
+                      if($saldoQty < 0)
+                      {
+                          $saldoQty = 0;
+                      }                         
+                      
                   	 array_push($detailParameter,
                   	       ['Sku' => [
                   	            'ItemId' => $dataHeader[$x]->IDINDUKBARANGLAZADA,
@@ -6526,6 +6542,11 @@ class Lazada extends MY_Controller {
             
         	$result   = get_saldo_stok_new($dataHeader[$x]->IDPERUSAHAAN,$dataHeader[$x]->IDBARANG, $idlokasiset, date('Y-m-d'));
             $saldoQty = $result->QTY??0;
+            
+             if($saldoQty < 0)
+             {
+                 $saldoQty = 0;
+             }
   
         	 array_push($detailParameter,
         	       ['Sku' => [
