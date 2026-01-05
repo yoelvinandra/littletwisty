@@ -6963,7 +6963,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             $ret =  json_decode($response,true);
             if($ret['code'] != 0)
             {
-                echo $ret['code']." : ".$ret['message'];
+                $finalResult['errorMsg'] =  "1 : ".$ret['code']." : ".$ret['message'];
                 $statusok = false;
                 $countTotal = 0;
             }
@@ -6978,17 +6978,40 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             }
         }
         
+        $pesananUpdate = "";
+        
         for($x = 0  ; $x < count($result); $x++)
         {
-            $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS,if(MINTGLKIRIM = '0000-00-00 00:00:00','-',MINTGLKIRIM) as MINTGLKIRIM  FROM TPENJUALANMARKETPLACE 
-                                    WHERE MARKETPLACE = 'TIKTOK' 
-                                    and KODEPENJUALANMARKETPLACE = '".$result[$x]['id']."'";
-                                
-            $dataPesananDB = $CI->db->query($sql)->row();
+            $pesananUpdate .= "'".$result[$x]['id']."',";
+        }
+        
+        $pesananUpdate = substr($pesananUpdate, 0, -1);
+        
+        for($x = 0  ; $x < count($result); $x++)
+        {
             
-            $ada = $dataPesananDB->ADA;
-            $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
-            $idtrans =  $dataPesananDB->IDTRANS;
+            $sql = "SELECT 1 as ADA , KODEPENJUALANMARKETPLACE, ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS  FROM TPENJUALANMARKETPLACE 
+                                    WHERE MARKETPLACE = 'TIKTOK' 
+                                    and KODEPENJUALANMARKETPLACE in (".$pesananUpdate.")";
+                                
+            $queryPesananDB = $CI->db->query($sql)->result();
+            
+            $ada = 0;
+            $kodepengembalian = "";
+            $idtrans =  0;
+            $catatanJual = "";
+            $tglkirim = "-";
+            
+            foreach($queryPesananDB as $dataPesananDB)
+            {
+                if($dataPesananDB->KODEPENJUALANMARKETPLACE == $result[$x]['id'])
+                {
+                    $ada = $dataPesananDB->ADA;
+                    $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
+                    $idtrans =  $dataPesananDB->IDTRANS;
+                    $catatanJual = $dataPesananDB->CATATANPENJUAL;
+                }
+            }
             
             $dataDetail = $result[$x]['line_items'];
             $allsku = "";
@@ -7050,7 +7073,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             $data['STATUSMARKETPLACE']              = $result[$x]['status'];
             $data['STATUS']                         = $this->getStatus($result[$x]['status'])['state'];
             $data['CATATANPEMBELI']                 = $result[$x]['buyer_message'];
-            $data['CATATANPENJUAL']                 = ($dataPesananDB->CATATANPENJUAL??"");
+            $data['CATATANPENJUAL']                 = $catatanJual;
             $data['CATATANPENGEMBALIAN']            = ($result[$x]['cancel_reason']??"");
             $data["LASTUPDATED"]                    =  date("Y-m-d H:i:s");
             
@@ -7174,7 +7197,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         $ret =  json_decode($response,true);
         if($ret['code'] != 0)
         {
-            echo $ret['code']." : ".$ret['message'];
+           $finalResult['errorMsg'] =  "2 : ".$ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -7235,7 +7258,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         $ret =  json_decode($response,true);
         if($ret['code'] != 0)
         {
-            echo $ret['code']." : ".$ret['message'];
+           $finalResult['errorMsg'] =  "3 : ".$ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -7281,7 +7304,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                $ret =  json_decode($response,true);
                if($ret['code'] != 0)
                {
-                   echo $ret['code']." : ".$ret['message'];
+                  $finalResult['errorMsg'] =  "4 : ".$ret['code']." : ".$ret['message'];
                }
                else
                {
@@ -7354,7 +7377,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             $ret =  json_decode($response,true);
             if($ret['code'] != 0)
             {
-                echo $ret['code']." : ".$ret['message'];
+                $finalResult['errorMsg'] =  "5 : ".$ret['code']." : ".$ret['message'];
                 $statusok = false;
                 $countTotal = 0;
             }
@@ -7474,7 +7497,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         $ret =  json_decode($response,true);
         if($ret['code'] != 0)
         {
-            echo $ret['code']." : ".$ret['message'];
+           $finalResult['errorMsg'] =  "6 : ".$ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -7592,7 +7615,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         $ret =  json_decode($response,true);
         if($ret['code'] != 0)
         {
-            echo $ret['code']." : ".$ret['message'];
+            $finalResult['errorMsg'] =  "7 : ".$ret['code']." : ".$ret['message'];
         }
         else
         {
@@ -7657,10 +7680,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                         
                         if($ret['code'] != 0)
                         {
-                            $data['success'] = false;
-                            $data['msg'] =  $ret['error']." STOK 1 : ".$ret['message'];
-                             echo $ret['code']." : ".$ret['message'];
-                            // print_r($ret);
+                            $finalResult['errorMsg'] =  "8 : ".$ret['code']." : ".$ret['message'];
                         }
                      }
                      $idHeader = $itemHeader->IDINDUKBARANGTIKTOK;
@@ -7715,9 +7735,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             
             if($ret['code'] != 0)
             {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." STOK 2 : ".$ret['message'];
-                echo $ret['code']." : ".$ret['message'];
+                $finalResult['errorMsg'] =  "9 : ".$ret['code']." : ".$ret['message'];
             }
         }
         //SET STOK

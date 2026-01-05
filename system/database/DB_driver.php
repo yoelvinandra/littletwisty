@@ -384,16 +384,42 @@ abstract class CI_DB_driver {
 	 */
 	public function initialize()
 	{
+	   // if ($this->conn_id)
+    //     {
+    //         // 🔥 AUTO-RECONNECT FIX
+    //         if ($this->dbdriver === 'mysqli' && is_object($this->conn_id))
+    //         {
+    //             if ( ! mysqli_ping($this->conn_id))
+    //             {
+    //                 $this->reconnect();
+    //             }
+    //         }
+    
+    //         return TRUE;
+    //     }
+	    
+
 		/* If an established connection is available, then there's
 		 * no need to connect and select the database.
 		 *
 		 * Depending on the database driver, conn_id can be either
 		 * boolean TRUE, a resource or an object.
 		 */
-		if ($this->conn_id)
-		{
-			return TRUE;
-		}
+		 
+        if ($this->conn_id)
+        {
+            // 🔥 AUTO-RECONNECT FIX
+            if ($this->dbdriver === 'mysqli' && is_object($this->conn_id))
+            {
+                if ( ! mysqli_ping($this->conn_id))
+                {
+                    $this->reconnect();
+                }
+            }
+    
+            return TRUE;
+        }
+
 
 		// ----------------------------------------------------------------
 

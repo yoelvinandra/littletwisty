@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Init extends MY_Controller {
 	
-	public function index()
+	public function Shopee()
 	{
 	     $active = $this->model_master_config->getConfigMarketplace('SHOPEE','ACTIVE');
 	     
@@ -29,6 +29,14 @@ class Init extends MY_Controller {
             print_r($response);
             echo "<br><br>";
 	     }
+	     else
+	     {
+	         echo "SHOPEE NO ACCESS<br>";
+	     }
+	}
+	
+	public function Tiktok()
+	{
 	     
 	     $active = $this->model_master_config->getConfigMarketplace('TIKTOK','ACTIVE');
 	     
@@ -38,6 +46,14 @@ class Init extends MY_Controller {
             echo "TIKTOK<br>";
             echo "<br><br>";
 	     }
+	     else
+	     {
+	         echo "TIKTOK NO ACCESS<br>";
+	     }
+	}
+	
+	public function Lazada()
+	{
         
          $active = $this->model_master_config->getConfigMarketplace('LAZADA','ACTIVE');
 	     
@@ -63,6 +79,10 @@ class Init extends MY_Controller {
             print_r($response);
             echo "<br><br>";
     	 }
+    	 else
+	     {
+	         echo "LAZADA NO ACCESS<br>";
+	     }
 	}
 	
 }

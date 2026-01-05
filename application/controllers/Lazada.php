@@ -5780,9 +5780,8 @@ class Lazada extends MY_Controller {
             $ret =  json_decode($response,true);
             if($ret['code'] != 0)
             {
-                $ret['success'] = false;
-                $ret['msg'] = $ret['message'];
-                echo $ret['code']." : ".$ret['msg'];
+                $finalResult['errorMsg'] =  "1 : ".$ret['code']." : ".$ret['message'];
+                $countTotal = 0;
             }
             else
             {
@@ -5835,9 +5834,7 @@ class Lazada extends MY_Controller {
 
                 if($ret['code'] != 0)
                 {
-                    $ret['success'] = false;
-                    $ret['msg'] = $ret['message'];
-                    echo $ret['code']." : ".$ret['msg'];
+                   $finalResult['errorMsg'] =  "2 : ".$ret['code']." : ".$ret['message'];
                 }
                 else
                 {
@@ -5859,18 +5856,40 @@ class Lazada extends MY_Controller {
         
         $tempDataPack = [];
         $tempDataShipping = [];
+        $pesananUpdate = "";
         
         for($x = 0  ; $x < count($history); $x++)
         {
-            $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS,if(MINTGLKIRIM = '0000-00-00 00:00:00','-',MINTGLKIRIM) as MINTGLKIRIM  FROM TPENJUALANMARKETPLACE 
+            $pesananUpdate .= "'".$history[$x]['order_number']."',";
+        }
+        
+        $pesananUpdate = substr($pesananUpdate, 0, -1);
+        
+        for($x = 0  ; $x < count($history); $x++)
+        {
+            $sql = "SELECT 1 as ADA , KODEPENJUALANMARKETPLACE, ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE,CATATANPENJUAL,IDPENJUALANMARKETPLACE as IDTRANS,if(MINTGLKIRIM = '0000-00-00 00:00:00','-',MINTGLKIRIM) as MINTGLKIRIM  FROM TPENJUALANMARKETPLACE 
                                     WHERE MARKETPLACE = 'LAZADA' 
-                                    and KODEPENJUALANMARKETPLACE = '".$history[$x]['order_number']."'";
+                                    and KODEPENJUALANMARKETPLACE in (".$pesananUpdate.")";
                                 
-            $dataPesananDB = $CI->db->query($sql)->row();
+            $queryPesananDB = $CI->db->query($sql)->result();
             
-            $ada = $dataPesananDB->ADA;
-            $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
-            $idtrans =  $dataPesananDB->IDTRANS;
+            $ada = 0;
+            $kodepengembalian = "";
+            $idtrans =  0;
+            $catatanJual = "";
+            $tglkirim = "-";
+            
+            foreach($queryPesananDB as $dataPesananDB)
+            {
+                if($dataPesananDB->KODEPENJUALANMARKETPLACE == $history[$x]['order_number'])
+                {
+                    $ada = $dataPesananDB->ADA;
+                    $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
+                    $idtrans =  $dataPesananDB->IDTRANS;
+                    $catatanJual = $dataPesananDB->CATATANPENJUAL;
+                    $tglkirim = $dataPesananDB->MINTGLKIRIM;
+                }
+            }
             
             $dataDetail = $history[$x]['order_items'];
             $allsku = "";
@@ -5934,7 +5953,7 @@ class Lazada extends MY_Controller {
             $data['KOTA']                           = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","",strtoupper($history[$x]['address_shipping']['city']))));
             $data['SKUPRODUK']                      = $allsku;
             $data['SKUPRODUKOLD']                   = $allsku;
-            if($this->extractDateTime($data['ALLBARANG'][0]['fulfillment_sla']) != null && $dataPesananDB->MINTGLKIRIM == "-")
+            if($this->extractDateTime($data['ALLBARANG'][0]['fulfillment_sla']) != null && $tglkirim == "-")
             {
                 $data['MINTGLKIRIM']                    = $this->extractDateTime($data['ALLBARANG'][0]['fulfillment_sla']);
             }
@@ -5946,7 +5965,7 @@ class Lazada extends MY_Controller {
             $data['STATUSMARKETPLACE']              = $this->getStatus($history[$x]['statuses'])['statusLabel'];
             $data['STATUS']                         = $this->getStatus($history[$x]['statuses'])['state'];
             $data['CATATANPEMBELI']                 = $history[$x]['buyer_note'];
-            $data['CATATANPENJUAL']                 = ($dataPesananDB->CATATANPENJUAL??"");
+            $data['CATATANPENJUAL']                 = $catatanJual;
             $data["LASTUPDATED"]                    =  date("Y-m-d H:i:s");
             
             if($ada)
@@ -6101,9 +6120,7 @@ class Lazada extends MY_Controller {
    
                 if($ret['code'] != 0)
                 { 
-                    $ret['success'] = false;
-                    $ret['msg'] = $ret['message'];
-                    echo $ret['code']." : ".$ret['msg'];
+                   $finalResult['errorMsg'] =  "3 : ".$ret['code']." : ".$ret['message'];
                 }
                 else
                 {
@@ -6146,9 +6163,7 @@ class Lazada extends MY_Controller {
    
                 if($ret['code'] != 0)
                 { 
-                    $ret['success'] = false;
-                    $ret['msg'] = $ret['message'];
-                    echo $ret['code']." : ".$ret['msg'];
+                    $finalResult['errorMsg'] =  "4 : ".$ret['code']." : ".$ret['message'];
                 }
                 else
                 {
@@ -6272,9 +6287,8 @@ class Lazada extends MY_Controller {
             $ret =  json_decode($response,true);
             if($ret['code'] != 0)
             {
-                $ret['success'] = false;
-                $ret['msg'] = $ret['message'];
-                echo $ret['code']." : ".$ret['msg'];
+                $finalResult['errorMsg'] =  "5 : ".$ret['code']." : ".$ret['message'];
+                $countTotal = 0;
             }
             else
             {
@@ -6558,9 +6572,7 @@ class Lazada extends MY_Controller {
                 
                 if($ret['code'] != 0)
                 { 
-                    $ret['success'] = false;
-                    $ret['msg'] = $ret['message'];
-                    echo $ret['code']." : ".$ret['msg'];
+                    $finalResult['errorMsg'] =  "6 : ".$ret['code']." : ".$ret['message'];
                 }
                 else
                 {
@@ -6602,7 +6614,7 @@ class Lazada extends MY_Controller {
  
         if($ret['code'] != 0)
         {
-            echo $ret['error']." : ".$ret['message'];
+           $finalResult['errorMsg'] =  "7 : ".$ret['code']." : ".$ret['message'];
         }
         else
         {    

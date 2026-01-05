@@ -7014,7 +7014,7 @@ class Shopee extends MY_Controller {
 	        $labelKartuStok = "KARTUSTOK";
 	    }
 	    
-        $sqlStok = "SELECT count(IDTRANS) as ADA FROM $labelKartuStok WHERE KODETRANS = '".$kodetrans."'";
+        $sqlStok = "SELECT count(IDTRANS) as ADA FROM $labelKartuStok WHERE KODETRANS = '".$kodetrans."' LIMIT 1";
         $ada = $CI->db->query($sqlStok)->row()->ADA;
         if($ada == 0)
         {
@@ -7071,7 +7071,7 @@ class Shopee extends MY_Controller {
 	        $labelKartuStok = "KARTUSTOK";
 	    }
 	    
-        $sqlStok = "SELECT count(IDTRANS) as ADA FROM $labelKartuStok WHERE KODETRANS = '".$kodetrans."'";
+        $sqlStok = "SELECT count(IDTRANS) as ADA FROM $labelKartuStok WHERE KODETRANS = '".$kodetrans."' LIMIT 1";
         $ada = $CI->db->query($sqlStok)->row()->ADA;
         if($ada == 0)
         {
@@ -7497,7 +7497,7 @@ class Shopee extends MY_Controller {
         echo(json_encode($data));
 
 	}
-	
+
 	public function init($tgl_aw,$tgl_ak,$jenis = 'create_time') {
 	    
 	    if($jenis == "update")
@@ -7578,7 +7578,7 @@ class Shopee extends MY_Controller {
                  $ret =  json_decode($response,true);
                  if($ret['error'] != "")
                  {
-                     echo $ret['error']." : ".$ret['message'];
+                     $finalResult['errorMsg'] =  "1 : ".$ret['error']." : ".$ret['message'];
                      $statusok = false;
                  }
                  else
@@ -7643,7 +7643,7 @@ class Shopee extends MY_Controller {
                 $ret =  json_decode($response,true);
                 if($ret['error'] != "")
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    $finalResult['errorMsg'] =  "2 : ".$ret['error']." : ".$ret['message'];
                     $statusok = false;
                 }
                 else
@@ -7737,10 +7737,12 @@ class Shopee extends MY_Controller {
         
         $parameter = [];
         $packaging = [];
+        $pesananUpdate = "";
         $indexPackaging = 0;
         
         for($f = 0 ; $f < count($finalData);$f++){
             $packaging[count($packaging)]['package_number'] = $finalData[$f]['KODEPACKAGING'];
+            $pesananUpdate .= "'".$finalData[$f]['KODEPENJUALANMARKETPLACE']."',";
             if(($f % 49 == 0 && $f != 0) || $f == count($finalData)-1)
             {
                 //GET RESI
@@ -7769,24 +7771,37 @@ class Shopee extends MY_Controller {
                 $ret =  json_decode($response,true);
                 if($ret['error'] != "")
                 {
-                    echo $ret['error']." : ".$ret['message'];
+                    $finalResult['errorMsg'] =  "3 : ".$ret['error']." : ".$ret['message'];
                     $statusok = false;
                 }
                 else
                 {
+                    
+                    $pesananUpdate = substr($pesananUpdate, 0, -1);
+                    $sql = "SELECT 1 as ADA , KODEPENJUALANMARKETPLACE, ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACE 
+                                    WHERE MARKETPLACE = 'SHOPEE' 
+                                    and KODEPENJUALANMARKETPLACE in (".$pesananUpdate.")";
+                                
+                    $queryPesananDB = $CI->db->query($sql)->result();
+                        
                     for($x = 0 ;$x < count($ret['response']['success_list']); $x++)
                     {
-                       $sql = "SELECT count(KODEPENJUALANMARKETPLACE) as ADA,ifnull(KODEPENGEMBALIANMARKETPLACE,'') as KODEPENGEMBALIANMARKETPLACE FROM TPENJUALANMARKETPLACE 
-                                    WHERE MARKETPLACE = 'SHOPEE' 
-                                    and KODEPENJUALANMARKETPLACE = '".$finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE']."'";
-                                
-                        $dataPesananDB = $CI->db->query($sql)->row();
+                        $ada = 0;
+                        $kodepengembalian = "";
                         
-                        $ada = $dataPesananDB->ADA;
-                        $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
+                        foreach($queryPesananDB as $dataPesananDB)
+                        {
+                            if($dataPesananDB->KODEPENJUALANMARKETPLACE == $finalData[$indexPackaging]['KODEPENJUALANMARKETPLACE'])
+                            {
+                                $ada = $dataPesananDB->ADA;
+                                $kodepengembalian = $dataPesananDB->KODEPENGEMBALIANMARKETPLACE;
+                            }
+                        }
                         
                         $finalData[$indexPackaging]['RESI'] = $ret['response']['success_list'][$x]['tracking_number'];
                         $finalData[$indexPackaging]['KODEPENGAMBILAN'] = $ret['response']['success_list'][$x]['pickup_code'];
+                        
+                    
                         
                         if($ada)
                         {
@@ -7828,7 +7843,7 @@ class Shopee extends MY_Controller {
                             foreach($detailBarang as $itemBarang){
                                 $urutan++;
                                 
-                               //KHUSUS SKU YANG KOSONG
+                              //KHUSUS SKU YANG KOSONG
                                 if($itemBarang['model_sku'] == "")
                                 {
                                     $sku = $itemBarang['item_sku'];
@@ -7866,7 +7881,7 @@ class Shopee extends MY_Controller {
                         $indexPackaging++;
                     }
                 }
-                
+                $pesananUpdate = "";
                 $packaging = [];
             }
         }
@@ -7896,7 +7911,7 @@ class Shopee extends MY_Controller {
         $ret =  json_decode($response,true);
         if($ret['error'] != "")
         {
-            echo $ret['error']." : ".$ret['message'];
+            $finalResult['errorMsg'] =  "4 : ".$ret['error']." : ".$ret['message'];
         }
         else
         {
@@ -7990,10 +8005,10 @@ class Shopee extends MY_Controller {
     		{
     		    //KALAU DALAM PENGIRIMAN, HAPUS AJA PDF SISA
     		   if(strtoupper($this->getStatus($item['STATUSMARKETPLACE'])['status']) == "DALAM PENGIRIMAN")
-               {
+              {
                  unlink($file);
                  unlink($fileCompressed);
-               }
+              }
     		}
 		}
 		
@@ -8043,10 +8058,7 @@ class Shopee extends MY_Controller {
 		            $data = [];
                     if($ret['error'] != "")
                     {
-                        $data['success'] = false;
-                        $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
-                        $data['ret'] = $ret;
-                        echo $ret['error']." : ".$ret['message'];
+                         $finalResult['errorMsg'] =  "5 : ".$ret['error']." : ".$ret['message'];
                     }
                     else
                     {
@@ -8093,10 +8105,7 @@ class Shopee extends MY_Controller {
 		                $data = [];
                         if($ret['error'] != "")
                         {
-                            $data['success'] = false;
-                            $data['msg'] =  "2 ".$ret['error']." : ".$ret['message'];
-                            $data['ret'] = $ret;
-                            echo $ret['error']." : ".$ret['message'];
+                             $finalResult['errorMsg'] =  "6 : ".$ret['error']." : ".$ret['message'];
                         }
                         else
                         {
@@ -8125,10 +8134,7 @@ class Shopee extends MY_Controller {
                                 
                             if($ret['error'] != "")
                             {
-                                $data['success'] = false;
-                                $data['msg'] =   "3 ".$ret['error']." : ".$ret['message'];
-                                $data['ret'] = $ret;
-                                 echo $ret['error']." : ".$ret['message'];
+                                $finalResult['errorMsg'] =  "7 : ".$ret['error']." : ".$ret['message'];
                             }
                             else
                             {
@@ -8170,10 +8176,7 @@ class Shopee extends MY_Controller {
                                     $ret =  json_decode($response,true);
                                     if($ret['error'] != "")
                                     {
-                                        $data['success'] = false;
-                                        $data['msg'] =   "4 ".$ret['error']." : ".$ret['message'];
-                                        $data['ret'] = $ret;
-                                        echo $ret['error']." : ".$ret['message'];
+                                         $finalResult['errorMsg'] =  "8 : ".$ret['error']." : ".$ret['message'];
                                     }
                                     else
                                     {
@@ -8196,7 +8199,7 @@ class Shopee extends MY_Controller {
                                         } else {
                                             $data['success'] = false;
                                             $data['msg'] =  "Failed to download file. HTTP Status: $http_code\n";
-                                             echo $ret['error']." : ".$ret['message'];
+                                             $finalResult['errorMsg'] =  "9 : ".$ret['error']." : ".$ret['message'];
                                         }
                                     }
                                 }
@@ -8246,10 +8249,7 @@ class Shopee extends MY_Controller {
 		          $data = [];
                   if($ret['error'] != "")
                   {
-                      $data['success'] = false;
-                      $data['msg'] =   "1 ".$ret['error']." : ".$ret['message'];
-                      $data['ret'] = $ret;
-                      echo $ret['error']." : ".$ret['message'];
+                      $finalResult['errorMsg'] =  "10 : ".$ret['error']." : ".$ret['message'];
                   }
                   else
                   {
@@ -8315,18 +8315,18 @@ class Shopee extends MY_Controller {
                  $curl = curl_init();
                 //GET ORDER LIST
                  curl_setopt_array($curl, array(
-                   CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
-                   CURLOPT_RETURNTRANSFER => true,
-                   CURLOPT_ENCODING => '',
-                   CURLOPT_MAXREDIRS => 10,
-                   CURLOPT_TIMEOUT => 30,
-                   CURLOPT_FOLLOWLOCATION => true,
-                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                   CURLOPT_CUSTOMREQUEST => 'POST',
-                   CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_list','parameter' => $parameter),
-                   CURLOPT_HTTPHEADER => array(
+                  CURLOPT_URL => $this->config->item('base_url')."/shopee/getAPI/",
+                  CURLOPT_RETURNTRANSFER => true,
+                  CURLOPT_ENCODING => '',
+                  CURLOPT_MAXREDIRS => 10,
+                  CURLOPT_TIMEOUT => 30,
+                  CURLOPT_FOLLOWLOCATION => true,
+                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                  CURLOPT_CUSTOMREQUEST => 'POST',
+                  CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_list','parameter' => $parameter),
+                  CURLOPT_HTTPHEADER => array(
                      'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                   ),
+                  ),
                  ));
                  
                  $response = curl_exec($curl);
@@ -8334,8 +8334,7 @@ class Shopee extends MY_Controller {
                  $ret =  json_decode($response,true);
                  if($ret['error'] != "")
                  {
-                     echo $ret['error']." : ".$ret['message'];
-                     $statusok = false;
+                      $finalResult['errorMsg'] =  "11 : ".$ret['error']." : ".$ret['message'];
                  }
                  else
                  {
@@ -8367,7 +8366,7 @@ class Shopee extends MY_Controller {
                         $ret =  json_decode($response,true);
                         if($ret['error'] != "")
                         {
-                            echo $ret['error']." : ".$ret['message'];
+                            $finalResult['errorMsg'] =  "12 : ".$ret['error']." : ".$ret['message'];
                         }
                         else
                         {
@@ -8457,7 +8456,7 @@ class Shopee extends MY_Controller {
         $ret =  json_decode($response,true);
         if($ret['error'] != "")
         {
-            echo $ret['error']." : ".$ret['message'];
+             $finalResult['errorMsg'] =  "13 : ".$ret['error']." : ".$ret['message'];
         }
         else
         {
@@ -8499,7 +8498,7 @@ class Shopee extends MY_Controller {
 
         foreach($dataRetur as $itemRetur)
         {
-           $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
+          $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
         }
         //CEK LOKASI RETURN
         
@@ -8530,7 +8529,7 @@ class Shopee extends MY_Controller {
         $ret =  json_decode($response,true);
         if($ret['error'] != "")
         {
-            echo $ret['error']." : ".$ret['message'];
+             $finalResult['errorMsg'] =  "14 : ".$ret['error']." : ".$ret['message'];
         }
         else
         {
@@ -8589,7 +8588,7 @@ class Shopee extends MY_Controller {
          
             if($ret['error'] != "")
             {
-                echo $ret['error']." BOOST : ".$ret['message'];
+                $finalResult['errorMsg'] =  "15 : ".$ret['error']." : ".$ret['message'];
             }
         }
         
@@ -8623,7 +8622,7 @@ class Shopee extends MY_Controller {
         
         if($ret['error'] != "")
         {
-            echo $ret['error']." LOKASI : ".$ret['message'];
+            $finalResult['errorMsg'] =  "16 : ".$ret['error']." : ".$ret['message'];
         }
         else
         {
@@ -8692,9 +8691,7 @@ class Shopee extends MY_Controller {
                         
                         if($ret['error'] != "")
                         {
-                            $data['success'] = false;
-                            $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                             echo $ret['error']." : ".$ret['message'];
+                             $finalResult['errorMsg'] =  "17 : ".$ret['error']." : ".$ret['message'];
                         }
             	         }
             	         $idHeader = $itemHeader->IDINDUKBARANGSHOPEE;
@@ -8747,9 +8744,7 @@ class Shopee extends MY_Controller {
             
             if($ret['error'] != "")
             {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." STOK : ".$ret['message'];
-                 echo $ret['error']." : ".$ret['message'];
+                 $finalResult['errorMsg'] =  "18 : ".$ret['error']." : ".$ret['message'];
             }
         }
         //SET STOK

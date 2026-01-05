@@ -8,11 +8,39 @@ class Model_master_config extends CI_Model{
 	
 	public function getConfigMarketplace($modul,$conf){
 	    
-        $this->maindb->reconnect();
-		return $this->maindb
-					->where('MODUL',$modul)
-					->where('CONFIG',$conf)
-					->get('MCONFIG')->row()->VALUE;
+        // 🔥 STEP 2: LOAD CACHE
+        $this->load->driver('cache', ['adapter' => 'file']);
+        
+        $cacheKey = 'MCONFIG_'.$modul.'_'.$conf;
+        
+        // 1️⃣ Ambil dari cache dulu
+        $data = $this->cache->get($cacheKey);
+        if ($data !== FALSE) {
+            if ($this->cache->get($cacheKey) !== FALSE) {
+                return $data;
+            }
+        }
+        
+        // 2️⃣ Pastikan DB hidup
+        if ($this->maindb->conn_id === FALSE) {
+            $this->maindb->reconnect();
+        }
+        
+        // 3️⃣ Query DB (AMAN)
+        $row = $this->maindb
+                    ->select('VALUE')
+                    ->where('MODUL', $modul)
+                    ->where('CONFIG', $conf)
+                    ->get('MCONFIG')
+                    ->row();
+        
+        // 4️⃣ Ambil VALUE
+        $data = ($row && property_exists($row, 'VALUE')) ? $row->VALUE : null;
+        
+        // 5️⃣ Simpan ke cache (termasuk 0 / empty)
+        $this->cache->save($cacheKey, $data, 86400);
+        
+        return $data;
 	}
 	
 	public function setConfigMarketplace($modul,$param,$val){
