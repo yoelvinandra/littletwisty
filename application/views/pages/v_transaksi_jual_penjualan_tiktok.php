@@ -1416,7 +1416,7 @@ function changeTabTiktok(index){
                                 
                             }  else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && row.BARANGSAMPAIMANUAL == 0){
                                 html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
-                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_lazada' class='btn btn-danger'  style='width:122px;' >Retur B. Manual</button>";
+                                html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_tiktok' class='btn btn-danger'  style='width:122px;' >Retur B. Manual</button>";
                             }   else {
                                 html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                             }
@@ -1429,9 +1429,13 @@ function changeTabTiktok(index){
                         "targets": 1,
                         render: function (data, type, row) {
                             let html = row.STATUS;
-                            if(row.STATUS.toUpperCase() == "SELESAI"  && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1)){
+                            if(row.STATUS.toUpperCase() == "SELESAI"  && (row.BARANGSAMPAIMANUAL == 1)){
+                                html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang Manual</div><div style='margin:auto;'></div>";
+                            }
+                            else if(row.STATUS.toUpperCase() == "SELESAI"  && (row.BARANGSAMPAI == 1)){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang</div><div style='margin:auto;'></div>";
-                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
+                            } 
+                            else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Dana</div><div style='margin:auto;'></div>";
                             }
                             return html;
@@ -1535,7 +1539,7 @@ function changeTabTiktok(index){
     		else if(mode == "btn_lacak_tiktok"){lacakTiktok();}
     		else if(mode == "btn_kembali_tiktok"){kembaliTiktok();}
     		else if(mode == "btn_retur_tiktok"){returTiktok();}
-    	    else if(mode == "btn_retur_manual_tiktok"){returBarangLazada();}
+    	    else if(mode == "btn_retur_manual_tiktok"){returBarangTiktok();}
     	} );
     	
     	$('#dataGridTiktok'+index+' tbody').on( 'click', 'i', function () {
@@ -2999,6 +3003,8 @@ function lacakTiktok(){
                 $("#TGLKIRIMLACAKTIKTOK").html("-"); 
                 
                 var stepTracker = "";
+                
+                var pickupIndex = msg.length-2;
                 for(var x = 0 ; x < msg.length;x++)
                 {
                     if(x==0)
@@ -3010,16 +3016,12 @@ function lacakTiktok(){
                         stepTracker += `<div class="step"><div class="circle">&nbsp</div><div class="label-step">`+msg[x]['description']+`<br><span style="color:#949494; font-style:italic;">`+msg[x]['update_time']+`</span></div></div>`;
                     }
                     
-                    if(msg.length > 1)
+                    if(msg[x]['description'].toUpperCase().includes("FAILED") && pickupIndex == msg.length-2)
                     {
-                        if(x == msg.length-2)
-                        {
-                        //PASTI YANG INDEX TERAKHIR
-                        $("#TGLKIRIMLACAKTIKTOK").html(msg[x]['update_time']); 
-                        }
+                        pickupIndex = (x-1);
                     }
                 }
-                
+                $("#TGLKIRIMLACAKTIKTOK").html(msg[pickupIndex]['update_time']); 
                 
                 $(".step-tracker").html(stepTracker);
             
@@ -3360,14 +3362,13 @@ function noteKonfirmTiktok(){
 function returBarangTiktok(){
     $("#modal-form-Tiktok").modal("hide");
     var row = JSON.parse($("#rowDataTiktok").val());
-    loading();
     Swal.fire({
-        title: 'Anda Yakin Merubah Pengembalian Dana menjadi Barang ?',
+        title: 'Anda Yakin Melakukan Pengembalian Barang Atas Semua Retur Secara Manual ?',
         showCancelButton: true,
         confirmButtonText: 'Yakin',
         cancelButtonText: 'Tidak',
         }).then((result) => {
-            Swal.close();
+        loading();
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
                 $.ajax({
@@ -3376,6 +3377,7 @@ function returBarangTiktok(){
                 	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
                 	dataType: 'json',
                 	success : function(msg){
+                        Swal.close();
                         Swal.fire({
                         		title            :  msg.msg,
                         		type             : (msg.success?'success':'error'),

@@ -1429,9 +1429,13 @@ function changeTabShopee(index){
                         "targets": 1,
                         render: function (data, type, row) {
                             let html = row.STATUS;
-                            if(row.STATUS.toUpperCase() == "SELESAI" && (row.BARANGSAMPAI == 1 || row.BARANGSAMPAIMANUAL == 1)){
+                            if(row.STATUS.toUpperCase() == "SELESAI"  && (row.BARANGSAMPAIMANUAL == 1)){
+                                html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang Manual</div><div style='margin:auto;'></div>";
+                            }
+                            else if(row.STATUS.toUpperCase() == "SELESAI"  && (row.BARANGSAMPAI == 1)){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Barang</div><div style='margin:auto;'></div>";
-                            } else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
+                            } 
+                            else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != ""){
                                 html += "<div style='width:122px; white-space: pre-wrap; white-space: -moz-pre-wrap;  white-space: -pre-wrap;  white-space: -o-pre-wrap;word-wrap: break-word; text-align:center; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>;'>Retur Dana</div><div style='margin:auto;'></div>";
                             }
                             return html;
@@ -3828,14 +3832,13 @@ function noteKonfirmShopee(){
 function returBarangShopee(){
     $("#modal-form-shopee").modal("hide");
     var row = JSON.parse($("#rowDataShopee").val());
-    loading();
     Swal.fire({
-        title: 'Anda Yakin Merubah Pengembalian Dana menjadi Barang ?',
+        title: 'Anda Yakin Melakukan Pengembalian Barang Atas Semua Retur Secara Manual ?',
         showCancelButton: true,
         confirmButtonText: 'Yakin',
         cancelButtonText: 'Tidak',
         }).then((result) => {
-              Swal.close();
+        loading();
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
                 $.ajax({
@@ -3844,7 +3847,7 @@ function returBarangShopee(){
                 	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
                 	dataType: 'json',
                 	success : function(msg){
-                       
+                        Swal.close();
                         Swal.fire({
                         		title            :  msg.msg,
                         		type             : (msg.success?'success':'error'),

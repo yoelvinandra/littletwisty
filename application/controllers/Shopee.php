@@ -4004,6 +4004,7 @@ class Shopee extends MY_Controller {
                 }
             }
             
+            //CEK BARANG RETUR MANUAL, KHUSUS SHOPEE DITIADAKAN< KARNA RETUR HANYA 1X
 		    
 		    for($x = 0; $x < count($ret['response']['order_income']['items']) ; $x++)
 		    {
@@ -8415,18 +8416,18 @@ class Shopee extends MY_Controller {
                          $CI->db->where("KODEPENJUALANMARKETPLACE",$return[$x]['order_sn'])
 		                    ->where('MARKETPLACE','SHOPEE')
 		                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-		                        'KODEPENGEMBALIANMARKETPLACE'   =>  $return[$x]['return_sn'],
-		                        'SKUPRODUKPENGEMBALIAN'         =>  $allsku,
-		                        'TOTALBARANGPENGEMBALIAN'       =>  $jml,
-		                        'STATUSPENGEMBALIANMARKETPLACE' =>  $return[$x]['status'],
-		                        'CATATANPENGEMBALIAN'           =>  $return[$x]['text_reason'],
-		                        'TOTALPENGEMBALIANDANA'         =>  $return[$x]['refund_amount'],
-		                        'TIPEPENGEMBALIAN'              =>  $return[$x]['return_refund_type'],
-		                        'TGLPENGEMBALIAN'               =>  date("Y-m-d H:i:s", $return[$x]['create_time']),
-		                        'MINTGLPENGEMBALIAN'            =>  date("Y-m-d H:i:s", $return[$x]['due_date']),
-		                        'MINTGLKIRIMPENGEMBALIAN'       =>  date("Y-m-d H:i:s", $return[$x]['return_ship_due_date']),
-		                        'RESIPENGEMBALIAN'              =>  $return[$x]['tracking_number'],
-		                        'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0),
+		                        'KODEPENGEMBALIANMARKETPLACE'   =>  ($return[$x]['status'] != "CANCELLED"?$return[$x]['return_sn']:""),
+		                        'SKUPRODUKPENGEMBALIAN'         =>  ($return[$x]['status'] != "CANCELLED"?$allsku:""),
+		                        'TOTALBARANGPENGEMBALIAN'       =>  ($return[$x]['status'] != "CANCELLED"?$jml:0),
+		                        'STATUSPENGEMBALIANMARKETPLACE' =>  ($return[$x]['status'] != "CANCELLED"?$return[$x]['status']:""),
+		                        'CATATANPENGEMBALIAN'           =>  ($return[$x]['status'] != "CANCELLED"?$return[$x]['text_reason']:""),
+		                        'TOTALPENGEMBALIANDANA'         =>  ($return[$x]['status'] != "CANCELLED"?$return[$x]['refund_amount']:0),
+		                        'TIPEPENGEMBALIAN'              =>  ($return[$x]['status'] != "CANCELLED"?$return[$x]['return_refund_type']:""),
+		                        'TGLPENGEMBALIAN'               =>  ($return[$x]['status'] != "CANCELLED"?date("Y-m-d H:i:s", $return[$x]['create_time']):""),
+		                        'MINTGLPENGEMBALIAN'            =>  ($return[$x]['status'] != "CANCELLED"?date("Y-m-d H:i:s", $return[$x]['due_date']):""),
+		                        'MINTGLKIRIMPENGEMBALIAN'       =>  ($return[$x]['status'] != "CANCELLED"?date("Y-m-d H:i:s", $return[$x]['return_ship_due_date']):""),
+		                        'RESIPENGEMBALIAN'              =>  ($return[$x]['status'] != "CANCELLED"?$return[$x]['tracking_number']:""),
+		                        'BARANGSAMPAI'                  =>  ($return[$x]['status'] != "CANCELLED"?($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0):0),
 		                        "LASTUPDATED"                   =>  date("Y-m-d H:i:s")
 		                      ));
                      }

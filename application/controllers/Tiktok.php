@@ -3853,6 +3853,10 @@ class Tiktok extends MY_Controller {
                 }
             }
             
+            //CEK BARANG RETUR MANUAL
+    		$sql = "SELECT SKU FROM TPENJUALANMARKETPLACEDTL WHERE KODEPENJUALANMARKETPLACE = '".$nopesanan."' AND BARANGSAMPAIMANUAL = 1 AND KODEPENGEMBALIANMARKETPLACE != ''";
+    		$resultQtyBarang = $CI->db->query($sql)->result();
+            
 		    $dataDetail = $ret['data']['orders'][0]['line_items'];
 		    for($x = 0; $x < count($dataDetail) ; $x++)
 		    {
@@ -3874,6 +3878,19 @@ class Tiktok extends MY_Controller {
 		        $resultDetail['SKUKEMBALI'] = $dataProduk[$x]->SKUKEMBALI;
 		        $resultDetail['JUMLAH'] = 1;
 		        $resultDetail['JUMLAHKEMBALI'] = $dataProduk[$x]->JMLKEMBALI??"0";
+		        
+		        if($resultDetail['JUMLAHKEMBALI'] == 0)
+		        {
+		            foreach ($resultQtyBarang as $key => $itemQtyBarang)
+                    {
+                        if ($itemQtyBarang->SKU == $dataProduk[$x]->SKU)
+                        {
+                            $resultDetail['JUMLAHKEMBALI'] = 1;
+                            unset($resultQtyBarang[$key]);
+                        }
+                    }
+		        }
+		        
 		        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
 		        $resultDetail['HARGATAMPIL'] = $dataDetail[$x]['original_price'];
 		        $resultDetail['HARGACORET'] = $dataDetail[$x]['sale_price'];
@@ -6898,8 +6915,53 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
 		$nopengembalian = $this->input->post('kodepengembalian')??"";
 		$nopesanan = $this->input->post('kodepesanan')??"";
 	    
-	    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOK = 1 AND GROUPLOKASI like '%MARKETPLACE%'";
-        $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
+	    $idlokasiset = "1";
+        $parameter="";
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => 'POST',
+          CURLOPT_POSTFIELDS => array('endpoint' => '/logistics/202309/warehouses','parameter' => $parameter),
+          CURLOPT_HTTPHEADER => array(
+            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $ret =  json_decode($response,true);
+        if($ret['code'] != 0)
+        {
+           $finalResult['errorMsg'] =  "6 : ".$ret['code']." : ".$ret['message'];
+        }
+        else
+        {
+            $dataAddress = $ret['data']['warehouses'];
+            $data['rows'] = [];
+            for($x = 0 ; $x < count($dataAddress);$x++)
+            {
+                $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
+                $return = false;
+                
+                if($dataAddress[$x]['type'] == "RETURN_WAREHOUSE")
+                {
+                    $return = true;
+                }
+                
+                if($return)
+                {
+                    $idlokasiset = $CI->db->query($sql)->row()->IDLOKASI;
+                }
+            }
+        }
 
         $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
         $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN, BARANGSAMPAIMANUAL FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'TIKTOK' and BARANGSAMPAIMANUAL = 0 and KODEPENGEMBALIANMARKETPLACE != '' and KODEPENJUALANMARKETPLACE = '".$nopesanan."'  ORDER BY KODEPENJUALANMARKETPLACE";
@@ -6913,6 +6975,10 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
     	     
             $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$idlokasiset);
         }
+        
+        $CI->db->where("KODEPENJUALANMARKETPLACE", $nopesanan)
+              ->set('BARANGSAMPAIMANUAL',1)
+    	     ->update('TPENJUALANMARKETPLACE');
      
         
         $data['success'] = true;
@@ -7533,7 +7599,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                     $return = true;
                 }
                 
-                if($pickup)
+                if($return)
                 {
                     $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
                 }

@@ -2911,6 +2911,10 @@ class Lazada extends MY_Controller {
         }
         else
         { 
+            //CEK BARANG RETUR MANUAL
+    		$sql = "SELECT SKU FROM TPENJUALANMARKETPLACEDTL WHERE KODEPENJUALANMARKETPLACE = '".$nopesanan."' AND BARANGSAMPAIMANUAL = 1 AND KODEPENGEMBALIANMARKETPLACE != ''";
+    		$resultQtyBarang = $CI->db->query($sql)->result();
+    		
     	    for($x = 0; $x < count($dataProduk) ; $x++)
     	    {
     	        $resultDetail;
@@ -2931,6 +2935,19 @@ class Lazada extends MY_Controller {
     	        $resultDetail['SKUKEMBALI'] = $dataProduk[$x]->SKUKEMBALI;
     	        $resultDetail['JUMLAH'] = (int)($dataProduk[$x]->JML??"0");
     	        $resultDetail['JUMLAHKEMBALI'] = (int)($dataProduk[$x]->JMLKEMBALI??"0");
+    	        
+    	        if($resultDetail['JUMLAHKEMBALI'] == 0)
+		        {
+		            foreach ($resultQtyBarang as $key => $itemQtyBarang)
+                    {
+                        if ($itemQtyBarang->SKU == $dataProduk[$x]->SKU)
+                        {
+                            $resultDetail['JUMLAHKEMBALI'] = 1;
+                            unset($resultQtyBarang[$key]);
+                        }
+                    }
+		        }
+		        
     	        $resultDetail['SATUAN'] = $dataProduk[$x]->SATUAN;
     	        $resultDetail['HARGATAMPIL'] = $dataProduk[$x]->HARGA;
     	        $resultDetail['HARGACORET'] = 0;
