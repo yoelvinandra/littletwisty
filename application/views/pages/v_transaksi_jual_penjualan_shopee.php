@@ -1694,7 +1694,7 @@ function lihatShopee(){
     	        $("#cetakShopeeDetail").show();
     	    }
     	    
-    	     if(row.STATUS.toUpperCase() == "SELESAI"  && row.BARANGSAMPAIMANUAL == 0)
+    	     if(row.STATUS.toUpperCase() == "SELESAI"  && row.KODEPENGEMBALIAN != ""&& row.BARANGSAMPAIMANUAL == 0)
             {
                $("#returBarangShopeeDetail").show();
             }
@@ -3838,9 +3838,9 @@ function returBarangShopee(){
         confirmButtonText: 'Yakin',
         cancelButtonText: 'Tidak',
         }).then((result) => {
-        loading();
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
+                loading();
                 $.ajax({
                 	type    : 'POST',
                 	url     : base_url+'Shopee/setReturBarang/',

@@ -268,8 +268,8 @@
       					 </div>
       					  <select id="cb_trans_status_tiktok_4" name="cb_trans_status_tiktok_4" class="form-control "  panelHeight="auto" required="true">
       					  	<option value="SEMUA">Semua Transaksi </option>
-      					  	<option value="RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP">Pengembalian Diajukan</option>
-      					  	<option value="RETURNED|AWAITING_BUYER_RESPONSE|BUYER_SHIPPED_ITEM|REFUND_PENDING|RETURN_OR_REFUND_REQUEST_SUCCESS">Pengembalian Diproses</option>
+      					  	<option value="RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP|REPLACEMENT_REQUEST_PENDING">Pengembalian Diajukan</option>
+      					  	<option value="RETURNED|REQUEST_REJECTED|REQUEST_SUCCESS|RECEIVE_REJECTED|RETURN_OR_REFUND_CANCEL|BUYER_SHIPPED_ITEM|RETURN_OR_REFUND_REQUEST_SUCCESS|REPLACEMENT_REQUEST_COMPLETE|REPLACEMENT_REQUEST_REFUND_SUCCESS|REPLACEMENT_REQUEST_CANCEL|REPLACEMENT_REQUEST_REJECT">Pengembalian Diproses</option>
       					  	<!--<option value="RETURNED|DISPUTE">Pengembalian dalam Sengketa</option>-->
       					  </select>
       					</div>
@@ -1010,9 +1010,9 @@
 		    Jadi penjual memilih :
 		    <br><br>
           	<ul class="nav nav-tabs" id="tab_retur_tiktok">
-          		<li id="tab_retur_header_tiktok_0"><a href="#tab_retur_detail_tiktok_0" data-toggle="tab">Kembalikan Dana ke Pembeli</a></li>
-          	    <li id="tab_retur_header_tiktok_1" onclick="focusOnRefundTiktok()"><a href="#tab_retur_detail_tiktok_1" data-toggle="tab">Pengembalian Barang dan Dana</a></li>
-          	    <li id="tab_retur_header_tiktok_2"><a href="#tab_retur_detail_tiktok_2" data-toggle="tab">Ajukan Banding</a></li>
+          		<li id="tab_retur_header_tiktok_0"><a href="#tab_retur_detail_tiktok_0" data-toggle="tab"></a></li>
+          	    <li id="tab_retur_header_tiktok_1"><a href="#tab_retur_detail_tiktok_1" data-toggle="tab"></a></li>
+          	    <li id="tab_retur_header_tiktok_2"><a href="#tab_retur_detail_tiktok_2" data-toggle="tab">Menunggu Respon Tiktok</a></li>
             </ul>
             <div class="tab-content" style="border:1px solid #dddddd; background:white; border-radius:0px 0px 3px 3px; padding: 10px 10px 10px 10px;">
                 <div class="tab-pane " id="tab_retur_detail_tiktok_0" style="padding:5px 0px 5px 0px;">
@@ -1022,51 +1022,57 @@
                     <div style="width:100%; text-align:center;"><input type="text" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANTIKTOK_0" onkeyup="return numberInputTrans(event,0)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
                     <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANTIKTOK_0">
                     <br><br><br>
-                     <button onclick="refundTiktok(0)" id='returRefundTiktok' class='btn btn-success' style='width:100%; font-weight:bold;'>Setuju&nbsp;&nbsp;dan&nbsp;&nbsp;Kembalikan&nbsp;&nbsp;Dana</button>
+                    <button onclick="refundTiktok(0)" id='returRefundTiktok' class='btn btn-success' style='width:100%; font-weight:bold;'>Setuju&nbsp;&nbsp;Kembalikan&nbsp;&nbsp;Dana</button>
+                    <button onclick="refundTiktok(1)" id='returRefundBarangTiktok' class='btn btn-success' style='width:100%; font-weight:bold;'>Pengembalian&nbsp;&nbsp;Barang&nbsp;&nbsp;dan&nbsp;&nbsp;Dana</button>
+                    <button onclick="refundTiktok(-1)" id='returRefundBarangTerimaTiktok' class='btn btn-success' style='width:100%; font-weight:bold;'>Pengembalian&nbsp;&nbsp;Barang&nbsp;&nbsp;Diterima</button>
+                    <button onclick="refundTiktok(2)" id='tukarRefundBarangTiktok' class='btn btn-success' style='width:49%; font-weight:bold;'>Setuju&nbsp;&nbsp;Penukaran&nbsp;&nbsp;Barang</button>
+                    <button onclick="refundTiktok(-2)" id='tukafRefundBarangTerimaTiktok' class='btn btn-danger' style='width:49%; font-weight:bold;'>Dana&nbsp;&nbsp;Dikembalikan&nbsp;&nbsp;Tanpa&nbsp;&nbsp;Barang</button>
                 </div>
                 <div class="tab-pane" id="tab_retur_detail_tiktok_1" style="padding:5px 0px 5px 0px;">
                     <div id="DETAILRETURTIKTOK_1"></div>
+            		<select id="cb_alasan_penolakan_tiktok" style="margin-top:5px;" name="cb_alasan_penolakan_tiktok" class="form-control "  panelHeight="auto" required="true">
+                  	
+                  	</select>
+            		<table width="100%" style="margin-top:5px;">
+            		    <tr>
+            		        <td valign="top">
+                              	<label >Penjelasan Penolakan</label>
+                        		<textarea id="deskripsi_tolak_tiktok" maxlines="3" style="width:100%; height:98px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>
+            		        </td>
+            		        <td valign="top" style="width:116px;padding-left:10px;">
+            		            <label >Bukti Penolakan</label>
+                                <input type="file" id="file-input-tolak-tiktok" accept="image/jpeg,image/jpg,image/png" style="display:none;" value="">
+                                <input type="hidden"  id="format-input-tolak-tiktok" value="">
+                                <input type="hidden"  id="index-input-tolak-tiktok" value="0">
+                                <input type="hidden"  id="src-input-tolak-tiktok" value="">
+                                <input type="hidden"  id="keterangan-input-tolak-tiktok" value="Bukti Penolakan">
+                                <input type="hidden"  id="id-input-tolak-tiktok" value="">
+                                <input type="hidden"  id="tipe-input-tolak-tiktok" value="">
+                                <input type="hidden"  id="panjang-input-tolak-tiktok" value="">
+                                <input type="hidden"  id="lebar-input-tolak-tiktok" value="">
+                                <div style="margin-bottom:20px; text-align:center;">
+                                     <img id="preview-image-tolak-tiktok" onclick='' src='<?=base_url()?>/assets/images/addphoto.webp' style='width:100px; cursor:pointer; border:2px solid #dddddd;'>
+                                     <span id="ubahGambarTolakTiktok" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
+                                     &nbsp;
+                                     <span id="hapusGambarTolakTiktok" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
+                                 </div>
+            		        </td>
+            		    </tr>
+            		</table>
                     <br><br>
-                    <label style="width:100%; text-align:center; font-size:18pt;">Total Dana Pengembalian yang Diajukan</label>
+                    <label style="width:100%; text-align:center; font-size:18pt;">Tolak Pengembalian </label>
                     <div style="width:100%; text-align:center;"><input type="text" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANTIKTOK_1" onkeyup="return numberInputTrans(event,1)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
                     <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANTIKTOK_1">
-                     <!--<div style="width:100%; margin-top:10px; text-align:center;"><button id='btn_max_kembali_tiktok' onclick="setMaksRefundTiktok()" style='border:1px solid #CECECE; margin:auto;' class='btn' >Maks Pengembalian</button></div><br><br>-->
-                     <br><br><br>
-                     <button onclick="refundTiktok(1)" id='returNegotiationTiktok' class='btn btn-warning' style='width:100%; font-weight:bold;'>Pengembalian&nbsp;&nbsp;Barang&nbsp;&nbsp;dan&nbsp;&nbsp;Dana</button>
-                     <button id='returTiktokWaitResponse' class='btn' style='width:100%; background:#888888; color:white; font-weight:bold;'>Menunggu&nbsp;&nbsp;Respon&nbsp;&nbsp;Pembeli</button>
+                    <br><br><br>
+                    <button onclick="rejectRefundTiktok(1)" id='rejectReturRefundBarangTiktok' class='btn btn-danger' style='width:100%; font-weight:bold;'>Tolak&nbsp;&nbsp;Kembalikan&nbsp;&nbsp;Barang&nbsp;&nbsp;dan&nbsp;&nbsp;Dana</button>
+                    <button onclick="rejectRefundTiktok(0)" id='rejectReturRefundTiktok' class='btn btn-danger' style='width:100%; font-weight:bold;'>Tolak&nbsp;&nbsp;Kembalikan&nbsp;&nbsp;Dana</button>
+                    <button onclick="rejectRefundTiktok(-1)" id='rejectReturRefundBarangTerimaTiktok' class='btn btn-danger' style='width:100%; font-weight:bold;'>Pengembalian&nbsp;&nbsp;Barang&nbsp;&nbsp;Ditolak</button>
+                    <button onclick="rejectRefundTiktok(2)" id='rejectTukarRefundBarangTiktok' class='btn btn-danger' style='width:100%; font-weight:bold;'>Tolak&nbsp;&nbsp;Penukaran&nbsp;&nbsp;Barang</button>
                 </div>
-                <div class="tab-pane" id="tab_retur_detail_tiktok_2" style="padding:5px 0px 5px 0px;">
-                    <div id="DISPUTESEBELUMBARANGDATANG">
-                        <div id="DETAILRETURTIKTOK_2">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).</div>
-            		    <div id="ALASANBANDING">
-            		        <br>
-                      	    <label>Alasan Banding</label>
-                			<select id="cb_alasan_sengketa_tiktok" name="cb_alasan_sengketa_tiktok" class="form-control "  panelHeight="auto" required="true">
-                      		
-                      		</select>
-                      	</div>
-            		    <br>
-                		<div>
-                      	    <label>Penjelasan Banding</label>
-                		    <textarea id="deskripsi_sengketa_tiktok" maxlines="2" style="width:100%; height:80px; border:0.5px solid #cecece; padding:10px;" placeholder="Masukkan Penjelasan....."></textarea>
-                		</div>
-                		<br>
-                      	<div id="uploadBuktiTiktok">
-                      	    <label>Upload Bukti</label>
-                      	    <div id="penjelasan_bukti_tiktok"></div>
-                			<div id="proof_sengketa_tiktok" style="border:1px solid; background:white; border-radius:0px 0px 3px 3px; margin-top:15px; margin-bottom:15px; padding:10px;">
-                			    
-                			</div>
-                		 </div>
-                         <div style="width:100%; text-align:center;"><input type="hidden" readonly class="form-control has-feedback-left" id="DANADIKEMBALIKANTIKTOK_2" onkeyup="return numberInputTrans(event,3)" placeholder="0"  value="0" style="width:250px; padding-top:35px; padding-bottom:35px; font-weight:bold; font-size:32pt; margin:auto; text-align:center;"></div>
-                         <input type="hidden" class="form-control has-feedback-left" id="MAXDANADIKEMBALIKANTIKTOK_2">
-                         <input type="hidden" id="dataDisputeTiktok">
-                         <input type="hidden" id="pilihanDisputeTiktok">
-                         <input type="hidden" id="pilihDisputeTiktok">
-                         <br>
-                         <button onclick="refundTiktok(2)" id='returDisputeTiktok' class='btn btn-danger' style='width:100%; font-weight:bold;'>Ajukan&nbsp;&nbsp;Banding</button>
-                    </div>
-                    <div id="DISPUTESESUDAHBARANGDATANG">Dengan ini menyatakan bahwa : <br>Penjual mengajukan banding terhadap barang yang telah dikirimkan oleh Pembeli (Terkait kerusakan, barang yang dikembalikan berbeda, dll).<br><br>Untuk transaksi hanya dapat dilakukan pada aplikasi tiktok. Status transaksi dan stok akan terupdate, melalui sinkronisasi otomatis maupun sinkronisasi manual.</div>
+                 <div class="tab-pane" id="tab_retur_detail_tiktok_2" style="padding:5px 0px 5px 0px;">
+                    <div id="DETAILRETURTIKTOK_2">Dengan ini menyatakan bahwa : <br>Penjual telah setuju untuk menunggu <b>Respon dari Tiktok</b>.&nbsp; Klik tombol "Menunggu Respon Tiktok". untuk membiarkan Tiktok memberi keputusan.</div>
+                     <br><br>
+                    <button onclick="refundTiktok(3)" id='returTiktokWaitResponse' class='btn btn-warning' style='width:100%; font-weight:bold;'>Menunggu&nbsp;&nbsp;Respon&nbsp;&nbsp;Tiktok</button>
                 </div>
             </div>  
         </div>
@@ -1120,7 +1126,7 @@ $(document).ready(function(){
 	$("#STATUSTIKTOK1").val('UNPAID,ON_HOLD,AWAITING_SHIPMENT,AWAITING_COLLECTION');
 	$("#STATUSTIKTOK2").val('IN_TRANSIT,DELIVERED');
 	$("#STATUSTIKTOK3").val('COMPLETED,CANCELLED');
-	$("#STATUSTIKTOK4").val('RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP,RETURNED|AWAITING_BUYER_RESPONSE|BUYER_SHIPPED_ITEM|REFUND_PENDING|RETURN_OR_REFUND_REQUEST_SUCCESS');
+	$("#STATUSTIKTOK4").val('RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP|REPLACEMENT_REQUEST_PENDING,RETURNED|REQUEST_REJECTED|REQUEST_SUCCESS|RECEIVE_REJECTED|RETURN_OR_REFUND_CANCEL|BUYER_SHIPPED_ITEM|RETURN_OR_REFUND_REQUEST_SUCCESS|REPLACEMENT_REQUEST_COMPLETE|REPLACEMENT_REQUEST_REFUND_SUCCESS|REPLACEMENT_REQUEST_CANCEL|REPLACEMENT_REQUEST_REJECT|REFUND_OR_RETURN_REQUEST_REJECT');
 	
 	$('body').keyup(function(e){
 		hotkey(e);
@@ -1249,7 +1255,7 @@ $("#cb_trans_status_tiktok_4").change(function(event){
     loading();
 	if($(this).val()  == 'SEMUA' )
 	{
-		$("#STATUSTIKTOK4").val('RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP,RETURNED|AWAITING_BUYER_RESPONSE|BUYER_SHIPPED_ITEM|REFUND_PENDING|RETURN_OR_REFUND_REQUEST_SUCCESS');
+		$("#STATUSTIKTOK4").val('RETURNED|RETURN_OR_REFUND_REQUEST_PENDING|AWAITING_BUYER_SHIP|REPLACEMENT_REQUEST_PENDING,RETURNED|REQUEST_REJECTED|REQUEST_SUCCESS|RECEIVE_REJECTED|RETURN_OR_REFUND_CANCEL|BUYER_SHIPPED_ITEM|RETURN_OR_REFUND_REQUEST_SUCCESS|REPLACEMENT_REQUEST_COMPLETE|REPLACEMENT_REQUEST_REFUND_SUCCESS|REPLACEMENT_REQUEST_CANCEL|REPLACEMENT_REQUEST_REJECT|REFUND_OR_RETURN_REQUEST_REJECT');
 	}	
 	else
 	{
@@ -1415,7 +1421,7 @@ function changeTabTiktok(index){
                                 }
                                 
                             }  else if(row.STATUS.toUpperCase() == "SELESAI" && row.KODEPENGEMBALIAN != "" && row.BARANGSAMPAIMANUAL == 0){
-                                html += "<button id='btn_lihat_lazada' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
+                                html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
                                 html += "<button  style='width:122px; margin-top:5px;' id='btn_retur_manual_tiktok' class='btn btn-danger'  style='width:122px;' >Retur B. Manual</button>";
                             }   else {
                                 html += "<button id='btn_lihat_tiktok' style='border:1px solid #CECECE; width:122px;' class='btn' >Detail Pesanan</button>";
@@ -1530,7 +1536,7 @@ function changeTabTiktok(index){
     		var row = table.row( $(this).parents('tr') ).data();
     		var mode = $(this).attr("id");
     		$("#rowDataTiktok").val(JSON.stringify(row));
-    		
+
     		if(mode == "btn_lihat_tiktok"){ lihatTiktok();}
     // 		else if(mode == "btn_edit_tiktok"){ubahTiktok();}
     		else if(mode == "btn_cetak_tiktok"){cetakTiktok();}
@@ -1731,7 +1737,7 @@ function lihatTiktok(){
                 $("#NOPENGEMBALIANTIKTOK").html(row.KODEPENGEMBALIAN);
             }
             
-            if(row.STATUS.toUpperCase() == "SELESAI" && row.BARANGSAMPAIMANUAL == 0)
+            if(row.STATUS.toUpperCase() == "SELESAI"  && row.KODEPENGEMBALIAN != "" && row.BARANGSAMPAIMANUAL == 0)
             {
                $("#returBarangTiktokDetail").show();
             }
@@ -1830,6 +1836,25 @@ function kembaliTiktok(){
             
             $("#returTiktokDetail").hide();
             $("#returTiktokWait").show();
+            
+            if((row.STATUSPENGEMBALIAN.toUpperCase() == "RETURN_OR_REFUND_REQUEST_PENDING" || row.STATUSPENGEMBALIAN.toUpperCase() == "REPLACEMENT_REQUEST_PENDING" || row.STATUSPENGEMBALIAN.toUpperCase() == "BUYER_SHIPPED_ITEM"  ) && msg.SELLERMENUNGGUBARANGDATANG == 0)
+            {
+                $("#returTiktokDetail").show();
+                $("#returTiktokWait").hide();
+            }
+            else if(msg.SELLERMENUNGGUBARANGDATANG == 1)
+            {
+                $("#returTiktokWait").html("Menunggu Respon Tiktok");
+            }
+            else if(row.STATUSPENGEMBALIAN.toUpperCase() == "AWAITING_BUYER_SHIP"){
+                $("#returTiktokWait").html("Menunggu Pembeli Mengirim Barang");
+            }
+            else
+            {
+                $("#returTiktokWait").html("Menunggu Respon Berikutnya");
+            }
+            
+            
             
             // if(row.TIPEPENGEMBALIAN.toUpperCase() == "RETURN_DELIVERED")
             // {
@@ -3368,9 +3393,9 @@ function returBarangTiktok(){
         confirmButtonText: 'Yakin',
         cancelButtonText: 'Tidak',
         }).then((result) => {
-        loading();
         /* Read more about isConfirmed, isDenied below */
         	if (result.value) {
+                loading();
                 $.ajax({
                 	type    : 'POST',
                 	url     : base_url+'Tiktok/setReturBarang/',
@@ -3403,6 +3428,256 @@ function returTiktok(){
     var rowDetail = JSON.parse($("#dataReturTiktok").val());
     loading();
     
+    const fileInput = document.getElementById('file-input-tolak-tiktok');
+    const previewImage = document.getElementById('preview-image-tolak-tiktok');
+    const title = document.getElementById('keterangan-input-tolak-tiktok');
+    const format = document.getElementById('format-input-tolak-tiktok');
+    const index = document.getElementById('index-input-tolak-tiktok');
+    const url =  document.getElementById('src-input-tolak-tiktok');
+    const id =  document.getElementById('id-input-tolak-tiktok');
+    const tipe =  document.getElementById('tipe-input-tolak-tiktok');
+    const panjang =  document.getElementById('panjang-input-tolak-tiktok');
+    const lebar =  document.getElementById('lebar-input-tolak-tiktok');
+    
+    const ubahImage = document.getElementById('ubahGambarTolakTiktok');
+    const hapusImage = document.getElementById('hapusGambarTolakTiktok');
+    
+    previewImage.addEventListener('click', () => {
+      if(url.value != '')
+      {
+          lihatLebihJelasTiktok(format.value,title.value,url.value);
+      }
+      else
+      {
+        fileInput.click();
+      }
+    });
+    
+    ubahImage.addEventListener('click', () => {
+       fileInput.click();
+    });
+    
+    hapusImage.addEventListener('click', () => {
+      fileInput.value = '';
+      format.value = '';
+      previewImage.src = base_url+"/assets/images/addphoto.webp";
+      url.value = "";
+      id.value = "";
+      
+      ubahImage.style.display = 'none';
+      hapusImage.style.display = 'none';
+    });
+    
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+    
+      // Jika file adalah gambar
+      if (file.type.startsWith('image/')) {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    
+        if (!allowedTypes.includes(file.type.toLowerCase())) {
+            fileInput.value = '';
+          Swal.fire({
+            title: 'Format gambar tidak didukung (hanya jpg/jpeg/png)',
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 2000
+          });
+          return;
+        }
+    
+        const maxSizeMB = 1;
+        if (file.size > maxSizeMB * 1024 * 1024) {
+            fileInput.value = '';
+              Swal.fire({
+                title: 'Ukuran gambar melebihi 1 MB',
+                icon: 'warning',
+                showConfirmButton: false,
+                timer: 2000
+              });
+        }
+        
+         const img = new Image();
+         img.onload = function () {
+             if (img.width < 350 || img.height < 350) {
+                  Swal.fire({
+                     title: 'Panjang dan Lebar gambar minimal 350px',
+                     icon: 'warning',
+                     showConfirmButton: false,
+                     timer: 2000
+                   });
+             } 
+             else
+             {
+                 // Upload file asli ke server
+                const formData = new FormData();
+                formData.append('index', index.value);
+                formData.append('kode', row.KODEPENGEMBALIAN);
+                formData.append('file', file);
+                formData.append('tipe', 'GAMBAR');
+                formData.append('size', file.size);
+                formData.append("reason","MAIN_IMAGE");
+            
+                loading();
+                
+                $.ajax({
+                  type: 'POST',
+                  url: base_url + 'Tiktok/uploadLocalUrl/',
+                  data: formData,
+                  contentType: false,
+                  processData: false,
+                  dataType: 'json',
+                  success: function (msg) {
+                    if (msg.success) {
+                         format.value = "GAMBAR";
+                     
+                        $.ajax({
+                            type    : 'POST',
+                            url     : base_url+'Tiktok/changeLocalUrl/',
+                            data    : {
+                                "url" : msg.url,
+                                "reason" : "MAIN_IMAGE",
+                            },
+                            dataType: 'json',
+                            success: function (msgBaru) {
+                                Swal.close();
+                                if (msg.success) {
+                                     previewImage.src = msgBaru.url;
+                                     url.value =  msgBaru.url;
+                                     id.value = msgBaru.id;
+                                     tipe.value = file.type.toLowerCase();
+                                     panjang.value = img.height;
+                                     lebar.value = img.width;
+                            
+                                     ubahImage.style.display = '';
+                                     hapusImage.style.display = '';
+                                }
+                            }
+                        });
+                    }
+                    else
+                    {
+                        fileInput.value = '';
+                    }
+                  },
+                  error: function (xhr, status, error) {
+                    fileInput.value = '';
+                    Swal.fire({
+                      title: 'Upload gagal!',
+                      text: error,
+                      icon: 'error'
+                    });
+                  }
+                });
+             }
+             URL.revokeObjectURL(img.src); // free memory
+         };
+          img.src = URL.createObjectURL(file); 
+    
+      }
+      // Jika file adalah video
+    //   else if (file.type.startsWith('video/')) {
+    //     format.value = "VIDEO";
+    //     const video = document.createElement("video");
+    //     video.preload = "metadata";
+    
+    //     video.onloadedmetadata = function () {
+    //       window.URL.revokeObjectURL(video.src);
+    
+    //       if (parseInt(video.duration) > 60) {
+    //         Swal.fire({
+    //         	title            : 'Durasi Min 1 Menit',
+    //         	type             : 'warning',
+    //         	showConfirmButton: false,
+    //         	timer            : 2000
+    //         });
+    //         fileInput.value = ""; // Kosongkan input
+    //         format.value = "";
+    //         return;
+    //       }
+          
+    //       const maxSizeMB = 10;
+    //       if (file.size > maxSizeMB * 1024 * 1024) {
+    //           fileInput.value = '';
+    //          Swal.fire({
+    //           title: 'Ukuran video melebihi 10MB',
+    //           icon: 'warning',
+    //           showConfirmButton: false,
+    //           timer: 2000
+    //          });
+    //          return;
+    //       }
+          
+    //       var row = JSON.parse($("#rowDatatiktok").val());
+    //         // Upload file asli ke server
+    //         const formData = new FormData();
+    //         formData.append('index', index.value);
+    //         formData.append('kodepengembalian', row.KODEPENGEMBALIAN);
+    //         formData.append('file', file);
+    //         formData.append('tipe', 'VIDEO');
+    //         formData.append('size', file.size);
+        
+    //         loading();
+            
+    //         $.ajax({
+    //           type: 'POST',
+    //           url: base_url + 'Tiktok/uploadLocalUrl/',
+    //           data: formData,
+    //           contentType: false,
+    //           processData: false,
+    //           dataType: 'json',
+    //           success: function (msg) {
+    //             Swal.close();
+    //             if (msg.success) {
+    //              format.value = "VIDEO";
+    //              previewImage.src =  base_url+"/assets/images/video.webp";
+    //              url.value =  msg.url;
+        
+    //              ubahImage.style.display = '';
+    //              hapusImage.style.display = '';
+    //             }
+    //             else
+    //             {
+    //                 fileInput.value = '';
+    //             }
+    //           },
+    //           error: function (xhr, status, error) {
+    //             fileInput.value = '';
+    //             Swal.fire({
+    //               title: 'Upload gagal!',
+    //               text: error,
+    //               icon: 'error'
+    //             });
+    //           }
+    //         });
+    //     };
+    
+    //     video.onerror = () => {
+    //       Swal.fire({
+    //         	title            : 'Gagal memuat video dari file',
+    //         	type             : 'warning',
+    //         	showConfirmButton: false,
+    //         	timer            : 2000
+    //         });
+    //       fileInput.value = "";
+    //       format.value = "";
+    //     };
+    
+    //     video.src = URL.createObjectURL(file);
+    //   }
+    
+      // Tipe file tidak valid
+      else {
+         Swal.fire({
+            	title            : 'Hanya mendukung file Gambar',
+            	type             : 'warning',
+            	showConfirmButton: false,
+            	timer            : 2000
+        });
+      }
+    });
+    
     $.ajax({
     	type    : 'POST',
     	url     : base_url+'Tiktok/cekStokLokasi/',
@@ -3421,26 +3696,37 @@ function returTiktok(){
             {
                 $("#tab_retur_header_tiktok_0").attr("class","active");
                 $("#tab_retur_detail_tiktok_0").attr("class","tab-pane active");
+                $("#tab_retur_header_tiktok_0").show();
+                $("#tab_retur_detail_tiktok_0").show();
                 
                 $("#tab_retur_header_tiktok_1").attr("class","");
                 $("#tab_retur_detail_tiktok_1").attr("class","tab-pane");
+                $("#tab_retur_header_tiktok_1").show();
+                // $("#tab_retur_detail_tiktok_1").hide();
                 
                 $("#tab_retur_header_tiktok_2").attr("class","");
                 $("#tab_retur_detail_tiktok_2").attr("class","tab-pane");
+                $("#tab_retur_header_tiktok_2").show();
+                // $("#tab_retur_detail_tiktok_2").hide();
                 
-                $("#deskripsi_sengketa_tiktok").val("");
-                $("#returTiktokWaitResponse").hide();
-                $("#returNegotiationTiktok").css("width","100%");
-                $("#btn_max_kembali_tiktok").show();
-                // $("#DANADIKEMBALIKANTIKTOK_1").removeAttr("readonly");
-                $("#returNegotiationTiktok").show();
+                $("#rejectReturRefundBarangTiktok").hide();
+                $("#rejectReturRefundTiktok").hide();
+                $("#rejectReturRefundBarangTerimaTiktok ").hide();
+                $("#rejectTukarRefundBarangTiktok").hide();
+                
+                $("#returRefundTiktok").hide();
+                $("#returRefundBarangTiktok").hide();
+                $("#returRefundBarangTerimaTiktok").hide();
+                $("#tukarRefundBarangTiktok").hide();
+                $("#tukafRefundBarangTerimaTiktok").hide();
+                
                 $("#HEADERRETURTIKTOK").show();
-                $("#DETAILRETURTIKTOK_1").html('Dengan ini menyatakan bahwa : <br>Penjual ingin melakukan <b>Pengembalian Barang dan Dana</b> kepada pembeli, dengan catatan :<ol><li>Item harus dikirim oleh pelanggan dan diverifikasi kualitasnya sebelum menyetujui pengembalian dana.</li><li>Dengan memilih "Pengembalian Barang dan Dana", Pembeli meminta pelanggan untuk mengirimkan kembali barang yang sudah diterima. Setelah pembeli menerima barang yang dikembalikan pelanggan, harap konfirmasikan pengiriman barang yang dikembalikan dan selesaikan pemeriksaan kualitas dalam batas waktu (SLA).</li><li>Penjual dapat memilih untuk mengembalikan dana sepenuhnya atau sebagian berdasarkan kesepakatan penjual dengan pembeli atau menolak pengembalian dan mengajukan banding. Agen CS Tiktok akan menghubungi penjual, jika membutuhkan bantuan untuk memproses banding.</li></ol>');
                 $("#NOTIKTOKRETUR").html("#"+row.KODEPENGEMBALIAN);
-                $("#HEADERRETURTIKTOK").html('Pembeli akan mengirimkan barang paling lambat pada <span style="font-weight:bold;">'+row.MINTGLPENGEMBALIAN+'</span>. Anda dapat mengajukan banding setelah menerima barang dari Pembeli atau menawarkan pengembalian Dana sebagian kepada Pembeli.<br><br>');
+                $("#deskripsi_tolak_tiktok").val("");
                 $("#modal-retur-tiktok").modal("show");
+                $("#HEADERRETURTIKTOK").html('Pembeli menunggu respon dari Penjual atau Tiktok. Dari sisi Penjual dapat memberikan respon paling lambat <span style="font-weight:bold;">'+row.MINTGLPENGEMBALIAN+'</span>, jika tidak maka Tiktok yang akan secara langsung memberikan respon kepada Pembeli.<br><br>Jika ingin mengajuka banding atas respon / keputusan dari Tiktok, bisa dilakukan pada aplikasi Tiktok.<br><br>');
                 
-                for(var x = 0 ; x < 3 ; x++)
+                for(var x = 0 ; x < 2 ; x++)
                 {
                     $("#DANADIKEMBALIKANTIKTOK_"+x).number(true,"<?=$_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']?>");
                     $("#MAXDANADIKEMBALIKANTIKTOK_"+x).number(true,"<?=$_SESSION[NAMAPROGRAM]['DECIMALDIGITAMOUNT']?>");
@@ -3449,291 +3735,75 @@ function returTiktok(){
                     $("#MAXDANADIKEMBALIKANTIKTOK_"+x).val(rowDetail.TOTALREFUND);
                 }
                 
-                
-                if(rowDetail.REFUNDTYPE == 'ONLY_REFUND' || row.TIPEPENGEMBALIAN == 'RETURN_DELIVERED' )
+                  
+                if(row.TIPEPENGEMBALIAN == 'REFUND' )
                 {
-                    $("#tab_retur_header_tiktok_1").hide();
-                    $("#tab_retur_detail_tiktok_1").hide();
-                }
-                
-                $("#ALASANBANDING").hide();
-                var select = '<option value="-">-Pilih Alasan-</option>';
-                $("#DISPUTESEBELUMBARANGDATANG").show();
-                $("#DISPUTESESUDAHBARANGDATANG").hide();
-                
-                if(rowDetail.REFUNDTYPE == 'RETURN' &&  row.TIPEPENGEMBALIAN == 'RETURN_DELIVERED' ){
-                    $("#DISPUTESEBELUMBARANGDATANG").hide();
-                    $("#DISPUTESESUDAHBARANGDATANG").show();
-                    // $("#ALASANBANDING").show();
-                    // $.ajax({
-                    // 	type    : 'POST',
-                    // 	url     : base_url+'Tiktok/getDispute/',
-                    // 	data    : {kodepengembalian: row.KODEPENGEMBALIAN},
-                    // 	dataType: 'json',
-                    // 	success : function(msg){
-                    // 	    var dataDispute = msg;
-                    // 	    for(var x = 0 ; x < dataDispute.length;x++)
-                    // 	    {
-                    // 	        select +=  '<option value="'+dataDispute[x].reason_id+'">'+dataDispute[x].muti_language_text+'</option>';
-                    // 	    }
-                    // 	    $("#cb_alasan_sengketa_tiktok").html(select);
-                    // 	}
-                    // });
-                }
-                
-                $("#penjelasan_bukti_tiktok").html("Kamu dapat menambahkan 8 Foto, ukuran file tidak bisa lebih dari 10MB.");
-                
-                var htmlProof = "<table><tr>";
-                for(var y = 0 ; y < 8 ;y++)
-                {
-                    if(y % 4 == 0)
-                    {
-                        htmlProof += "</tr><tr>";
-                    }
+                    $("#tab_retur_header_tiktok_0 a").html("Setuju Pengembalian Dana");
+                    $("#tab_retur_header_tiktok_1 a").html("Tolak Pengembalian Dana");
                     
-                    htmlProof += `<td>
-                                        <input type="file" id="file-input-tiktok-`+y+`" accept="image/*,video/*" style="display:none;" value="">
-                                        <input type="hidden"  id="keterangan-input-tiktok-`+y+`" value="">
-                                        <input type="hidden"  id="format-input-tiktok-`+y+`" value="">
-                                        <input type="hidden"  id="index-input-tiktok-`+y+`" value="`+y+`">
-                                        <input type="hidden"  id="src-input-tiktok-`+y+`" value="">
-                                        <input type="hidden"  id="id-input-tiktok-`+y+`" value="">
-                                        <div style="margin-bottom:20px; margin-right:10px;">
-                                            <img id="preview-image-tiktok-`+y+`" onclick='' src='`+base_url+`/assets/images/addphoto.webp' style='width:100px; height:100px; cursor:pointer; border:2px solid #dddddd;'>
-                                            <br>
-                                            <div style="text-align:center;">
-                                                <span id="ubahProofTiktok-`+y+`" onclick='' style="display:none; color:blue; cursor:pointer;">Ubah</span>
-                                                &nbsp;
-                                                <span id="hapusProofTiktok-`+y+`" onclick='' style="display:none; color:<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>; cursor:pointer;">Hapus</span>
-                                            </div>
-                                        </div>
-                                    </td>`;  
-                
+                    $("#DETAILRETURTIKTOK_0").html('Dengan ini menyatakan bahwa : <br>Penjual <b>setuju untuk melakukan Pengembalian Dana</b> kepada pembeli.');
+                    $("#DETAILRETURTIKTOK_1").html('Dengan ini menyatakan bahwa : <br>Penjual <b>menolak untuk melakukan Pengembalian Dana</b> kepada pembeli dengan alasan : ');
+                        
+                    $("#returRefundTiktok").show();
+                    $("#rejectReturRefundTiktok").show();
                 }
-                htmlProof += "</table>";
-                $("#proof_sengketa_tiktok").html(htmlProof);
-            
-                for(var y = 0 ; y < 8 ; y++)
+                else if(row.TIPEPENGEMBALIAN == 'RETURN_AND_REFUND' )
                 {
-                        const fileInput = document.getElementById('file-input-tiktok-'+y);
-                        const previewImage = document.getElementById('preview-image-tiktok-'+y);
-                        const title = document.getElementById('keterangan-input-tiktok-'+y);
-                        const format = document.getElementById('format-input-tiktok-'+y);
-                        const index = document.getElementById('index-input-tiktok-'+y);
-                        const url =  document.getElementById('src-input-tiktok-'+y);
-                        const id =  document.getElementById('id-input-tiktok-'+y);
+                    if(row.STATUSPENGEMBALIAN == 'BUYER_SHIPPED_ITEM')
+                    {
                         
-                        const ubahImage = document.getElementById('ubahProofTiktok-'+y);
-                        const hapusImage = document.getElementById('hapusProofTiktok-'+y);
+                        $("#tab_retur_header_tiktok_0 a").html("Setuju Penerimaan Barang");
+                        $("#tab_retur_header_tiktok_1 a").html("Tolak Penerimaan Barang");
                         
-                        previewImage.addEventListener('click', () => {
-                          if(url.value != '')
-                          {
-                              lihatLebihJelasTiktok(format.value,title.value,url.value);
-                          }
-                          else
-                          {
-                            fileInput.click();
-                          }
-                        });
-                        
-                        ubahImage.addEventListener('click', () => {
-                          fileInput.click();
-                        });
-                        
-                        hapusImage.addEventListener('click', () => {
-                          fileInput.value = '';
-                          format.value = '';
-                          previewImage.src = base_url+"/assets/images/addphoto.webp";
-                          url.value = "";
-                          id.value = "";
-                          
-                          ubahImage.style.display = 'none';
-                          hapusImage.style.display = 'none';
-                        });
-                        
-                        fileInput.addEventListener('change', () => {
-                          const file = fileInput.files[0];
-                          if (!file) return;
-        
-                          // Jika file adalah gambar
-                          if (file.type.startsWith('image/')) {
-                            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-                        
-                            if (!allowedTypes.includes(file.type.toLowerCase())) {
-                                fileInput.value = '';
-                              Swal.fire({
-                                title: 'Format gambar tidak didukung (hanya jpg/jpeg/png)',
-                                icon: 'warning',
-                                showConfirmButton: false,
-                                timer: 2000
-                              });
-                              return;
-                            }
-                        
-                            const maxSizeMB = 10;
-                            if (file.size > maxSizeMB * 1024 * 1024) {
-                                fileInput.value = '';
-                              Swal.fire({
-                                title: 'Ukuran gambar melebihi 10 MB',
-                                icon: 'warning',
-                                showConfirmButton: false,
-                                timer: 2000
-                              });
-                              return;
-                            }
-                        
-                            var row = JSON.parse($("#rowDataTiktok").val());
-                            // Upload file asli ke server
-                            const formData = new FormData();
-                            formData.append('index', index.value);
-                            formData.append('kode', row.KODEPENGEMBALIAN);
-                            formData.append('file', file);
-                            formData.append('tipe', 'GAMBAR');
-                            formData.append('size', file.size);
-                            formData.append("reason","proof/TIKTOK");
-                        
-                            loading();
-                            
-                            $.ajax({
-                              type: 'POST',
-                              url: base_url + 'Tiktok/uploadLocalUrlProof/',
-                              data: formData,
-                              contentType: false,
-                              processData: false,
-                              dataType: 'json',
-                              success: function (msg) {
-                                Swal.close();
-                                if (msg.success) {
-                                 format.value = "GAMBAR";
-                                 previewImage.src = msg.url;
-                                 url.value =  msg.url;
-                                 id.value = msg.id;
-                        
-                                 ubahImage.style.display = '';
-                                 hapusImage.style.display = '';
-                                }
-                                else
-                                {
-                                    fileInput.value = '';
-                                }
-                              },
-                              error: function (xhr, status, error) {
-                                fileInput.value = '';
-                                Swal.fire({
-                                  title: 'Upload gagal!',
-                                  text: error,
-                                  icon: 'error'
-                                });
-                              }
-                            });
-                          }
-                          // Jika file adalah video
-                          else if (file.type.startsWith('video/')) {
-                            format.value = "VIDEO";
-                            const video = document.createElement("video");
-                            video.preload = "metadata";
-                        
-                            video.onloadedmetadata = function () {
-                              window.URL.revokeObjectURL(video.src);
-                        
-                              if (parseInt(video.duration) > 60) {
-                                Swal.fire({
-                                	title            : 'Durasi Min 1 Menit',
-                                	type             : 'warning',
-                                	showConfirmButton: false,
-                                	timer            : 2000
-                                });
-                                fileInput.value = ""; // Kosongkan input
-                                format.value = "";
-                                return;
-                              }
-                              
-                               const maxSizeMB = 10;
-                               if (file.size > maxSizeMB * 1024 * 1024) {
-                                   fileInput.value = '';
-                                 Swal.fire({
-                                   title: 'Ukuran video melebihi 10MB',
-                                   icon: 'warning',
-                                   showConfirmButton: false,
-                                   timer: 2000
-                                 });
-                                 return;
-                               }
-                              
-                               var row = JSON.parse($("#rowDataTiktok").val());
-                                // Upload file asli ke server
-                                const formData = new FormData();
-                                formData.append('index', index.value);
-                                formData.append('kode', row.KODEPENGEMBALIAN);
-                                formData.append('file', file);
-                                formData.append('tipe', 'VIDEO');
-                                formData.append('size', file.size);
-                                formData.append("reason","proof/TIKTOK");
-                            
-                                loading();
-                                
-                                $.ajax({
-                                  type: 'POST',
-                                  url: base_url + 'Tiktok/uploadLocalUrlProof/',
-                                  data: formData,
-                                  contentType: false,
-                                  processData: false,
-                                  dataType: 'json',
-                                  success: function (msg) {
-                                    Swal.close();
-                                    if (msg.success) {
-                                     format.value = "VIDEO";
-                                     previewImage.src =  base_url+"/assets/images/video.webp";
-                                     url.value =  msg.url;
-                            
-                                     ubahImage.style.display = '';
-                                     hapusImage.style.display = '';
-                                    }
-                                    else
-                                    {
-                                        fileInput.value = '';
-                                    }
-                                  },
-                                  error: function (xhr, status, error) {
-                                    fileInput.value = '';
-                                    Swal.fire({
-                                      title: 'Upload gagal!',
-                                      text: error,
-                                      icon: 'error'
-                                    });
-                                  }
-                                });
-                            };
-                        
-                            video.onerror = () => {
-                               Swal.fire({
-                                	title            : 'Gagal memuat video dari file',
-                                	type             : 'warning',
-                                	showConfirmButton: false,
-                                	timer            : 2000
-                                });
-                              fileInput.value = "";
-                              format.value = "";
-                            };
-                        
-                            video.src = URL.createObjectURL(file);
-                          }
-                        
-                          // Tipe file tidak valid
-                          else {
-                             Swal.fire({
-                                	title            : 'Hanya mendukung file Gambar dan Video',
-                                	type             : 'warning',
-                                	showConfirmButton: false,
-                                	timer            : 2000
-                            });
-                          }
-                        });
+                        $("#DETAILRETURTIKTOK_0").html('Dengan ini menyatakan bahwa : <br>Penjual <b>setuju untuk Menerima Barang</b> yang telah dikirim oleh pembeli.');
+                        $("#DETAILRETURTIKTOK_1").html('Dengan ini menyatakan bahwa : <br>Penjual <b>menolak untuk Menerima Barang</b> yang telah dikirim oleh pembeli dengan alasan : ');
+                    
+                    
+                        $("#returRefundBarangTerimaTiktok").show();
+                        $("#rejectReturRefundBarangTerimaTiktok").show();
                     }
+                    else
+                    {
+                        $("#tab_retur_header_tiktok_0 a").html("Setuju Pengembalian Barang");
+                        $("#tab_retur_header_tiktok_1 a").html("Tolak Pengembalian Barang");
+                        
+                        $("#DETAILRETURTIKTOK_0").html('Dengan ini menyatakan bahwa : <br>Penjual <b>setuju untuk melakukan Pengembalian Dana</b> disertai dengan <b>Pengembalian Barang</b> oleh pembeli.');
+                        $("#DETAILRETURTIKTOK_1").html('Dengan ini menyatakan bahwa : <br>Penjual <b>menolak untuk melakukan Pengembalian Dana</b> disertai dengan <b>Pengembalian Barang</b> oleh pembeli dengan alasan : ');
+                        
+                        $("#returRefundBarangTiktok").show();
+                        $("#rejectReturRefundBarangTiktok").show();
+                    }
+                }
+                else if(row.TIPEPENGEMBALIAN == 'REPLACEMENT' )
+                {
+                    $("#tab_retur_header_tiktok_0 a").html("Setuju Tukar Barang / Kembali Dana Saja");
+                    $("#tab_retur_header_tiktok_1 a").html("Tolak Tukar Barang");
+                    
+                    $("#DETAILRETURTIKTOK_0").html('Dengan ini menyatakan bahwa : <br>Penjual <b>setuju untuk melakukan Penukaran Barang</b> atau <b>Pengembalian Dana Tanpa Barang</b>. Pengembalian Dana Tanpa Barang biasanya dilakukan ketika barang yang akan ditukar stoknya telah habis.');
+                    $("#DETAILRETURTIKTOK_1").html('Dengan ini menyatakan bahwa : <br>Penjual <b>menolak untuk melakukan Penukaran Barang</b>, dengan alasan : ');
+                    
+                        
+                    $("#tukarRefundBarangTiktok").show();
+                    $("#tukafRefundBarangTerimaTiktok").show();
+                    $("#rejectTukarRefundBarangTiktok").show();
+                }
                 
-                Swal.close();
-            }
+                $.ajax({
+                	type    : 'POST',
+                	url     : base_url+'Tiktok/getAlasanReject/',
+                	data    : {kode: row.KODEPENGEMBALIAN},
+                	dataType: 'json',
+                	success : function(msg){
+                	    var select = '<option value="">- Pilih Alasan -</option>';
+                	    for(var x = 0 ; x < msg.length;x++)
+                	    {
+                	        select +=  '<option value="'+msg[x].name+'">'+msg[x].text+'</option>';
+                	    }
+                	    $("#cb_alasan_penolakan_tiktok").html(select);
+                        Swal.close();
+                	}
+                });
+    	    }
     	}
     });
 }
@@ -3744,50 +3814,7 @@ function setMaksRefundTiktok(){
 
 function refundTiktok(x){
         
-   var gambarada = false;
-   for(var y = 0 ; y < 8;y++)
-   {
-       //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
-       if($("#src-input-tiktok-"+y).val() != "")
-       {
-          gambarada = true;
-       }
-   
-   }
-        
-    if(x == 2 && ($("#deskripsi_sengketa_tiktok").val() == "" || !gambarada || $("#cb_alasan_sengketa_tiktok").val() == "-"))
-    {
-        if($("#cb_alasan_sengketa_tiktok").val() == "-")
-        {
-             Swal.fire({
-                 	title            : 'Alasan Banding harus dipilih',
-                 	type             : 'warning',
-                 	showConfirmButton: false,
-                 	timer            : 2000
-             });
-        }
-        else if($("#deskripsi_sengketa_tiktok").val() == "")
-        {
-             Swal.fire({
-                 	title            : 'Penjelasan Banding wajib diisi',
-                 	type             : 'warning',
-                 	showConfirmButton: false,
-                 	timer            : 2000
-             });
-        }
-        else if(!gambarada)
-        {
-             Swal.fire({
-                 	title            : 'Gambar wajib diisi min 1',
-                 	type             : 'warning',
-                 	showConfirmButton: false,
-                 	timer            : 2000
-             });
-        }
-    }
-    else
-    {
-    Swal.fire({
+   Swal.fire({
         title: 'Anda Yakin Melanjutkan Pengembalian Pesanan Ini ?',
         showCancelButton: true,
         confirmButtonText: 'Yakin',
@@ -3798,7 +3825,6 @@ function refundTiktok(x){
                 setRefundTiktok(x);
         	}
         });
-    }
 }
 
 function setRefundTiktok(x)
@@ -3806,138 +3832,136 @@ function setRefundTiktok(x)
     var row = JSON.parse($("#rowDataTiktok").val());
     var rowDetail = JSON.parse($("#dataReturTiktok").val());
     loading();
+    let tipeAlasan = "";
     if(x == 0)
     {
-        $.ajax({
-        	type    : 'POST',
-        	url     : base_url+'Tiktok/refund/',
-        	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
-        	dataType: 'json',
-        	success : function(msg){
-               
-                Swal.close();	
-                Swal.fire({
-                	title            :  msg.msg,
-                	type             : (msg.success?'success':'error'),
-                	showConfirmButton: false,
-                	timer            : 2000
-                });
-                if(msg.success)
-                {
-                    $("#modal-retur-tiktok").modal("hide");
-                
-                    setTimeout(() => {
-                      reloadTiktok();
-                    }, "2000");
-                }
-        	}
-        });
+        tipeAlasan = "APPROVE_REFUND";
     }
     else if(x == 1)
     {
-        $.ajax({
-        	type    : 'POST',
-        	url     : base_url+'Tiktok/returnRefund/',
-        	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN},
-        	dataType: 'json',
-        	success : function(msg){
-               
-                Swal.close();	
-                Swal.fire({
-                	title            :  msg.msg,
-                	type             : (msg.success?'success':'error'),
-                	showConfirmButton: false,
-                	timer            : 2000
-                });
-                if(msg.success)
-                {
-                    $("#modal-retur-tiktok").modal("hide");
-                
-                    setTimeout(() => {
-                      reloadTiktok();
-                    }, "2000");
-                }
-        	}
-        });
+        tipeAlasan = "APPROVE_RETURN";
     }
-    if(x == -1){
-        
+    if(x == -1)
+    {
+        tipeAlasan = "APPROVE_RECEIVED_PACKAGE";
     }
     else if(x == 2)
     {
-        var dataDisputeProof = [];
-        for(var y = 0 ; y < 8;y++)
-        {
-            //CEK KALAU GAMBAR BELUM ADA NDAK USA DIKIRIM
-            if($("#src-input-tiktok-"+y).val() != "")
-            {
-                dataDisputeProof.push({
-                    "id" : (y+1),
-                    "requirement" : $("#keterangan-input-tiktok-"+y).val(),
-                    "thumbnail" : $("#src-input-tiktok-"+y).val(),
-                    "url" : $("#src-input-tiktok-"+y).val(),
-                    "url-baru" : ""
-                });
-            }
-        
-        }
-        
-       $.ajax({
-            type    : 'POST',
-            url     : base_url+'Tiktok/changeLocalUrl/',
-            data    : {
-                "url" : JSON.stringify(dataDisputeProof),
-            },
-            dataType: 'json',
-            success : function(msg){
-                if (msg.success) {
-                    for(var x = 0 ; x < dataDisputeProof.length ; x++)
-                    {
-                       dataDisputeProof[x]['url-baru'] = msg.data[x]['url-baru'];
-                    }
-                    
-                    $.ajax({
-                    	type    : 'POST',
-                    	url     : base_url+'Tiktok/dispute/',
-                    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,kodepesanan: row.KODEPESANAN,pilihandispute:$("#cb_alasan_sengketa_tiktok").val(),alasandispute:$("#deskripsi_sengketa_tiktok").val(),disputeproof:JSON.stringify(dataDisputeProof)},
-                    	dataType: 'json',
-                    	success : function(msg){
-                           
-                            Swal.close();	
-                            Swal.fire({
-                            	title            :  msg.msg,
-                            	type             : (msg.success?'success':'error'),
-                            	showConfirmButton: false,
-                            	timer            : 2000
-                            });
-                            if(msg.success)
-                            {
-                                $("#modal-retur-tiktok").modal("hide");
-                            
-                                setTimeout(() => {
-                                  reloadTiktok();
-                                }, "2000");
-                            }
-                    	}
-                    });
-                }
-                else
-                {
-                    Swal.close();	
-                    setRefundTiktok(2);
-                    // error = true;
-                    // Swal.close();	
-                    // Swal.fire({
-                    //     title            : msg.msg,
-                    //     type             : (msg.success?'success':'error'),
-                    //     showConfirmButton: false,
-                    //     timer            : 2000
-                    // });
-                }
-                
-            }
-        });
+        tipeAlasan = "APPROVE_REPLACEMENT";
     }
+    if(x == -2)
+    {
+        tipeAlasan = "ISSUE_REPLACEMENT_REFUND";
+    }
+    else if(x == 3)
+    {
+        tipeAlasan = "MENUNGGU";
+    }
+    
+    $.ajax({
+    	type    : 'POST',
+    	url     : base_url+'Tiktok/returnRefund/',
+    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,type: tipeAlasan},
+    	dataType: 'json',
+    	success : function(msg){
+           
+            Swal.close();	
+            Swal.fire({
+            	title            :  msg.msg,
+            	type             : (msg.success?'success':'error'),
+            	showConfirmButton: false,
+            	timer            : 2000
+            });
+            if(msg.success)
+            {
+                $("#modal-retur-tiktok").modal("hide");
+            
+                setTimeout(() => {
+                  reloadTiktok();
+                }, "2000");
+            }
+    	}
+    });
+}
+
+
+
+function rejectRefundTiktok(x){
+    
+    if($("#cb_alasan_penolakan_tiktok").val() != "" && $("#deskripsi_tolak_tiktok").val() != "")
+    {
+        Swal.fire({
+            title: 'Anda Yakin Membatalkan Pengembalian Pesanan Ini ?',
+            showCancelButton: true,
+            confirmButtonText: 'Yakin',
+            cancelButtonText: 'Tidak',
+            }).then((result) => {
+            /* Read more about isConfirmed, isDenied below */
+            	if (result.value) {
+                    setRejectRefundTiktok(x);
+            	}
+            });
+    }
+    else
+    {
+         Swal.fire({
+                	title            :  "Mohon isi alasan dan penjelasannya",
+                	type             :'warning',
+                	showConfirmButton: false,
+                	timer            : 2000
+                });
+    }
+}
+
+function setRejectRefundTiktok(x)
+{
+    var row = JSON.parse($("#rowDataTiktok").val());
+    var rowDetail = JSON.parse($("#dataReturTiktok").val());
+    loading();
+    
+    let tipeAlasan = "";
+                    
+    if(x == 0)
+    {
+        tipeAlasan = "REJECT_REFUND";
+    }
+    else if(x == 1)
+    {
+        tipeAlasan = "REJECT_RETURN";
+    }
+    if(x == -1)
+    {
+        tipeAlasan = "REJECT_RECEIVED_PACKAGE";
+    }
+    else if(x == 2)
+    {
+        tipeAlasan = "REJECT_REPLACEMENT";
+    }
+    
+    $.ajax({
+    	type    : 'POST',
+    	url     : base_url+'Tiktok/rejectReturnRefund/',
+    	data    : {kodepengembalian: row.KODEPENGEMBALIAN,type:tipeAlasan,reason:$("#cb_alasan_penolakan_tiktok").val(),alasandetail:$("#deskripsi_tolak_tiktok").val(),imageid:$("#id-input-tolak-tiktok").val(),tipe:$("#tipe-input-tolak-tiktok").val(),panjang:$("#panjang-input-tolak-tiktok").val(),lebar:$("#lebar-input-tolak-tiktok").val()},
+    	dataType: 'json',
+    	success : function(msg){
+           
+            Swal.close();	
+            Swal.fire({
+            	title            :  msg.msg,
+            	type             : (msg.success?'success':'error'),
+            	showConfirmButton: false,
+            	timer            : 2000
+            });
+            if(msg.success)
+            {
+                $("#modal-retur-tiktok").modal("hide");
+            
+                setTimeout(() => {
+                  reloadTiktok();
+                }, "2000");
+            }
+    	}
+    });
 }
 
 function reloadTiktok(){
@@ -3958,12 +3982,6 @@ function loading(){
         Swal.showLoading();
       }
     });
-}
-
-function focusOnRefundTiktok(){
-    setTimeout(() => {
-    //  $("#DANADIKEMBALIKANTIKTOK_1").focus();
-    }, "500");
 }
 
 //LIMIT ANGKA SAJA

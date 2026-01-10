@@ -3662,12 +3662,20 @@ class Tiktok extends MY_Controller {
 		    $result['SUBTOTALBELI']         = (int)$dataPayment['original_total_product_price']; 
 		    $result['BIAYAKIRIMBELI']       = (int)$dataPayment['original_shipping_fee']; 
 		    
-		    if($this->getStatus($resultPesanan->STATUSMARKETPLACE)['state'] != 3)
+		    $result['BIAYALAYANANJUAL']     = 0;
+            $result['PENERIMAANJUAL']       = 0;
+            $result['DISKONJUAL']           = 0; 
+            $result['SUBTOTALJUAL']         = 0;
+            $result['BIAYAKIRIMJUAL']       = 0;
+            $result['REFUNDJUAL']           = 0;
+            $result['PENYELESAIANPENJUAL']  = 0;
+		    
+            $dataUnsettled = [];
+		    if($this->getStatus($resultPesanan->STATUSMARKETPLACE)['state'] != 3 || $resultPesanan->STATUSMARKETPLACE == 'COMPLETED')
             {
         		//UNSETTLED
-                $dataUnsettled = [];
                 $curl = curl_init();
-                $parameter = "&sort_field=order_create_time&page_size=100&search_time_ge=".$ret['data']['orders'][0]['create_time'];
+                $parameter = "&sort_field=order_create_time&page_size=100"; //&search_time_ge=".$ret['data']['orders'][0]['create_time']
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -3702,18 +3710,18 @@ class Tiktok extends MY_Controller {
             		    $result['BIAYALAYANANJUAL']     = (int)$dataUnsettled[$u]['est_fee_tax_amount']; 
             		    $result['PENERIMAANJUAL']       = (int)$dataUnsettled[$u]['est_settlement_amount']; 
             		    $result['DISKONJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_amount']+(int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_refund_amount']; 
-            		    $result['SUBTOTALJUAL']         = (int)$dataUnsettled[$u]['est_revenue_amount']; 
+            		    $result['SUBTOTALJUAL']         = (int)$result['SUBTOTALBELI']; 
             		    $result['BIAYAKIRIMJUAL']       = (int)$dataUnsettled[$u]['est_shipping_cost_amount'];
             		    $result['REFUNDJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['refund_subtotal_before_discount_amount'];
             		    $result['PENYELESAIANPENJUAL']  = (int)$dataUnsettled[$u]['est_settlement_amount']; 
                     }
                 }
           }
-		  else if($finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
+		  if(count($dataUnsettled) == 0 && $resultPesanan->STATUSMARKETPLACE == 'COMPLETED')
 		  {
 		       $curl = curl_init();
-               $parameter = "";
-               curl_setopt_array($curl, array(
+              $parameter = "";
+              curl_setopt_array($curl, array(
                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                  CURLOPT_RETURNTRANSFER => true,
                  CURLOPT_ENCODING => '',
@@ -3724,37 +3732,27 @@ class Tiktok extends MY_Controller {
                  CURLOPT_CUSTOMREQUEST => 'POST',
                  CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202501/orders/'.$nopesanan.'/statement_transactions','parameter' => $parameter),
                  CURLOPT_HTTPHEADER => array(
-                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                  'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
                  ),
-               ));
+              ));
                
-               $response = curl_exec($curl);
-               curl_close($curl);
-               $ret =  json_decode($response,true);
-               if($ret['code'] != 0)
-               {
-                   echo $ret['code']." : ".$ret['message'];
-               }
-               else
-               {
-                   $result['BIAYALAYANANJUAL']     = (int)$dataUnsettled[$u]['fee_and_tax_amount']; 
+              $response = curl_exec($curl);
+              curl_close($curl);
+              $ret =  json_decode($response,true);
+              if($ret['code'] != 0)
+              {
+                  echo $ret['code']." : ".$ret['message'];
+              }
+              else
+              {
+                  $result['BIAYALAYANANJUAL']     = (int)$dataUnsettled[$u]['fee_and_tax_amount']; 
             	   $result['PENERIMAANJUAL']       = (int)$dataUnsettled[$u]['settlement_amount']; 
             	   $result['DISKONJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_amount']+(int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_refund_amount']; 
             	   $result['SUBTOTALJUAL']         = (int)$dataUnsettled[$u]['revenue_amount']; 
             	   $result['BIAYAKIRIMJUAL']       = (int)$dataUnsettled[$u]['shipping_cost_amount'];
             	   $result['REFUNDJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['refund_subtotal_before_discount_amount'];
             	   $result['PENYELESAIANPENJUAL']  = (int)$dataUnsettled[$u]['settlement_amount']; 
-               }
-		  }
-		  else
-		  {
-		       $result['BIAYALAYANANJUAL']     = 0;
-               $result['PENERIMAANJUAL']       = 0;
-               $result['DISKONJUAL']           = 0; 
-               $result['SUBTOTALJUAL']         = 0;
-               $result['BIAYAKIRIMJUAL']       = 0;
-               $result['REFUNDJUAL']           = 0;
-               $result['PENYELESAIANPENJUAL']  = 0;
+              }
 		  }
 		    $result['DETAILBARANG'] = [];
 		    
@@ -3989,7 +3987,7 @@ class Tiktok extends MY_Controller {
             
 		    $result['DETAILBARANG'] = [];
 		    
-		     $sql = "SELECT GROUP_CONCAT(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, a.SKUPRODUK, ifnull(a.SKUPRODUKOLD,'') as SKUPRODUKOLD
+		     $sql = "SELECT GROUP_CONCAT(b.SKUPRODUKPENGEMBALIAN SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, a.SKUPRODUK, ifnull(a.SKUPRODUKOLD,'') as SKUPRODUKOLD,b.SELLERMENUNGGUBARANGDATANG
                         FROM TPENJUALANMARKETPLACE a
                         INNER JOIN  TPENJUALANMARKETPLACEDTL b  on a.IDPENJUALANMARKETPLACE = b.IDPENJUALANMARKETPLACE
                         WHERE b.MARKETPLACE = 'TIKTOK' and b.KODEPENGEMBALIANMARKETPLACE = '$nopengembalian' ";
@@ -3998,6 +3996,7 @@ class Tiktok extends MY_Controller {
             $produkDataPengembalian = explode("|",$resultPesanan->SKUPRODUKPENGEMBALIAN);
             $produkData = explode("|",$resultPesanan->SKUPRODUK);
             $produkDataOld = explode("|",$resultPesanan->SKUPRODUKOLD);
+            $result['SELLERMENUNGGUBARANGDATANG'] = $resultPesanan->SELLERMENUNGGUBARANGDATANG;
             $dataProduk = [];
             $indexProduk = 0;
             
@@ -4139,775 +4138,15 @@ class Tiktok extends MY_Controller {
 
 	}
 	
-	public function getSolution(){
+	public function getAlasanReject(){
+	    
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		$nopengembalian = $this->input->post('kode')??"";
-		$detailRetur = json_decode($this->input->post('detailRetur')??"",true);
-        
-		$arrayResult = [
-            [
-                "eligibility" => false,
-                "keterangan" => "KEMBALI DANA PENUH",
-                "max_refund_amount" => $detailRetur['TOTALREFUND'],
-                "refund_amount_adjustable" => false
-            ],
-            [
-                "eligibility" => false,
-                "keterangan" => "NEGOSIASI",
-                "max_refund_amount" => $detailRetur['TOTALREFUND'],
-                "refund_amount_adjustable" => false
-            ],
-            [
-                "eligibility" => false,
-                "keterangan" => "MENUNGGU PEMBAYARAN",
-                "max_refund_amount" => $detailRetur['TOTALREFUND'],
-                "refund_amount_adjustable" => false
-            ],
-            [
-                "eligibility" => false,
-                "keterangan" => "DISPUTE",
-                "max_refund_amount" => $detailRetur['TOTALREFUND'],
-                "refund_amount_adjustable" => false
-            ]
-        ];
-        
-		if($detailRetur['REFUNDTYPE'] == "RRBOC")
-		{
-		    //KALAU 2, BELUM PERNAH NEGO
-		    if($detailRetur['NEGOTIATIONCOUNTER'] == 2 && $detailRetur['NEGOTIATIONSTATUS'] != "")
-		    {  
-    		    $arrayResult[0]['eligibility'] = true;
-                $arrayResult[1]['eligibility'] = true;
-            	$arrayResult[2]['eligibility'] = true;
-		    }
-		    else if($detailRetur['LOGISTICSTATUS'] == "LOGISTICS_DELIVERY_DONE")
-		    {
-		        $arrayResult[0]['eligibility'] = true;
-		        $arrayResult[3]['eligibility'] = true;
-		    }
-		    else if($detailRetur['NEGOTIATIONSTATUS'] == "")
-		    {  
-    		    $arrayResult[0]['eligibility'] = true;
-		    }
-		    else
-		    {
-		        $arrayResult[1]['eligibility'] = true;
-		        $arrayResult[1]['max_refund_amount'] = $detailRetur['NEGOTIATIONREFUND'];
-		    }
-		}
-		else
-		{
-            $arrayResult[3]['eligibility'] = true;
-		}
-		
-           
-		echo(json_encode($arrayResult));
-
-	}
-	
-	public function refund(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$nopesanan = $this->input->post('kodepesanan')??"";
-		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		//HAPUS PESANAN
-		
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/confirm',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-     
-        if($ret['code'] != 0)
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['code']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-          //GET ORDER DETAIL
-          $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-          // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-          // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-          $curl = curl_init();
-           
-          curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-              'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-          ));
-           
-          $response = curl_exec($curl);
-          curl_close($curl);
-          $ret =  json_decode($response,true);
-          if($ret['code'] != 0)
-          {
-              echo $ret['code']." : ".$ret['message'];
-              $statusok = false;
-          }
-          else
-          {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                {
-                  $dataDetail = $ret['response']['order_list'][$y];
-                  $data;
-                  //DAPATKAN RESI
-                  $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                  $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                  $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                  $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                  $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                  $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                  $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
-                  $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                  $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                  $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                  ->where('MARKETPLACE',"TIKTOK")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                      'NAME'                       => $data['NAME'],  
-                      'TELP'                       => $data['TELP'],  
-                      'ALAMAT'                     => $data['ALAMAT'],
-                      'KOTA'                       => $data['KOTA'],  
-                      'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                      'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                      'STATUS'                     => $data['STATUS'],
-                      'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                    ));    
-                }
-          }
-           
-            //UPDATE TOTAL PENDAPATAN DANA
-            $parameter = "";
-    	    $parameter = "&order_sn=".$nopesanan;
-            
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'payment/get_escrow_detail','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['code'] != 0)
-            {
-                echo $ret['code']." : ".$ret['message'];
-            }
-            else
-            {
-    		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','TIKTOK')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
-    		    ));
-            }
-            
-           //UPDATE BARANG SAMPAI
-           $parameter = "&return_sn=".$nopengembalian;
-           
-           $curl = curl_init();
-           $logisticStatus = "";
-           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['code'] != 0)
-           {
-               echo $ret['code']." : ".$ret['message'];
-           }
-           else
-           {
-               $logisticStatus = $ret['response']['logistics_status'];
-               
-                $CI->db->where("KODEPENGEMBALIANMARKETPLACE",$nopengembalian)
-		          ->where('MARKETPLACE','TIKTOK')
-		          ->updateRaw("TPENJUALANMARKETPLACE", array(
-		              'BARANGSAMPAI'                  =>  ($logisticStatus == "LOGISTICS_DELIVERY_DONE"? 1 : 0)
-		            ));
-		            
-		        if($logisticStatus == "LOGISTICS_DELIVERY_DONE")
-		        {
-    		        //CEK LOKASI RETURN, YANG BARANG SMPAI = 1
-                    $lokasi = "0";
-                    $parameter="";
-                    $curl = curl_init();
-                    
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                    
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-                    if($ret['code'] != 0)
-                    {
-                        echo $ret['code']." : ".$ret['message'];
-                    }
-                    else
-                    {
-                        $dataAddress = $ret['response']['address_list'];
-                        $data['rows'] = [];
-                        for($x = 0 ; $x < count($dataAddress);$x++)
-                        {
-                            $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                            
-                            for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                            {
-                                if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
-                                {
-                                    $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                                }
-                            }
-                        }
-                    }
-                    
-            	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
-            	    
-            	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
-                    for($f = 0 ; $f < count($finalData) ; $f++)
-                    {
-                        $wherePesanan .= "'".$finalData[$f]['KODEPENJUALANMARKETPLACE']."'";
-                        
-                        if($f != count($finalData)-1)
-                        {
-                             $wherePesanan .= ",";
-                        }
-                    }
-                    $wherePesanan .= ")";
-                    
-                    $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'TIKTOK' and KODEPENGEMBALIANMARKETPLACE != '' and BARANGSAMPAI = 1 $wherePesanan ";
-                    $dataRetur = $CI->db->query($sqlRetur)->result();
-            
-                    foreach($dataRetur as $itemRetur)
-                    {
-                       $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
-                    }
-                    //CEK LOKASI RETURN
-		        }
-           }
-            
-        }
-        
-        $data['success'] = true;
-        $data['msg'] = "Pengembalian Dana #".$nopengembalian." Berhasil Dilakukan";
-        echo(json_encode($data));
-
-	}
-	
-	public function returnRefund(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$offeramount = $this->input->post('offeramount')??"";
-		$solution = $this->input->post('solution')??"";
-		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		$parameter['proposed_solution'] = $solution;
-		$parameter['proposed_adjusted_refund_amount'] = (float)$offeramount;
-		//HAPUS PESANAN
-		
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/offer',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-     
-        if($ret['code'] != 0)
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['code']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-            $data['success'] = true;
-            $data['msg'] = "Negosiasi Pengembalian #".$parameter['return_sn']." Berhasil Dilakukan";
-            echo(json_encode($data));
-        }
-
-	}
-	
-	public function finalReturnRefund(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$nopesanan = $this->input->post('kodepesanan')??"";
-		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		//HAPUS PESANAN
-		
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/accept_offer',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-     
-        if($ret['code'] != 0)
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['code']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-            //GET ORDER DETAIL
-           $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-           // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-           // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-           $curl = curl_init();
-           
-           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['code'] != 0)
-           {
-               echo $ret['code']." : ".$ret['message'];
-               $statusok = false;
-           }
-           else
-           {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                {
-                   $dataDetail = $ret['response']['order_list'][$y];
-                   $data;
-                   //DAPATKAN RESI
-                   $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                   $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                   $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                   $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                   $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                   $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
-                   $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                   $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"TIKTOK")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                       'NAME'                       => $data['NAME'],  
-                       'TELP'                       => $data['TELP'],  
-                       'ALAMAT'                     => $data['ALAMAT'],
-                       'KOTA'                       => $data['KOTA'],  
-                       'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                       'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                       'STATUS'                     => $data['STATUS'],
-                       'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                    ));    
-                }
-           }
-           
-           
-            //UPDATE TOTAL PENDAPATAN DANA
-            $parameter = "";
-    	    $parameter = "&order_sn=".$nopesanan;
-            
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'payment/get_escrow_detail','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['code'] != 0)
-            {
-                echo $ret['code']." : ".$ret['message'];
-            }
-            else
-            {
-    		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','TIKTOK')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
-    		    ));
-            }
-            
-           
-            $data['success'] = true;
-            $data['msg'] = "Pengembalian Dana #".$nopengembalian." Berhasil Dilakukan";
-            echo(json_encode($data));
-        }
-
-	}
-	
-	public function dispute(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$nopesanan = $this->input->post('kodepesanan')??"";
-		$email = $this->input->post('email')??"";
-		$disputeid = $this->input->post('id')??"";
-		$disputetext = $this->input->post('description')??"";
-		$imageData = json_decode($this->input->post('data')??"",true);
-		
-		$imageDataSave = [];
-		
-		for($x = 0 ; $x < count($imageData); $x++)
-		{
-		    array_push($imageDataSave,array(
-		        'module_index' => (int)$imageData[$x]['index'],
-		        'requirement' => $imageData[$x]['requirement'],
-		        'image_url' => $imageData[$x]['url']
-		    ));
-		}
-		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian;
-		$parameter['email'] = $email;
-		$parameter['dispute_reason_id'] = (int)$disputeid;
-		$parameter['dispute_text_reason'] = $disputetext;
-		$parameter['image_list'] = $imageDataSave;
-		//HAPUS PESANAN
-		
-        $curl = curl_init();
-        
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 30,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/dispute',
-          'parameter' => json_encode($parameter)),
-          CURLOPT_HTTPHEADER => array(
-            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-          ),
-        ));
-          
-        $response = curl_exec($curl);
-        curl_close($curl);
-        $ret =  json_decode($response,true);
-     
-        if($ret['code'] != 0)
-        {
-            $data['success'] = false;
-            $data['msg'] =  $ret['code']." : ".$ret['message'];
-            die(json_encode($data));
-        }
-        else
-        {
-             //GET ORDER DETAIL
-           $parameter = "&order_sn_list=".$nopesanan."&response_optional_fields=total_amount,item_list,buyer_username,recipient_address,shipping_carrier,payment_method,note,package_list,buyer_cancel_reason";
-           // echo $tglTemp." - ".$tgl_ak." 23:59:59"."<br>";
-           // echo "&order_status=COMPLETED&time_range_field=create_time&time_from=".$tglAw."&time_to=".$tglAk."&page_size=10"."<br>";
-           
-           $curl = curl_init();
-           
-           curl_setopt_array($curl, array(
-             CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-             CURLOPT_RETURNTRANSFER => true,
-             CURLOPT_ENCODING => '',
-             CURLOPT_MAXREDIRS => 10,
-             CURLOPT_TIMEOUT => 30,
-             CURLOPT_FOLLOWLOCATION => true,
-             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-             CURLOPT_CUSTOMREQUEST => 'POST',
-             CURLOPT_POSTFIELDS => array('endpoint' => 'order/get_order_detail','parameter' => $parameter),
-             CURLOPT_HTTPHEADER => array(
-               'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-             ),
-           ));
-           
-           $response = curl_exec($curl);
-           curl_close($curl);
-           $ret =  json_decode($response,true);
-           if($ret['code'] != 0)
-           {
-               echo $ret['code']." : ".$ret['message'];
-               $statusok = false;
-           }
-           else
-           {
-                for($y = 0 ; $y < count($ret['response']['order_list']); $y++)
-                {
-                   $dataDetail = $ret['response']['order_list'][$y];
-                   $data;
-                   //DAPATKAN RESI
-                   $data['KODEPENJUALANMARKETPLACE']   = $dataDetail['order_sn'];
-                   $data['TOTALBAYAR']                 = $dataDetail['total_amount'];
-                   $data['STATUSMARKETPLACE']          = $dataDetail['order_status'];
-                   $data['NAME']                       = $dataDetail['recipient_address']['name'];
-                   $data['TELP']                       = $dataDetail['recipient_address']['phone'];
-                   $data['ALAMAT']                     = $dataDetail['recipient_address']['full_address'];
-                   $data['KOTA']                       = str_replace(" CITY","",str_replace("KAB. ","",str_replace("KOTA ","", strtoupper($dataDetail['recipient_address']['city']))));
-                   $data['STATUS']                     = $this->getStatus($dataDetail['order_status'])['state'];
-                   $data['CATATANPENGEMBALIAN']        = $dataDetail['buyer_cancel_reason'];
-             
-                   $CI->db->where("KODEPENJUALANMARKETPLACE",$data['KODEPENJUALANMARKETPLACE'])
-                   ->where('MARKETPLACE',"TIKTOK")
-                    ->updateRaw("TPENJUALANMARKETPLACE", array(
-                       'NAME'                       => $data['NAME'],  
-                       'TELP'                       => $data['TELP'],  
-                       'ALAMAT'                     => $data['ALAMAT'],
-                       'KOTA'                       => $data['KOTA'],  
-                       'TOTALBAYAR'                 => $data['TOTALBAYAR'],
-                       'STATUSMARKETPLACE'          => $data['STATUSMARKETPLACE'],
-                       'STATUS'                     => $data['STATUS'],
-                       'CATATANPENGEMBALIAN'        => $data['CATATANPENGEMBALIAN'],
-                    ));    
-                }
-           }
-           
-           
-            //UPDATE TOTAL PENDAPATAN DANA
-            $parameter = "";
-    	    $parameter = "&order_sn=".$nopesanan;
-            
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'payment/get_escrow_detail','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['code'] != 0)
-            {
-                echo $ret['code']." : ".$ret['message'];
-            }
-            else
-            {
-    		   $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','TIKTOK')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'TOTALPENDAPATANPENJUAL'   =>  $ret['response']['order_income']['escrow_amount_after_adjustment'],
-    		    ));
-            }
-            
-            //UPDATE BARANG SAMPAI
-            $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-    		   ->where('MARKETPLACE','TIKTOK')
-    		   ->updateRaw("TPENJUALANMARKETPLACE", array(
-    		      'BARANGSAMPAI'   =>  1,
-    		 ));
-        
-            //CEK LOKASI RETURN
-            $lokasi = "0";
-            $parameter="";
-            $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'logistics/get_address_list','parameter' => $parameter),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-            
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-            if($ret['code'] != 0)
-            {
-                echo $ret['code']." : ".$ret['message'];
-            }
-            else
-            {
-                $dataAddress = $ret['response']['address_list'];
-                $data['rows'] = [];
-                for($x = 0 ; $x < count($dataAddress);$x++)
-                {
-                    $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['address_id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-                    
-                    for($y = 0 ; $y < count($dataAddress[$x]['address_type']);$y++)
-                    {
-                        if($dataAddress[$x]['address_type'][$y] == "RETURN_ADDRESS")
-                        {
-                            $lokasi = $CI->db->query($sql)->row()->IDLOKASI;
-                        }
-                    }
-                }
-            }
-            
-    	    $tglStokMulai = $this->model_master_config->getConfigMarketplace('TIKTOK','TGLSTOKMULAI');
-            
-            $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACE WHERE MARKETPLACE = 'TIKTOK' and KODEPENGEMBALIANMARKETPLACE = '".$nopengembalian."'";
-            $dataRetur = $CI->db->query($sqlRetur)->result();
-            
-            foreach($dataRetur as $itemRetur)
-            {
-               $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$lokasi);
-            }
-            //CEK LOKASI RETURN
-            
-            $data['success'] = true;
-            $data['msg'] = "Proses Sengketa #".$nopengembalian." Berhasil Dilakukan";
-            echo(json_encode($data));
-        }
-
-	}
-	
-	public function getDispute(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kode')??"";
-		
-		//PAYMENT DETAIL
-	    $parameter = "&return_sn=".$nopengembalian;
-        
-        $curl = curl_init();
+		 
+		$curl = curl_init();
+		$parameter = "&return_or_cancel_id=".$nopengembalian."&locale=id-ID";
         
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
@@ -4918,48 +4157,128 @@ class Tiktok extends MY_Controller {
           CURLOPT_FOLLOWLOCATION => true,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array('endpoint' => 'returns/get_return_dispute_reason','parameter' => $parameter),
+          CURLOPT_POSTFIELDS => array('endpoint' => '/return_refund/202309/reject_reasons','parameter' => $parameter),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
           ),
         ));
-        
+          
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
         if($ret['code'] != 0)
         {
             echo $ret['code']." : ".$ret['message'];
+            $statusok = false;
         }
         else
         {
-           $response = $ret['response']['dispute_reason_list'];
-           $index = 0 ;
-           foreach($response as $item)
-           {
-               $response[$index]['dispute_text'] = $this->getAlasanDispute($response[$index]['dispute_reason']);
-               $index++;
-           }
-		   echo(json_encode($response));
+            $arrayResult = $ret['data']['reasons'];
         }
+	
+           
+		echo(json_encode($arrayResult));
 
 	}
 	
-	public function cancelDispute(){
+	public function returnRefund(){
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
 		$this->output->set_content_type('application/json');
 		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$nopesanan = $this->input->post('kodepesanan')??"";
-		$email = $this->input->post('email')??"";
+		$type = $this->input->post('type')??"";
 		
-		$parameter = [];
-		$parameter['return_sn'] = $nopengembalian; // when the return_status is ACCEPTED and the compensation_status is COMPENSATION_REQUESTED.
-		$parameter['email'] = $email;
-		//HAPUS PESANAN
 		
+		if($type == "MENUNGGU")
+		{
+		     $CI->db->where("KODEPENGEMBALIANMARKETPLACE",$nopengembalian)
+		        ->where('MARKETPLACE','TIKTOK')
+		            ->set("SELLERMENUNGGUBARANGDATANG", 1)
+		            ->updateRaw("TPENJUALANMARKETPLACEDTL");
+
+           
+            $data['success'] = true;
+            $data['msg'] = "Proses Pengembalian #".$nopengembalian." Diserahkan Kepada Tiktok";
+            echo(json_encode($data));
+		}
+		else
+		{
+        	$parameter = [];
+        	$parameter['decision'] = $type;
+        	
+            $curl = curl_init();
+            
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 30,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS =>  array(
+              'endpoint' =>'/return_refund/202309/returns/'.$nopengembalian.'/approve',
+              'parameter' => json_encode($parameter)),
+              CURLOPT_HTTPHEADER => array(
+                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+              ),
+            ));
+              
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $ret =  json_decode($response,true);
+            
+            
+            sleep(5); 
+            
+            $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+                
+            if($ret['code'] != 0)
+            {
+                $data['success'] = false;
+                $data['msg'] =  $ret['code']." : ".$ret['message'];
+                die(json_encode($data));
+            }
+            else
+            {
+                $data['success'] = true;
+                $data['msg'] = "Pengembalian #".$nopengembalian." Berhasil Disetujui";
+                echo(json_encode($data));
+            }
+		}
+
+	}
+	
+	public function rejectReturnRefund(){
+	    $CI =& get_instance();	
+        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
+		$this->output->set_content_type('application/json');
+		$nopengembalian = $this->input->post('kodepengembalian')??"";
+		$type = $this->input->post('type')??"";
+		$reason = $this->input->post('reason')??"";
+		$alasandetail = $this->input->post('alasandetail')??"";
+		
+		
+		$imageid = $this->input->post('imageid')??"";
+		$tipe = $this->input->post('tipe')??"";
+		$panjang = $this->input->post('panjang')??"";
+		$lebar = $this->input->post('lebar')??"";
+	
+    	//HAPUS PESANAN
+    	
+    	$parameter = [];
+    	$parameter['decision'] = $type;
+    	$parameter['reject_reason'] = $reason;
+    	$parameter['comment'] = $alasandetail;
+    	$parameter['images'] = array(array(
+    	    'image_id' => $imageid,
+    	    'mime_type' => $tipe,
+    	    'height' => (int)$panjang,
+    	    'width' => (int)$lebar
+    	));
+    	
         $curl = curl_init();
-        
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
           CURLOPT_RETURNTRANSFER => true,
@@ -4970,7 +4289,7 @@ class Tiktok extends MY_Controller {
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => 'POST',
           CURLOPT_POSTFIELDS =>  array(
-          'endpoint' => 'returns/cancel_dispute',
+          'endpoint' => '/return_refund/202309/returns/'.$nopengembalian.'/reject',
           'parameter' => json_encode($parameter)),
           CURLOPT_HTTPHEADER => array(
             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
@@ -4980,7 +4299,12 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
-     
+        
+        
+        sleep(5); 
+        
+        $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
+            
         if($ret['code'] != 0)
         {
             $data['success'] = false;
@@ -4990,131 +4314,10 @@ class Tiktok extends MY_Controller {
         else
         {
             $data['success'] = true;
-            $data['msg'] = "Proses Sengketa #".$parameter['return_sn']." Berhasil Dibatalkan";
+            $data['msg'] = "Pengembalian / Penukaran #".$nopengembalian." Berhasil Dibatalkan / Ditolak";
             echo(json_encode($data));
         }
 
-	}
-	
-	public function uploadLocalUrlProof(){
-	      $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$kode = $this->input->post('kode')??"";
-		$index = $this->input->post('index')??0;
-		$tipe = $this->input->post('tipe')??0;
-		$size = $this->input->post('size')??0;
-		
-		if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-            die(json_encode([
-                'success' => false,
-                'msg' => 'File upload failed.'
-            ]));
-        }
-        
-        // Destination folder (make sure this folder exists and is writable)
-        $uploadDir = FCPATH . 'assets/'.$this->input->post('reason').'/'; 
-        
-        // Create filename and move the file
-        $type = ".".explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
-        $destination = $uploadDir . $kode . "_" . $index.$type;
-
-        if (move_uploaded_file($_FILES['file']['tmp_name'], $destination)) {
-            
-            if($tipe == "GAMBAR")
-            {
-                $response =  $this->getRefreshToken();
-        	    if($response)
-        	    {
-        	        $endpoint = "returns/convert_image";
-            	    
-            	    $code = $this->model_master_config->getConfigMarketplace('TIKTOK','CODE');
-            	    $shopId = $this->model_master_config->getConfigMarketplace('TIKTOK','SHOP_ID');
-            	    $partnerId = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_ID');
-            	    $partnerKey = $this->model_master_config->getConfigMarketplace('TIKTOK','PARTNER_KEY');
-            	    $accessToken = $this->model_master_config->getConfigMarketplace('TIKTOK','ACCESS_TOKEN');
-                    $path = "/api/v2/";
-                    
-                    $timest = time();
-                    $sign = hash_hmac('sha256', $partnerId.$path.$endpoint.$timest.$accessToken.$shopId,$partnerKey);
-                    
-                    $host = 'https://partner.TIKTOKmobile.com'.$path.$endpoint;
-                    // Path to the local file
-                    $filePath = $destination;
-                    
-                    // Check if file exists
-                    if (!file_exists($filePath)) {
-                    die('File not found.');
-                    }
-                    
-                    // Prepare the CURLFile object
-                    $cfile = new CURLFile($filePath, mime_content_type($filePath), basename($filePath));
-                    
-                    // Prepare POST data
-                    $postData = [
-                    'return_sn' => $kode,
-                    'upload_image' => $cfile
-                    ];
-                    
-                    // Initialize cURL
-                    $ch = curl_init();
-                    // Set cURL options
-                    curl_setopt($ch, CURLOPT_URL,  $host.'?timestamp='.$timest.'&sign='.$sign.'&partner_id='.$partnerId.'&shop_id='.$shopId."&access_token=".$accessToken); // destination URL
-                    curl_setopt($ch, CURLOPT_POST, true);
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                        'Content-Type: multipart/form-data'
-                    ]);
-                    
-                    // Execute the request
-                    $response = curl_exec($ch);
-                    curl_close($ch);
-                    $ret =  json_decode($response,true);
-                    if($ret['code'] != 0)
-                    {
-                        $data['success'] = false;
-                        // print_r($ret);
-                        echo json_encode($postData).$ret['code']." : ".$ret['message'];
-                    }
-                    else
-                    {
-                      $data['success'] = true;
-                      $data['url'] = $ret['response']['url'];
-                      $data['thumbnail'] = $ret['response']['thumbnail'];
-                      $data['id'] = 0;
-                       
-                      //HAPUS DLU
-                      $folder = FCPATH . '/assets/'.$this->input->post('reason').'/'; // Use FCPATH . 'assets/proof/' in CodeIgniter
-                
-                      if (!is_dir($folder)) {
-                          die('Folder does not exist.');
-                      }
-                       
-                      $files = glob($folder . '*'); // Get all files in the folder
-                       
-                      foreach ($files as $file) {
-                          if (is_file($file) && strpos(basename($file), $kode . "_" . $index) !== false) {
-                              unlink($file); // Delete file if name contains "a"
-                          }
-                      }
-        
-                      $data['urlLocal'] = $this->config->item('base_url')."/assets/".$this->input->post('reason')."/". $kode . "_" . $index.$type;
-            		   echo(json_encode($data));
-                    }
-    
-        	    }
-                else
-        	    {
-        	       // echo "Token gagal diperbaharui";
-        	        echo json_encode(array(
-        	            "success" => false,
-        	            "error" => "failed refresh token"
-        	        ));
-        	    }
-           }
-        }
-	    
 	}
 	
 	public function uploadLocalUrl(){
@@ -5540,25 +4743,6 @@ class Tiktok extends MY_Controller {
 		   echo(json_encode($response));
         }
 
-	}
-	
-	public function menungguBarangDatang(){
-	    $CI =& get_instance();	
-        $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');
-		$nopengembalian = $this->input->post('kodepengembalian')??"";
-		$nopesanan = $this->input->post('kodepesanan')??"";
-		
-		
-	    $CI->db->where("KODEPENJUALANMARKETPLACE",$nopesanan)
-		        ->where('MARKETPLACE','TIKTOK')
-		            ->set("SELLERMENUNGGUBARANGDATANG", 1)
-		            ->updateRaw("TPENJUALANMARKETPLACE");
-
-           
-        $data['success'] = true;
-        $data['msg'] = "Proses Pengembalian #".$nopengembalian." Ditunda Hingga Barang Tiba";
-        echo(json_encode($data));
 	}
 	
 	public function ubah(){
@@ -6335,7 +5519,7 @@ class Tiktok extends MY_Controller {
 	            "state"  => 3,
 	         ];
 	    }
-	    else if($orderStatus == "TO_RETURN")
+	    else if($orderStatus == "RETURNED")
 	    {
 	        return [
 	            "status" => "Pengembalian",
@@ -6356,10 +5540,31 @@ class Tiktok extends MY_Controller {
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "RETURNED|AWAITING_BUYER_RESPONSE")
+	    else if($orderStatus == "RETURNED|REQUEST_REJECTED" || $orderStatus == "RETURNED|REFUND_OR_RETURN_REQUEST_REJECT")
 	    {
 	        return [
-	            "status" => "Menunggu<br>Respon Pembeli",
+	            "status" => "Pengembalian<br>Ditolak",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|REQUEST_SUCCESS")
+	    {
+	        return [
+	            "status" => "Pengembalian<br>Diterima",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|RECEIVE_REJECTED")
+	    {
+	        return [
+	            "status" => "Penerimaan<br>Barang Ditolak",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|RETURN_OR_REFUND_CANCEL")
+	    {
+	        return [
+	            "status" => "Pengembalian<br>Dibatalkan",
 	            "state"  => 4,
 	         ];
 	    }
@@ -6370,13 +5575,6 @@ class Tiktok extends MY_Controller {
 	            "state"  => 4,
 	         ];
 	    }
-	    else if($orderStatus == "RETURNED|REFUND_PENDING")
-	    {
-	        return [
-	            "status" => "Menunggu<br>Kembali Dana",
-	            "state"  => 4,
-	         ];
-	    }
 	    else if($orderStatus == "RETURNED|RETURN_OR_REFUND_REQUEST_SUCCESS")
 	    {
 	        return [
@@ -6384,186 +5582,45 @@ class Tiktok extends MY_Controller {
 	            "state"  => 4,
 	         ];
 	    }
+	    else if($orderStatus == "RETURNED|REPLACEMENT_REQUEST_PENDING")
+	    {
+	        return [
+	            "status" => "Permintaan<br>Penukaran",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|REPLACEMENT_REQUEST_COMPLETE")
+	    {
+	        return [
+	            "status" => "Penukaran<br>Selesai",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|REPLACEMENT_REQUEST_REFUND_SUCCESS")
+	    {
+	        return [
+	            "status" => "Penukaran<br>dan Pengembalian Dana",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|REPLACEMENT_REQUEST_CANCEL")
+	    {
+	        return [
+	            "status" => "Penukaran<br>Dibatalkan",
+	            "state"  => 4,
+	         ];
+	    }
+	    else if($orderStatus == "RETURNED|REPLACEMENT_REQUEST_REJECT")
+	    {
+	        return [
+	            "status" => "Penukaran<br>Ditolak",
+	            "state"  => 4,
+	         ];
+	    }
+	    
+	    
 	    
 	    return $orderStatus;
-	}
-	
-	public function getAlasanKembali($alasan){
-	    if($alasan == "WRONG_ITEM")
-	    {
-	        $alasan = "Barang yang dikirim salah (salah ukuran, variasi, dll)";
-	    }
-	    else if($alasan == "CHANGE_MIND")
-	    {
-	        $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "NONE")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "NOT_RECEIPT")
-	    {
-	        $alasan = "Semua barang tidak sampai";
-	    }
-	    else if($alasan == "ITEM_DAMAGED")
-	    {
-	       // $alasan = "Barang Rusak";
-	    }
-	    else if($alasan == "DIFFERENT_DESCRIPTION")
-	    {
-	        $alasan = "Barang berbeda dengan deskripsi/foto";
-	    }
-	    else if($alasan == "MUTUAL_AGREE")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "OTHER")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "ITEM_MISSING")
-	    {
-	        $alasan = "Barang sampai namun tidak lengkap";
-	    }
-	    else if($alasan == "EXPECTATION_FAILED")
-	    {
-	       // $alasan = "Ingin kembalikan barang sesuai kondisi awal";
-	    }
-	    else if($alasan == "ITEM_FAKE")
-	    {
-	        $alasan = "Barang palsu";
-	    }
-	    else if($alasan == "PHYSICAL_DMG")
-	    {
-	        $alasan = "Barang rusak";
-	    }
-	    else if($alasan == "FUNCTIONAL_DMG")
-	    {
-	        $alasan = "Barang tidak berfungsi/tidak bisa dipakai";
-	    }
-	    else if($alasan == "SLIGHT_SCRATCH_DENTS")
-	    {
-	        $alasan = "Barang tidak sempurna (Cacat)";
-	    }
-	    
-	    return $alasan;
-	}
-	
-	public function getAlasanDispute($id){
-	    
-        if($id == 1){
-            $message = "I would like to reject the non-receipt claim";
-    	}
-        if($id == 2){
-            $message = "I would like to reject the return request";
-    	}
-        if($id == 3){
-            $message = "I agree with the return request, but I did not receive the product(s) which was/were supposed to be";
-    	}
-        if($id == 4){
-            $message = "未收到退貨";
-    	}
-        if($id == 5){
-            $message = "商品毀損/瑕疵";
-    	}
-        if($id == 6){
-            $message = "商品缺件/不符";
-    	}
-        if($id == 7){
-            $message = "非鑑賞期商品";
-    	}
-        if($id == 8){
-            $message = "其他";
-    	}
-        if($id == 9){
-            $message = "I have shipped the item(s) and have proof of shipment";
-    	}
-        if($id == 10){
-            $message = "I shipped the correct item(s) as buyer ordered";
-    	}
-        if($id == 11){
-            $message = "I shipped the item(s) in good working condition";
-    	}
-        if($id == 12){
-            $message = "I agreed with the return request, but I have not received the item(s) that was/were supposed to be returned";
-    	}
-        if($id == 13){
-            $message = "I agreed with the return request, but I received wrong/damaged item(s) from buyer";
-    	}
-        if($id == 41){
-            $message = "I have shipped the item(s) and have proof of shipment";
-    	}
-        if($id == 42){
-            $message = "I shipped the correct item(s) as buyer ordered";
-    	}
-        if($id == 43){
-            $message = "I shipped the item(s) in good working condition";
-    	}
-        if($id == 44){
-            $message = "Unable to come to an agreement with buyer";
-    	}
-        if($id == 45){
-            $message = "Products are not in the appreciation period";
-    	}
-        if($id == 46){
-            $message = "Tidak menerima pengembalian barang";
-    	}
-        if($id == 47){
-            $message = "Menerima pengembalian barang dengan kerusakan fisik";
-    	}
-        if($id == 48){
-            $message = "Menerima pengembalian barang yang tidak lengkap (jumlah / aksesoris hilang)";
-    	}
-        if($id == 49){
-            $message = "Menerima pengembalian barang yang salah";
-    	}
-        if($id == 50){
-            $message = "Menerima pengembalian barang, klaim pembeli salah";
-    	}
-        if($id == 51){
-            $message = "Unable to come to an agreement with seller";
-    	}
-        if($id == 53){
-            $message = "Buyer’s claim is incorrect";
-    	}
-        if($id == 54){
-            $message = "Buyer has been refunded wrong amount";
-    	}
-        if($id == 55){
-            $message = "Buyer claim is correct, but I have other concerns";
-    	}
-        if($id == 56){
-            $message = "Pengembalian barang telah diterima, tetapi barang telah digunakan";
-    	}
-        if($id == 81){
-            $message = "Tidak menerima pengembalian barang";
-    	}
-        if($id == 82){
-            $message = "Menerima pengembalian barang dengan kerusakan fisik";
-    	}
-        if($id == 83){
-            $message = "Menerima pengembalian barang yang tidak lengkap (jumlah / aksesoris hilang)";
-    	}
-        if($id == 84){
-            $message = "Menerima pengembalian barang yang salah";
-    	}
-        if($id == 85){
-            $message = "Products are not in the appreciation period";
-    	}
-        if($id == 86){
-            $message = "Menerima pengembalian barang, klaim pembeli salah";
-    	}
-        if($id == 87){
-            $message = "The product(s) returned is excluded from buyer's statutory right of withdrawal";
-    	}
-        if($id == 88){
-            $message = "Buyer was unresponsive in Seller Arrange Return";
-    	}
-        if($id == 89){
-            $message = "Pengembalian barang telah diterima, tetapi barang telah digunakan";
-    	}
-	    
-	    return $message;
 	}
 	
 	public function insertKartuStokPesanan($kodetrans,$tgltrans,$tglStokMulai,$lokasi){
@@ -6978,6 +6035,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         
         $CI->db->where("KODEPENJUALANMARKETPLACE", $nopesanan)
               ->set('BARANGSAMPAIMANUAL',1)
+              ->set('TOTALBARANGPENGEMBALIAN',count($dataRetur))
     	     ->update('TPENJUALANMARKETPLACE');
      
         
@@ -7355,7 +6413,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         {
             $totalPendapatan = 0;
             $ada = false;
-            if($this->getStatus($finalData[$x]['STATUSMARKETPLACE'])['state'] != 3)
+            if($this->getStatus($finalData[$x]['STATUSMARKETPLACE'])['state'] != 3 || $finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
             {
                 for($u = 0; $u < count($dataUnsettled); $u++)
                 {
@@ -7366,38 +6424,38 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                     }
                 }
             }
-            else if($finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
-            {
-               $curl = curl_init();
-               $parameter = "";
-               curl_setopt_array($curl, array(
-                 CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                 CURLOPT_RETURNTRANSFER => true,
-                 CURLOPT_ENCODING => '',
-                 CURLOPT_MAXREDIRS => 10,
-                 CURLOPT_TIMEOUT => 30,
-                 CURLOPT_FOLLOWLOCATION => true,
-                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                 CURLOPT_CUSTOMREQUEST => 'POST',
-                 CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202501/orders/'.$finalData[$x]['KODEPENJUALANMARKETPLACE'].'/statement_transactions','parameter' => $parameter),
-                 CURLOPT_HTTPHEADER => array(
-                   'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                 ),
-               ));
+            // else if($finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
+            // {
+            //   $curl = curl_init();
+            //   $parameter = "";
+            //   curl_setopt_array($curl, array(
+            //      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+            //      CURLOPT_RETURNTRANSFER => true,
+            //      CURLOPT_ENCODING => '',
+            //      CURLOPT_MAXREDIRS => 10,
+            //      CURLOPT_TIMEOUT => 30,
+            //      CURLOPT_FOLLOWLOCATION => true,
+            //      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //      CURLOPT_CUSTOMREQUEST => 'POST',
+            //      CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202501/orders/'.$finalData[$x]['KODEPENJUALANMARKETPLACE'].'/statement_transactions','parameter' => $parameter),
+            //      CURLOPT_HTTPHEADER => array(
+            //       'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+            //      ),
+            //   ));
                
-               $response = curl_exec($curl);
-               curl_close($curl);
-               $ret =  json_decode($response,true);
-               if($ret['code'] != 0)
-               {
-                  $finalResult['errorMsg'] =  "4 : ".$ret['code']." : ".$ret['message'];
-               }
-               else
-               {
-                   $totalPendapatan = $ret['data']['settlement_amount'];
-                   $ada = true;
-               }
-            }
+            //   $response = curl_exec($curl);
+            //   curl_close($curl);
+            //   $ret =  json_decode($response,true);
+            //   if($ret['code'] != 0)
+            //   {
+            //       $finalResult['errorMsg'] =  "4 : ".$ret['code']." : ".$ret['message'];
+            //   }
+            //   else
+            //   {
+            //       $totalPendapatan = $ret['data']['settlement_amount'];
+            //       $ada = true;
+            //   }
+            // }
             else if($finalData[$x]['STATUSMARKETPLACE'] == 'CANCELLED')
             {
                 $ada = true;
@@ -7484,9 +6542,9 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             {
                 
                 $reverseComplete = true;
-                if($statusRetur != "RETURN_OR_REFUND_REQUEST_REJECT" && $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL")
+                if((($statusRetur != "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur != "REFUND_OR_RETURN_REQUEST_REJECT") && $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL") || ($statusRetur != "REPLACEMENT_REQUEST_REJECT" && $statusRetur == "REPLACEMENT_REQUEST_CANCEL"))
                 {
-                    if($statusRetur != "RETURN_OR_REFUND_REQUEST_COMPLETE" && $reverseComplete)
+                    if((($statusRetur != "RETURN_OR_REFUND_REQUEST_COMPLETE" && $reverseComplete) || ($statusRetur != "REPLACEMENT_REQUEST_COMPLETE" || $statusRetur != "REPLACEMENT_REQUEST_REFUND_SUCCESS")) && $reverseComplete)
                     {
                         $reverseComplete = false;
                     }
@@ -7525,34 +6583,33 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                 $statusRetur = $resultReturn[$x]['return_status'];
                 
                 //HANYA UNTUK YANG RETUR SAJA
-                if (strpos($status, 'REPLACEMENT') === false) {
-                    $CI->db->where("KODEPENJUALANMARKETPLACE",$resultReturn[$x]['order_id'])
-                     ->where('SKU',$sku)
-                     ->where('URUTAN',$urutan)
-            	    ->where('MARKETPLACE','TIKTOK')
-            	    ->updateRaw("TPENJUALANMARKETPLACEDTL", array(
-            	        'KODEPENGEMBALIANMARKETPLACE'       =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_id']),
-            	        'KODEBARANGPENGEMBALIANMARKETPLACE' =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_line_items'][$d]['return_line_item_id']),
-            	        'SKUPRODUKPENGEMBALIAN'             =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:("1*".$sku)),
-            	        'STATUSPENGEMBALIANMARKETPLACE'     =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_status']),
-            	        'CATATANPENGEMBALIAN'               =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_reason_text']),
-            	        'TOTALPENGEMBALIANDANA'             =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_line_items'][$d]['refund_amount']['refund_total']),
-            	        'TIPEPENGEMBALIAN'                  =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_type']),
-            	        'TGLPENGEMBALIAN'                   =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:date("Y-m-d H:i:s", $resultReturn[$x]['create_time'])),
-            	        'MINTGLPENGEMBALIAN'                =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:date("Y-m-d H:i:s", $resultReturn[$x]['seller_next_action_response']['deadline'])),
-            	        'STATUS'                            =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL" || $statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" ?'3':'4'),
-            	        'STATUSMARKETPLACE'                 =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL" || $statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" ?'COMPLETED':'RETURNED'),
-            	        'RESIPENGEMBALIAN'                  =>  ($statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL")?null: $resultReturn[$x]['return_tracking_number'],
-            	        'BARANGSAMPAI'                      =>  (($barangSampai == 1 || ($statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" &&  $resultReturn[$x]['return_type'] == 'RETURN_AND_REFUND'))? 1 : 0)
-            	      ));
-                }
-            }
+                $CI->db->where("KODEPENJUALANMARKETPLACE",$resultReturn[$x]['order_id'])
+                 ->where('SKU',$sku)
+                 ->where('URUTAN',$urutan)
+            	->where('MARKETPLACE','TIKTOK')
+            	->updateRaw("TPENJUALANMARKETPLACEDTL", array(
+            	    'KODEPENGEMBALIANMARKETPLACE'       =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_id']),
+            	    'KODEBARANGPENGEMBALIANMARKETPLACE' =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_line_items'][$d]['return_line_item_id']),
+            	    'SKUPRODUKPENGEMBALIAN'             =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:("1*".$sku)),
+            	    'STATUSPENGEMBALIANMARKETPLACE'     =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_status']),
+            	    'CATATANPENGEMBALIAN'               =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_reason_text']),
+            	    'TOTALPENGEMBALIANDANA'             =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_line_items'][$d]['refund_amount']['refund_total']),
+            	    'TIPEPENGEMBALIAN'                  =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:$resultReturn[$x]['return_type']),
+            	    'TGLPENGEMBALIAN'                   =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:date("Y-m-d H:i:s", $resultReturn[$x]['create_time'])),
+            	    'MINTGLPENGEMBALIAN'                =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL"?null:date("Y-m-d H:i:s", $resultReturn[$x]['seller_next_action_response'][count($resultReturn[$x]['seller_next_action_response'])-1]['deadline'])),
+            	    'STATUS'                            =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL" || $statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" ?'3':'4'),
+            	    'STATUSMARKETPLACE'                 =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL" || $statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" ?'COMPLETED':'RETURNED'),
+            	    'RESIPENGEMBALIAN'                  =>  ($statusRetur == "REPLACEMENT_REQUEST_CANCEL" || $statusRetur == "REPLACEMENT_REQUEST_REJECT" || $statusRetur == "REFUND_OR_RETURN_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_REJECT" || $statusRetur == "RETURN_OR_REFUND_REQUEST_CANCEL")?null: $resultReturn[$x]['return_tracking_number'],
+            	    'BARANGSAMPAI'                      =>  (($barangSampai == 1 || (($statusRetur == "REPLACEMENT_REQUEST_COMPLETE" || $statusRetur == "REPLACEMENT_REQUEST_REFUND_SUCCESS") &&  $resultReturn[$x]['return_type'] == 'REPLACEMENT') || ($statusRetur == "RETURN_OR_REFUND_REQUEST_COMPLETE" &&  $resultReturn[$x]['return_type'] == 'RETURN_AND_REFUND'))? 1 : 0)
+            	  ));
             
-            //JIKA ADA KURANG RETUR NYA, INPUT STOK LAGI
-            if(!$reverseComplete){
-                $CI->db->where('KODETRANS',$resultReturn[$x]['return_id'])
-                     ->where('JENISTRANS','RETUR JUAL TIKTOK')
-                     ->delete('KARTUSTOK');
+            
+                //JIKA ADA KURANG RETUR NYA, INPUT STOK LAGI
+                if(!$reverseComplete){
+                    $CI->db->where('KODETRANS',$resultReturn[$x]['return_id'])
+                         ->where('JENISTRANS','RETUR JUAL TIKTOK')
+                         ->delete('KARTUSTOK');
+                }
             }
         }
         
@@ -7611,7 +6668,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
 	    
 	    if(count($finalData) > 0)
 	    {
-    	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
+    	    $wherePesanan = "AND a.KODEPENJUALANMARKETPLACE in (";
             for($f = 0 ; $f < count($finalData) ; $f++)
             {
                 $wherePesanan .= "'".$finalData[$f]['KODEPENJUALANMARKETPLACE']."'";
@@ -7624,7 +6681,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             $wherePesanan .= ")";
 	    }
         
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'TIKTOK' and (BARANGSAMPAI = 1 OR BARANGSAMPAIMANUAL = 1) and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY KODEPENJUALANMARKETPLACE";
+        $sqlRetur = "SELECT a.KODEPENGEMBALIANMARKETPLACE, a.TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL a WHERE a.MARKETPLACE = 'TIKTOK' and (a.BARANGSAMPAI = 1 OR a.BARANGSAMPAIMANUAL = 1) and a.KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY a.KODEPENJUALANMARKETPLACE";
         $dataRetur = $CI->db->query($sqlRetur)->result();
 
         foreach($dataRetur as $itemRetur)
@@ -7645,12 +6702,19 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         $CI->db->query($sqlDeleteStok);
         
         //TOTAL RETUR HEADER
-        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(IF(BARANGSAMPAI = 1,SKUPRODUKPENGEMBALIAN,null) SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
-                                sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,  SUM(IF(BARANGSAMPAIMANUAL = 1,1,0)) as BARANGSAMPAIMANUAL
-                                FROM TPENJUALANMARKETPLACEDTL 
-                                WHERE MARKETPLACE = 'TIKTOK' and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  
-                                GROUP BY KODEPENJUALANMARKETPLACE 
-                                ORDER BY KODEPENJUALANMARKETPLACE";
+        $sqlReturHeader = "SELECT a.KODEPENJUALANMARKETPLACE, 
+                            IFNULL( GROUP_CONCAT( NULLIF(a.KODEPENGEMBALIANMARKETPLACE, '') SEPARATOR ', ' ), '' ) AS KODEPENGEMBALIANMARKETPLACE, 
+                            GROUP_CONCAT( IF(a.BARANGSAMPAI = 1, a.SKUPRODUKPENGEMBALIAN, NULL) SEPARATOR '|' ) AS SKUPRODUKPENGEMBALIAN, 
+                            SUM(a.TOTALPENGEMBALIANDANA) AS TOTALPENGEMBALIANDANA, SUM(IF(a.STATUS = 4,1,0)) AS STATUS, 
+                            SUM(IF(a.BARANGSAMPAI = 1,1,0)) AS BARANGSAMPAI, SUM(IF(a.BARANGSAMPAIMANUAL = 1,1,0)) AS BARANGSAMPAIMANUAL,
+                            b.STATUSMARKETPLACE AS STATUSMARKETPLACEHEADER ,b.STATUS AS STATUSHEADER
+                            FROM TPENJUALANMARKETPLACEDTL a
+                            INNER JOIN TPENJUALANMARKETPLACE b ON a.IDPENJUALANMARKETPLACE = b.IDPENJUALANMARKETPLACE
+                                WHERE a.MARKETPLACE = 'TIKTOK'   $wherePesanan  
+                                AND b.STATUSMARKETPLACE != 'CANCELLED'
+                                AND b.STATUS > 2
+                                GROUP BY a.KODEPENJUALANMARKETPLACE 
+                                ORDER BY a.KODEPENJUALANMARKETPLACE";
         $dataReturHeader = $CI->db->query($sqlReturHeader)->result();
 		   
         foreach($dataReturHeader as $itemReturHeader)
@@ -7661,7 +6725,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
 		 ->updateRaw("TPENJUALANMARKETPLACE", array(
 		     'KODEPENGEMBALIANMARKETPLACE'   =>  $itemReturHeader->KODEPENGEMBALIANMARKETPLACE,
 		     'SKUPRODUKPENGEMBALIAN'         =>  $itemReturHeader->SKUPRODUKPENGEMBALIAN, 
-		     'TOTALBARANGPENGEMBALIAN'       =>  $itemReturHeader->BARANGSAMPAI, 
+		     'TOTALBARANGPENGEMBALIAN'       =>  ($itemReturHeader->BARANGSAMPAIMANUAL > $itemReturHeader->BARANGSAMPAI ? $itemReturHeader->BARANGSAMPAIMANUAL : $itemReturHeader->BARANGSAMPAI), 
 		     'TOTALPENGEMBALIANDANA'         =>  $itemReturHeader->TOTALPENGEMBALIANDANA, 
 		     'STATUSMARKETPLACE'             =>  ($itemReturHeader->STATUS > 0 ? 'RETURNED' : 'COMPLETED'),  
 		     'STATUS'                        =>  ($itemReturHeader->STATUS > 0 ? '4' : '3'),

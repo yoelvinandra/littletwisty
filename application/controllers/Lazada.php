@@ -5753,8 +5753,12 @@ class Lazada extends MY_Controller {
     	     
             $this->insertKartuStokRetur($itemRetur->KODEPENGEMBALIANMARKETPLACE,$itemRetur->TGLPENGEMBALIAN,$tglStokMulai,$idlokasiset);
         }
-     
         
+        $CI->db->where("KODEPENJUALANMARKETPLACE", $nopesanan)
+              ->set('BARANGSAMPAIMANUAL',1)
+              ->set('TOTALBARANGPENGEMBALIAN',count($dataRetur))
+    	     ->update('TPENJUALANMARKETPLACE');
+     
         $data['success'] = true;
         $data['msg'] = "Pengembalian Barang Manual Atas Pesanan #".$nopesanan." Berhasil Dilakukan";
         echo(json_encode($data));
@@ -6476,7 +6480,7 @@ class Lazada extends MY_Controller {
 	    
 	    if(count($history) > 0)
 	    {
-    	    $wherePesanan = "AND KODEPENJUALANMARKETPLACE in (";
+    	    $wherePesanan = "AND a.KODEPENJUALANMARKETPLACE in (";
             for($f = 0 ; $f < count($history) ; $f++)
             {
                 $wherePesanan .= "'".$history[$f]['order_number']."'";
@@ -6491,7 +6495,7 @@ class Lazada extends MY_Controller {
 	    
 	    
         
-        $sqlRetur = "SELECT KODEPENGEMBALIANMARKETPLACE, TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL WHERE MARKETPLACE = 'LAZADA' and (BARANGSAMPAI = 1 OR BARANGSAMPAIMANUAL = 1) and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY KODEPENJUALANMARKETPLACE";
+        $sqlRetur = "SELECT a.KODEPENGEMBALIANMARKETPLACE, a.TGLPENGEMBALIAN FROM TPENJUALANMARKETPLACEDTL a WHERE a.MARKETPLACE = 'LAZADA' and (a.BARANGSAMPAI = 1 OR a.BARANGSAMPAIMANUAL = 1) and a.KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  ORDER BY a.KODEPENJUALANMARKETPLACE";
         $dataRetur = $CI->db->query($sqlRetur)->result();
 		   
         foreach($dataRetur as $itemRetur)
@@ -6513,12 +6517,19 @@ class Lazada extends MY_Controller {
         
         
         //TOTAL RETUR HEADER
-        $sqlReturHeader = "SELECT KODEPENJUALANMARKETPLACE,group_concat(KODEPENGEMBALIANMARKETPLACE SEPARATOR ', ') as KODEPENGEMBALIANMARKETPLACE, group_concat(IF(BARANGSAMPAI = 1,SKUPRODUKPENGEMBALIAN,null) SEPARATOR '|') as SKUPRODUKPENGEMBALIAN, 
-                                sum(TOTALPENGEMBALIANDANA) as TOTALPENGEMBALIANDANA, SUM(IF(STATUS = 4,1,0)) as STATUS,  SUM(IF(BARANGSAMPAI = 1,1,0)) as BARANGSAMPAI,  SUM(IF(BARANGSAMPAIMANUAL = 1,1,0)) as BARANGSAMPAIMANUAL
-                                FROM TPENJUALANMARKETPLACEDTL 
-                                WHERE MARKETPLACE = 'LAZADA' and KODEPENGEMBALIANMARKETPLACE != ''  $wherePesanan  
-                                GROUP BY KODEPENJUALANMARKETPLACE 
-                                ORDER BY KODEPENJUALANMARKETPLACE";
+        $sqlReturHeader = "SELECT a.KODEPENJUALANMARKETPLACE, 
+                            IFNULL( GROUP_CONCAT( NULLIF(a.KODEPENGEMBALIANMARKETPLACE, '') SEPARATOR ', ' ), '' ) AS KODEPENGEMBALIANMARKETPLACE, 
+                            GROUP_CONCAT( IF(a.BARANGSAMPAI = 1, a.SKUPRODUKPENGEMBALIAN, NULL) SEPARATOR '|' ) AS SKUPRODUKPENGEMBALIAN, 
+                            SUM(a.TOTALPENGEMBALIANDANA) AS TOTALPENGEMBALIANDANA, SUM(IF(a.STATUS = 4,1,0)) AS STATUS, 
+                            SUM(IF(a.BARANGSAMPAI = 1,1,0)) AS BARANGSAMPAI, SUM(IF(a.BARANGSAMPAIMANUAL = 1,1,0)) AS BARANGSAMPAIMANUAL,
+                            b.STATUSMARKETPLACE AS STATUSMARKETPLACEHEADER ,b.STATUS AS STATUSHEADER
+                            FROM TPENJUALANMARKETPLACEDTL a
+                            INNER JOIN TPENJUALANMARKETPLACE b ON a.IDPENJUALANMARKETPLACE = b.IDPENJUALANMARKETPLACE
+                                WHERE a.MARKETPLACE = 'LAZADA'   $wherePesanan  
+                                AND b.STATUSMARKETPLACE != 'CANCELLED'
+                                AND b.STATUS > 2
+                                GROUP BY a.KODEPENJUALANMARKETPLACE 
+                                ORDER BY a.KODEPENJUALANMARKETPLACE";
         $dataReturHeader = $CI->db->query($sqlReturHeader)->result();
 		   
         foreach($dataReturHeader as $itemReturHeader)
@@ -6529,7 +6540,7 @@ class Lazada extends MY_Controller {
 		 ->updateRaw("TPENJUALANMARKETPLACE", array(
 		     'KODEPENGEMBALIANMARKETPLACE'   =>  $itemReturHeader->KODEPENGEMBALIANMARKETPLACE,
 		     'SKUPRODUKPENGEMBALIAN'         =>  $itemReturHeader->SKUPRODUKPENGEMBALIAN, 
-		     'TOTALBARANGPENGEMBALIAN'       =>  $itemReturHeader->BARANGSAMPAI, 
+		     'TOTALBARANGPENGEMBALIAN'       =>  ($itemReturHeader->BARANGSAMPAIMANUAL > $itemReturHeader->BARANGSAMPAI ? $itemReturHeader->BARANGSAMPAIMANUAL : $itemReturHeader->BARANGSAMPAI), 
 		     'TOTALPENGEMBALIANDANA'         =>  $itemReturHeader->TOTALPENGEMBALIANDANA, 
 		     'STATUSMARKETPLACE'             =>  ($itemReturHeader->STATUS > 0 ? 'RETURNED' : 'COMPLETED'),  
 		     'STATUS'                        =>  ($itemReturHeader->STATUS > 0 ? '4' : '3'),
