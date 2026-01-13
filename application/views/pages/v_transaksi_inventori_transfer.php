@@ -529,7 +529,7 @@ $(document).ready(function(){
 			{
                 "targets": 0,
                 "data": null,
-                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash' aria-hidden='true' ></i></button> <button id='btn_cetak' class='btn btn-warning'><i class='fa fa-print' ></i></button> <button id='btn_cetak_daftar_harga' class='btn btn-warning'><i class='fa fa-list' ></i></button>"	
+                "defaultContent": "<button id='btn_ubah' class='btn btn-primary'><i class='fa fa-edit'></i></button> <button id='btn_hapus' class='btn btn-danger'><i class='fa fa-trash' aria-hidden='true' ></i></button> <button id='btn_cetak_daftar_harga' class='btn btn-warning'>Daftar Harga</button>&nbsp;&nbsp;<button id='btn_cetak' class='btn btn-warning'>Cetak Surat Jalan</button>&nbsp;&nbsp;<button id='btn_cetak_pajak' class='btn' style='background:white; color:black'>Cetak Surat Jalan Pajak</button>"	
 			},
 		]
     });
@@ -542,8 +542,9 @@ $(document).ready(function(){
 		
 		if(mode == "btn_ubah"){ ubah(row);}
 		else if(mode == "btn_hapus"){ before_batal(row);}
-		else if(mode == "btn_cetak"){ cetak(row);}
-		else if(mode == "btn_cetak_daftar_harga"){ cetakSuratJalan(row);}
+		else if(mode == "btn_cetak_daftar_harga"){ cetak(row,'NON');}
+		else if(mode == "btn_cetak"){ cetakSuratJalan(row,'NON');}
+		else if(mode == "btn_cetak_pajak"){ cetakSuratJalan(row,'KARATU');}
 
 	} );
 	
@@ -1562,7 +1563,7 @@ function cetak(row){
 	});	
 }
 
-function cetakSuratJalan(row){
+function cetakSuratJalan(row,type){
 	get_akses_user('<?=$kodemenu?>', function(data){
 		if (data.CETAK==1) {	
 			get_status_trans("Inventori/Transaksi/TransferPersediaan",row.IDTRANSFER, function(data){
@@ -1576,7 +1577,14 @@ function cetakSuratJalan(row){
 						success: function(msg){
 							if (msg.success) {
 								$("#dataGrid").DataTable().ajax.reload();
-								window.open(base_url+"Inventori/Transaksi/TransferPersediaan/cetakSuratJalan/"+row.IDTRANSFER, '_blank');
+								if(type == 'PAJAK')
+								{
+								    window.open(base_url+"Inventori/Transaksi/TransferPersediaan/cetakSuratJalanPajak/"+row.IDTRANSFER, '_blank'); 
+								}
+								else
+								{
+								    window.open(base_url+"Inventori/Transaksi/TransferPersediaan/cetakSuratJalan/"+row.IDTRANSFER, '_blank');
+								}
 							} else {
 								Swal.fire({
 									title            : msg.errorMsg,
@@ -1589,7 +1597,14 @@ function cetakSuratJalan(row){
 					});
 				}
 				else if(data.status != 'D'){
-				    window.open(base_url+"Inventori/Transaksi/TransferPersediaan/cetakSuratJalan/"+row.IDTRANSFER, '_blank');
+				   	if(type == 'KARATU')
+					{
+					    window.open(base_url+"Inventori/Transaksi/TransferPersediaan/cetakSuratJalanKaratu/"+row.IDTRANSFER, '_blank'); 
+					}
+					else
+					{
+					    window.open(base_url+"Inventori/Transaksi/TransferPersediaan/cetakSuratJalan/"+row.IDTRANSFER, '_blank');
+					}
 				}
 				else
 				{

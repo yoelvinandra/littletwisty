@@ -6424,38 +6424,39 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                     }
                 }
             }
-            // else if($finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
-            // {
-            //   $curl = curl_init();
-            //   $parameter = "";
-            //   curl_setopt_array($curl, array(
-            //      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-            //      CURLOPT_RETURNTRANSFER => true,
-            //      CURLOPT_ENCODING => '',
-            //      CURLOPT_MAXREDIRS => 10,
-            //      CURLOPT_TIMEOUT => 30,
-            //      CURLOPT_FOLLOWLOCATION => true,
-            //      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            //      CURLOPT_CUSTOMREQUEST => 'POST',
-            //      CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202501/orders/'.$finalData[$x]['KODEPENJUALANMARKETPLACE'].'/statement_transactions','parameter' => $parameter),
-            //      CURLOPT_HTTPHEADER => array(
-            //       'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-            //      ),
-            //   ));
+            
+            if(!$ada && $finalData[$x]['STATUSMARKETPLACE'] == 'COMPLETED')
+            {
+              $curl = curl_init();
+              $parameter = "";
+              curl_setopt_array($curl, array(
+                 CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+                 CURLOPT_RETURNTRANSFER => true,
+                 CURLOPT_ENCODING => '',
+                 CURLOPT_MAXREDIRS => 10,
+                 CURLOPT_TIMEOUT => 30,
+                 CURLOPT_FOLLOWLOCATION => true,
+                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                 CURLOPT_CUSTOMREQUEST => 'POST',
+                 CURLOPT_POSTFIELDS => array('endpoint' => '/finance/202501/orders/'.$finalData[$x]['KODEPENJUALANMARKETPLACE'].'/statement_transactions','parameter' => $parameter),
+                 CURLOPT_HTTPHEADER => array(
+                  'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+                 ),
+              ));
                
-            //   $response = curl_exec($curl);
-            //   curl_close($curl);
-            //   $ret =  json_decode($response,true);
-            //   if($ret['code'] != 0)
-            //   {
-            //       $finalResult['errorMsg'] =  "4 : ".$ret['code']." : ".$ret['message'];
-            //   }
-            //   else
-            //   {
-            //       $totalPendapatan = $ret['data']['settlement_amount'];
-            //       $ada = true;
-            //   }
-            // }
+              $response = curl_exec($curl);
+              curl_close($curl);
+              $ret =  json_decode($response,true);
+              if($ret['code'] != 0)
+              {
+                  $finalResult['errorMsg'] =  "4 : ".$ret['code']." : ".$ret['message'];
+              }
+              else
+              {
+                  $totalPendapatan = $ret['data']['settlement_amount'];
+                  $ada = true;
+              }
+            }
             else if($finalData[$x]['STATUSMARKETPLACE'] == 'CANCELLED')
             {
                 $ada = true;

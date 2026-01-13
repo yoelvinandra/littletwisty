@@ -104,14 +104,18 @@ $rp = $CI->db->query($sql)->row();
 			<table border="0" class="tabel_perusahaan">
 				<tr>
 					
-					<td valign="top" class="font-header"> <img src="'.base_url().'assets/'.$_SESSION[NAMAPROGRAM]['KODEPERUSAHAAN'].'/logo.png" class="user-image" alt="User Image" height="26"></td>
+					<td valign="top" class="font-header"> <img src="'.base_url().'assets/'.$_SESSION[NAMAPROGRAM]['KODEPERUSAHAAN'].'/logo-perusahaan.jpeg" class="user-image" alt="User Image" height="26"></td>
 					<td valign="top" rowspan="3" class="title">SURAT JALAN</td>
 
 				</tr>
 				<tr>
-					<td valign="top"class="font-body">'.$alamatp.$kotap.'</td>	
-				</tr>
+    				<td valign="top" colspan="2" class="font-body">Factory  :  Jl. Raya Pradah Indah 39, kel Pradah Kec sambikerep</td>	
+    			</tr>
+    			<tr>
+    				<td valign="top" colspan="2"class="font-body">Telp. (031) 7319400 – 7319401    Fax ( 031) 7318134 Surabaya</td>	
+    			</tr>
 			</table>
+		<br>
 		';
 	 ?>
 	

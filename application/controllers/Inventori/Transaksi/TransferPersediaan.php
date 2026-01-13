@@ -335,9 +335,19 @@ class TransferPersediaan extends MY_Controller {
 	
 	function cetakSuratJalan($idTrans){
 		$data['idtrans'] = $idTrans;
+		$data['type'] = $type;
 		//$data['namasubcustomer'] = $namaSubcustomer;
 		
         $this->load->library('html_table');
 		$this->load->view('reports/v_faktur_inventori_transfer_persediaan_surat_jalan.php', $data);
+
+	}
+	
+	function cetakSuratJalanKaratu($idTrans){
+		$data['idtrans'] = $idTrans;
+		//$data['namasubcustomer'] = $namaSubcustomer;
+		
+        $this->load->library('html_table');
+		$this->load->view('reports/v_faktur_inventori_transfer_persediaan_surat_jalan_karatu.php', $data);
 	}
 }
