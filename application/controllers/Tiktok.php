@@ -9,6 +9,7 @@ class Tiktok extends MY_Controller {
 	         1. Masuk ke Tiktok Console, masukkan data-data ini ke database :<br>
 	         - App Secret <br>
 	         - App Key <br>
+	         - App ID dari partnernya <br>
 	         - Dan pastikan redirect linknya ".$this->config->item('base_url')."/Tiktok/setCodeandShop?
 	         <br><br>
 	         2. Buat link auth yang akan diinput, ketika klik Authorize (Console -> App List)<br>

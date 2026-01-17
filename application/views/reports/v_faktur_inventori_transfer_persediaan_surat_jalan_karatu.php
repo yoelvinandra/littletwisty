@@ -14,10 +14,10 @@
 	width:70%;
 }
 .info_transaksi{
-	width:317px;
+	width:327px;
 }
 .customer{
-	width:300px;
+	width:290px;
 }
 table .fieldset{
 	height:110px;
