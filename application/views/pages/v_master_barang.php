@@ -372,9 +372,9 @@
                                                         </div>
                                                         <div class="box-footer">&nbsp;&nbsp;&nbsp;&nbsp;
                                                             <button type="button" id="btn_simpan" class="btn btn-primary" style="margin-right:5px;" onclick="javascript:simpanHeader()">Simpan</button>
-                                                            <button type="button" id="btn_simpan_shopee" class="btn" style="background:#EE4D2D; color:white; margin-right:5px;" onclick="javascript:simpanHeader('SHOPEE')">Simpan & Hubungkan Shopee</button>
+                                                            <button type="button" id="btn_simpan_shopee" class="btn" style="background:#f14d2a; color:white; margin-right:5px;" onclick="javascript:simpanHeader('SHOPEE')">Simpan & Hubungkan Shopee</button>
                                                             <button type="button" id="btn_simpan_tiktok" class="btn" style="background:#000000; color:white; margin-right:5px;" onclick="javascript:simpanHeader('TIKTOK')">Simpan & Hubungkan Tiktok</button>
-                                                            <button type="button" id="btn_simpan_lazada" class="btn" style="background:#201ADC; color:white;" onclick="javascript:simpanHeader('LAZADA')">Simpan & Hubungkan Lazada</button>
+                                                            <button type="button" id="btn_simpan_lazada" class="btn" style="background:#201adc; color:white;" onclick="javascript:simpanHeader('LAZADA')">Simpan & Hubungkan Lazada</button>
                                                         </div>
                                                     </div>
                         						</form>

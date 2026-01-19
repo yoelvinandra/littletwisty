@@ -1037,20 +1037,10 @@ function batal(){
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "SHOPEE");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "SHOPEE");
                                 }
                             },
                             
@@ -1085,23 +1075,14 @@ function batal(){
                                 {
                                     Swal.close();    
                                 }
+                                
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "TIKTOK");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "TIKTOK");
                                 }
                             },
                             
@@ -1136,23 +1117,14 @@ function batal(){
                                 {
                                     Swal.close();    
                                 }
+                                
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "LAZADA");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "LAZADA");
                                 }
                             },
                             
@@ -1386,20 +1358,10 @@ function simpan(){
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "SHOPEE");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "SHOPEE");
                                 }
                             },
                             
@@ -1438,20 +1400,10 @@ function simpan(){
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "TIKTOK");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "TIKTOK");
                                 }
                             },
                             
@@ -1490,20 +1442,10 @@ function simpan(){
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "LAZADA");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "LAZADA");
                                 }
                             },
                             

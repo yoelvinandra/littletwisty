@@ -856,14 +856,18 @@ function batal(){
 						timer            : 1500
 					});
 					
-					var doneStok = [true,true];     
+					var doneStok = [true,true,true];     
 					if('<?=$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] == 'YES'?>')
                     {
                        doneStok[0] = false;
                     }
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
                     {
                          doneStok[1] = false;
+                    }
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    {
+                         doneStok[2] = false;
                     }
                     
                     if(doneStok.length > 0)
@@ -915,33 +919,22 @@ function batal(){
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "SHOPEE");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "SHOPEE");
                                 }
                             },
                             
                         });
                     }
                     
-                    
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
                     {
                        
-                        $.ajax({
+    					$.ajax({
                             type      : 'POST',
-                            url       : base_url+'Lazada/setStokBarang',
+                            url       : base_url+'Tiktok/setStokBarang',
                             data      : {
                                 'idtrans' : row.IDSALDOSTOK, 
                                 'jenistrans' : 'SALDOSTOK',
@@ -965,23 +958,57 @@ function batal(){
                                 {
                                     Swal.close();    
                                 }
+                                
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "TIKTOK");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "TIKTOK");
+                                }
+                            },
+                            
+                        });
+                    }
+                    
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    {
+                       
+                        $.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Lazada/setStokBarang',
+                            data      : {
+                                'idtrans' : row.IDSALDOSTOK, 
+                                'jenistrans' : 'SALDOSTOK',
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[2] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
+                                
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        showAlertMarketplace('SUCCESS', msg.msg, "LAZADA");
+                                    }
+                                } else {
+                                    showAlertMarketplace('FAILED', msg.msg, "LAZADA");
                                 }
                             },
                             
@@ -1157,14 +1184,18 @@ function simpan(){
 					}
 					
 					
-				    var doneStok = [true,true];     
+				    var doneStok = [true,true,true];     
 					if('<?=$_SESSION[NAMAPROGRAM]['SHOPEE_ACTIVE'] == 'YES'?>')
                     {
-                       doneStok[0] = false;
+                        doneStok[0] = false;
+                    }
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
+                    {
+                        doneStok[1] = false;
                     }
                     if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
                     {
-                         doneStok[1] = false;
+                        doneStok[2] = false;
                     }
                     
                     if(doneStok.length > 0)
@@ -1213,35 +1244,25 @@ function simpan(){
                                 {
                                     Swal.close();    
                                 }
+                                
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "SHOPEE");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "SHOPEE");
                                 }
                             },
                             
                         });
                     }
                     
-                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
-                    { 
-                    
-                        $.ajax({
+                    if('<?=$_SESSION[NAMAPROGRAM]['TIKTOK_ACTIVE'] == 'YES'?>')
+                    {    
+        				$.ajax({
                             type      : 'POST',
-                            url       : base_url+'Lazada/setStokBarang',
+                            url       : base_url+'Tiktok/setStokBarang',
                             data      : {
                                 'idlokasi' : $("#LOKASI").val(), 
                                 'databarang' : JSON.stringify(dataBarang),
@@ -1265,24 +1286,56 @@ function simpan(){
                                 {
                                     Swal.close();    
                                 }
+                                if (msg.success) {
+                                    if(msg.msg != "")
+                                    {
+                                        showAlertMarketplace('SUCCESS', msg.msg, "TIKTOK");
+                                    }
+                                } else {
+                                    showAlertMarketplace('FAILED', msg.msg, "TIKTOK");
+                                }
+                            },
+                            
+                        });
+                    }
+                    
+                    if('<?=$_SESSION[NAMAPROGRAM]['LAZADA_ACTIVE'] == 'YES'?>')
+                    { 
+                    
+                        $.ajax({
+                            type      : 'POST',
+                            url       : base_url+'Lazada/setStokBarang',
+                            data      : {
+                                'idlokasi' : $("#LOKASI").val(), 
+                                'databarang' : JSON.stringify(dataBarang),
+                            },
+                            dataType  : 'json',
+                            beforeSend: function (){
+                                //$.messager.progress();
+                            },
+                            success: function(msg){
+                                doneStok[2] = true;
+                                cekDone = true;
+                                for(var d = 0 ; d < doneStok.length;d++)
+                                {
+                                    if(!doneStok[d])
+                                    {
+                                        cekDone = false
+                                    }
+                                }
+                                
+                                if(cekDone)
+                                {
+                                    Swal.close();    
+                                }
                                 
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "LAZADA");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "LAZADA");
                                 }
                             },
                             

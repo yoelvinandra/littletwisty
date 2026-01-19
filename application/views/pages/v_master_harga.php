@@ -681,23 +681,13 @@ function simpanHarga() {
                                    Swal.close();    
                                }
                                
-                                if (msg.success) {
+                               if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "SHOPEE");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "SHOPEE");
                                 }
                             },
                             
@@ -737,20 +727,10 @@ function simpanHarga() {
                                 if (msg.success) {
                                     if(msg.msg != "")
                                     {
-                                        Swal.fire({
-                                            title            : msg.msg,
-                                            type             : 'success',
-                                            showConfirmButton: false,
-                                            timer            : 1500
-                                        });
+                                        showAlertMarketplace('SUCCESS', msg.msg, "TIKTOK");
                                     }
                                 } else {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'error',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('FAILED', msg.msg, "TIKTOK");
                                 }
                             },
                             
@@ -790,20 +770,10 @@ function simpanHarga() {
                             if (msg.success) {
                                 if(msg.msg != "")
                                 {
-                                    Swal.fire({
-                                        title            : msg.msg,
-                                        type             : 'success',
-                                        showConfirmButton: false,
-                                        timer            : 1500
-                                    });
+                                    showAlertMarketplace('SUCCESS', msg.msg, "LAZADA");
                                 }
                             } else {
-                                Swal.fire({
-                                    title            : msg.msg,
-                                    type             : 'error',
-                                    showConfirmButton: false,
-                                    timer            : 1500
-                                });
+                                showAlertMarketplace('FAILED', msg.msg, "LAZADA");
                             }
                         },
                         
@@ -839,18 +809,5 @@ function get_akses_user(kodemenu, callback) {
 			}
 		}
 	});
-}
-
-function loadingMaster(){
-    Swal.fire({
-      title: '',
-      html: '<div style="font-size:20pt; font-weight:600;">Menghubungkan Master Barang dengan Marketplace... <div>',                // no text or HTML content
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      showConfirmButton: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
 }
 </script>

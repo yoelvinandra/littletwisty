@@ -180,5 +180,6 @@ $_SESSION[NAMAPROGRAM]['WARNA_STATUS_BELUM_BAYAR'] = "#CFECF7";
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper" style="overflow-y:auto;  height: calc(100vh - 135px); ">
-            
+        
         <div style="background:#90EE90; font-weight:bold; text-align:center;"> <?php echo $label ?></div>
+        <div id="alert-container" style="position:absolute; top:55px; right:0px; z-index:9999999; "></div>    

@@ -25,39 +25,40 @@
     <div class="row">
         <div class="col-md-12"  style="border:0px; padding:0px 15px 0px 15px;">
             <div class="box" style="border:0px; padding:0px; margin:0px;">
-            <div class="box-header form-inline" style="padding:0px;">
-                <div  style="font-weight:bold; font-size:18pt; margin-bottom:10px;">Atur Promo Tiktok</div>
-                <button class="btn btn-success" onclick="javascript:tambahTiktok()">Tambah</button>
-                <div class="pull-right" style="width:170px; margin-right:0px;">
-                	<div class="input-group " >
-                	 <div class="input-group-addon">
-                		 <i class="fa fa-filter"></i>
-                	 </div>
-                		<select id="cb_barang_status_tiktok" name="cb_barang_status_tiktok" class="form-control "  panelHeight="auto" required="true">
-                			<option value="">Semua </option>
-                			<option value="ONGOING" selected>Aktif</option>
-                			<option value="DRAFT">Simpan Draft</option>
-                			<option value="NOT_START">>Belum Berjalan</option>
-                			<option value="DEACTIVATED" selected>Non Aktif</option>
-                			<option value="NOT_EFFECTIVE" selected>Non Aktif oleh Tiktok</option>
-                			<option value="EXPIRED">Telah Berakhir</option>
-                		</select>
-                	</div>
-                </div>
+                Coming Soon
+            <!--<div class="box-header form-inline" style="padding:0px;">-->
+            <!--    <div  style="font-weight:bold; font-size:18pt; margin-bottom:10px;">Atur Promo Tiktok</div>-->
+            <!--    <button class="btn btn-success" onclick="javascript:tambahTiktok()">Tambah</button>-->
+            <!--    <div class="pull-right" style="width:170px; margin-right:0px;">-->
+            <!--    	<div class="input-group " >-->
+            <!--    	 <div class="input-group-addon">-->
+            <!--    		 <i class="fa fa-filter"></i>-->
+            <!--    	 </div>-->
+            <!--    		<select id="cb_barang_status_tiktok" name="cb_barang_status_tiktok" class="form-control "  panelHeight="auto" required="true">-->
+            <!--    			<option value="">Semua </option>-->
+            <!--    			<option value="ONGOING" selected>Aktif</option>-->
+            <!--    			<option value="DRAFT">Simpan Draft</option>-->
+            <!--    			<option value="NOT_START">>Belum Berjalan</option>-->
+            <!--    			<option value="DEACTIVATED" selected>Non Aktif</option>-->
+            <!--    			<option value="NOT_EFFECTIVE" selected>Non Aktif oleh Tiktok</option>-->
+            <!--    			<option value="EXPIRED">Telah Berakhir</option>-->
+            <!--    		</select>-->
+            <!--    	</div>-->
+            <!--    </div>-->
             </div>
-            <br>          			
-            <table id="dataGridPromoTiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%">
+            <!--<br>          			-->
+            <!--<table id="dataGridPromoTiktok" class="table table-bordered table-striped table-hover display nowrap" width="100%">-->
                 <!-- class="table-hover"> -->
-                <thead>
-                <tr>
-                    <th width="80px"></th>
-                    <th>Nama Promosi</th>
-                    <th width="100px">Tgl Mulai</th>
-                    <th width="100px">Tgl Akhir</th>
-                    <th width="40px">Status</th>							
-                </tr>
-                </thead>
-            </table>  
+            <!--    <thead>-->
+            <!--    <tr>-->
+            <!--        <th width="80px"></th>-->
+            <!--        <th>Nama Promosi</th>-->
+            <!--        <th width="100px">Tgl Mulai</th>-->
+            <!--        <th width="100px">Tgl Akhir</th>-->
+            <!--        <th width="40px">Status</th>							-->
+            <!--    </tr>-->
+            <!--    </thead>-->
+            <!--</table>  -->
         </div>
     </div>
     <!-- /.col -->

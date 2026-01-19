@@ -1189,7 +1189,7 @@ class Shopee extends MY_Controller {
             	{
             	    $data['success'] = true;
                     $data['msg'] =  "";
-            	    die(json_encode($data));
+            	   // die(json_encode($data));
             	}
             }
         }

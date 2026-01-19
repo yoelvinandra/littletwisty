@@ -1327,6 +1327,8 @@ class Tiktok extends MY_Controller {
         $response = curl_exec($curl);
         curl_close($curl);
         $ret =  json_decode($response,true);
+        $lokasi = "1";
+        
         if($ret['code'] != 0)
         {
             echo $ret['code']." : ".$ret['message'];
@@ -1352,6 +1354,7 @@ class Tiktok extends MY_Controller {
                 }
             }
             
+  
             if($lokasi == $idlokasiset)
             {
                 $countBarang = 0;
@@ -1478,7 +1481,7 @@ class Tiktok extends MY_Controller {
             	{
             	    $data['success'] = true;
                     $data['msg'] =  "";
-            	    die(json_encode($data));
+            	   // die(json_encode($data));
             	}
             }
         }

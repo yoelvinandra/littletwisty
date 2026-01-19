@@ -49,4 +49,42 @@
 		}
 	});
 	
+    function showAlertMarketplace(type, message, marketplace) {
+      var color = "";
+      if(marketplace == "SHOPEE"){color = "#f14d2a";}
+      else if(marketplace == "TIKTOK"){color = "#000000";}
+      else if(marketplace == "LAZADA"){color = "#201adc";}
+      
+      if(type == "FAILED")
+      {
+          color = "#'<?=$_SESSION[NAMAPROGRAM]['WARNA_STATUS_D']?>'";
+      }
+      
+      var alertData =  $(` 
+        <div class="alert" style="background: ${color}; color:white; margin:5px 15px 0px 15px; padding:10px 20px 10px 20px;">
+          ${message}
+        </div>
+      `);
+    
+      $('#alert-container').append(alertData);
+      
+      
+      setTimeout(() => {
+        alertData.fadeOut(500, () => alertData.remove());
+      }, 3000);
+    }
+
+    function loadingMaster(){
+        Swal.fire({
+          title: '',
+          html: '<div style="font-size:20pt; font-weight:600;">Menghubungkan Master Barang dengan Marketplace... <div>',                // no text or HTML content
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+    }
+	
 </script>
