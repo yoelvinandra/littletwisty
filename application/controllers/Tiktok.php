@@ -28,6 +28,15 @@ class Tiktok extends MY_Controller {
 	
 	public function getAuth()
 	{
+        $path  = APPPATH . 'cache/';
+        $files = glob($path . '*TIKTOK*');
+        
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+                    
 	    $app_id = $this->model_master_config->getConfigMarketplace('TIKTOK','APP_ID');
         echo "Authorize Link : https://services.tiktokshop.com/open/authorize?service_id=".$app_id;
 	}
@@ -100,15 +109,6 @@ class Tiktok extends MY_Controller {
                 {
                     $this->model_master_config->setConfigMarketplace('TIKTOK','SHOP',json_encode($ret['data']['shops'][0]));
                     $this->getCipher();
-                    
-                    $path  = APPPATH . 'cache/';
-                    $files = glob($path . '*TIKTOK*');
-            
-                    foreach ($files as $file) {
-                        if (is_file($file)) {
-                            unlink($file);
-                        }
-                    }
                 }
             }
             

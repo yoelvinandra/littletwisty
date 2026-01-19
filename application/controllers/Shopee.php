@@ -25,7 +25,16 @@ class Shopee extends MY_Controller {
 	}
 	
 	public function getAuth()
-	{
+	{       
+        $path  = APPPATH . 'cache/';
+        $files = glob($path . '*SHOPEE*');
+        
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+        
 	    $partnerId = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_ID');
 	    $partnerKey = $this->model_master_config->getConfigMarketplace('SHOPEE','PARTNER_KEY');
 
@@ -83,15 +92,6 @@ class Shopee extends MY_Controller {
             {
                 $this->model_master_config->setConfigMarketplace('SHOPEE','ACCESS_TOKEN',$accessToken);
                 $this->model_master_config->setConfigMarketplace('SHOPEE','REFRESH_TOKEN',$newRefreshToken);
-                
-                $path  = APPPATH . 'cache/';
-                $files = glob($path . '*SHOPEE*');
-            
-                foreach ($files as $file) {
-                    if (is_file($file)) {
-                        unlink($file);
-                    }
-                }
             }
             
             echo "Access Token : ".($accessToken)."<br>Refresh Token : ".($newRefreshToken)."<br><br>Berhasil disimpan di database";
