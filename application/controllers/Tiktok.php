@@ -100,6 +100,15 @@ class Tiktok extends MY_Controller {
                 {
                     $this->model_master_config->setConfigMarketplace('TIKTOK','SHOP',json_encode($ret['data']['shops'][0]));
                     $this->getCipher();
+                    
+                    $path  = APPPATH . 'cache/';
+                    $files = glob($path . '*TIKTOK*');
+            
+                    foreach ($files as $file) {
+                        if (is_file($file)) {
+                            unlink($file);
+                        }
+                    }
                 }
             }
             
@@ -145,7 +154,6 @@ class Tiktok extends MY_Controller {
                 $this->model_master_config->setConfigMarketplace('TIKTOK','ACCESS_TOKEN',$accessToken);
                 $this->model_master_config->setConfigMarketplace('TIKTOK','REFRESH_TOKEN',$newRefreshToken);
             }
-            
             // echo "Access Token : ".($accessToken)."<br>Refresh Token : ".($newRefreshToken)."<br><br>Berhasil disimpan di database";
             return 'true';
         }

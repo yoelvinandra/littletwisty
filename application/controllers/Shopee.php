@@ -83,6 +83,15 @@ class Shopee extends MY_Controller {
             {
                 $this->model_master_config->setConfigMarketplace('SHOPEE','ACCESS_TOKEN',$accessToken);
                 $this->model_master_config->setConfigMarketplace('SHOPEE','REFRESH_TOKEN',$newRefreshToken);
+                
+                $path  = APPPATH . 'cache/';
+                $files = glob($path . '*SHOPEE*');
+            
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        unlink($file);
+                    }
+                }
             }
             
             echo "Access Token : ".($accessToken)."<br>Refresh Token : ".($newRefreshToken)."<br><br>Berhasil disimpan di database";

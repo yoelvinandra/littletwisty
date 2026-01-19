@@ -100,6 +100,15 @@ class Lazada extends MY_Controller {
             {
                 $this->model_master_config->setConfigMarketplace('LAZADA','ACCESS_TOKEN',$accessToken);
                 $this->model_master_config->setConfigMarketplace('LAZADA','REFRESH_TOKEN',$newRefreshToken);
+                
+                $path  = APPPATH . 'cache/';
+                $files = glob($path . '*LAZADA*');
+            
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        unlink($file);
+                    }
+                }
             }
             
             echo "Access Token : ".($accessToken)."<br>Refresh Token : ".($newRefreshToken)."<br><br>Berhasil disimpan di database";
