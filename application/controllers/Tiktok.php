@@ -551,32 +551,30 @@ class Tiktok extends MY_Controller {
 	}
 	
 	public function connectBarang(){
+	    
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
-		$this->output->set_content_type('application/json');;
-		$status = ["NORMAL","BANNED","UNLIST","REVIEWING","SELLER_DELETE","TIKTOK_DELETE"];
-		$statusok = true;
-		$statusParam = "";
-		$data["msg"] = "TIDAK ADA IDBARANGTIKTOK YANG DIUPDATE";
-		$data["total"] = 0;
-		$data['barang'] = [];
-		$offset = 0;
-		$pageSize = 100;
-		for($x = 0 ;$x < count($status); $x++)
-		{
-		    $statusParam .= "&item_status=".$status[$x];
-		}
+		$this->output->set_content_type('application/json');
+		$status = $this->input->post('status')??'ALL';
 		
+		$nextPageToken = "";
+		$data['rows'] = [];
+		$data["total"] = 999;
+		$pageSize = 100;
+		
+        $parameter = array(
+            'status' =>    $status 
+        );
+        
 		//LOGISTIC
 		$curl = curl_init();
 		
-		while(!$bigger && $statusok)
+		while(count($data['rows']) < $data["total"])
         {
-            
-		    $parameter = "&offset=".$offset."&page_size=".$pageSize.$statusParam;
+		    $urlparameter = "&page_token=".$nextPageToken."&page_size=".$pageSize;
 		    
             curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -584,7 +582,7 @@ class Tiktok extends MY_Controller {
               CURLOPT_FOLLOWLOCATION => true,
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_item_list','parameter' => $parameter),
+              CURLOPT_POSTFIELDS => array('endpoint' => '/product/202502/products/search','urlparameter' => $urlparameter,'parameter'=>json_encode($parameter)),
               CURLOPT_HTTPHEADER => array(
                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
               ),
@@ -599,74 +597,25 @@ class Tiktok extends MY_Controller {
             }
             else
             {
-                $response = $ret['response'];
-                $statusok = $response['has_next_page'];
-                $offset = $response['next_offset'];
-                $idbarang = $response['item'];
-                $paramId = "";
-                for($x = 0 ; $x < count($idbarang);$x++)
-                {
+                $response = $ret['data'];
+                $nextPageToken = $response['next_page_token'];
+                $data["total"] = $response['total_count'];
+                $dataBarang = $response['products'];
                 
-                    //GET MODEL
-                    $parameter = "&item_id=".(int)$idbarang[$x]['item_id'];
-                    $curl = curl_init();
-                    
-                    curl_setopt_array($curl, array(
-                      CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                      CURLOPT_RETURNTRANSFER => true,
-                      CURLOPT_ENCODING => '',
-                      CURLOPT_MAXREDIRS => 10,
-                      CURLOPT_TIMEOUT => 30,
-                      CURLOPT_FOLLOWLOCATION => true,
-                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                      CURLOPT_CUSTOMREQUEST => 'POST',
-                      CURLOPT_POSTFIELDS => array('endpoint' => 'product/get_model_list','parameter' => $parameter),
-                      CURLOPT_HTTPHEADER => array(
-                        'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                      ),
-                    ));
-                    
-                    $response = curl_exec($curl);
-                    curl_close($curl);
-                    $ret =  json_decode($response,true);
-                    if($ret['code'] != 0)
-                    {
-                        echo $ret['code']." : ".$ret['message'];
-                        $statusok = false;
-                    }
-                    else
-                    {
-                        $dataModel = $ret['response']['model'];
-                        for($m = 0 ; $m < count($dataModel);$m++)
-                        {
-                            $sku = "";
-                            if($dataModel[$m]['model_sku'] == "")
-                            {
-                                 $sku = $dataModel[$m]['item_sku'];
-                            }
-                            else
-                            {
-                                 $sku = $dataModel[$m]['model_sku'];
-                            }
-                            
-                            $sql = "UPDATE MBARANG SET IDBARANGTIKTOK = ".$dataModel[$m]['model_id'].", idindukbarangtiktok = ".$idbarang[$x]['item_id']." WHERE SKUTIKTOK = '".strtoupper($sku)."'";
-                            $CI->db->query($sql);
-                            echo $sql." ;";
-                            echo "\n";
-                        //   array_push($data['barang'],array(
-                        //       'ITEMID' => $idbarang[$x]['item_id'],
-                        //       'ITEM' =>  $idbarang[$x]['item_name'],
-                        //       'MODELID' => $dataModel[$m]['model_id'],
-                        //       'MODEL' => $dataModel[$m]['model_name'],
-                        //       'SKU' => $sku
-                        //     ));
-                           $data["total"]++;
-                           $data["msg"] = "IDBARANGTIKTOK BERHASIL DIUPDATE";
-                        }
-                    }
+                foreach($dataBarang as $itemBarang)
+                {
+                    foreach($itemBarang['skus'] as $itemDetail)
+                      $sql = "UPDATE MBARANG SET IDBARANGTIKTOK = (IF(WARNA = '','".($itemBarang['id']."_".$itemDetail['id'])."','".$itemBarang['skus'][0]['id']."')), idindukbarangtiktok = '".$itemBarang['id']."' WHERE SKUTIKTOK = '".strtoupper($itemDetail['seller_sku'])."'";
+                      $CI->db->query($sql);
+                      echo $sql." ;";
+                      echo "\n";
+                      $data["total"]++;
+                      $data["msg"] = "IDBARANGTIKTOK BERHASIL DIUPDATE";
                 }
             }
         }
+        
+      
         echo(json_encode($data));
 	}
 	
@@ -677,10 +626,10 @@ class Tiktok extends MY_Controller {
 		$data     = json_decode($this->input->post('data_detail'));
 		$allcustomer = $this->input->post('allcustomer')??"false";
 		$varian = $this->input->post('varian')??"false";
-		$dataHargaBarang = [];
+		$dataBarangHarga = [];
 		
 	
-    	$sql = "SELECT IDCUSTOMER,KONSINYASI FROM MCUSTOMER WHERE KODECUSTOMER = 'XTIKTOK' ";
+        $sql = "SELECT IDCUSTOMER,KONSINYASI FROM MCUSTOMER WHERE KODECUSTOMER = 'XTIKTOK' ";
     	$IDCUSTOMER = $CI->db->query($sql)->row()->IDCUSTOMER;
     	$KONSINYASI = $CI->db->query($sql)->row()->KONSINYASI??0;
 		
@@ -688,7 +637,7 @@ class Tiktok extends MY_Controller {
 		if($varian == "true")
 		{
     		$sql = "SELECT a.IDBARANG,a.KATEGORI,
-    		        a.IDBARANGTIKTOK, a.idindukbarangtiktok
+    		        a.IDBARANGTIKTOK, a.IDINDUKBARANGTIKTOK,a.SKUTIKTOK
     		        FROM MBARANG a";
     		$dataBarang = $CI->db->query($sql)->result();  
 		}
@@ -704,35 +653,16 @@ class Tiktok extends MY_Controller {
     		        foreach($dataBarang as $itemBarang){
     		            if($itemBarang->IDBARANG == $item->idbarang)
     		            {
-    		                if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->idindukbarangtiktok != 0)
+    		                if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->IDINDUKBARANGTIKTOK != 0)
     		                {
-    		                    if($idbarang != $itemBarang->idindukbarangtiktok)
-    		                    {
-    		                        $idbarang = $itemBarang->idindukbarangtiktok;
-    		                        array_push($dataHargaBarang, array(
-        		                        'item_id' => $itemBarang->idindukbarangtiktok,
-        		                        'model' => []
-    		                        ));
-    		                    }
-    		                    
-    		                    if($itemBarang->IDBARANGTIKTOK == $itemBarang->idindukbarangtiktok)
-    		                    {
-    		                        array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
+    		                    array_push($dataBarangHarga,
         		                    array(
-        		                         'model_id'         => 0,
-        		                         'original_price'   => $item->hargajualnew,
-        		                         'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                         'IDBARANGTIKTOK'           => $itemBarang->IDBARANGTIKTOK,
+        		                         'IDINDUKBARANGTIKTOK'      => $itemBarang->IDINDUKBARANGTIKTOK,
+        		                         'SKUTIKTOK'                => $itemBarang->SKUTIKTOK,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
         		                    )); 
-    		                    }
-    		                    else
-    		                    {
-        		                    array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
-        		                    array(
-        		                         'model_id'         => $itemBarang->IDBARANGTIKTOK,
-        		                         'original_price'   => $item->hargajualnew,
-        		                         'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-        		                    ));
-    		                    }
     		                }
     		            }
     		        }
@@ -747,35 +677,16 @@ class Tiktok extends MY_Controller {
     		   foreach($dataBarang as $itemBarang){
     		       if($itemBarang->IDBARANG == $item->idbarang)
     		       {
-    		           if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->idindukbarangtiktok != 0)
+    		           if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->IDINDUKBARANGTIKTOK != 0)
     		           {
-    		               if($idbarang != $itemBarang->idindukbarangtiktok)
-    		               {
-    		                   $idbarang = $itemBarang->idindukbarangtiktok;
-    		                   array_push($dataHargaBarang, array(
-        	                    'item_id' => $itemBarang->idindukbarangtiktok,
-        	                    'model' => []
-    		                   ));
-    		               }
-    		               
-    		               if($itemBarang->IDBARANGTIKTOK == $itemBarang->idindukbarangtiktok)
-    		               {
-    		                array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
-        	                array(
-        	                     'model_id'         => 0,
-        	                     'original_price'   => $item->hargajualnew,
-        		                 'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-        	                )); 
-    		               }
-    		               else
-    		               {
-        	                array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
-        	                array(
-        	                     'model_id'         => $itemBarang->IDBARANGTIKTOK,
-        	                     'original_price'   => $item->hargajualnew,
-        		                 'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-        	                ));
-    		               }
+    		               array_push($dataBarangHarga,
+        		                    array(
+        		                         'IDBARANGTIKTOK'           => $itemBarang->IDBARANGTIKTOK,
+        		                         'IDINDUKBARANGTIKTOK'      => $itemBarang->IDINDUKBARANGTIKTOK,
+        		                         'SKUTIKTOK'                => $itemBarang->SKUTIKTOK,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                    )); 
     		           }
     		       }
     		   }
@@ -786,43 +697,26 @@ class Tiktok extends MY_Controller {
             $idbarang = 0;
     		foreach($data as $item)
     		{	
-        	   $sql = "SELECT a.IDBARANG, a.IDBARANGTIKTOK, a.idindukbarangtiktok FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
+        	   $sql = "SELECT a.IDBARANG, a.IDBARANGTIKTOK, a.IDINDUKBARANGTIKTOK,a.SKUTIKTOK FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
         	   
         	   $allBarang = $CI->db->query($sql)->result();
         	   
         	   foreach($allBarang as $itemBarang)
         	   {
-                   if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->idindukbarangtiktok != 0)
+                   if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->IDINDUKBARANGTIKTOK != 0)
         	       {
-        	           if($idbarang != $itemBarang->idindukbarangtiktok)
-        	           {
-        	               $idbarang = $itemBarang->idindukbarangtiktok;
-        	               array_push($dataHargaBarang, array(
-                            'item_id' => $itemBarang->idindukbarangtiktok,
-                            'model' => []
-        	               ));
-        	           }
-        	           
-        	           if($itemBarang->IDBARANGTIKTOK == $itemBarang->idindukbarangtiktok)
-        	           {
-        	            array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
-                        array(
-                             'model_id'         => 0,
-                             'original_price'   => $item->hargajualnew,
-        		             'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-                        )); 
-        	           }
-        	           else
-        	           {
-                        array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
-                        array(
-                             'model_id'         => $itemBarang->IDBARANGTIKTOK,
-                             'original_price'   => $item->hargajualnew,
-        		             'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-                        ));
-        	           }
+        	            array_push($dataBarangHarga,
+        		                    array(
+        		                         'IDBARANGTIKTOK'           => $itemBarang->IDBARANGTIKTOK,
+        		                         'IDINDUKBARANGTIKTOK'      => $itemBarang->IDINDUKBARANGTIKTOK,
+        		                         'SKUTIKTOK'                => $itemBarang->SKUTIKTOK,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                    )); 
         	       }
+        	       
         	   }
+        	   
     		}
         }
         else if($allcustomer == "false" && $varian == "false")  //BUKAN SEMUA CUSTOMER, TAPi BUKAN VARIAN
@@ -832,41 +726,22 @@ class Tiktok extends MY_Controller {
 		    
 		        if($IDCUSTOMER == $item->idcustomer)
     		    {
-        		    $sql = "SELECT a.IDBARANG, a.IDBARANGTIKTOK, a.idindukbarangtiktok FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
+        		    $sql = "SELECT a.IDBARANG, a.IDBARANGTIKTOK, a.IDINDUKBARANGTIKTOK,a.SKUTIKTOK FROM MBARANG a WHERE a.IDPERUSAHAAN = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} and kategori in (select x.kategori from mbarang x where x.idbarang = {$item->idbarang})";
         		    
         		    $allBarang = $CI->db->query($sql)->result();
         		    
         		    foreach($allBarang as $itemBarang)
         		    {
-            		    if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->idindukbarangtiktok != 0)
+            		    if($itemBarang->IDBARANGTIKTOK != 0 && $itemBarang->IDINDUKBARANGTIKTOK != 0)
         		        {
-        		            if($idbarang != $itemBarang->idindukbarangtiktok)
-        		            {
-        		                $idbarang = $itemBarang->idindukbarangtiktok;
-        		                array_push($dataHargaBarang, array(
-            	                 'item_id' => $itemBarang->idindukbarangtiktok,
-            	                 'model' => []
-        		                ));
-        		            }
-        		            
-        		            if($itemBarang->IDBARANGTIKTOK == $itemBarang->idindukbarangtiktok)
-        		            {
-        		             array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
-            	             array(
-            	                  'model_id'         => 0,
-            	                  'original_price'   => $item->hargajualnew,
-        		                  'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-            	             )); 
-        		            }
-        		            else
-        		            {
-            	             array_push($dataHargaBarang[count($dataHargaBarang)-1]['model'],
-            	             array(
-            	                  'model_id'         => $itemBarang->IDBARANGTIKTOK,
-            	                  'original_price'   => $item->hargajualnew,
-        		                  'cross_price'      => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
-            	             ));
-        		            }
+        		            array_push($dataBarangHarga,
+        		                    array(
+        		                         'IDBARANGTIKTOK'           => $itemBarang->IDBARANGTIKTOK,
+        		                         'IDINDUKBARANGTIKTOK'      => $itemBarang->IDINDUKBARANGTIKTOK,
+        		                         'SKUTIKTOK'                => $itemBarang->SKUTIKTOK,
+        		                         'HARGA'                    => $item->hargajualnew,
+        		                         'HARGADISKON'              => $KONSINYASI == 1 ? $item->hargakonsinyasinew:$item->harganew,
+        		                    )); 
         		        }
         		    }
     		    }
@@ -874,21 +749,51 @@ class Tiktok extends MY_Controller {
     		
         }
         
-		for($x = 0 ; $x < count($dataHargaBarang); $x++)
+        $idbarangheader = 0;
+        $databaranginduk = [];
+        
+        //SUSUN HEADER BARANG
+        for($x = 0 ; $x < count($dataBarangHarga); $x++)
 		{
-        	$parameter = [];
-            $parameter['item_id'] = (int)$dataHargaBarang[$x]['item_id'];
-            $parameter['price_list'] = [];
-            for($h = 0 ; $h < count($dataHargaBarang[$x]['model']); $h++)
-            {
-                 array_push($parameter['price_list'],array(
-                     'model_id'       =>  (int)$dataHargaBarang[$x]['model'][$h]['model_id'],
-                     'original_price' =>  (float)$dataHargaBarang[$x]['model'][$h]['original_price'],
-                  ));
-            }
-            
+		    $ada = false;
+		    for($y = 0; $y < count($databaranginduk); $y++)
+		    {
+		        if($databaranginduk[$y] == $dataBarangHarga[$x]['IDINDUKBARANGTIKTOK'])
+		        {
+		           $ada = true;
+		        }
+		    }
+		    
+		    if(!$ada)
+		    {
+		         array_push($databaranginduk,$dataBarangHarga[$x]['IDINDUKBARANGTIKTOK']);
+		    }
+		}
+		
+		for($y = 0; $y < count($databaranginduk); $y++)
+		{
+		    $parameter = [
+		        'skus' => []
+		    ];
+		    
+		    for($x = 0 ; $x < count($dataBarangHarga); $x++)
+    		{
+        	    if($databaranginduk[$y] == $dataBarangHarga[$x]['IDINDUKBARANGTIKTOK'])	
+        	    {
+        	        array_push(
+        	            $parameter['skus'], array(
+            	            'id' => explode('_',$dataBarangHarga[$x]['IDBARANGTIKTOK'])[0],
+            	            'price' => array(
+        		                'amount' => $dataBarangHarga[$x]['HARGA'],
+        		                'currency' => 'IDR'
+        		            )
+    		            )
+        	        );
+        	    }
+    		}
+    		
             $curl = curl_init();
-                  
+                    
             curl_setopt_array($curl, array(
               CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
               CURLOPT_RETURNTRANSFER => true,
@@ -899,8 +804,9 @@ class Tiktok extends MY_Controller {
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'POST',
               CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => 'product/update_price',
-              'parameter' => json_encode($parameter)),
+              'endpoint' => '/product/202309/products/'.$databaranginduk[$y].'/prices/update',
+              'parameter' => json_encode($parameter),
+              ),
               CURLOPT_HTTPHEADER => array(
                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
               ),
@@ -911,360 +817,367 @@ class Tiktok extends MY_Controller {
             $ret =  json_decode($response,true);
             
             if($ret['code'] != 0)
-            {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." UBAH HARGA TIKTOK : ".$ret['message'];
-                die(json_encode($data));
-            }
-		}
-		
-		
-		//HARGA PROMO SAAT INI
-		$status = ['ongoing','upcoming'];
-		
-		$arrIDPromo = [];
-		
-		//PROMO
-		for($x = 0 ; $x < count($status); $x++)
-		{
-		    
-    		$statusok = true;
-    		$pageno = 1;
-    		$pageSize = 100;
-		    
-    		while($statusok)
-            {
-                
-		        $curl = curl_init();
-    		    $parameter = "&discount_status=".$status[$x]."&page_no=".$pageno."&page_size=".$pageSize;
-
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount_list','parameter' => $parameter),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['code'] != 0)
-                {
-                    echo $ret['code']." : ".$ret['message'];
-                }
-                else
-                {
-                    $response = $ret['response'];
-                    $statusok = $response['more'];
-                    if($statusok){
-                        $pageno++;
-                    }
-                    
-                    for($p = 0 ; $p < count($response['discount_list']);$p++)
-                    {
-                        $dataPromo = $response['discount_list'][$p];
-                        array_push($arrIDPromo,
-                            array(
-                                'IDPROMO' => $dataPromo['discount_id'],
-                                'STATUS' => $status[$x]
-                            )
-                        );
-                    }
-                }
-            }
-		}
-        //JIKA ADA PROMO, TINGGAL TAMBAHKAN BARANGNYA 
-        for($x = 0 ;$x < count($arrIDPromo) ; $x++)
-        {
-            $idPromosi = $arrIDPromo[$x]['IDPROMO'];
-    		
-    		$statusok = true;
-    		$pageno = 1;
-    		$pageSize = 100;
-    		$data['rows'] = [];
-    		
-    		//LOGISTIC
-    		$curl = curl_init();
-    		
-    		while($statusok)
-            {
-                
-    		    $parameter = "&discount_id=".$idPromosi."&page_no=".$pageno."&page_size=".$pageSize;
-    		    
-    		  //  echo $parameter;
-    		    
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount','parameter' => $parameter),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                if($ret['code'] != 0)
-                {
-                    echo $ret['code']." : ".$ret['message'];
-                }
-                else
-                {
-                    $response = $ret['response'];
-                    $statusok = $response['more'];
-                    if($statusok){
-                        $pageno++;
-                    }
-                    
-                    $parameterTambah = [];
-                	$parameterTambah['discount_id']   = (int)$idPromosi;
-                	$parameterTambah['item_list']  = array();
-    		
-            		$parameterUbah = [];
-                	$parameterUbah['discount_id']   = (int)$idPromosi;
-                	$parameterUbah['item_list']  = array();
-                    
-                    
-                    for($p = 0 ; $p < count($response['item_list']);$p++)
-                    {
-                        $dataItem = $response['item_list'][$p];
-                        //INDUK
-                        if(count($dataItem['model_list']) == 0)
-                        {
-                            foreach($dataHargaBarang as $key  => $itemHargaBarang)
-                            {
-                                if($itemHargaBarang['item_id'] == $dataItem['item_id'])
-                                {
-                                    array_push($parameterUbah['item_list'], array(
-                            	       'item_id'                => (int)$itemHargaBarang['item_id'],
-                            	       'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
-                            	       'purchase_limit'         => (int)0,
-                            	       'model_list' => []
-                            	   ));
-                            	   
-                            	   unset($dataHargaBarang[$key]);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            foreach ($dataHargaBarang as $key => &$itemHargaBarang) {
-                                if ($itemHargaBarang['item_id'] == $dataItem['item_id']) {
-                            
-                                    $parameterUbah['item_list'][] = [
-                                        'item_id'              => (int)$itemHargaBarang['item_id'],
-                                        'item_promotion_price' => (float)$itemHargaBarang['model'][0]['cross_price'],
-                                        'purchase_limit'       => 0,
-                                        'model_list'           => []
-                                    ];
-                            
-                                    $lastIndex = count($parameterUbah['item_list']) - 1;
-                            
-                                    foreach ($dataItem['model_list'] as $itemModel) {
-                                        foreach ($itemHargaBarang['model'] as $modelKey => $itemHargaBarangModel) {
-                            
-                                            if ($itemHargaBarangModel['model_id'] == $itemModel['model_id']) {
-                                                $parameterUbah['item_list'][$lastIndex]['model_list'][] = [
-                                                    'model_id'              => (int)$itemHargaBarangModel['model_id'],
-                                                    'model_promotion_price' => (float)$itemHargaBarangModel['cross_price'],
-                                                ];
-                            
-                                                // remove model from the reference array
-                                                unset($itemHargaBarang['model'][$modelKey]);
-                                            }
-                                        }
-                                    }
-                            
-                                    // remove the item if no models left
-                                    if (empty($itemHargaBarang['model'])) {
-                                        unset($dataHargaBarang[$key]);
-                                    }
-                                }
-                            }
-                            unset($itemHargaBarang); // cleanup reference
-                            
-                            // optional: reindex
-                            $dataHargaBarang = array_values($dataHargaBarang);
-                        }
-                    }
-                    
-                    if(count($parameterUbah['item_list']) > 0)
-    	            {
-                        
-                        $curl = curl_init();
-                
-                        curl_setopt_array($curl, array(
-                          CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                          CURLOPT_RETURNTRANSFER => true,
-                          CURLOPT_ENCODING => '',
-                          CURLOPT_MAXREDIRS => 10,
-                          CURLOPT_TIMEOUT => 30,
-                          CURLOPT_FOLLOWLOCATION => true,
-                          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                          CURLOPT_CUSTOMREQUEST => 'POST',
-                          CURLOPT_POSTFIELDS =>  array(
-                          'endpoint' => 'discount/update_discount_item',
-                          'parameter' => json_encode($parameterUbah)),
-                          CURLOPT_HTTPHEADER => array(
-                            'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                          ),
-                        ));
-                          
-                        $response = curl_exec($curl);
-                        curl_close($curl);
-                        $ret =  json_decode($response,true);
-                     
-                        if($ret['code'] != 0)
-                        {
-                            $data['success'] = false;
-                            $data['msg'] =  $ret['error']."PROMO BARANG UBAH : ".$ret['message'];
-                            die(json_encode($data));
-                        }
-    	            }
-                }
-            }
-        }
-        
-        
-        //SISA BELUM ADA
-        if(count($dataHargaBarang) > 0)
-        {
-    		$nama       = "DISKON SYSTEM";
-    		$startdate        = new DateTime();  
-            $startdate->modify('+1 hour 1 minutes');  
-            
-            $enddate        = new DateTime();  
-            $enddate->modify('+180 days');  
-            
-    		$tglMulai   = $startdate->format('Y-m-d H:i:s');
-    		$tglAkhir   = $enddate->format('Y-m-d H:i:s');
-    		$parameter = [];
-    		$parameter['discount_name'] = $nama." ".date('Y-m-d H:i:s');
-    		$parameter['start_time']    = strtotime($tglMulai);
-    		$parameter['end_time']      = strtotime($tglAkhir);
-		
-		    $endpoint = 'discount/add_discount';
-    		
-    		
-    	    $curl = curl_init();
-            
-            curl_setopt_array($curl, array(
-              CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 30,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'POST',
-              CURLOPT_POSTFIELDS =>  array(
-              'endpoint' => $endpoint,
-              'parameter' => json_encode($parameter)),
-              CURLOPT_HTTPHEADER => array(
-                'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-              ),
-            ));
-              
-            $response = curl_exec($curl);
-            curl_close($curl);
-            $ret =  json_decode($response,true);
-         
-            if($ret['code'] != 0)
-            {
-                $data['success'] = false;
-                $data['msg'] =  $ret['error']." BUAT PROMO : ".$ret['message'];
-                die(json_encode($data));
+            { 
+                $ret['success'] = false;
+                $ret['msg'] = $ret['message'];
+                die(json_encode($ret));
             }
             else
             {
-                $id = $ret['response']['discount_id'];
-                
-                $parameterTambah = [];
-        	    $parameterTambah['discount_id']   = (int)$id;
-        	    $parameterTambah['item_list']  = array();
-		
-		        foreach($dataHargaBarang as $itemHargaBarang)
-                {
-                    if($itemHargaBarang['model'][0]['model_id'] == 0)
-                    {
-                       array_push($parameterTambah['item_list'], array(
-        	               'item_id'                => (int)$itemHargaBarang['item_id'],
-                           'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
-                           'purchase_limit'         => (int)0,
-        	               'model_list' => []
-        	           ));
-                    }
-                    else
-                    {
-                       array_push($parameterTambah['item_list'], array(
-        	               'item_id'                => (int)$itemHargaBarang['item_id'],
-                           'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
-                           'purchase_limit'         => (int)0,
-        	               'model_list' => []
-        	           ));
-                       foreach($itemHargaBarang['model'] as $itemHargaBarangModel)
-                       { 
-                           array_push($parameterTambah['item_list'][count($parameterTambah['item_list'])-1]['model_list'],
-            	           array(
-            	                'model_id'               => (int)$itemHargaBarangModel['model_id'],
-            	                'model_promotion_price'   => (float)$itemHargaBarangModel['cross_price'],
-            	           ));  
-                       }
-                    }
-                }
-                
-                $curl = curl_init();
-                
-                curl_setopt_array($curl, array(
-                  CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
-                  CURLOPT_RETURNTRANSFER => true,
-                  CURLOPT_ENCODING => '',
-                  CURLOPT_MAXREDIRS => 10,
-                  CURLOPT_TIMEOUT => 30,
-                  CURLOPT_FOLLOWLOCATION => true,
-                  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                  CURLOPT_CUSTOMREQUEST => 'POST',
-                  CURLOPT_POSTFIELDS =>  array(
-                  'endpoint' => 'discount/add_discount_item',
-                  'parameter' => json_encode($parameterTambah)),
-                  CURLOPT_HTTPHEADER => array(
-                    'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
-                  ),
-                ));
-                  
-                $response = curl_exec($curl);
-                curl_close($curl);
-                $ret =  json_decode($response,true);
-                
-                if($ret['code'] != 0)
-                {
-                    $data['success'] = false;
-                    $data['msg'] =  $ret['error']."PROMO BARANG TAMBAH : ".$ret['message'];
-                    die(json_encode($data));
-                }
+        	   
+               $parameter = [];
             }
+		}
+        
+		
+		
+		
+// 		//HARGA PROMO SAAT INI
+// 		$status = ['ongoing','upcoming'];
+		
+// 		$arrIDPromo = [];
+		
+// 		//PROMO
+// 		for($x = 0 ; $x < count($status); $x++)
+// 		{
+		    
+//     		$statusok = true;
+//     		$pageno = 1;
+//     		$pageSize = 100;
+		    
+//     		while($statusok)
+//             {
+                
+// 		        $curl = curl_init();
+//     		    $parameter = "&discount_status=".$status[$x]."&page_no=".$pageno."&page_size=".$pageSize;
+
+//                 curl_setopt_array($curl, array(
+//                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+//                   CURLOPT_RETURNTRANSFER => true,
+//                   CURLOPT_ENCODING => '',
+//                   CURLOPT_MAXREDIRS => 10,
+//                   CURLOPT_TIMEOUT => 30,
+//                   CURLOPT_FOLLOWLOCATION => true,
+//                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//                   CURLOPT_CUSTOMREQUEST => 'POST',
+//                   CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount_list','parameter' => $parameter),
+//                   CURLOPT_HTTPHEADER => array(
+//                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+//                   ),
+//                 ));
+                
+//                 $response = curl_exec($curl);
+//                 curl_close($curl);
+//                 $ret =  json_decode($response,true);
+//                 if($ret['code'] != 0)
+//                 {
+//                     echo $ret['code']." : ".$ret['message'];
+//                 }
+//                 else
+//                 {
+//                     $response = $ret['response'];
+//                     $statusok = $response['more'];
+//                     if($statusok){
+//                         $pageno++;
+//                     }
+                    
+//                     for($p = 0 ; $p < count($response['discount_list']);$p++)
+//                     {
+//                         $dataPromo = $response['discount_list'][$p];
+//                         array_push($arrIDPromo,
+//                             array(
+//                                 'IDPROMO' => $dataPromo['discount_id'],
+//                                 'STATUS' => $status[$x]
+//                             )
+//                         );
+//                     }
+//                 }
+//             }
+// 		}
+//         //JIKA ADA PROMO, TINGGAL TAMBAHKAN BARANGNYA 
+//         for($x = 0 ;$x < count($arrIDPromo) ; $x++)
+//         {
+//             $idPromosi = $arrIDPromo[$x]['IDPROMO'];
+    		
+//     		$statusok = true;
+//     		$pageno = 1;
+//     		$pageSize = 100;
+//     		$data['rows'] = [];
+    		
+//     		//LOGISTIC
+//     		$curl = curl_init();
+    		
+//     		while($statusok)
+//             {
+                
+//     		    $parameter = "&discount_id=".$idPromosi."&page_no=".$pageno."&page_size=".$pageSize;
+    		    
+//     		  //  echo $parameter;
+    		    
+//                 curl_setopt_array($curl, array(
+//                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
+//                   CURLOPT_RETURNTRANSFER => true,
+//                   CURLOPT_ENCODING => '',
+//                   CURLOPT_MAXREDIRS => 10,
+//                   CURLOPT_TIMEOUT => 30,
+//                   CURLOPT_FOLLOWLOCATION => true,
+//                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//                   CURLOPT_CUSTOMREQUEST => 'POST',
+//                   CURLOPT_POSTFIELDS => array('endpoint' => 'discount/get_discount','parameter' => $parameter),
+//                   CURLOPT_HTTPHEADER => array(
+//                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+//                   ),
+//                 ));
+                
+//                 $response = curl_exec($curl);
+//                 curl_close($curl);
+//                 $ret =  json_decode($response,true);
+//                 if($ret['code'] != 0)
+//                 {
+//                     echo $ret['code']." : ".$ret['message'];
+//                 }
+//                 else
+//                 {
+//                     $response = $ret['response'];
+//                     $statusok = $response['more'];
+//                     if($statusok){
+//                         $pageno++;
+//                     }
+                    
+//                     $parameterTambah = [];
+//                 	$parameterTambah['discount_id']   = (int)$idPromosi;
+//                 	$parameterTambah['item_list']  = array();
+    		
+//             		$parameterUbah = [];
+//                 	$parameterUbah['discount_id']   = (int)$idPromosi;
+//                 	$parameterUbah['item_list']  = array();
+                    
+                    
+//                     for($p = 0 ; $p < count($response['item_list']);$p++)
+//                     {
+//                         $dataItem = $response['item_list'][$p];
+//                         //INDUK
+//                         if(count($dataItem['model_list']) == 0)
+//                         {
+//                             foreach($dataHargaBarang as $key  => $itemHargaBarang)
+//                             {
+//                                 if($itemHargaBarang['item_id'] == $dataItem['item_id'])
+//                                 {
+//                                     array_push($parameterUbah['item_list'], array(
+//                             	       'item_id'                => (int)$itemHargaBarang['item_id'],
+//                             	       'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
+//                             	       'purchase_limit'         => (int)0,
+//                             	       'model_list' => []
+//                             	   ));
+                            	   
+//                             	   unset($dataHargaBarang[$key]);
+//                                 }
+//                             }
+//                         }
+//                         else
+//                         {
+//                             foreach ($dataHargaBarang as $key => &$itemHargaBarang) {
+//                                 if ($itemHargaBarang['item_id'] == $dataItem['item_id']) {
+                            
+//                                     $parameterUbah['item_list'][] = [
+//                                         'item_id'              => (int)$itemHargaBarang['item_id'],
+//                                         'item_promotion_price' => (float)$itemHargaBarang['model'][0]['cross_price'],
+//                                         'purchase_limit'       => 0,
+//                                         'model_list'           => []
+//                                     ];
+                            
+//                                     $lastIndex = count($parameterUbah['item_list']) - 1;
+                            
+//                                     foreach ($dataItem['model_list'] as $itemModel) {
+//                                         foreach ($itemHargaBarang['model'] as $modelKey => $itemHargaBarangModel) {
+                            
+//                                             if ($itemHargaBarangModel['model_id'] == $itemModel['model_id']) {
+//                                                 $parameterUbah['item_list'][$lastIndex]['model_list'][] = [
+//                                                     'model_id'              => (int)$itemHargaBarangModel['model_id'],
+//                                                     'model_promotion_price' => (float)$itemHargaBarangModel['cross_price'],
+//                                                 ];
+                            
+//                                                 // remove model from the reference array
+//                                                 unset($itemHargaBarang['model'][$modelKey]);
+//                                             }
+//                                         }
+//                                     }
+                            
+//                                     // remove the item if no models left
+//                                     if (empty($itemHargaBarang['model'])) {
+//                                         unset($dataHargaBarang[$key]);
+//                                     }
+//                                 }
+//                             }
+//                             unset($itemHargaBarang); // cleanup reference
+                            
+//                             // optional: reindex
+//                             $dataHargaBarang = array_values($dataHargaBarang);
+//                         }
+//                     }
+                    
+//                     if(count($parameterUbah['item_list']) > 0)
+//     	            {
+                        
+//                         $curl = curl_init();
+                
+//                         curl_setopt_array($curl, array(
+//                           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+//                           CURLOPT_RETURNTRANSFER => true,
+//                           CURLOPT_ENCODING => '',
+//                           CURLOPT_MAXREDIRS => 10,
+//                           CURLOPT_TIMEOUT => 30,
+//                           CURLOPT_FOLLOWLOCATION => true,
+//                           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//                           CURLOPT_CUSTOMREQUEST => 'POST',
+//                           CURLOPT_POSTFIELDS =>  array(
+//                           'endpoint' => 'discount/update_discount_item',
+//                           'parameter' => json_encode($parameterUbah)),
+//                           CURLOPT_HTTPHEADER => array(
+//                             'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+//                           ),
+//                         ));
+                          
+//                         $response = curl_exec($curl);
+//                         curl_close($curl);
+//                         $ret =  json_decode($response,true);
+                     
+//                         if($ret['code'] != 0)
+//                         {
+//                             $data['success'] = false;
+//                             $data['msg'] =  $ret['error']."PROMO BARANG UBAH : ".$ret['message'];
+//                             die(json_encode($data));
+//                         }
+//     	            }
+//                 }
+//             }
+//         }
+        
+        
+//         //SISA BELUM ADA
+//         if(count($dataHargaBarang) > 0)
+//         {
+//     		$nama       = "DISKON SYSTEM";
+//     		$startdate        = new DateTime();  
+//             $startdate->modify('+1 hour 1 minutes');  
+            
+//             $enddate        = new DateTime();  
+//             $enddate->modify('+180 days');  
+            
+//     		$tglMulai   = $startdate->format('Y-m-d H:i:s');
+//     		$tglAkhir   = $enddate->format('Y-m-d H:i:s');
+//     		$parameter = [];
+//     		$parameter['discount_name'] = $nama." ".date('Y-m-d H:i:s');
+//     		$parameter['start_time']    = strtotime($tglMulai);
+//     		$parameter['end_time']      = strtotime($tglAkhir);
+		
+// 		    $endpoint = 'discount/add_discount';
+    		
+    		
+//     	    $curl = curl_init();
+            
+//             curl_setopt_array($curl, array(
+//               CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+//               CURLOPT_RETURNTRANSFER => true,
+//               CURLOPT_ENCODING => '',
+//               CURLOPT_MAXREDIRS => 10,
+//               CURLOPT_TIMEOUT => 30,
+//               CURLOPT_FOLLOWLOCATION => true,
+//               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//               CURLOPT_CUSTOMREQUEST => 'POST',
+//               CURLOPT_POSTFIELDS =>  array(
+//               'endpoint' => $endpoint,
+//               'parameter' => json_encode($parameter)),
+//               CURLOPT_HTTPHEADER => array(
+//                 'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+//               ),
+//             ));
+              
+//             $response = curl_exec($curl);
+//             curl_close($curl);
+//             $ret =  json_decode($response,true);
+         
+//             if($ret['code'] != 0)
+//             {
+//                 $data['success'] = false;
+//                 $data['msg'] =  $ret['error']." BUAT PROMO : ".$ret['message'];
+//                 die(json_encode($data));
+//             }
+//             else
+//             {
+//                 $id = $ret['response']['discount_id'];
+                
+//                 $parameterTambah = [];
+//         	    $parameterTambah['discount_id']   = (int)$id;
+//         	    $parameterTambah['item_list']  = array();
+		
+// 		        foreach($dataHargaBarang as $itemHargaBarang)
+//                 {
+//                     if($itemHargaBarang['model'][0]['model_id'] == 0)
+//                     {
+//                       array_push($parameterTambah['item_list'], array(
+//         	               'item_id'                => (int)$itemHargaBarang['item_id'],
+//                           'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
+//                           'purchase_limit'         => (int)0,
+//         	               'model_list' => []
+//         	           ));
+//                     }
+//                     else
+//                     {
+//                       array_push($parameterTambah['item_list'], array(
+//         	               'item_id'                => (int)$itemHargaBarang['item_id'],
+//                           'item_promotion_price'   => (float)$itemHargaBarang['model'][0]['cross_price'],
+//                           'purchase_limit'         => (int)0,
+//         	               'model_list' => []
+//         	           ));
+//                       foreach($itemHargaBarang['model'] as $itemHargaBarangModel)
+//                       { 
+//                           array_push($parameterTambah['item_list'][count($parameterTambah['item_list'])-1]['model_list'],
+//             	           array(
+//             	                'model_id'               => (int)$itemHargaBarangModel['model_id'],
+//             	                'model_promotion_price'   => (float)$itemHargaBarangModel['cross_price'],
+//             	           ));  
+//                       }
+//                     }
+//                 }
+                
+//                 $curl = curl_init();
+                
+//                 curl_setopt_array($curl, array(
+//                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/postAPI/",
+//                   CURLOPT_RETURNTRANSFER => true,
+//                   CURLOPT_ENCODING => '',
+//                   CURLOPT_MAXREDIRS => 10,
+//                   CURLOPT_TIMEOUT => 30,
+//                   CURLOPT_FOLLOWLOCATION => true,
+//                   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//                   CURLOPT_CUSTOMREQUEST => 'POST',
+//                   CURLOPT_POSTFIELDS =>  array(
+//                   'endpoint' => 'discount/add_discount_item',
+//                   'parameter' => json_encode($parameterTambah)),
+//                   CURLOPT_HTTPHEADER => array(
+//                     'Cookie: ci_session=98dd861508777823e02f6276721dc2d2189d25b8'
+//                   ),
+//                 ));
+                  
+//                 $response = curl_exec($curl);
+//                 curl_close($curl);
+//                 $ret =  json_decode($response,true);
+                
+//                 if($ret['code'] != 0)
+//                 {
+//                     $data['success'] = false;
+//                     $data['msg'] =  $ret['error']."PROMO BARANG TAMBAH : ".$ret['message'];
+//                     die(json_encode($data));
+//                 }
+//             }
             
             
-        }
+//         }
 		
 		
         $data['success'] = true;
-        $data['msg'] =  'Update Harga TIKTOK Berhasil';
+        $data['msg'] =  'Update Harga Tiktok Berhasil';
         echo(json_encode($data));
 	}
 	
