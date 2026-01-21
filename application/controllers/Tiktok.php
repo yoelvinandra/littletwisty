@@ -550,7 +550,7 @@ class Tiktok extends MY_Controller {
         
 	}
 	
-	public function connectBarang(){
+		public function connectBarang(){
 	    
 	    $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
@@ -560,15 +560,15 @@ class Tiktok extends MY_Controller {
 		$nextPageToken = "";
 		$data['rows'] = [];
 		$data["total"] = 999;
+		$data["totalUpdate"] = 0;
 		$pageSize = 100;
 		
         $parameter = array(
-            'status' =>    $status 
+            'status' =>    'ACTIVATE' 
         );
         
 		//LOGISTIC
 		$curl = curl_init();
-		
 		while(count($data['rows']) < $data["total"])
         {
 		    $urlparameter = "&page_token=".$nextPageToken."&page_size=".$pageSize;
@@ -601,16 +601,23 @@ class Tiktok extends MY_Controller {
                 $nextPageToken = $response['next_page_token'];
                 $data["total"] = $response['total_count'];
                 $dataBarang = $response['products'];
-                
                 foreach($dataBarang as $itemBarang)
                 {
+                    echo "\n\n".$itemBarang['id']." ".$itemBarang['title']."\n";
                     foreach($itemBarang['skus'] as $itemDetail)
-                      $sql = "UPDATE MBARANG SET IDBARANGTIKTOK = (IF(WARNA = '','".($itemBarang['id']."_".$itemDetail['id'])."','".$itemBarang['skus'][0]['id']."')), idindukbarangtiktok = '".$itemBarang['id']."' WHERE SKUTIKTOK = '".strtoupper($itemDetail['seller_sku'])."'";
+                    {
+                        // $sql = "SELECT If(count(*) = 1,'ADA','TIDAK') as ADA FROM MBARANG WHERE SKUTIKTOK = '".strtoupper($itemDetail['seller_sku'])."' LIMIT 1";
+                        // $ada = $CI->db->query($sql)->row()->ADA;
+                      
+                        // echo $itemDetail['id']." ".$itemDetail['seller_sku']." ".$ada."\n";
+                            
+                      $sql = "UPDATE MBARANG SET IDBARANGTIKTOK = (IF(WARNA = '','".($itemBarang['id']."_".$itemDetail['id'])."','".$itemDetail['id']."')), idindukbarangtiktok = '".$itemBarang['id']."' WHERE SKUTIKTOK = '".strtoupper($itemDetail['seller_sku'])."'";
                       $CI->db->query($sql);
                       echo $sql." ;";
                       echo "\n";
-                      $data["total"]++;
+                      $data["totalUpdate"]++;
                       $data["msg"] = "IDBARANGTIKTOK BERHASIL DIUPDATE";
+                    }
                 }
             }
         }

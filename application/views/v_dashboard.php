@@ -481,7 +481,8 @@ $(document).ready(function(){
     });
     
     $("#TGLAKHIRPENJUALAN").change(function() {
-       if(periode == "99" && $(this).val() != "")setPeriode(periode,tglawal,$(this).val(),customer);
+       if($(this).val() != "")tglakhir = $(this).val();
+       if(periode == "99" && $(this).val() != "")setPeriode(periode,tglawal,tglakhir,customer);
     });
     
     $("#TGLAWALTERLARIS").change(function() {
@@ -490,7 +491,8 @@ $(document).ready(function(){
     });
     
     $("#TGLAKHIRTERLARIS").change(function() {
-       if(periodeTerlaris == "99" && $(this).val() != "")setPeriodeTerlaris(periodeTerlaris,tglawalTerlaris,$(this).val(),customerTerlaris);
+        if($(this).val() != "")tglakhirTerlaris = $(this).val();
+       if(periodeTerlaris == "99" && $(this).val() != "")setPeriodeTerlaris(periodeTerlaris,tglawalTerlaris,tglakhirTerlaris,customerTerlaris);
     });
     
     $("#TGLAWALCUSTOMER").change(function() {
@@ -499,6 +501,7 @@ $(document).ready(function(){
     });
     
     $("#TGLAKHIRCUSTOMER").change(function() {
+        if($(this).val() != "")tglakhirCustomer = $(this).val();
        if(periodeCustomer == "99" && $(this).val() != "")setPeriodeCustomer(periodeCustomer,tglawalCustomer,tglakhirCustomer,barangCustomer,customerKota);
     });
 	
@@ -1007,8 +1010,9 @@ $(document).ready(function(){
         }
         else
         {
-            $(".loading2").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
-            $(".loading2").show();
+            table = "<br><br><br><br><br><br><br><br>Tidak Ada Data";
+            // $(".loading2").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
+            // $(".loading2").show();
         }
         $(".legendDoughnut").html(table);
     }
@@ -1736,8 +1740,9 @@ $(document).ready(function(){
         }
         else
         {
-            $(".loading3").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
-            $(".loading3").show();
+            table = "<br><br><br><br><br><br><br><br>Tidak Ada Data";
+            // $(".loading3").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
+            // $(".loading3").show();
         }
         $(".tableCustomer").html(table);
     }
@@ -1797,8 +1802,9 @@ $(document).ready(function(){
         }
         else
         {
-            $(".loading3").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
-            $(".loading3").show();
+            table = "<br><br><br><br><br><br><br><br>Tidak Ada Data";
+            // $(".loading3").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
+            // $(".loading3").show();
         }
         $(".tableKota").html(table);
     }
@@ -1868,8 +1874,9 @@ $(document).ready(function(){
         }
         else
         {
-            $(".loading4").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
-            $(".loading4").show();
+            table = "<br><br><br><br><br><br><br><br>Tidak Ada Data";
+            // $(".loading4").html("<br><br><br><br><br><br><br><br>Tidak Ada Data");
+            // $(".loading4").show();
         }
         $(".tableStok").html(table);
     }

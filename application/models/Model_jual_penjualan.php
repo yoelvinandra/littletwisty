@@ -985,9 +985,9 @@ class Model_jual_penjualan extends MY_Model{
 	    $whereBarangStok = "";
 	    $paramBarang = "(SELECT SUM(x.GRANDTOTALDISKON) FROM TPENJUALAN x 
 	    	                inner join MCUSTOMER xc on x.IDCUSTOMER = xc.IDCUSTOMER
-	                        WHERE x.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.status = 'S' and xc.KOTA = c.KOTA
+	                        WHERE x.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.status = 'S' and xc.KOTA = c.KOTA 
 	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
-	                    )";
+	                    ";
 	    $paramBarangMarketplace  = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
 	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and (x.statusmarketplace = 'COMPLETED') and x.MARKETPLACE = a.MARKETPLACE and x.KOTA = a.KOTA
 	                    )";
@@ -1013,7 +1013,10 @@ class Model_jual_penjualan extends MY_Model{
 	        $sqlCustomerMarketplace = "SELECT NAMACUSTOMER FROM MCUSTOMER WHERE IDCUSTOMER = $customer";
         	$customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
         	$whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
+        	$paramBarang .= " and xc.IDCUSTOMER = c.IDCUSTOMER";
 	    }
+	    
+	    $paramBarang .= ")";
 	    
         
 	    $sql = "
