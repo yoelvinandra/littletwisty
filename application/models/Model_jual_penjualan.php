@@ -989,18 +989,8 @@ class Model_jual_penjualan extends MY_Model{
 	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
 	                    ";
 	    $paramBarangMarketplace  = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
-	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and (x.statusmarketplace = 'COMPLETED') and x.MARKETPLACE = a.MARKETPLACE and x.KOTA = a.KOTA
-	                    )";
-	                    
-	    if($barang != "0")
-	    {
-	        $kodebarang = explode(" | ",$barang)[0];
-	        $sqlBarang = "select IDBARANG from mbarang where kodebarang = '{$kodebarang}'";
-	        $idbarang = $this->db->query($sqlBarang)->row()->IDBARANG;
-	        $whereBarang = " and b.idbarang = $idbarang";
-	        $whereBarangStok = "and c.idbarang = '$idbarang'";
-	        $paramBarangMarketplace = "0";
-	    }
+	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and (x.statusmarketplace = 'COMPLETED')  and x.KOTA = a.KOTA
+	                    ";
 	    
 	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
 	    
@@ -1014,15 +1004,28 @@ class Model_jual_penjualan extends MY_Model{
         	$customerMarketplace = $this->db->query($sqlCustomerMarketplace)->row()->NAMACUSTOMER;
         	$whereCustomerMarketplace = " and a.MARKETPLACE = '$customerMarketplace'";
         	$paramBarang .= " and xc.IDCUSTOMER = c.IDCUSTOMER";
+        	$paramBarangMarketplace .= "  and x.MARKETPLACE = a.MARKETPLACE";
 	    }
-	    
+	   
+	    $paramBarangMarketplace .= ")";
 	    $paramBarang .= ")";
+	    
+	                    
+	    if($barang != "0")
+	    {
+	        $kodebarang = explode(" | ",$barang)[0];
+	        $sqlBarang = "select IDBARANG from mbarang where kodebarang = '{$kodebarang}'";
+	        $idbarang = $this->db->query($sqlBarang)->row()->IDBARANG;
+	        $whereBarang = " and b.idbarang = $idbarang";
+	        $whereBarangStok = "and c.idbarang = '$idbarang'";
+	        $paramBarangMarketplace = "0";
+	    }
 	    
         
 	    $sql = "
-	    SELECT a.NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
+	    SELECT IF(a.NAMA = '', 'TANPA KOTA', a.NAMA) as NAMA,SUM(a.QTY) as QTY,SUM(a.GRANDTOTAL) as GRANDTOTAL
 	        from(
-                select if(c.NAMACUSTOMER = 'UMUM','UMUM',IFNULL(KOTA,'TANPA KOTA')) as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
+                select if(c.NAMACUSTOMER = 'UMUM','',IFNULL(KOTA,'')) as NAMA, ifnull(SUM(b.jml),0) as QTY, $paramBarang as GRANDTOTAL
         		from TPENJUALAN a
         		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
         		inner join MCUSTOMER c on a.IDCUSTOMER = c.IDCUSTOMER
@@ -1032,7 +1035,7 @@ class Model_jual_penjualan extends MY_Model{
         	    
         	    UNION ALL
         	    
-        	    select IFNULL(a.KOTA,'TANPA KOTA') as NAMA, 
+        	    select IFNULL(a.KOTA,'') as NAMA, 
         	    IFNULL(SUM(b.jml),0) as QTY, 
                 $paramBarangMarketplace as GRANDTOTAL
         		from TPENJUALANMARKETPLACE a
