@@ -3607,7 +3607,7 @@ class Tiktok extends MY_Controller {
             {
         		//UNSETTLED
                 $curl = curl_init();
-                $parameter = "&sort_field=order_create_time&page_size=100"; //&search_time_ge=".$ret['data']['orders'][0]['create_time']
+                $parameter = "&sort_field=order_create_time&page_size=100&search_time_ge=".$ret['data']['orders'][0]['create_time']; 
                 curl_setopt_array($curl, array(
                   CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
                   CURLOPT_RETURNTRANSFER => true,
@@ -3670,20 +3670,20 @@ class Tiktok extends MY_Controller {
                
               $response = curl_exec($curl);
               curl_close($curl);
-              $ret =  json_decode($response,true);
-              if($ret['code'] != 0)
+              $retSettled =  json_decode($response,true);
+              if($retSettled['code'] != 0)
               {
-                  echo $ret['code']." : ".$ret['message'];
+                  echo $retSettled['code']." : ".$retSettled['message'];
               }
               else
               {
-                  $result['BIAYALAYANANJUAL']     = (int)$dataUnsettled[$u]['fee_and_tax_amount']; 
-            	   $result['PENERIMAANJUAL']       = (int)$dataUnsettled[$u]['settlement_amount']; 
-            	   $result['DISKONJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_amount']+(int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_refund_amount']; 
-            	   $result['SUBTOTALJUAL']         = (int)$dataUnsettled[$u]['revenue_amount']; 
-            	   $result['BIAYAKIRIMJUAL']       = (int)$dataUnsettled[$u]['shipping_cost_amount'];
-            	   $result['REFUNDJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['refund_subtotal_before_discount_amount'];
-            	   $result['PENYELESAIANPENJUAL']  = (int)$dataUnsettled[$u]['settlement_amount']; 
+                  $result['BIAYALAYANANJUAL']      = (int)$retSettled['data']['fee_and_tax_amount']; 
+            	   $result['PENERIMAANJUAL']       = (int)$retSettled['data']['settlement_amount']; 
+            	   $result['DISKONJUAL']           = (int)$retSettled['data']['revenue_breakdown']['seller_discount_amount']+(int)$retSettled['data']['revenue_breakdown']['seller_discount_refund_amount']; 
+            	   $result['SUBTOTALJUAL']         = (int)$retSettled['data']['revenue_amount']; 
+            	   $result['BIAYAKIRIMJUAL']       = (int)$retSettled['data']['shipping_cost_amount'];
+            	   $result['REFUNDJUAL']           = (int)$retSettled['data']['revenue_breakdown']['refund_subtotal_before_discount_amount'];
+            	   $result['PENYELESAIANPENJUAL']  = (int)$retSettled['data']['settlement_amount']; 
               }
 		  }
 		    $result['DETAILBARANG'] = [];
@@ -5992,6 +5992,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
 	        $parameter['create_time_ge'] = $dateAw->getTimestamp();
 	        $parameter['create_time_lt'] = $dateAk->getTimestamp();
 	    }
+	    
 		$this->output->set_content_type('application/json');
         $CI =& get_instance();	
         $CI->load->database($_SESSION[NAMAPROGRAM]['CONFIG']);
@@ -6148,7 +6149,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
             
             $data['STATUSMARKETPLACE']              = $result[$x]['status'];
             $data['STATUS']                         = $this->getStatus($result[$x]['status'])['state'];
-            $data['CATATANPEMBELI']                 = $result[$x]['buyer_message'];
+            $data['CATATANPEMBELI']                 = $result[$x]['buyer_message']??"";
             $data['CATATANPENJUAL']                 = $catatanJual;
             $data['CATATANPENGEMBALIAN']            = ($result[$x]['cancel_reason']??"");
             $data["LASTUPDATED"]                    =  date("Y-m-d H:i:s");
@@ -6313,7 +6314,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
         //UNSETTLED
         $dataUnsettled = [];
         $curl = curl_init();
-        $parameter = "&sort_field=order_create_time&page_size=100&search_time_ge=".$dateAw->getTimestamp()."&search_time_lt=". $dateAk->getTimestamp();
+        $parameter = "&sort_field=order_create_time&page_size=100"; //&search_time_ge=".$dateAw->getTimestamp()."&search_time_lt=". $dateAk->getTimestamp()
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
           CURLOPT_RETURNTRANSFER => true,
