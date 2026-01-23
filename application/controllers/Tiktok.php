@@ -3586,12 +3586,12 @@ class Tiktok extends MY_Controller {
             $resultPesanan = $CI->db->query($sql)->row();
             
             $dataPayment = $ret['data']['orders'][0]['payment'];
-
+          
             $result;
 		    $result['BIAYALAINBELI']        = (int)$dataPayment['buyer_service_fee'] + (int)$dataPayment['tax'] + (int)$dataPayment['small_order_fee'] + (int)$dataPayment['shipping_fee_tax'] + (int)$dataPayment['product_tax'] + (int)$dataPayment['retail_delivery_fee']  + (int)$dataPayment['handling_fee']  + (int)$dataPayment['shipping_insurance_fee']  + (int)$dataPayment['item_insurance_fee']  + (int)$dataPayment['item_insurance_tax']; 
 		    $result['PEMBAYARANBELI']       = (int)$dataPayment['total_amount']; 
-		    $result['DISKONBELI']           = -((int)$dataPayment['platform_discount'] + (int)$dataPayment['shipping_fee_cofunded_discount'] + (int)$dataPayment['shipping_fee_platform_discount'] + (int)$dataPayment['shipping_fee_seller_discount'] + (int)$dataPayment['seller_discount'] + (int)$dataPayment['payment_platform_discount'] + (int)$dataPayment['payment_discount_service_fee']); 
-		    $result['SUBTOTALBELI']         = (int)$dataPayment['original_total_product_price']; 
+		    $result['DISKONBELI']           = -((int)$dataPayment['shipping_fee_cofunded_discount'] + (int)$dataPayment['shipping_fee_platform_discount'] + (int)$dataPayment['shipping_fee_seller_discount'] + (int)$dataPayment['payment_platform_discount'] ); //+ (int)$dataPayment['platform_discount'] + (int)$dataPayment['payment_discount_service_fee'] 
+		    $result['SUBTOTALBELI']         = (int)$dataPayment['sub_total']; 
 		    $result['BIAYAKIRIMBELI']       = (int)$dataPayment['original_shipping_fee']; 
 		    
 		    $result['BIAYALAYANANJUAL']     = 0;
@@ -3603,6 +3603,7 @@ class Tiktok extends MY_Controller {
             $result['PENYELESAIANPENJUAL']  = 0;
 		    
             $dataUnsettled = [];
+            $adaUnsettled = false;
 		    if($this->getStatus($resultPesanan->STATUSMARKETPLACE)['state'] != 3 || $resultPesanan->STATUSMARKETPLACE == 'COMPLETED')
             {
         		//UNSETTLED
@@ -3639,6 +3640,7 @@ class Tiktok extends MY_Controller {
                 {
                     if($dataUnsettled[$u]['order_id'] == $nopesanan)
                     {
+                        $adaUnsettled = true;
             		    $result['BIAYALAYANANJUAL']     = (int)$dataUnsettled[$u]['est_fee_tax_amount']; 
             		    $result['PENERIMAANJUAL']       = (int)$dataUnsettled[$u]['est_settlement_amount']; 
             		    $result['DISKONJUAL']           = (int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_amount']+(int)$dataUnsettled[$u]['revenue_breakdown']['seller_discount_refund_amount']; 
@@ -3649,8 +3651,8 @@ class Tiktok extends MY_Controller {
                     }
                 }
           }
-		  if(count($dataUnsettled) == 0 && $resultPesanan->STATUSMARKETPLACE == 'COMPLETED')
-		  {
+		  if(!$adaUnsettled && $resultPesanan->STATUSMARKETPLACE == 'COMPLETED')
+		  { 
 		       $curl = curl_init();
               $parameter = "";
               curl_setopt_array($curl, array(
@@ -3677,6 +3679,7 @@ class Tiktok extends MY_Controller {
               }
               else
               {
+                  
                   $result['BIAYALAYANANJUAL']      = (int)$retSettled['data']['fee_and_tax_amount']; 
             	   $result['PENERIMAANJUAL']       = (int)$retSettled['data']['settlement_amount']; 
             	   $result['DISKONJUAL']           = (int)$retSettled['data']['revenue_breakdown']['seller_discount_amount']+(int)$retSettled['data']['revenue_breakdown']['seller_discount_refund_amount']; 

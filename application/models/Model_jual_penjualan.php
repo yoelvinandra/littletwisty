@@ -609,6 +609,7 @@ class Model_jual_penjualan extends MY_Model{
                     IFNULL(SUM((SELECT SUM(B.JML) FROM TPENJUALANDTL b WHERE a.IDPENJUALAN = b.IDPENJUALAN)) ,0) AS TOTALBARANG
                     from tpenjualan a
             		where (1=1)  and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']}  $whereLokasi $whereCustomer AND a.tgltrans >= '".$item['tglawal']."' AND a.tgltrans <= '".$item['tglakhir']."' and a.status = 'S'
+            		and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))
             ";
             
             if($adaOnline)
@@ -685,6 +686,7 @@ class Model_jual_penjualan extends MY_Model{
             		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
             		inner join MBARANG c on b.IDBARANG = c.IDBARANG
             		where (1=1) $whereLokasi and c.kategori = '".$itemBarang->KATEGORI."' and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereCustomer AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
+            		and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))
             ";
             
             if($adaOnline)
@@ -767,6 +769,7 @@ class Model_jual_penjualan extends MY_Model{
             		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
             		inner join MBARANG c on b.IDBARANG = c.IDBARANG
             		where (1=1) $whereLokasi and c.kategori = '$itemBarang->KATEGORI' and c.warna = '".$itemBarang->WARNA."' and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereCustomer AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
+            		and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))
             ";
             
             if($adaOnline)
@@ -849,6 +852,7 @@ class Model_jual_penjualan extends MY_Model{
             		inner join TPENJUALANDTL b on a.IDPENJUALAN = b.IDPENJUALAN
             		inner join MBARANG c on b.IDBARANG = c.IDBARANG
             		where (1=1) $whereLokasi and c.kategori = '$itemBarang->KATEGORI' and c.size = '".$itemBarang->SIZE."' and a.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} $whereCustomer AND a.tgltrans >= '".$tglawal."' AND a.tgltrans <= '".$tglakhir."' and a.status = 'S'
+            		and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))
             ";
             
             if($adaOnline)
@@ -923,12 +927,12 @@ class Model_jual_penjualan extends MY_Model{
 	function dashboardCustomer($periode,$tglawal,$tglakhir,$barang = "0", $customer = "0"){
 	    
 	    //CUSTOMER
-	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
+	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))";
 	    $whereBarang = "";
 	    $whereBarangStok = "";
 	    $paramBarang = "(SELECT SUM(x.GRANDTOTALDISKON) FROM TPENJUALAN x 
 	                        WHERE x.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.status = 'S' and c.IDCUSTOMER = x.IDCUSTOMER
-	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
+	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))
 	                    )";
 	    $paramBarangMarketplace = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
 	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and (x.statusmarketplace = 'COMPLETED') and x.MARKETPLACE = a.MARKETPLACE
@@ -986,13 +990,13 @@ class Model_jual_penjualan extends MY_Model{
 	    $paramBarang = "(SELECT SUM(x.GRANDTOTALDISKON) FROM TPENJUALAN x 
 	    	                inner join MCUSTOMER xc on x.IDCUSTOMER = xc.IDCUSTOMER
 	                        WHERE x.idperusahaan = {$_SESSION[NAMAPROGRAM]['IDPERUSAHAAN']} AND x.tgltrans >= '".$tglawal."' AND x.tgltrans <= '".$tglakhir."' and x.status = 'S' and xc.KOTA = c.KOTA 
-	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))
+	                        and x.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))
 	                    ";
 	    $paramBarangMarketplace  = "(SELECT SUM(x.TOTALPENDAPATANPENJUAL) FROM TPENJUALANMARKETPLACE x 
 	                        WHERE x.tgltrans >= '".$tglawal." 00:00:00' AND x.tgltrans <= '".$tglakhir." 23:59:59' and (x.statusmarketplace = 'COMPLETED')  and x.KOTA = a.KOTA
 	                    ";
 	    
-	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT GROUP_CONCAT(DISTINCT CONCAT('X',marketplace)) AS data FROM TPENJUALANMARKETPLACE))";
+	    $whereCustomer = " and a.idcustomer not in (select idcustomer from mcustomer where kodecustomer in (SELECT DISTINCT CONCAT('X',marketplace) AS data FROM TPENJUALANMARKETPLACE))";
 	    
 	    $whereCustomerMarketplace = "";
 	    
