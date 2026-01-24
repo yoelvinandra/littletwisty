@@ -1270,7 +1270,7 @@ class Tiktok extends MY_Controller {
                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
                 
-                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE"  && $dataAddress[$x]['is_default'] == 1)
                 {
                     $pickup = true;
                 }
@@ -1436,7 +1436,7 @@ class Tiktok extends MY_Controller {
 		
         $curl = curl_init();
         
-        $parameter = "&locale=id-ID";
+        $parameter = "&locale=id-ID&category_version=v2";
         
         curl_setopt_array($curl, array(
           CURLOPT_URL => $this->config->item('base_url')."/Tiktok/getAPI/",
@@ -1470,7 +1470,7 @@ class Tiktok extends MY_Controller {
                 if($itemKategori['parent_id'] == 0)
                 {
                     
-                    if($itemKategori['is_leaf'])
+                    if($itemKategori['is_leaf'] && $itemKategori['permission_statuses'][0] == 'AVAILABLE')
                     {
                         array_push($responseKategori,array(
                             'VALUE' =>  $itemKategori['id'],
@@ -1485,7 +1485,7 @@ class Tiktok extends MY_Controller {
                           if($itemKategori['id'] == $itemSubKategori['parent_id'])
                           {
                                  
-                              if($itemSubKategori['is_leaf'])
+                              if($itemSubKategori['is_leaf'] && $itemSubKategori['permission_statuses'][0] == 'AVAILABLE')
                               {
                                   array_push($responseKategori,array(
                                       'VALUE' =>  $itemSubKategori['id'],
@@ -1498,7 +1498,7 @@ class Tiktok extends MY_Controller {
                                   {
                                       if($itemSubKategori['id'] == $itemSubKategori2['parent_id'])
                                       {
-                                          if($itemSubKategori2['is_leaf'])
+                                          if($itemSubKategori2['is_leaf'] && $itemSubKategori2['permission_statuses'][0] == 'AVAILABLE')
                                           {
                                               array_push($responseKategori,array(
                                                   'VALUE' =>  $itemSubKategori2['id'],
@@ -1511,7 +1511,7 @@ class Tiktok extends MY_Controller {
                                               {
                                                   if($itemSubKategori2['id'] == $itemSubKategori3['parent_id'])
                                                   {
-                                                      if($itemSubKategori3['is_leaf'])
+                                                      if($itemSubKategori3['is_leaf'] && $itemSubKategori3['permission_statuses'][0] == 'AVAILABLE')
                                                       {
                                                           array_push($responseKategori,array(
                                                               'VALUE' =>  $itemSubKategori3['id'],
@@ -1525,7 +1525,7 @@ class Tiktok extends MY_Controller {
                                                           {
                                                               if($itemSubKategori3['id'] == $itemSubKategori4['parent_id'])
                                                               {
-                                                                  if($itemSubKategori4['is_leaf'])
+                                                                  if($itemSubKategori4['is_leaf'] && $itemSubKategori4['permission_statuses'][0] == 'AVAILABLE')
                                                                   {
                                                                       array_push($responseKategori,array(
                                                                           'VALUE' =>  $itemSubKategori4['id'],
@@ -2127,8 +2127,8 @@ class Tiktok extends MY_Controller {
             for($x = 0 ; $x < count($dataAddress);$x++)
             {
                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI FROM MLOKASI WHERE IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." AND GROUPLOKASI like '%MARKETPLACE%'";
-
-                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+             
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE" && $dataAddress[$x]['is_default'] == 1)
                 {
                     $lokasiPickup = $CI->db->query($sql)->row();
                     $idlokasiset = $lokasiPickup->IDLOKASI;
@@ -2142,6 +2142,7 @@ class Tiktok extends MY_Controller {
                  // }
             }
         }
+        
 		
 		$sql = "SELECT IDCUSTOMER,KONSINYASI FROM MCUSTOMER WHERE KODECUSTOMER like '%TIKTOK%'";
         $dataCustomer = $CI->db->query($sql)->row();
@@ -2164,6 +2165,7 @@ class Tiktok extends MY_Controller {
 		$parameter['package_dimensions']['unit'] = "CENTIMETER";
 		$parameter['package_weight']['value'] =  $this->input->post("BERAT");
         $parameter['package_weight']['unit'] = "GRAM";
+        $parameter['category_version'] = "v2";
         
         if($sizeChartTipe == "COMBOBOX")
 		{
@@ -2476,7 +2478,7 @@ class Tiktok extends MY_Controller {
                 $pickup = 0;
                 $return = 0;
                 
-                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE" && $dataAddress[$x]['is_default'] == 1)
                 {
                     $pickup = 1;
                     $label = "<br><i>PICKUP_ADDRESS</i>";
@@ -4986,7 +4988,7 @@ class Tiktok extends MY_Controller {
               $data['msg'] = "Pesanan ".$nopesanan." Berhasil Dikirim";
             }
 		}
-		sleep(3); 
+		sleep(5); 
         
         $this->init(date('Y-m-d'),date('Y-m-d'),'update',false);
         
@@ -5754,7 +5756,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                             $return = false;
                             
                             //RENCANA PAKAI YANG RETURN_WAREHOUSE, TAPI KETIKA COBA HIT API STOK NYA, MESTI ERROR, AKHIRNYA PAKE YANG INI
-                            if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+                            if($dataAddress[$x]['type'] == "SALES_WAREHOUSE" && $dataAddress[$x]['is_default'] == 1)
                             {
                                 $return = true;
                             }
@@ -6288,7 +6290,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
                 
-                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE" && $dataAddress[$x]['is_default'] == 1)
                 {
                     $pickup = true;
                 }
@@ -6713,7 +6715,7 @@ public function insertKartuStokRetur($kodetrans,$tgltrans,$tglStokMulai,$lokasi)
                 $sql = "SELECT IFNULL(IDLOKASI,0) as IDLOKASI, IFNULL(NAMALOKASI,'') as NAMALOKASI FROM MLOKASI WHERE (IDLOKASITIKTOKPICKUP = ".$dataAddress[$x]['id']." OR  IDLOKASITIKTOKRETUR = ".$dataAddress[$x]['id'].") AND GROUPLOKASI like '%MARKETPLACE%'";
                 $pickup = false;
                 
-                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE")
+                if($dataAddress[$x]['type'] == "SALES_WAREHOUSE" && $dataAddress[$x]['is_default'] == 1)
                 {
                     $pickup = true;
                 }

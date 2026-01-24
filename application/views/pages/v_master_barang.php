@@ -623,8 +623,8 @@ var kategoriBarangShopee = [
 ];
 var kategoriBarangTiktok = [
     602787,
-    805896,
-    806664,
+    602787,
+    602787,
     888968,
     888968
 ];
